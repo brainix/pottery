@@ -15,7 +15,7 @@ First, set up your Redis client: :alien:
     >>> url = urllib.parse.urlparse('http://localhost:6379/')
     >>> redis = Redis(host=url.hostname, port=url.port, password=url.password)
 
-That was the hardest part.  :grimacing:
+That was the hardest part. :grimacing:
 
 ### Dicts
 
