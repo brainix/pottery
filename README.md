@@ -24,17 +24,14 @@ That was the hardest part. :grimacing:
 Create a `RedisDict`:
 
     >>> from pottery import RedisDict
-    >>> raj = RedisDict(redis, 'raj')
+    >>> raj = RedisDict(redis, 'raj', job='computers', hobby='music')
 
 The first argument to `RedisDict()` is your Redis client.  The second argument
 is the Redis key name for your dict.  Other than that, you can use your
 `RedisDict` the same way that you use any other Python dict:
 
-    >>> raj['job'] = 'computers'
-    >>> raj['hobby'] = 'music'
-    >>> raj['vegetarian'] = True
     >>> len(raj)
-    3
+    2
     >>> raj['job']
     'computers'
     >>> raj['girlfriend']
@@ -49,14 +46,12 @@ is the Redis key name for your dict.  Other than that, you can use your
 Create a `RedisSet`:
 
     >>> from pottery import RedisSet
-    >>> edible = RedisSet(redis, 'edible')
+    >>> edible = RedisSet(redis, 'edible', ['tofu', 'avocado'])
 
 Again, the first argument to `RedisSet()` is your Redis client.  The second
 argument is the Redis key name for your set.  Other than that, you can use your
 `RedisSet` the same way that you use any other Python set:
 
-    >>> edible.add('tofu')
-    >>> edible.add('avocado')
     >>> len(edible)
     2
     >>> 'tofu' in edible
