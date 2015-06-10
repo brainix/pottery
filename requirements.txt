@@ -1,0 +1,6 @@
+pkginfo==1.2.1
+redis==2.10.5
+requests==2.9.1
+requests-toolbelt==0.6.0
+twine==1.6.5
+wheel==0.26.0
