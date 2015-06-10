@@ -1,2 +1,1 @@
-# pottery
-Redis for humans.
+# Pottery: Redis for Humans
