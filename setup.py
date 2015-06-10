@@ -12,7 +12,11 @@ setup(
     name='pottery',
     version='0.1',
     description='Redis for Humans',
-    long_description='',
+    long_description="""
+        Redis is awesome, but Redis clients are not awesome.  Pottery is a
+        Pythonic way to access Redis.  If you know how to use Python dicts and
+        sets, then you already know how to use Pottery.
+    """,
     url='https://github.com/brainix/pottery',
     author='Rajiv Bakulesh Shah',
     author_email='brainix@gmail.com',
