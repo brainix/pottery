@@ -1,6 +1,8 @@
 # Pottery: Redis for Humans
 
-[Redis](http://redis.io/) is awesome, :grinning: but Redis clients are not awesome. :rage:  Pottery is a Pythonic way to access Redis.  If you know how to use Python dicts and sets, then you already know how to use Pottery.
+[Redis](http://redis.io/) is awesome, :grinning: but Redis clients are not
+awesome. :rage:  Pottery is a Pythonic way to access Redis.  If you know how to
+use Python dicts and sets, then you already know how to use Pottery.
 
 ## Installation
 
@@ -24,7 +26,9 @@ Create a `RedisDict`:
     >>> from pottery import RedisDict
     >>> raj = RedisDict(redis, 'raj')
 
-The first argument to `RedisDict()` is your Redis client.  The second argument is the Redis key name for your dict.  Other than that, you can use your `RedisDict` the same way that you use any other Python dict:
+The first argument to `RedisDict()` is your Redis client.  The second argument
+is the Redis key name for your dict.  Other than that, you can use your
+`RedisDict` the same way that you use any other Python dict:
 
     >>> raj['job'] = 'computers'
     >>> raj['hobby'] = 'music'
@@ -46,6 +50,11 @@ Create a `RedisSet`:
 
     >>> from pottery import RedisSet
     >>> edible = RedisSet(redis, 'edible')
+
+Again, the first argument to `RedisSet()` is your Redis client.  The second
+argument is the Redis key name for your set.  Other than that, you can use your
+`RedisSet` the same way that you use any other Python set:
+
     >>> edible.add('tofu')
     >>> edible.add('avocado')
     >>> len(edible)
