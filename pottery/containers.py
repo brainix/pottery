@@ -53,7 +53,7 @@ class RedisSet(_Base, collections.abc.MutableSet):
             self._redis.sadd(self._key, json.dumps(value))
 
     def __contains__(self, value):
-        return self._redis.sismember(self._key, value)
+        return self._redis.sismember(self._key, json.dumps(value))
 
     def __iter__(self):
         return super().__iter__(self._redis.sscan)

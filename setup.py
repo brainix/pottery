@@ -10,7 +10,7 @@ from setuptools import setup
 
 setup(
     name='pottery',
-    version='0.1',
+    version='0.2',
     description='Redis for Humans',
     long_description="""
         Redis is awesome, but Redis clients are not awesome.  Pottery is a
@@ -30,7 +30,7 @@ setup(
         'Programming Language :: Python :: 3 :: Only',
         'License :: OSI Approved :: Apache Software License',
     ],
-    keywords='Redis persistent storage',
+    keywords='Redis client persistent storage',
     packages=find_packages(exclude=('contrib', 'docs', 'tests*')),
     install_requires=('redis',),
     extras_require={},
