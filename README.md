@@ -1,0 +1,2 @@
+# pottery
+Redis for humans.
