@@ -8,9 +8,11 @@
 from setuptools import find_packages
 from setuptools import setup
 
+import pottery
+
 setup(
-    name='pottery',
-    version='0.2',
+    name=pottery.__name__,
+    version=pottery.__version__,
     description='Redis for Humans',
     long_description="""
         Redis is awesome, but Redis clients are not awesome.  Pottery is a
@@ -18,9 +20,9 @@ setup(
         sets, then you already know how to use Pottery.
     """,
     url='https://github.com/brainix/pottery',
-    author='Rajiv Bakulesh Shah',
+    author=pottery.__author__,
     author_email='brainix@gmail.com',
-    license='Apache 2.0',
+    license=pottery.__license__,
     classifiers=[
         'Development Status :: 1 - Planning',
         'Intended Audience :: Developers',
