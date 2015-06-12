@@ -13,20 +13,6 @@ import json
 
 
 
-TMP_KEY = 'tmp'
-
-
-
-@contextlib.contextmanager
-def _pipeline(redis, *, transaction=True, shard_hint=None, raise_on_error=True):
-    pipeline = redis.pipeline(transaction=transaction, shard_hint=shard_hint)
-    try:
-        yield pipeline
-    finally:
-        pipeline.execute(raise_on_error=raise_on_error)
-
-
-
 class _Base:
     def __init__(self, redis, key, *args, **kwargs):
         self._redis = redis
@@ -65,9 +51,7 @@ class RedisSet(_Base, collections.abc.MutableSet):
         self._redis.sadd(self._key, json.dumps(value))
 
     def discard(self, value):
-        with _pipeline(self._redis) as pipeline:
-            pipeline.smove(self._key, TMP_KEY, json.dumps(value))
-            pipeline.delete(TMP_KEY)
+        self._redis.srem(self._key, json.dumps(value))
 
 
 
