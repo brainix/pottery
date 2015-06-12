@@ -53,6 +53,9 @@ class RedisSet(_Base, collections.abc.MutableSet):
     def discard(self, value):
         self._redis.srem(self._key, json.dumps(value))
 
+    def __repr__(self):
+        return self.__class__.__name__ + str(set(self))
+
 
 
 class RedisDict(_Base, collections.abc.MutableMapping):
@@ -79,3 +82,6 @@ class RedisDict(_Base, collections.abc.MutableMapping):
 
     def __len__(self):
         return self._redis.hlen(self._key)
+
+    def __repr__(self):
+        return self.__class__.__name__ + str(dict(self))
