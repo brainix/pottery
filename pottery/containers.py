@@ -10,45 +10,53 @@
 import collections.abc
 import contextlib
 import json
+import urllib.parse
 
-
-
-@contextlib.contextmanager
-def _pipeline(redis, *, transaction=True, shard_hint=None, raise_on_error=True):
-    pipeline = redis.pipeline(transaction=transaction, shard_hint=shard_hint)
-    try:
-        yield pipeline
-    finally:
-        pipeline.execute(raise_on_error=raise_on_error)
+from redis import Redis
 
 
 
 class _Base:
+    _DEFAULT_REDIS_URL = 'http://localhost:6379/'
+
     def __init__(self, redis, key, *args, **kwargs):
+        if redis is None:
+            url = urllib.parse.urlparse(self._DEFAULT_REDIS_URL)
+            redis = Redis(host=url.hostname, port=url.port, password=url.password)
         self._redis = redis
         self._key = key
 
+    @contextlib.contextmanager
+    def _pipeline(self, *, transaction=True, shard_hint=None, raise_on_error=True):
+        pipeline = self._redis.pipeline(transaction=transaction, shard_hint=shard_hint)
+        try:
+            yield pipeline
+        finally:
+            pipeline.execute(raise_on_error=raise_on_error)
+
+
+
+class _Iterable:
     def __iter__(self, scan):
         cursor = 0
         while True:
             cursor, iterable = scan(self._key, cursor=cursor)
             for value in iterable:
-                value = value.decode('utf-8')
-                with contextlib.suppress(ValueError):
-                    value = json.loads(value)
-                yield value
-            if cursor is 0:
+                yield json.loads(value.decode('utf-8'))
+            if cursor == 0:
                 break
 
 
 
 class RedisList(_Base, collections.abc.MutableSequence):
+    """Redis-backed container compatible with Python lists."""
+
     def __init__(self, redis, key, iterable=tuple()):
         """Initialize a RedisList.  O(1)"""
         super().__init__(redis, key, iterable)
         values = [json.dumps(value) for value in iterable]
         if values:
-            with _pipeline(self._redis) as pipeline:
+            with self._pipeline(self._redis) as pipeline:
                 pipeline.delete(self._key)
                 pipeline.rpush(self._key, *values)
 
@@ -69,7 +77,13 @@ class RedisList(_Base, collections.abc.MutableSequence):
     def __delitem__(self, index):
         """l.__delitem__(index) <==> del l[index].  O(n)"""
         try:
-            with _pipeline(self._redis) as pipeline:
+            # This is monumentally stupid.  Python's list API requires us to
+            # delete an element by *index.*  Of course, Redis doesn't support
+            # that, because it's Redis.  Instead, Redis supports deleting an
+            # element by *value.*  So our ridiculous hack is to set l[index] to
+            # None, then to delete the value None.  More info:
+            # http://redis.io/commands/lrem
+            with self._pipeline(self._redis) as pipeline:
                 pipeline.lset(self._key, index, None)
                 pipeline.lrem(self._key, None, num=1)
         except redis.exceptions.ResponseError:
@@ -82,15 +96,25 @@ class RedisList(_Base, collections.abc.MutableSequence):
     def insert(self, index, value):
         """Insert an element into a RedisList before the given index.  O(n)"""
         value = json.dumps(value)
-        if index >= len(self):
-            self._redis.rpush(self._key, value)
-        else:
-            tmp, self[index] = json.dumps(self[index]), None
-            with _pipeline(self._redis) as pipeline:
+        if index <= 0:
+            self._redis.lpush(self._key, value)
+        elif index < len(self):
+            # This is monumentally stupid.  Python's list API requires us to
+            # insert an element before the given *index.*  Of course, Redis
+            # doesn't support that, because it's Redis.  Instead, Redis
+            # supports inserting an element before a given (pivot) *value.*  So
+            # our ridiculous hack is to set the pivot value to None, then to
+            # insert the desired value and the original pivot value before the
+            # value None, then to delete the value None.  More info:
+            # http://redis.io/commands/linsert
+            pivot = json.dumps(self[index])
+            with self._pipeline(self._redis) as pipeline:
                 pipeline.lset(self._key, index, None)
-                pipeline.linsert(self._key, 'BEFORE', None, value)
-                pipeline.linsert(self._key, 'BEFORE', None, tmp)
+                for value in (value, pivot):
+                    pipeline.linsert(self._key, 'BEFORE', None, value)
                 pipeline.lrem(self._key, None, num=1)
+        else:
+            self._redis.rpush(self._key, value)
 
     def __repr__(self):
         """Return the string representation of a RedisList.  O(n)"""
@@ -100,13 +124,15 @@ class RedisList(_Base, collections.abc.MutableSequence):
 
 
 
-class RedisSet(_Base, collections.abc.MutableSet):
+class RedisSet(_Iterable, _Base, collections.abc.MutableSet):
+    """Redis-backed container compatible with Python sets."""
+
     def __init__(self, redis, key, iterable=tuple()):
         """Initialize a RedisSet.  O(n)"""
         super().__init__(redis, key, iterable)
         values = [json.dumps(value) for value in iterable]
         if values:
-            with _pipeline(self._redis) as pipeline:
+            with self._pipeline(self._redis) as pipeline:
                 pipeline.delete(self._key)
                 pipeline.sadd(self._key, *values)
 
@@ -144,12 +170,14 @@ class RedisSet(_Base, collections.abc.MutableSet):
 
 
 
-class RedisDict(_Base, collections.abc.MutableMapping):
+class RedisDict(_Iterable, _Base, collections.abc.MutableMapping):
+    """Redis-backed container compatible with Python dicts."""
+
     def __init__(self, redis, key, **kwargs):
         """Initialize a RedisDict.  O(n)"""
         super().__init__(redis, key, **kwargs)
         if kwargs:
-            with _pipeline(self._redis) as pipeline:
+            with self._pipeline(self._redis) as pipeline:
                 pipeline.delete(self._key)
                 for key, value in kwargs.items():
                     pipeline.hset(self._key, key, json.dumps(value))
