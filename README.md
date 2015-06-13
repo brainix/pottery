@@ -32,8 +32,11 @@ is the Redis key name for your dict.  Other than that, you can use your
 
     >>> len(raj)
     2
-    >>> raj['job']
-    'computers'
+    >>> raj['hobby']
+    'music'
+    >>> raj['vegetarian'] = True
+    >>> raj['vegetarian']
+    True
     >>> raj['girlfriend']
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
@@ -58,3 +61,6 @@ argument is the Redis key name for your set.  Other than that, you can use your
     True
     >>> 'bacon' in edible
     False
+    >>> edible.add('strawberries')
+    >>> 'strawberries' in edible
+    True
