@@ -12,4 +12,5 @@ __license__ = 'Apache 2.0'
 __copyright__ = 'Copyright (c) 2015, Rajiv Bakulesh Shah'
 
 from .containers import RedisDict
+from .containers import RedisList
 from .containers import RedisSet
