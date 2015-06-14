@@ -44,7 +44,7 @@ class _Iterable:
         while True:
             cursor, iterable = scan(self._key, cursor=cursor)
             for value in iterable:
-                yield json.loads(value.decode('utf-8'))
+                yield value
             if cursor == 0:
                 break
 
