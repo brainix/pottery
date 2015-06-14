@@ -9,10 +9,12 @@
 
 import collections.abc
 import contextlib
+import functools
 import json
 import urllib.parse
 
 from redis import Redis
+from redis.exceptions import ResponseError
 
 
 
@@ -51,12 +53,21 @@ class _Iterable:
 class RedisList(_Base, collections.abc.MutableSequence):
     """Redis-backed container compatible with Python lists."""
 
+    def raise_on_error(func):
+        @functools.wraps(func)
+        def wrap(*args, **kwargs):
+            try:
+                func(*args, **kwargs)
+            except ResponseError:
+                raise IndexError('list assignment index out of range')
+        return wrap
+
     def __init__(self, redis, key, iterable=tuple()):
         """Initialize a RedisList.  O(1)"""
         super().__init__(redis, key, iterable)
         values = [json.dumps(value) for value in iterable]
         if values:
-            with self._pipeline(self._redis) as pipeline:
+            with self._pipeline() as pipeline:
                 pipeline.delete(self._key)
                 pipeline.rpush(self._key, *values)
 
@@ -67,27 +78,23 @@ class RedisList(_Base, collections.abc.MutableSequence):
             raise IndexError('list index out of range')
         return json.loads(value.decode('utf-8'))
 
+    @raise_on_error
     def __setitem__(self, index, value):
         """l.__setitem__(index, value) <==> l[index] = value.  O(n)"""
-        try:
-            self._redis.lset(self._key, index, json.dumps(value))
-        except redis.exceptions.ResponseError:
-            raise IndexError('list assignment index out of range')
+        self._redis.lset(self._key, index, json.dumps(value))
 
+    @raise_on_error
     def __delitem__(self, index):
         """l.__delitem__(index) <==> del l[index].  O(n)"""
-        try:
-            # This is monumentally stupid.  Python's list API requires us to
-            # delete an element by *index.*  Of course, Redis doesn't support
-            # that, because it's Redis.  Instead, Redis supports deleting an
-            # element by *value.*  So our ridiculous hack is to set l[index] to
-            # None, then to delete the value None.  More info:
-            # http://redis.io/commands/lrem
-            with self._pipeline(self._redis) as pipeline:
-                pipeline.lset(self._key, index, None)
-                pipeline.lrem(self._key, None, num=1)
-        except redis.exceptions.ResponseError:
-            raise IndexError('list assignment index out of range')
+        # This is monumentally stupid.  Python's list API requires us to
+        # delete an element by *index.*  Of course, Redis doesn't support
+        # that, because it's Redis.  Instead, Redis supports deleting an
+        # element by *value.*  So our ridiculous hack is to set l[index] to
+        # None, then to delete the value None.  More info:
+        # http://redis.io/commands/lrem
+        with self._pipeline() as pipeline:
+            pipeline.lset(self._key, index, None)
+            pipeline.lrem(self._key, None, num=1)
 
     def __len__(self):
         """Return the number of items in a RedisList.  O(1)"""
@@ -108,7 +115,7 @@ class RedisList(_Base, collections.abc.MutableSequence):
             # value None, then to delete the value None.  More info:
             # http://redis.io/commands/linsert
             pivot = json.dumps(self[index])
-            with self._pipeline(self._redis) as pipeline:
+            with self._pipeline() as pipeline:
                 pipeline.lset(self._key, index, None)
                 for value in (value, pivot):
                     pipeline.linsert(self._key, 'BEFORE', None, value)
@@ -132,7 +139,7 @@ class RedisSet(_Iterable, _Base, collections.abc.MutableSet):
         super().__init__(redis, key, iterable)
         values = [json.dumps(value) for value in iterable]
         if values:
-            with self._pipeline(self._redis) as pipeline:
+            with self._pipeline() as pipeline:
                 pipeline.delete(self._key)
                 pipeline.sadd(self._key, *values)
 
@@ -177,7 +184,7 @@ class RedisDict(_Iterable, _Base, collections.abc.MutableMapping):
         """Initialize a RedisDict.  O(n)"""
         super().__init__(redis, key, **kwargs)
         if kwargs:
-            with self._pipeline(self._redis) as pipeline:
+            with self._pipeline() as pipeline:
                 pipeline.delete(self._key)
                 for key, value in kwargs.items():
                     pipeline.hset(self._key, key, json.dumps(value))
