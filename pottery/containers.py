@@ -16,6 +16,8 @@ import urllib.parse
 from redis import Redis
 from redis.exceptions import ResponseError
 
+from .exceptions import KeyExistsError
+
 
 
 class _Base:
@@ -67,9 +69,9 @@ class RedisList(_Base, collections.abc.MutableSequence):
         super().__init__(redis, key, iterable)
         values = [json.dumps(value) for value in iterable]
         if values:
-            with self._pipeline() as pipeline:
-                pipeline.delete(self._key)
-                pipeline.rpush(self._key, *values)
+            if self._redis.exists(self._key):
+                raise KeyExistsError(self._redis, self._key)
+            self._redis.rpush(self._key, *values)
 
     def __getitem__(self, index):
         """l.__getitem__(index) <==> l[index].  O(n)"""
@@ -139,9 +141,9 @@ class RedisSet(_Iterable, _Base, collections.abc.MutableSet):
         super().__init__(redis, key, iterable)
         values = [json.dumps(value) for value in iterable]
         if values:
-            with self._pipeline() as pipeline:
-                pipeline.delete(self._key)
-                pipeline.sadd(self._key, *values)
+            if self._redis.exists(self._key):
+                raise KeyExistsError(self._redis, self._key)
+            self._redis.sadd(self._key, *values)
 
     def __contains__(self, value):
         """s.__contains__(element) <==> element in s.  O(1)"""
@@ -188,8 +190,9 @@ class RedisDict(_Iterable, _Base, collections.abc.MutableMapping):
         """Initialize a RedisDict.  O(n)"""
         super().__init__(redis, key, **kwargs)
         if kwargs:
+            if self._redis.exists(self._key):
+                raise KeyExistsError(self._redis, self._key)
             with self._pipeline() as pipeline:
-                pipeline.delete(self._key)
                 for key, value in kwargs.items():
                     pipeline.hset(self._key, key, json.dumps(value))
 
