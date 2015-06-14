@@ -22,6 +22,14 @@ from .exceptions import KeyExistsError
 class _Base:
     _DEFAULT_REDIS_URL = 'http://localhost:6379/'
 
+    @staticmethod
+    def _encode(value):
+        return json.dumps(value)
+
+    @staticmethod
+    def _decode(value):
+        return json.loads(value.decode('utf-8'))
+
     def __init__(self, redis, key, *args, **kwargs):
         if redis is None:
             redis = Redis.from_url(self._DEFAULT_REDIS_URL)
@@ -44,7 +52,7 @@ class _Iterable:
         while True:
             cursor, iterable = scan(self._key, cursor=cursor)
             for value in iterable:
-                yield value
+                yield self._decode(value)
             if cursor == 0:
                 break
 
@@ -65,7 +73,7 @@ class RedisList(_Base, collections.abc.MutableSequence):
     def __init__(self, redis, key, iterable=tuple()):
         """Initialize a RedisList.  O(1)"""
         super().__init__(redis, key, iterable)
-        values = [json.dumps(value) for value in iterable]
+        values = [self._encode(value) for value in iterable]
         if values:
             if self._redis.exists(self._key):
                 raise KeyExistsError(self._redis, self._key)
@@ -76,12 +84,12 @@ class RedisList(_Base, collections.abc.MutableSequence):
         value = self._redis.lindex(self._key, index)
         if value is None:
             raise IndexError('list index out of range')
-        return json.loads(value.decode('utf-8'))
+        return self._decode(value)
 
     @raise_on_error
     def __setitem__(self, index, value):
         """l.__setitem__(index, value) <==> l[index] = value.  O(n)"""
-        self._redis.lset(self._key, index, json.dumps(value))
+        self._redis.lset(self._key, index, self._encode(value))
 
     @raise_on_error
     def __delitem__(self, index):
@@ -102,7 +110,7 @@ class RedisList(_Base, collections.abc.MutableSequence):
 
     def insert(self, index, value):
         """Insert an element into a RedisList before the given index.  O(n)"""
-        value = json.dumps(value)
+        value = self._encode(value)
         if index <= 0:
             self._redis.lpush(self._key, value)
         elif index < len(self):
@@ -114,7 +122,7 @@ class RedisList(_Base, collections.abc.MutableSequence):
             # insert the desired value and the original pivot value before the
             # value None, then to delete the value None.  More info:
             # http://redis.io/commands/linsert
-            pivot = json.dumps(self[index])
+            pivot = self._encode(self[index])
             with self._pipeline() as pipeline:
                 pipeline.lset(self._key, index, None)
                 for value in (value, pivot):
@@ -126,7 +134,7 @@ class RedisList(_Base, collections.abc.MutableSequence):
     def __repr__(self):
         """Return the string representation of a RedisList.  O(n)"""
         l = self._redis.lrange(self._key, 0, -1)
-        l = [json.loads(value.decode('utf-8')) for value in l]
+        l = [self._decode(value) for value in l]
         return self.__class__.__name__ + str(l)
 
 
@@ -137,7 +145,7 @@ class RedisSet(_Iterable, _Base, collections.abc.MutableSet):
     def __init__(self, redis, key, iterable=tuple()):
         """Initialize a RedisSet.  O(n)"""
         super().__init__(redis, key, iterable)
-        values = [json.dumps(value) for value in iterable]
+        values = [self._encode(value) for value in iterable]
         if values:
             if self._redis.exists(self._key):
                 raise KeyExistsError(self._redis, self._key)
@@ -145,7 +153,7 @@ class RedisSet(_Iterable, _Base, collections.abc.MutableSet):
 
     def __contains__(self, value):
         """s.__contains__(element) <==> element in s.  O(1)"""
-        return self._redis.sismember(self._key, json.dumps(value))
+        return self._redis.sismember(self._key, self._encode(value))
 
     def __iter__(self):
         """Iterate over the elements in a RedisSet.  O(n)"""
@@ -160,19 +168,19 @@ class RedisSet(_Iterable, _Base, collections.abc.MutableSet):
 
         This has no effect if the element is already present.
         """
-        self._redis.sadd(self._key, json.dumps(value))
+        self._redis.sadd(self._key, self._encode(value))
 
     def discard(self, value):
         """Remove an element from a RedisSet.  O(1)
 
         This has no effect if the element is not present.
         """
-        self._redis.srem(self._key, json.dumps(value))
+        self._redis.srem(self._key, self._encode(value))
 
     def __repr__(self):
         """Return the string representation of a RedisSet.  O(n)"""
         s = self._redis.smembers(self._key)
-        s = (json.loads(value.decode('utf-8')) for value in s)
+        s = (self._decode(value) for value in s)
         s = list(str(tuple(s)))
         if s[-2] == ',':
             del s[-2]
@@ -196,22 +204,23 @@ class RedisDict(_Iterable, _Base, collections.abc.MutableMapping):
                 raise KeyExistsError(self._redis, self._key)
             with self._pipeline() as pipeline:
                 for key, value in kwargs.items():
-                    pipeline.hset(self._key, key, json.dumps(value))
+                    key, value = self._encode(key), self._encode(value)
+                    pipeline.hset(self._key, key, value)
 
     def __getitem__(self, key):
         """d.__getitem__(key) <==> d[key].  O(1)"""
-        value = self._redis.hget(self._key, key)
+        value = self._redis.hget(self._key, self._encode(key))
         if value is None:
             raise KeyError(key)
-        return json.loads(value.decode('utf-8'))
+        return self._decode(value)
 
     def __setitem__(self, key, value):
         """d.__setitem__(key, value) <==> d[key] = value.  O(1)"""
-        self._redis.hset(self._key, key, json.dumps(value))
+        self._redis.hset(self._key, self._encode(key), self._encode(value))
 
     def __delitem__(self, key):
         """d.__delitem__(key) <==> del d[key].  O(1)"""
-        success = self._redis.hdel(self._key, key)
+        success = self._redis.hdel(self._key, self._encode(key))
         if not bool(success):
             raise KeyError(key)
 
@@ -226,5 +235,5 @@ class RedisDict(_Iterable, _Base, collections.abc.MutableMapping):
     def __repr__(self):
         """Return the string representation of a RedisDict.  O(n)"""
         d = self._redis.hgetall(self._key).items()
-        d = {k.decode('utf-8'): json.loads(v.decode('utf-8')) for k, v in d}
+        d = {self._decode(key): self._decode(value) for key, value in d}
         return self.__class__.__name__ + str(d)
