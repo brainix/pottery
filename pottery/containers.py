@@ -173,7 +173,11 @@ class RedisSet(_Iterable, _Base, collections.abc.MutableSet):
         """Return the string representation of a RedisSet.  O(n)"""
         s = self._redis.smembers(self._key)
         s = set(json.loads(value.decode('utf-8')) for value in s)
-        return self.__class__.__name__ + str(s)
+        s = list(str(tuple(s)))
+        if s[-2] == ',':
+            del s[-2]
+        s = ''.join(s)
+        return self.__class__.__name__ + s
 
 
 
