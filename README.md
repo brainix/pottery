@@ -12,10 +12,8 @@ use Python dicts and sets, then you already know how to use Pottery.
 
 First, set up your Redis client: :alien:
 
-    >>> import urllib.parse
     >>> from redis import Redis
-    >>> url = urllib.parse.urlparse('http://localhost:6379/')
-    >>> redis = Redis(host=url.hostname, port=url.port, password=url.password)
+    >>> redis = Redis.from_url('http://localhost:6379/')
 
 That was the hardest part. :grimacing:
 

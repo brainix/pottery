@@ -11,7 +11,6 @@ import collections.abc
 import contextlib
 import functools
 import json
-import urllib.parse
 
 from redis import Redis
 from redis.exceptions import ResponseError
@@ -25,8 +24,7 @@ class _Base:
 
     def __init__(self, redis, key, *args, **kwargs):
         if redis is None:
-            url = urllib.parse.urlparse(self._DEFAULT_REDIS_URL)
-            redis = Redis(host=url.hostname, port=url.port, password=url.password)
+            redis = Redis.from_url(self._DEFAULT_REDIS_URL)
         self._redis = redis
         self._key = key
 
@@ -180,6 +178,10 @@ class RedisSet(_Iterable, _Base, collections.abc.MutableSet):
             del s[-2]
         s = ''.join(s)
         return self.__class__.__name__ + s
+
+    def clear(self):
+        """Remove the elements in a RedisSet.  O(n)"""
+        self._redis.delete(self._key)
 
 
 
