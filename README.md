@@ -22,11 +22,12 @@ That was the hardest part. :grimacing:
 Create a `RedisDict`:
 
     >>> from pottery import RedisDict
-    >>> raj = RedisDict(redis, 'raj', job='computers', hobby='music')
+    >>> raj = RedisDict(job='computers', hobby='music', redis=redis, key='raj')
 
-The first argument to `RedisDict()` is your Redis client.  The second argument
-is the Redis key name for your dict.  Other than that, you can use your
-`RedisDict` the same way that you use any other Python dict:
+Notice the last two keyword arguments to `RedisDict()`:  The first is your
+Redis client.  The second is the Redis key name for your dict.  Other than
+that, you can use your `RedisDict` the same way that you use any other Python
+dict:
 
     >>> len(raj)
     2
@@ -35,28 +36,20 @@ is the Redis key name for your dict.  Other than that, you can use your
     >>> raj['vegetarian'] = True
     >>> raj['vegetarian']
     True
-    >>> raj['girlfriend']
-    Traceback (most recent call last):
-      File "<stdin>", line 1, in <module>
-      File "/Users/raj/Documents/Code/pottery/pottery/containers.py", line 82, in __getitem__
-        raise KeyError(key)
-    KeyError: 'girlfriend'
 
 ### Sets
 
 Create a `RedisSet`:
 
     >>> from pottery import RedisSet
-    >>> edible = RedisSet(redis, 'edible', ['tofu', 'avocado'])
+    >>> edible = RedisSet(['tofu', 'avocado'], redis=redis, key='edible')
 
-Again, the first argument to `RedisSet()` is your Redis client.  The second
-argument is the Redis key name for your set.  Other than that, you can use your
-`RedisSet` the same way that you use any other Python set:
+Again, notice the two keyword arguments to `RedisSet()`:  The first is your
+Redis client.  The second is the Redis key name for your set.  Other than that,
+you can use your `RedisSet` the same way that you use any other Python set:
 
     >>> len(edible)
     2
-    >>> 'tofu' in edible
-    True
     >>> 'bacon' in edible
     False
     >>> edible.add('strawberries')
