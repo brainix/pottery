@@ -38,28 +38,6 @@ class Base:
         return json.loads(value.decode('utf-8'))
 
     @classmethod
-    def _watch(cls):
-        def wrap1(func):
-            @functools.wraps(func)
-            def wrap2(self, *args, **kwargs):
-                for _ in range(cls._NUM_TRIES):
-                    try:
-                        original_redis = self.redis
-                        self.redis = self.redis.pipeline()
-                        self.redis.watch(self.key)
-                        value = func(self, *args, **kwargs)
-                        self.redis.execute()
-                        return value
-                    except WatchError:
-                        pass
-                    finally:
-                        self.redis = original_redis
-                else:
-                    raise TooManyTriesError(self.redis, self.key)
-            return wrap2
-        return wrap1
-
-    @classmethod
     def _default_redis(cls):
         url = os.environ.get('REDISCLOUD_URL', cls._DEFAULT_REDIS_URL)
         return Redis.from_url(url)
@@ -92,6 +70,31 @@ class Base:
         suffix = ''.join(random_char() for n in range(self._RANDOM_KEY_LENGTH))
         value = self._RANDOM_KEY_PREFIX + suffix
         return _random_key(tries - 1) if self.redis.exists(value) else value
+
+
+
+class Pipelined:
+    @classmethod
+    def _watch(cls):
+        def wrap1(func):
+            @functools.wraps(func)
+            def wrap2(self, *args, **kwargs):
+                for _ in range(cls._NUM_TRIES):
+                    try:
+                        original_redis = self.redis
+                        self.redis = self.redis.pipeline()
+                        self.redis.watch(self.key)
+                        value = func(self, *args, **kwargs)
+                        self.redis.execute()
+                        return value
+                    except WatchError:
+                        pass
+                    finally:
+                        self.redis = original_redis
+                else:
+                    raise TooManyTriesError(self.redis, self.key)
+            return wrap2
+        return wrap1
 
     @contextlib.contextmanager
     def _pipeline(self):

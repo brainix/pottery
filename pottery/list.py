@@ -13,11 +13,12 @@ import functools
 from redis import ResponseError
 
 from .base import Base
+from .base import Pipelined
 from .exceptions import KeyExistsError
 
 
 
-class RedisList(Base, collections.abc.MutableSequence):
+class RedisList(Pipelined, Base, collections.abc.MutableSequence):
     """Redis-backed container compatible with Python lists."""
 
     def raise_on_error(func):
@@ -34,7 +35,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         super().__init__(iterable, redis=redis, key=key)
         self._populate(iterable)
 
-    @Base._watch()
+    @Pipelined._watch()
     def _populate(self, iterable=tuple()):
         values = [self._encode(value) for value in iterable]
         if values:
@@ -72,7 +73,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         """Return the number of items in a RedisList.  O(1)"""
         return self.redis.llen(self.key)
 
-    @Base._watch()
+    @Pipelined._watch()
     def insert(self, index, value):
         """Insert an element into a RedisList before the given index.  O(n)"""
         value = self._encode(value)

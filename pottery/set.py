@@ -11,11 +11,12 @@ import collections.abc
 
 from .base import Base
 from .base import Iterable
+from .base import Pipelined
 from .exceptions import KeyExistsError
 
 
 
-class RedisSet(Iterable, Base, collections.abc.MutableSet):
+class RedisSet(Iterable, Pipelined, Base, collections.abc.MutableSet):
     """Redis-backed container compatible with Python sets."""
 
     def __init__(self, iterable=tuple(), *, redis=None, key=None):
@@ -23,7 +24,7 @@ class RedisSet(Iterable, Base, collections.abc.MutableSet):
         super().__init__(iterable, redis=redis, key=key)
         self._populate(iterable)
 
-    @Base._watch()
+    @Pipelined._watch()
     def _populate(self, iterable=tuple()):
         values = [self._encode(value) for value in iterable]
         if values:

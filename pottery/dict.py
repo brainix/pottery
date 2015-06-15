@@ -11,11 +11,12 @@ import collections.abc
 
 from .base import Base
 from .base import Iterable
+from .base import Pipelined
 from .exceptions import KeyExistsError
 
 
 
-class RedisDict(Iterable, Base, collections.abc.MutableMapping):
+class RedisDict(Iterable, Pipelined, Base, collections.abc.MutableMapping):
     """Redis-backed container compatible with Python dicts."""
 
     def __init__(self, *, redis=None, key=None, **kwargs):
@@ -23,7 +24,7 @@ class RedisDict(Iterable, Base, collections.abc.MutableMapping):
         super().__init__(redis=redis, key=key, **kwargs)
         self._populate(**kwargs)
 
-    @Base._watch()
+    @Pipelined._watch()
     def _populate(self, **kwargs):
         if kwargs:
             if self.redis.exists(self.key):
