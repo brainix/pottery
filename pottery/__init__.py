@@ -6,7 +6,7 @@
 #-----------------------------------------------------------------------------#
 
 __title__ = 'pottery'
-__version__ = '0.9'
+__version__ = '0.10'
 __author__ = 'Rajiv Bakulesh Shah'
 __license__ = 'Apache 2.0'
 __copyright__ = 'Copyright (c) 2015, Rajiv Bakulesh Shah'
