@@ -79,7 +79,7 @@ class Pipelined:
         def wrap1(func):
             @functools.wraps(func)
             def wrap2(self, *args, **kwargs):
-                for _ in range(cls._NUM_TRIES):
+                for _ in range(super()._NUM_TRIES):
                     try:
                         original_redis = self.redis
                         self.redis = self.redis.pipeline()
