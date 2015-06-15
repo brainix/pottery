@@ -10,6 +10,8 @@
 import collections.abc
 import functools
 
+from redis import ResponseError
+
 from .base import Base
 from .exceptions import KeyExistsError
 
@@ -30,10 +32,15 @@ class RedisList(Base, collections.abc.MutableSequence):
     def __init__(self, iterable=tuple(), *, redis=None, key=None):
         """Initialize a RedisList.  O(1)"""
         super().__init__(iterable, redis=redis, key=key)
+        self._populate(iterable)
+
+    @Base._watch()
+    def _populate(self, iterable=tuple()):
         values = [self._encode(value) for value in iterable]
         if values:
             if self.redis.exists(self.key):
                 raise KeyExistsError(self.redis, self.key)
+            self.redis.multi()
             self.redis.rpush(self.key, *values)
 
     def __getitem__(self, index):
@@ -65,10 +72,12 @@ class RedisList(Base, collections.abc.MutableSequence):
         """Return the number of items in a RedisList.  O(1)"""
         return self.redis.llen(self.key)
 
+    @Base._watch()
     def insert(self, index, value):
         """Insert an element into a RedisList before the given index.  O(n)"""
         value = self._encode(value)
         if index <= 0:
+            self.redis.multi()
             self.redis.lpush(self.key, value)
         elif index < len(self):
             # This is monumentally stupid.  Python's list API requires us to
@@ -80,12 +89,13 @@ class RedisList(Base, collections.abc.MutableSequence):
             # value None, then to delete the value None.  More info:
             # http://redis.io/commands/linsert
             pivot = self._encode(self[index])
-            with self._pipeline() as pipeline:
-                pipeline.lset(self.key, index, None)
-                for value in (value, pivot):
-                    pipeline.linsert(self.key, 'BEFORE', None, value)
-                pipeline.lrem(self.key, None, num=1)
+            self.redis.multi()
+            self.redis.lset(self.key, index, None)
+            for value in (value, pivot):
+                self.redis.linsert(self.key, 'BEFORE', None, value)
+            self.redis.lrem(self.key, None, num=1)
         else:
+            self.redis.multi()
             self.redis.rpush(self.key, value)
 
     def __repr__(self):

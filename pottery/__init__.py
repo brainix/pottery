@@ -14,6 +14,7 @@ __copyright__ = 'Copyright (c) 2015, Rajiv Bakulesh Shah'
 from .exceptions import PotteryError
 from .exceptions import KeyExistsError
 from .exceptions import RandomKeyError
+from .exceptions import TooManyTriesError
 
 from .dict import RedisDict
 from .list import RedisList

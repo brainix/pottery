@@ -9,24 +9,29 @@
 
 import collections.abc
 
+from .base import Base
 from .base import Iterable
 from .exceptions import KeyExistsError
 
 
 
-class RedisDict(Iterable, collections.abc.MutableMapping):
+class RedisDict(Iterable, Base, collections.abc.MutableMapping):
     """Redis-backed container compatible with Python dicts."""
 
     def __init__(self, *, redis=None, key=None, **kwargs):
         """Initialize a RedisDict.  O(n)"""
         super().__init__(redis=redis, key=key, **kwargs)
+        self._populate(**kwargs)
+
+    @Base._watch()
+    def _populate(self, **kwargs):
         if kwargs:
             if self.redis.exists(self.key):
                 raise KeyExistsError(self.redis, self.key)
-            with self._pipeline() as pipeline:
-                for key, value in kwargs.items():
-                    key, value = self._encode(key), self._encode(value)
-                    pipeline.hset(self.key, key, value)
+            self.redis.multi()
+            for key, value in kwargs.items():
+                key, value = self._encode(key), self._encode(value)
+                self.redis.hset(self.key, key, value)
 
     def __getitem__(self, key):
         """d.__getitem__(key) <==> d[key].  O(1)"""

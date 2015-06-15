@@ -32,3 +32,8 @@ class RandomKeyError(PotteryError):
 
     def __str__(self):
         return str(self._redis)
+
+
+
+class TooManyTriesError(PotteryError):
+    """Can't complete a Redis transaction; tried too many times."""

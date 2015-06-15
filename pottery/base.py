@@ -16,6 +16,10 @@ import random
 import string
 
 from redis import Redis
+from redis import WatchError
+
+from .exceptions import RandomKeyError
+from .exceptions import TooManyTriesError
 
 
 
@@ -32,6 +36,28 @@ class Base:
     @staticmethod
     def _decode(value):
         return json.loads(value.decode('utf-8'))
+
+    @classmethod
+    def _watch(cls):
+        def wrap1(func):
+            @functools.wraps(func)
+            def wrap2(self, *args, **kwargs):
+                for _ in range(cls._NUM_TRIES):
+                    try:
+                        original_redis = self.redis
+                        self.redis = self.redis.pipeline()
+                        self.redis.watch(self.key)
+                        value = func(self, *args, **kwargs)
+                        self.redis.execute()
+                        return value
+                    except WatchError:
+                        pass
+                    finally:
+                        self.redis = original_redis
+                else:
+                    raise TooManyTriesError(self.redis, self.key)
+            return wrap2
+        return wrap1
 
     @classmethod
     def _default_redis(cls):
@@ -77,7 +103,7 @@ class Base:
 
 
 
-class Iterable(Base, metaclass=abc.ABCMeta):
+class Iterable(metaclass=abc.ABCMeta):
     def __iter__(self):
         """Iterate over the items in a Redis-backed container.  O(n)"""
         cursor = 0

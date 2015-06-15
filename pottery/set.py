@@ -9,21 +9,27 @@
 
 import collections.abc
 
+from .base import Base
 from .base import Iterable
 from .exceptions import KeyExistsError
 
 
 
-class RedisSet(Iterable, collections.abc.MutableSet):
+class RedisSet(Iterable, Base, collections.abc.MutableSet):
     """Redis-backed container compatible with Python sets."""
 
     def __init__(self, iterable=tuple(), *, redis=None, key=None):
         """Initialize a RedisSet.  O(n)"""
         super().__init__(iterable, redis=redis, key=key)
+        self._populate(iterable)
+
+    @Base._watch()
+    def _populate(self, iterable=tuple()):
         values = [self._encode(value) for value in iterable]
         if values:
             if self.redis.exists(self.key):
                 raise KeyExistsError(self.redis, self.key)
+            self.redis.multi()
             self.redis.sadd(self.key, *values)
 
     def __contains__(self, value):
