@@ -14,6 +14,7 @@ import json
 import os
 import random
 import string
+import threading
 
 from redis import Redis
 from redis import WatchError
@@ -80,6 +81,34 @@ class Base:
         suffix = ''.join(random_char() for n in range(self._RANDOM_KEY_LENGTH))
         value = self._RANDOM_KEY_PREFIX + suffix
         return _random_key(tries - 1) if self.redis.exists(value) else value
+
+
+
+class Lockable:
+    _lock = threading.Lock()
+    _count = {}
+    _locks = {}
+
+    def __init__(self, *args, redis=None, key=None, **kwargs):
+        super().__init__(self, *args, redis=redis, key=key, **kwargs)
+        with self._lock:
+            self._count[self._id()] = self._count.get(self._id(), 0) + 1
+            if self._count[self._id()] == 1:
+                self._locks[self._id()] = threading.Lock()
+
+    def __del__(self):
+        with self._lock:
+            self._count[self._id()] -= 1
+            if self._count[self._id()] == 0:
+                del self._count[self._id()]
+                del self._locks[self._id()]
+
+    def _id(self):
+        return (self.redis, self.key)
+
+    @property
+    def lock(self):
+        return self._locks[self._id()]
 
 
 

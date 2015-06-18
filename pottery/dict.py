@@ -11,12 +11,13 @@ import collections.abc
 
 from .base import Base
 from .base import Iterable
+from .base import Lockable
 from .base import Pipelined
 from .exceptions import KeyExistsError
 
 
 
-class RedisDict(Iterable, Pipelined, Base, collections.abc.MutableMapping):
+class RedisDict(Iterable, Pipelined, Lockable, Base, collections.abc.MutableMapping):
     """Redis-backed container compatible with Python dicts."""
 
     def __init__(self, *, redis=None, key=None, **kwargs):

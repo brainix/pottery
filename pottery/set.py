@@ -11,12 +11,13 @@ import collections.abc
 
 from .base import Base
 from .base import Iterable
+from .base import Lockable
 from .base import Pipelined
 from .exceptions import KeyExistsError
 
 
 
-class RedisSet(Iterable, Pipelined, Base, collections.abc.MutableSet):
+class RedisSet(Iterable, Pipelined, Lockable, Base, collections.abc.MutableSet):
     """Redis-backed container compatible with Python sets."""
 
     def __init__(self, iterable=tuple(), *, redis=None, key=None):

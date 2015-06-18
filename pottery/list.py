@@ -13,12 +13,13 @@ import functools
 from redis import ResponseError
 
 from .base import Base
+from .base import Lockable
 from .base import Pipelined
 from .exceptions import KeyExistsError
 
 
 
-class RedisList(Pipelined, Base, collections.abc.MutableSequence):
+class RedisList(Pipelined, Lockable, Base, collections.abc.MutableSequence):
     """Redis-backed container compatible with Python lists."""
 
     def raise_on_error(func):
