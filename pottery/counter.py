@@ -36,11 +36,11 @@ class RedisCounter(RedisDict, collections.Counter):
 
     def update(self, iterable=tuple(), **kwargs):
         'Like dict.update() but add counts instead of replacing them.  O(n)'
-        return self._update(iterable=iterable, sign=+1, **kwargs)
+        self._update(iterable=iterable, sign=+1, **kwargs)
 
     def subtract(self, iterable=tuple(), **kwargs):
         'Like dict.update() but subtracts counts instead of replacing them.  O(n)'
-        return self._update(iterable=iterable, sign=-1, **kwargs)
+        self._update(iterable=iterable, sign=-1, **kwargs)
 
     def __getitem__(self, key):
         '''c.__getitem__(key) <==> c.get(key, 0).  O(1)
