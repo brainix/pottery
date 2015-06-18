@@ -12,7 +12,6 @@ import itertools
 
 from .base import Base
 from .base import Iterable
-from .base import Lockable
 from .base import Pipelined
 from .exceptions import KeyExistsError
 
@@ -24,7 +23,10 @@ class RedisDict(Iterable, Base, collections.abc.MutableMapping):
     def __init__(self, iterable=tuple(), *, redis=None, key=None, **kwargs):
         'Initialize a RedisDict.  O(n)'
         super().__init__(redis=redis, key=key, **kwargs)
-        self.update(iterable, **kwargs)
+        if iterable or kwargs:
+            if self.redis.exists(self.key):
+                raise KeyExistsError(self.redis, self.key)
+            self.update(iterable, **kwargs)
 
     # Methods required by collections.abc.MutableMapping:
 
@@ -52,7 +54,7 @@ class RedisDict(Iterable, Base, collections.abc.MutableMapping):
         'Return the number of items in a RedisDict.  O(1)'
         return self.redis.hlen(self.key)
 
-    # Methods required by Raj's sanity:
+    # Methods required for Raj's sanity:
 
     def __repr__(self):
         'Return the string representation of a RedisDict.  O(n)'
@@ -64,10 +66,9 @@ class RedisDict(Iterable, Base, collections.abc.MutableMapping):
 
     @Pipelined._watch()
     def update(self, iterable=tuple(), **kwargs):
-        if kwargs:
-            if self.redis.exists(self.key):
-                raise KeyExistsError(self.redis, self.key)
-            self.redis.multi()
-            for key, value in itertools.chain(iterable, kwargs.items()):
-                key, value = self._encode(key), self._encode(value)
-                self.redis.hset(self.key, key, value)
+        to_set = {}
+        for key, value in itertools.chain(iterable, kwargs.items()):
+            to_set[self._encode(key)] = self._encode(value)
+        self.redis.multi()
+        if to_set:
+            self.redis.hmset(self.key, to_set)

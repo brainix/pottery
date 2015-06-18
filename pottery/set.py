@@ -11,7 +11,6 @@ import collections.abc
 
 from .base import Base
 from .base import Iterable
-from .base import Lockable
 from .base import Pipelined
 from .exceptions import KeyExistsError
 
@@ -61,7 +60,7 @@ class RedisSet(Iterable, Base, collections.abc.MutableSet):
         '''
         self.redis.srem(self.key, self._encode(value))
 
-    # Methods required by Raj's sanity:
+    # Methods required for Raj's sanity:
 
     def __repr__(self):
         'Return the string representation of a RedisSet.  O(n)'

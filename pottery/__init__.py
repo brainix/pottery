@@ -16,6 +16,7 @@ from .exceptions import KeyExistsError
 from .exceptions import RandomKeyError
 from .exceptions import TooManyTriesError
 
+from .counter import RedisCounter
 from .dict import RedisDict
 from .list import RedisList
 from .set import RedisSet

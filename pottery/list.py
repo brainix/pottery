@@ -13,7 +13,6 @@ import functools
 from redis import ResponseError
 
 from .base import Base
-from .base import Lockable
 from .base import Pipelined
 from .exceptions import KeyExistsError
 
@@ -102,7 +101,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             self.redis.multi()
             self.redis.rpush(self.key, value)
 
-    # Methods required by Raj's sanity:
+    # Methods required for Raj's sanity:
 
     def __repr__(self):
         'Return the string representation of a RedisList.  O(n)'
