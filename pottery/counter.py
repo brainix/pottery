@@ -9,7 +9,6 @@
 
 import collections
 import contextlib
-import functools
 import itertools
 
 from .base import Pipelined
