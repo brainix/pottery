@@ -48,6 +48,10 @@ class Base:
         self.redis = redis
         self.key = key
 
+    def __del__(self):
+        if self.key.startswith(self._RANDOM_KEY_PREFIX):
+            self.redis.delete(self.key)
+
     def __eq__(self, other):
         if type(self) == type(other) and self.redis == other.redis and \
            self.key == other.key:
@@ -90,13 +94,14 @@ class Lockable:
     _locks = {}
 
     def __init__(self, *args, redis=None, key=None, **kwargs):
-        super().__init__(self, *args, redis=redis, key=key, **kwargs)
+        super().__init__(*args, redis=redis, key=key, **kwargs)
         with self._lock:
             self._count[self._id()] = self._count.get(self._id(), 0) + 1
             if self._count[self._id()] == 1:
                 self._locks[self._id()] = threading.Lock()
 
     def __del__(self):
+        super().__del__()
         with self._lock:
             self._count[self._id()] -= 1
             if self._count[self._id()] == 0:

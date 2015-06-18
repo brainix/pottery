@@ -22,18 +22,16 @@ That was the hardest part. :grimacing:
 Create a `RedisDict`:
 
     >>> from pottery import RedisDict
-    >>> raj = RedisDict(job='computers', hobby='music', redis=redis, key='raj')
+    >>> raj = RedisDict(redis=redis, key='raj')
 
-Notice the last two keyword arguments to `RedisDict()`:  The first is your
-Redis client.  The second is the Redis key name for your dict.  Other than
-that, you can use your `RedisDict` the same way that you use any other Python
-dict:
+Notice the two keyword arguments to `RedisDict()`:  The first is your Redis
+client.  The second is the Redis key name for your dict.  Other than that, you
+can use your `RedisDict` the same way that you use any other Python dict:
 
+    >>> raj['hobby'] = 'music'
+    >>> raj['vegetarian'] = True
     >>> len(raj)
     2
-    >>> raj['hobby']
-    'music'
-    >>> raj['vegetarian'] = True
     >>> raj['vegetarian']
     True
 
@@ -42,16 +40,15 @@ dict:
 Create a `RedisSet`:
 
     >>> from pottery import RedisSet
-    >>> edible = RedisSet(['tofu', 'avocado'], redis=redis, key='edible')
+    >>> edible = RedisSet(redis=redis, key='edible')
 
 Again, notice the two keyword arguments to `RedisSet()`:  The first is your
 Redis client.  The second is the Redis key name for your set.  Other than that,
 you can use your `RedisSet` the same way that you use any other Python set:
 
+    >>> edible.add('tofu')
+    >>> edible.add('avocado')
     >>> len(edible)
     2
     >>> 'bacon' in edible
     False
-    >>> edible.add('strawberries')
-    >>> 'strawberries' in edible
-    True
