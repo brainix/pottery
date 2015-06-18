@@ -18,6 +18,7 @@ import string
 from redis import Redis
 from redis import WatchError
 
+from . import monkey
 from .exceptions import RandomKeyError
 from .exceptions import TooManyTriesError
 
@@ -45,6 +46,15 @@ class Base:
     def __init__(self, *args, redis=None, key=None, **kwargs):
         self.redis = redis
         self.key = key
+
+    def __eq__(self, other):
+        if type(self) == type(other) and self.redis == other.redis and \
+           self.key == other.key:
+            return True
+        return super().__eq__(other)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     @property
     def redis(self):
