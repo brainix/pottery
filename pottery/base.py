@@ -25,7 +25,7 @@ from .exceptions import TooManyTriesError
 
 
 
-class Base:
+class Common:
     _DEFAULT_REDIS_URL = 'http://localhost:6379/'
     _NUM_TRIES = 3
     _RANDOM_KEY_PREFIX = 'pottery-'
@@ -150,9 +150,21 @@ class Pipelined:
 
 
 
+class Clearable:
+    def clear(self):
+        'Remove the elements in a Redis-backed container.  O(n)'
+        self.redis.delete(self.key)
+
+
+
+class Base(Clearable, Pipelined, Lockable, Common):
+    ...
+
+
+
 class Iterable(metaclass=abc.ABCMeta):
     def __iter__(self):
-        """Iterate over the items in a Redis-backed container.  O(n)"""
+        'Iterate over the items in a Redis-backed container.  O(n)'
         cursor = 0
         while True:
             cursor, iterable = self._scan(self.key, cursor=cursor)
