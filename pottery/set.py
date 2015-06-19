@@ -47,17 +47,11 @@ class RedisSet(Iterable, Base, collections.abc.MutableSet):
         return self.redis.scard(self.key)
 
     def add(self, value):
-        '''Add an element to a RedisSet.  O(1)
-
-        This has no effect if the element is already present.
-        '''
+        'Add an element to a RedisSet.  O(1)'
         self.redis.sadd(self.key, self._encode(value))
 
     def discard(self, value):
-        '''Remove an element from a RedisSet.  O(1)
-
-        This has no effect if the element is not present.
-        '''
+        'Remove an element from a RedisSet.  O(1)'
         self.redis.srem(self.key, self._encode(value))
 
     # Methods required for Raj's sanity:
@@ -71,3 +65,27 @@ class RedisSet(Iterable, Base, collections.abc.MutableSet):
             del s[-2]
         s = ''.join(s)
         return self.__class__.__name__ + s
+
+    # Method overrides:
+
+    # From collections.abc.MutableSet:
+    def pop(self):
+        'Remove and return an element from a RedisSet().  O(1)'
+        value = self.redis.spop(self.key)
+        if value is None:
+            raise KeyError('pop from an empty set')
+        return self._decode(value)
+
+    # From collections.abc.MutableSet:
+    def remove(self, value):
+        'Remove an element from a RedisSet().  O(1)'
+        count = self.redis.srem(self.key, self._encode(value))
+        if count is 0:
+            raise KeyError(value)
+
+    # From collections.abc.Set:
+    def isdisjoint(self, other):
+        'Return True if two sets have a null intersection.  O(n)'
+        if isinstance(other, self.__class__) and self.redis == other.redis:
+            return len(self.redis.sinter(self.key, other.key)) is 0
+        return super().isdisjoint(other)

@@ -64,6 +64,7 @@ class RedisDict(Iterable, Base, collections.abc.MutableMapping):
 
     # Method overrides:
 
+    # From collections.abc.MutableMapping:
     @Pipelined._watch()
     def update(self, iterable=tuple(), **kwargs):
         to_set = {}
@@ -72,3 +73,8 @@ class RedisDict(Iterable, Base, collections.abc.MutableMapping):
         self.redis.multi()
         if to_set:
             self.redis.hmset(self.key, to_set)
+
+    # From collections.abc.Mapping:
+    def __contains__(self, key):
+        'd.__contains__(key) <==> key in d.  O(1)'
+        return bool(self.redis.hexists(self.key, self._encode(key)))
