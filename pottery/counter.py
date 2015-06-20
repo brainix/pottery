@@ -43,19 +43,13 @@ class RedisCounter(RedisDict, collections.Counter):
         self._update(iterable=iterable, sign=-1, **kwargs)
 
     def __getitem__(self, key):
-        '''c.__getitem__(key) <==> c.get(key, 0).  O(1)
-
-        This has no effect if the key is not present.
-        '''
+        'c.__getitem__(key) <==> c.get(key, 0).  O(1)'
         with contextlib.suppress(KeyError):
             return super().__getitem__(key)
         return super().__missing__(key)
 
     def __delitem__(self, key):
-        '''c.__delitem__(key) <==> del c[key].  O(1)
-
-        This has no effect if the key is not present.
-        '''
+        'c.__delitem__(key) <==> del c[key].  O(1)'
         with contextlib.suppress(KeyError):
             super().__delitem__(key)
 
@@ -71,27 +65,27 @@ class RedisCounter(RedisDict, collections.Counter):
         return func(counter, other)
 
     def __add__(self, other):
-        "Add our counts to other's counts, but keep only counts > 0.  O(n)"
+        "Return the addition our counts to other's counts, but keep only counts > 0.  O(n)"
         return self._math_op(other, func=collections.Counter.__add__)
 
     def __sub__(self, other):
-        "Subtract other's counts from our counts, but keep only counts > 0.  O(n)"
+        "Return the subtraction other's counts from our counts, but keep only counts > 0.  O(n)"
         return self._math_op(other, func=collections.Counter.__sub__)
 
     def __or__(self, other):
-        "Max of our counts vs. other's counts (union), but keep only counts > 0.  O(n)"
+        "Return the max of our counts vs. other's counts (union), but keep only counts > 0.  O(n)"
         return self._math_op(other, func=collections.Counter.__or__)
 
     def __and__(self, other):
-        "Min of our counts vs. other's counts (intersection) but keep only counts > 0.  O(n)"
+        "Return the min of our counts vs. other's counts (intersection) but keep only counts > 0.  O(n)"
         return self._math_op(other, func=collections.Counter.__and__)
 
     def __pos__(self, other):
-        'Our counts > 0.  O(n)'
+        'Return our counts > 0.  O(n)'
         return self._math_op(other, func=collections.Counter.__pos__)
 
     def __neg__(self, other):
-        'Absolute value of our counts < 0.  O(n)'
+        'Return the absolute value of our counts < 0.  O(n)'
         return self._math_op(other, func=collections.Counter.__neg__)
 
     @Pipelined._watch()
