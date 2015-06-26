@@ -41,7 +41,7 @@ class Common:
 
     @classmethod
     def _default_redis(cls):
-        url = os.environ.get('REDISCLOUD_URL', cls._DEFAULT_REDIS_URL)
+        url = os.environ.get('REDIS_URL', cls._DEFAULT_REDIS_URL)
         return Redis.from_url(url)
 
     def __init__(self, *args, redis=None, key=None, **kwargs):
