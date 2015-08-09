@@ -26,13 +26,17 @@ class ListTests(TestCase):
         assert tuple(squares[-3:]) == (9, 16, 25)
         assert tuple(squares[:]) == (1, 4, 9, 16, 25)
         assert tuple(squares + [36, 49, 64, 81, 100]) == (1, 4, 9, 16, 25, 36, 49, 64, 81, 100)
+
+    def test_mutability_and_append(self):
         cubes = RedisList((1, 8, 27, 65, 125))
         cubes[3] = 64
         assert tuple(cubes) == (1, 8, 27, 64, 125)
         cubes.append(216)
         cubes.append(7 ** 3)
         assert tuple(cubes) == (1, 8, 27, 64, 125, 216, 343)
-        letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+
+    def test_slices(self):
+        letters = RedisList(('a', 'b', 'c', 'd', 'e', 'f', 'g'))
         assert tuple(letters) == ('a', 'b', 'c', 'd', 'e', 'f', 'g')
         letters[2:5] = ['C', 'D', 'E']
         assert tuple(letters) == ('a', 'b', 'C', 'D', 'E', 'f', 'g')
@@ -40,8 +44,12 @@ class ListTests(TestCase):
         assert tuple(letters) == ('a', 'b', 'f', 'g')
         letters[:] = []
         assert tuple(letters) == tuple()
+
+    def test_len(self):
         letters = RedisList(('a', 'b', 'c', 'd'))
         assert len(letters) == 4
+
+    def test_nesting(self):
         a = ['a', 'b', 'c']
         n = [1, 2, 3]
         x = RedisList((a, n))

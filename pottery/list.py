@@ -72,7 +72,20 @@ class RedisList(Base, collections.abc.MutableSequence):
     @_raise_on_error
     def __setitem__(self, index, value):
         'l.__setitem__(index, value) <==> l[index] = value.  O(n)'
-        self.redis.lset(self.key, index, self._encode(value))
+        try:
+            self.redis.lset(self.key, index, self._encode(value))
+        except ResponseError:
+            with self._pipeline() as pipeline:
+                indices, values = self._slice_to_indices(index), value
+                values = [self._encode(value) for value in values]
+                for index, value in zip(indices, values):
+                    pipeline.lset(self.key, index, value)
+                indices, num = indices[len(values):], 0
+                for index in indices:
+                    pipeline.lset(self.key, index, None)
+                    num += 1
+                if num:
+                    pipeline.lrem(self.key, None, num=num)
 
     @_raise_on_error
     def __delitem__(self, index):
@@ -84,11 +97,12 @@ class RedisList(Base, collections.abc.MutableSequence):
         # None, then to delete the value None.  More info:
         # http://redis.io/commands/lrem
         with self._pipeline() as pipeline:
-            indices = self._slice_to_indices(index)
-            indices = sorted(indices, reverse=True)
+            indices, num = self._slice_to_indices(index), 0
             for index in indices:
                 pipeline.lset(self.key, index, None)
-                pipeline.lrem(self.key, None, num=1)
+                num += 1
+            if num:
+                pipeline.lrem(self.key, None, num=num)
 
     def __len__(self):
         'Return the number of items in a RedisList.  O(1)'
