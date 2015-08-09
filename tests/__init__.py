@@ -4,20 +4,7 @@
 #   Copyright (c) 2015, Rajiv Bakulesh Shah.                                  #
 #   All rights reserved.                                                      #
 #-----------------------------------------------------------------------------#
+'''Run these tests on the command line with:
 
-__title__ = 'pottery'
-__version__ = '0.20'
-__author__ = 'Rajiv Bakulesh Shah'
-__license__ = 'Apache 2.0'
-__copyright__ = 'Copyright (c) 2015, Rajiv Bakulesh Shah'
-
-from .exceptions import PotteryError
-from .exceptions import KeyExistsError
-from .exceptions import RandomKeyError
-from .exceptions import TooManyTriesError
-
-from .counter import RedisCounter
-from .deque import RedisDeque
-from .dict import RedisDict
-from .list import RedisList
-from .set import RedisSet
+    $ python -W ignore -m unittest discover --start-directory tests
+'''

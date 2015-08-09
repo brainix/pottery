@@ -8,7 +8,7 @@
 
 
 class PotteryError(Exception):
-    """Base exception class."""
+    'Base exception class.'
 
     def __init__(self, redis, key):
         self._redis = redis
@@ -20,7 +20,7 @@ class PotteryError(Exception):
 
 
 class KeyExistsError(PotteryError):
-    """Initializing a container on a Redis key that already exists."""
+    'Initializing a container on a Redis key that already exists.'
 
     def __str__(self):
         return self._key
@@ -28,7 +28,7 @@ class KeyExistsError(PotteryError):
 
 
 class RandomKeyError(PotteryError):
-    """Can't create a random Redis key; all of our attempts already exist."""
+    "Can't create a random Redis key; all of our attempts already exist."
 
     def __str__(self):
         return str(self._redis)
@@ -36,4 +36,4 @@ class RandomKeyError(PotteryError):
 
 
 class TooManyTriesError(PotteryError):
-    """Can't complete a Redis transaction; tried too many times."""
+    "Can't complete a Redis transaction; tried too many times."

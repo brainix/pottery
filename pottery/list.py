@@ -9,6 +9,7 @@
 
 import collections.abc
 import functools
+import itertools
 
 from redis import ResponseError
 
@@ -30,6 +31,16 @@ class RedisList(Base, collections.abc.MutableSequence):
                 raise IndexError('list assignment index out of range')
         return wrap
 
+    def _slice_to_indices(self, slice_or_index):
+        try:
+            start = 0 if slice_or_index.start is None else slice_or_index.start
+            stop = len(self) if slice_or_index.stop is None else slice_or_index.stop
+            step = 1 if slice_or_index.step is None else slice_or_index.step
+            indices = range(start, stop, step)
+        except AttributeError:
+            indices = (slice_or_index,)
+        return indices
+
     def __init__(self, iterable=tuple(), *, redis=None, key=None):
         'Initialize a RedisList.  O(1)'
         super().__init__(iterable, redis=redis, key=key)
@@ -48,10 +59,15 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def __getitem__(self, index):
         'l.__getitem__(index) <==> l[index].  O(n)'
-        value = self.redis.lindex(self.key, index)
-        if value is None:
-            raise IndexError('list index out of range')
-        return self._decode(value)
+        try:
+            value = self.redis.lindex(self.key, index)
+            if value is None:
+                raise IndexError('list index out of range')
+            return self._decode(value)
+        except ResponseError:
+            indices = self._slice_to_indices(index)
+            values = self.redis.lrange(self.key, indices[0], indices[-1])
+            return [self._decode(value) for value in values]
 
     @_raise_on_error
     def __setitem__(self, index, value):
@@ -68,8 +84,11 @@ class RedisList(Base, collections.abc.MutableSequence):
         # None, then to delete the value None.  More info:
         # http://redis.io/commands/lrem
         with self._pipeline() as pipeline:
-            pipeline.lset(self.key, index, None)
-            pipeline.lrem(self.key, None, num=1)
+            indices = self._slice_to_indices(index)
+            indices = sorted(indices, reverse=True)
+            for index in indices:
+                pipeline.lset(self.key, index, None)
+                pipeline.lrem(self.key, None, num=1)
 
     def __len__(self):
         'Return the number of items in a RedisList.  O(1)'
@@ -102,6 +121,17 @@ class RedisList(Base, collections.abc.MutableSequence):
             self.redis.rpush(self.key, value)
 
     # Methods required for Raj's sanity:
+
+    def sort(self, key=None, reverse=False):
+        'Sort a RedisList in place.  O(n)'
+        if key is not None:
+            raise NotImplementedError('sorting by key not implemented')
+        self.redis.sort(self.key, desc=reverse, store=self.key)
+
+    def __add__(self, other):
+        'Append the items in other to a RedisList.  O(1)'
+        iterable = itertools.chain(self, other)
+        return self.__class__(iterable=iterable, redis=self.redis)
 
     def __repr__(self):
         'Return the string representation of a RedisList.  O(n)'
