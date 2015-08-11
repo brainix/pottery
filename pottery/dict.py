@@ -8,6 +8,7 @@
 
 
 import collections.abc
+import contextlib
 import itertools
 
 from .base import Base
@@ -68,6 +69,8 @@ class RedisDict(Iterable, Base, collections.abc.MutableMapping):
     @Pipelined._watch()
     def update(self, iterable=tuple(), **kwargs):
         to_set = {}
+        with contextlib.suppress(AttributeError):
+            iterable = iterable.items()
         for key, value in itertools.chain(iterable, kwargs.items()):
             to_set[self._encode(key)] = self._encode(value)
         self.redis.multi()
