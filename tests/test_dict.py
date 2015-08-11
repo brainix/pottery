@@ -25,7 +25,7 @@ class DictTests(TestCase):
         del tel['sape']
         tel['irv'] = 4127
         assert tel == {'guido': 4127, 'irv': 4127, 'jack': 4098}
-        assert sorted(tel.keys()) == ['guido', 'irv', 'jack']
+        assert sorted(tel) == ['guido', 'irv', 'jack']
         assert 'guido' in tel
         assert not 'jack' not in tel
 
@@ -76,19 +76,19 @@ class DictTests(TestCase):
 
     def test_key_deletion(self):
         a = RedisDict(one=1, two=2, three=3)
-        assert sorted(a.keys()) == ['one', 'three', 'two']
+        assert sorted(a) == ['one', 'three', 'two']
         a['four'] = 4
-        assert sorted(a.keys()) == ['four', 'one', 'three', 'two']
+        assert sorted(a) == ['four', 'one', 'three', 'two']
         with self.assertRaises(KeyError):
             del a['five']
         del a['four']
-        assert sorted(a.keys()) == ['one', 'three', 'two']
+        assert sorted(a) == ['one', 'three', 'two']
         del a['three']
-        assert sorted(a.keys()) == ['one', 'two']
+        assert sorted(a) == ['one', 'two']
         del a['two']
-        assert sorted(a.keys()) == ['one']
+        assert sorted(a) == ['one']
         del a['one']
-        assert sorted(a.keys()) == []
+        assert sorted(a) == []
         with self.assertRaises(KeyError):
             del a['one']
 
@@ -105,11 +105,11 @@ class DictTests(TestCase):
 
     def test_clear(self):
         a = RedisDict(one=1, two=2, three=3)
-        assert sorted(a.keys()) == ['one', 'three', 'two']
+        assert sorted(a) == ['one', 'three', 'two']
         a.clear()
-        assert sorted(a.keys()) == []
+        assert sorted(a) == []
         a.clear()
-        assert sorted(a.keys()) == []
+        assert sorted(a) == []
 
     def test_get(self):
         a = RedisDict(one=1, two=2, three=3)
