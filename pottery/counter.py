@@ -24,11 +24,16 @@ class RedisCounter(RedisDict, collections.Counter):
     @Pipelined._watch()
     def _update(self, iterable=tuple(), *, sign=+1, **kwargs):
         to_set = {}
-        for key in iterable:
-            to_set[key] = to_set.get(key, self[key]) + sign
+        try:
+            for key, value in iterable.items():
+                to_set[key] = sign * value
+        except AttributeError:
+            for key in iterable:
+                to_set[key] = to_set.get(key, self[key]) + sign
         for key, value in kwargs.items():
             original = self[key] if to_set.get(key, 0) is 0 else to_set[key]
             to_set[key] = original + sign * value
+        to_set = {key: self[key] + value for key, value in to_set.items()}
         to_set = {self._encode(k): self._encode(v) for k, v in to_set.items()}
         self.redis.multi()
         if to_set:
