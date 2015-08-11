@@ -38,7 +38,7 @@ class DictTests(TestCase):
         assert d == {'sape': 4139, 'jack': 4098, 'guido': 4127}
 
     # The following tests come from these examples:
-    #   https://docs.python.org/2/library/stdtypes.html#mapping-types-dict
+    #   https://docs.python.org/3.4/library/stdtypes.html#mapping-types-dict
 
     def test_more_construction_options(self):
         a = RedisDict(one=1, two=2, three=3)
