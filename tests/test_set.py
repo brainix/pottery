@@ -29,6 +29,10 @@ class SetTests(TestCase):
         b = RedisSet('alacazam')
         assert a == {'a', 'r', 'b', 'c', 'd'}
         assert a - b == {'r', 'd', 'b'}
+        assert isinstance(a - b, RedisSet)
         assert a | b == {'a', 'c', 'r', 'd', 'b', 'm', 'z', 'l'}
+        assert isinstance(a | b, RedisSet)
         assert a & b == {'a', 'c'}
+        assert isinstance(a & b, RedisSet)
         assert a ^ b == {'r', 'd', 'b', 'm', 'z', 'l'}
+        assert isinstance(a ^ b, RedisSet)
