@@ -103,10 +103,11 @@ class Lockable:
     def __del__(self):
         super().__del__()
         with self._lock:
-            self._count[self._id()] -= 1
-            if self._count[self._id()] == 0:
-                del self._count[self._id()]
-                del self._locks[self._id()]
+            if self._count.get(self._id()) is not None:
+                self._count[self._id()] -= 1
+                if self._count[self._id()] == 0:
+                    del self._count[self._id()]
+                    del self._locks[self._id()]
 
     def _id(self):
         return (self.redis, self.key)
@@ -157,7 +158,17 @@ class Clearable:
 
 
 
-class Base(Clearable, Pipelined, Lockable, Common):
+class ContextManaged:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.__del__()
+        self._redis.connection_pool.disconnect()
+
+
+
+class Base(ContextManaged, Clearable, Pipelined, Lockable, Common):
     ...
 
 
