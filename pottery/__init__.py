@@ -9,7 +9,7 @@ __title__ = 'pottery'
 __version__ = '0.22'
 __author__ = 'Rajiv Bakulesh Shah'
 __license__ = 'Apache 2.0'
-__copyright__ = 'Copyright (c) 2015, Rajiv Bakulesh Shah'
+__copyright__ = 'Copyright (c) 2015, {}'.format(__author__)
 
 from .exceptions import PotteryError
 from .exceptions import KeyExistsError
