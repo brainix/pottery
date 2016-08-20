@@ -23,3 +23,5 @@ class RedisTests(TestCase):
         redis2 = Redis.from_url(self.REDIS_URL)
         assert redis1 == redis2
         assert not redis1 != redis2
+        assert redis1 != None
+        assert not redis1 == None

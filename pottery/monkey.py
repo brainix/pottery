@@ -13,6 +13,8 @@ def _connection(redis):
     return dict_
 
 def __eq__(self, other):
+    if type(self) is not type(other):
+        return False
     return _connection(self) == _connection(other)
 
 def __ne__(self, other):
