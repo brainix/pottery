@@ -59,9 +59,9 @@ class RedisDict(Iterable, Base, collections.abc.MutableMapping):
 
     def __repr__(self):
         'Return the string representation of a RedisDict.  O(n)'
-        d = self.redis.hgetall(self.key).items()
-        d = {self._decode(key): self._decode(value) for key, value in d}
-        return self.__class__.__name__ + str(d)
+        dict_ = self.redis.hgetall(self.key).items()
+        dict_ = {self._decode(key): self._decode(value) for key, value in dict_}
+        return self.__class__.__name__ + str(dict_)
 
     # Method overrides:
 
