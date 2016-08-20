@@ -6,9 +6,9 @@
 #-----------------------------------------------------------------------------#
 '''Redis for Humans.
 
-Redis is awesome, but using Redis commands is not always fun.  Pottery is a
-Pythonic way to access Redis.  If you know how to use Python dicts and sets,
-then you already know how to use Pottery.
+Redis is awesome, but Redis commands are not always fun.  Pottery is a Pythonic
+way to access Redis.  If you know how to use Python dicts and sets, then you
+already know how to use Pottery.
 '''
 
 

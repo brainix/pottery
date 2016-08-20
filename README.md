@@ -1,7 +1,7 @@
 # Pottery: Redis for Humans
 
-[Redis](http://redis.io/) is awesome, :grinning: but using [Redis
-commands](http://redis.io/commands) is not always fun. :rage:  Pottery is a
+[Redis](http://redis.io/) is awesome, :grinning: but [Redis
+commands](http://redis.io/commands) are not always fun. :rage:  Pottery is a
 Pythonic way to access Redis.  If you know how to use Python dicts and sets,
 then you already know how to use Pottery.
 
