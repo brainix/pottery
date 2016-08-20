@@ -1,7 +1,7 @@
 #-----------------------------------------------------------------------------#
 #   test_dict.py                                                              #
 #                                                                             #
-#   Copyright (c) 2015-2016, Rajiv Bakulesh Shah.                             #
+#   Copyright © 2015-2016, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
 #-----------------------------------------------------------------------------#
 

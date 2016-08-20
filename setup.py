@@ -1,14 +1,18 @@
 #-----------------------------------------------------------------------------#
 #   setup.py                                                                  #
 #                                                                             #
-#   Copyright (c) 2015-2016, Rajiv Bakulesh Shah.                             #
+#   Copyright © 2015-2016, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
 #-----------------------------------------------------------------------------#
+
+
 
 from setuptools import find_packages
 from setuptools import setup
 
 import pottery
+
+
 
 setup(
     name=pottery.__name__,
