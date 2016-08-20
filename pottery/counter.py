@@ -49,9 +49,11 @@ class RedisCounter(RedisDict, collections.Counter):
 
     def __getitem__(self, key):
         'c.__getitem__(key) <==> c.get(key, 0).  O(1)'
-        with contextlib.suppress(KeyError):
-            return super().__getitem__(key)
-        return super().__missing__(key)
+        try:
+            value = super().__getitem__(key)
+        except KeyError:
+            value = super().__missing__(key)
+        return value
 
     def __delitem__(self, key):
         'c.__delitem__(key) <==> del c[key].  O(1)'
