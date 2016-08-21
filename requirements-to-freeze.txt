@@ -9,4 +9,5 @@
 
 redis
 
+wheel
 twine
