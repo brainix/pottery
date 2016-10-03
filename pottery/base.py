@@ -24,7 +24,7 @@ from .exceptions import TooManyTriesError
 
 
 
-class Common:
+class _Common:
     _DEFAULT_REDIS_URL = 'http://localhost:6379/'
     _NUM_TRIES = 3
     _RANDOM_KEY_PREFIX = 'pottery-'
@@ -137,7 +137,7 @@ class Pipelined(metaclass=abc.ABCMeta):
 
 
 
-class Clearable(metaclass=abc.ABCMeta):
+class _Clearable(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def redis(self):
         'Redis client.'
@@ -148,7 +148,7 @@ class Clearable(metaclass=abc.ABCMeta):
 
 
 
-class ContextManaged(metaclass=abc.ABCMeta):
+class _ContextManaged(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def redis(self):
         'Redis client.'
@@ -162,7 +162,7 @@ class ContextManaged(metaclass=abc.ABCMeta):
 
 
 
-class Base(Common, ContextManaged, Clearable, Pipelined):
+class Base(_Common, _ContextManaged, _Clearable, Pipelined):
     ...
 
 
