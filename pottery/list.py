@@ -33,9 +33,9 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def _slice_to_indices(self, slice_or_index):
         try:
-            start = 0 if slice_or_index.start is None else slice_or_index.start
-            stop = len(self) if slice_or_index.stop is None else slice_or_index.stop
-            step = 1 if slice_or_index.step is None else slice_or_index.step
+            start = slice_or_index.start or 0
+            stop = slice_or_index.stop or len(self)
+            step = slice_or_index.step or 1
             indices = range(start, stop, step)
         except AttributeError:
             indices = (slice_or_index,)
