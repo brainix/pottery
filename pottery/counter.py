@@ -99,7 +99,9 @@ class RedisCounter(RedisDict, collections.Counter):
     def _imath_op(self, other, *, sign=+1):
         to_set = {k: self[k] + sign * v for k, v in other.items()}
         to_del = [k for k, v in to_set.items() if v <= 0]
-        to_del.extend([k for k, v in self.items() if k not in to_set and v <= 0])
+        to_del.extend([
+            k for k, v in self.items() if k not in to_set and v <= 0
+        ])
         to_set = {self._encode(k): self._encode(v) for k, v in to_set.items()}
         to_del = [self._encode(k) for k in to_del]
         self.redis.multi()
@@ -121,7 +123,10 @@ class RedisCounter(RedisDict, collections.Counter):
     def _iset_op(self, other, *, func):
         to_set, to_del = {}, []
         for k in itertools.chain(self, other):
-            to_set[k] = self[v] if getattr(self[v], func)(other[v]) else other[v]
+            if getattr(self[v], func)(other[v]):
+                to_set[k] = self[v]
+            else:
+                to_set[k] = other[v]
             if to_set[k] <= 0:
                 to_del.append(k)
         self.redis.multi()
