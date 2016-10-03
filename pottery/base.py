@@ -49,10 +49,12 @@ class _Common:
             self.redis.delete(self.key)
 
     def __eq__(self, other):
-        if type(self) == type(other) and self.redis == other.redis and \
+        if type(self) == type(other) and \
+           self.redis == other.redis and \
            self.key == other.key:
-            return True
-        equals = super().__eq__(other)
+            equals = True
+        else:
+            equals = super().__eq__(other)
         return equals
 
     def __ne__(self, other):
@@ -79,7 +81,7 @@ class _Common:
 
     @key.setter
     def key(self, value):
-        self._key = self._random_key() if value is None else value
+        self._key = value or self._random_key()
 
     def _random_key(self, *, tries=_NUM_TRIES):
         if tries <= 0:

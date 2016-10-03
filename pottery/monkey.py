@@ -9,16 +9,20 @@
 
 from redis import Redis
 
-def _connection(redis):
+@property
+def _connection(self):
     keys = {'host', 'port', 'db'}
-    dict_ = {key: redis.connection_pool.connection_kwargs[key] for key in keys}
+    dict_ = {key: self.connection_pool.connection_kwargs[key] for key in keys}
     return dict_
 
 def __eq__(self, other):
-    return isinstance(other, Redis) and _connection(self) == _connection(other)
+    equals = isinstance(other, Redis) and self._connection == other._connection
+    return equals
 
 def __ne__(self, other):
-    return not __eq__(self, other)
+    does_not_equal = not self.__eq__(other)
+    return does_not_equal
 
+Redis._connection = _connection
 Redis.__eq__ = __eq__
 Redis.__ne__ = __ne__
