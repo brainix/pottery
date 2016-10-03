@@ -94,7 +94,19 @@ class Common:
 
 
 
-class Pipelined:
+class Pipelined(metaclass=abc.ABCMeta):
+    @abc.abstractproperty
+    def _NUM_TRIES(self):
+        'The number of times to try generating a random key before giving up.'
+
+    @abc.abstractproperty
+    def redis(self):
+        'Redis client.'
+
+    @abc.abstractproperty
+    def key(self):
+        'Redis key.'
+
     @property
     @contextlib.contextmanager
     def _pipeline(self):
@@ -107,7 +119,7 @@ class Pipelined:
     def _watch(func):
         @functools.wraps(func)
         def wrap(self, *args, **kwargs):
-            for _ in range(super()._NUM_TRIES):
+            for _ in range(self._NUM_TRIES):
                 try:
                     original_redis = self.redis
                     with self._pipeline as pipeline:
@@ -125,29 +137,41 @@ class Pipelined:
 
 
 
-class Clearable:
+class Clearable(metaclass=abc.ABCMeta):
+    @abc.abstractproperty
+    def redis(self):
+        'Redis client.'
+
     def clear(self):
         'Remove the elements in a Redis-backed container.  O(n)'
         self.redis.delete(self.key)
 
 
 
-class ContextManaged:
+class ContextManaged(metaclass=abc.ABCMeta):
+    @abc.abstractproperty
+    def redis(self):
+        'Redis client.'
+
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.__del__()
-        self._redis.connection_pool.disconnect()
+        self.redis.connection_pool.disconnect()
 
 
 
-class Base(ContextManaged, Clearable, Pipelined, Common):
+class Base(Common, ContextManaged, Clearable, Pipelined):
     ...
 
 
 
 class Iterable(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def _scan(self, key, *, cursor=0):
+        ...
+
     def __iter__(self):
         'Iterate over the items in a Redis-backed container.  O(n)'
         cursor = 0
@@ -158,7 +182,3 @@ class Iterable(metaclass=abc.ABCMeta):
                 yield decoded
             if cursor == 0:
                 break
-
-    @abc.abstractmethod
-    def _scan(self, key, *, cursor=0):
-        ...
