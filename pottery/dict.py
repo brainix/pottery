@@ -18,7 +18,7 @@ from .exceptions import KeyExistsError
 
 
 
-class RedisDict(Iterable, Base, collections.abc.MutableMapping):
+class RedisDict(Base, Iterable, collections.abc.MutableMapping):
     'Redis-backed container compatible with Python dicts.'
 
     def __init__(self, iterable=tuple(), *, redis=None, key=None, **kwargs):

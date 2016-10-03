@@ -16,7 +16,7 @@ from .exceptions import KeyExistsError
 
 
 
-class RedisSet(Iterable, Base, collections.abc.MutableSet):
+class RedisSet(Base, Iterable, collections.abc.MutableSet):
     'Redis-backed container compatible with Python sets.'
 
     def __init__(self, iterable=tuple(), *, redis=None, key=None):
