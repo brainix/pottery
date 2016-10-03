@@ -30,8 +30,9 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
         if values:
             if self.redis.exists(self.key):
                 raise KeyExistsError(self.redis, self.key)
-            self.redis.multi()
-            self.redis.sadd(self.key, *values)
+            else:
+                self.redis.multi()
+                self.redis.sadd(self.key, *values)
 
     # Methods required by collections.abc.MutableSet:
 
@@ -74,21 +75,23 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
         value = self.redis.spop(self.key)
         if value is None:
             raise KeyError('pop from an empty set')
-        return self._decode(value)
+        else:
+            return self._decode(value)
 
     # From collections.abc.MutableSet:
     def remove(self, value):
         'Remove an element from a RedisSet().  O(1)'
-        count = self.redis.srem(self.key, self._encode(value))
-        if count is 0:
+        if not self.redis.srem(self.key, self._encode(value)):
             raise KeyError(value)
 
     # From collections.abc.Set:
     def isdisjoint(self, other):
         'Return True if two sets have a null intersection.  O(n)'
         if isinstance(other, self.__class__) and self.redis == other.redis:
-            return len(self.redis.sinter(self.key, other.key)) is 0
-        return super().isdisjoint(other)
+            disjoint = not self.redis.sinter(self.key, other.key)
+        else:
+            disjoint = super().isdisjoint(other)
+        return disjoint
 
     # Where does this method come from?
     def issubset(self, other):
