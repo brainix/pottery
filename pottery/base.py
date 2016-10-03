@@ -49,7 +49,7 @@ class _Common:
             self.redis.delete(self.key)
 
     def __eq__(self, other):
-        if type(self) == type(other) and \
+        if type(self) is type(other) and \
            self.redis == other.redis and \
            self.key == other.key:
             equals = True
