@@ -7,11 +7,9 @@
 
 
 
-LDFLAGS := -L/usr/local/opt/readline/lib
-CPPFLAGS := -I/usr/local/opt/readline/include
-CFLAGS := '-g -O2'
-
-BREW := $(shell command -v brew 2>/dev/null)
+init: BREW := $(shell command -v brew 2>/dev/null)
+python: CFLAGS := '-I$(brew --prefix readline)/include -g -O2'
+python: LDFLAGS := -L$(brew --prefix readline)/lib
 
 version ?= 3.5.2
 venv ?= 'pottery'
