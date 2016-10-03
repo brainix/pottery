@@ -36,7 +36,7 @@ python:
 
 upgrade:
 	brew update
-	brew upgrade --all
+	brew upgrade
 	brew cleanup
 	pyenv rehash
 	pip3 install --upgrade pip
