@@ -26,7 +26,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         @functools.wraps(func)
         def wrap(*args, **kwargs):
             try:
-                func(*args, **kwargs)
+                return func(*args, **kwargs)
             except ResponseError:
                 raise IndexError('list assignment index out of range')
         return wrap
@@ -52,8 +52,9 @@ class RedisList(Base, collections.abc.MutableSequence):
         if values:
             if self.redis.exists(self.key):
                 raise KeyExistsError(self.redis, self.key)
-            self.redis.multi()
-            self.redis.rpush(self.key, *values)
+            else:
+                self.redis.multi()
+                self.redis.rpush(self.key, *values)
 
     # Methods required by collections.abc.MutableSequence:
 
@@ -63,7 +64,8 @@ class RedisList(Base, collections.abc.MutableSequence):
             value = self.redis.lindex(self.key, index)
             if value is None:
                 raise IndexError('list index out of range')
-            return self._decode(value)
+            else:
+                decoded = self._decode(value)
         except ResponseError:
             # This is monumentally stupid.  Python's list API requires us to
             # get elements by slice (defined as a start index, a stop index,
@@ -75,7 +77,8 @@ class RedisList(Base, collections.abc.MutableSequence):
             indices = self._slice_to_indices(index)
             values = self.redis.lrange(self.key, indices[0], indices[-1])
             values = values[::index.step]
-            return [self._decode(value) for value in values]
+            decoded = [self._decode(value) for value in values]
+        return decoded
 
     @_raise_on_error
     def __setitem__(self, index, value):
@@ -146,9 +149,10 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def sort(self, *, key=None, reverse=False):
         'Sort a RedisList in place.  O(n)'
-        if key is not None:
+        if key is None:
+            self.redis.sort(self.key, desc=reverse, store=self.key)
+        else:
             raise NotImplementedError('sorting by key not implemented')
-        self.redis.sort(self.key, desc=reverse, store=self.key)
 
     def __add__(self, other):
         'Append the items in other to a RedisList.  O(1)'
@@ -157,6 +161,6 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def __repr__(self):
         'Return the string representation of a RedisList.  O(n)'
-        l = self.redis.lrange(self.key, 0, -1)
-        l = [self._decode(value) for value in l]
-        return self.__class__.__name__ + str(l)
+        list_ = self.redis.lrange(self.key, 0, -1)
+        list_ = [self._decode(value) for value in list_]
+        return self.__class__.__name__ + str(list_)
