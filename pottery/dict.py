@@ -27,7 +27,8 @@ class RedisDict(Base, Iterable, collections.abc.MutableMapping):
         if iterable or kwargs:
             if self.redis.exists(self.key):
                 raise KeyExistsError(self.redis, self.key)
-            self.update(iterable, **kwargs)
+            else:
+                self.update(iterable, **kwargs)
 
     # Methods required by collections.abc.MutableMapping:
 
@@ -36,7 +37,8 @@ class RedisDict(Base, Iterable, collections.abc.MutableMapping):
         value = self.redis.hget(self.key, self._encode(key))
         if value is None:
             raise KeyError(key)
-        return self._decode(value)
+        else:
+            return self._decode(value)
 
     def __setitem__(self, key, value):
         'd.__setitem__(key, value) <==> d[key] = value.  O(1)'
@@ -44,8 +46,7 @@ class RedisDict(Base, Iterable, collections.abc.MutableMapping):
 
     def __delitem__(self, key):
         'd.__delitem__(key) <==> del d[key].  O(1)'
-        success = self.redis.hdel(self.key, self._encode(key))
-        if not bool(success):
+        if not self.redis.hdel(self.key, self._encode(key)):
             raise KeyError(key)
 
     def _scan(self, key, *, cursor=0):
@@ -59,8 +60,8 @@ class RedisDict(Base, Iterable, collections.abc.MutableMapping):
 
     def __repr__(self):
         'Return the string representation of a RedisDict.  O(n)'
-        dict_ = self.redis.hgetall(self.key).items()
-        dict_ = {self._decode(key): self._decode(value) for key, value in dict_}
+        items = self.redis.hgetall(self.key).items()
+        dict_ = {self._decode(key): self._decode(value) for key, value in items}
         return self.__class__.__name__ + str(dict_)
 
     # Method overrides:
