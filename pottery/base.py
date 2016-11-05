@@ -154,26 +154,7 @@ class _Clearable(metaclass=abc.ABCMeta):
 
 
 
-class _ContextManaged(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def redis(self):
-        'Redis client.'
-
-    @abc.abstractmethod
-    def __del__(self):
-        ...
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.__del__()  # We can't do del self because we still need a
-                        # referense to self for the next line...
-        self.redis.connection_pool.disconnect()
-
-
-
-class Base(_Common, _ContextManaged, _Clearable, Pipelined):
+class Base(_Common, _Clearable, Pipelined):
     ...
 
 
