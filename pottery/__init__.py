@@ -14,7 +14,7 @@ already know how to use Pottery.
 
 
 __title__ = 'pottery'
-__version__ = '0.30'
+__version__ = '0.32'
 __description__, __long_description__ = (
     s.strip() for s in __doc__.split('\n\n', 1)
 )
@@ -31,6 +31,9 @@ from .exceptions import PotteryError
 from .exceptions import KeyExistsError
 from .exceptions import RandomKeyError
 from .exceptions import TooManyTriesError
+
+from .contexttimer import contexttimer
+from .redlock import Redlock
 
 from .counter import RedisCounter
 from .deque import RedisDeque
