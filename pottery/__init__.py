@@ -32,6 +32,9 @@ from .exceptions import KeyExistsError
 from .exceptions import RandomKeyError
 from .exceptions import TooManyTriesError
 
+from .contexttimer import contexttimer
+from .redlock import Redlock
+
 from .counter import RedisCounter
 from .deque import RedisDeque
 from .dict import RedisDict
