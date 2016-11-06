@@ -27,7 +27,7 @@ from .exceptions import TooManyTriesError
 class _Common:
     _DEFAULT_REDIS_URL = 'http://localhost:6379/'
     _NUM_TRIES = 3
-    _RANDOM_KEY_PREFIX = 'pottery-'
+    _RANDOM_KEY_PREFIX = 'pottery:'
     _RANDOM_KEY_LENGTH = 16
 
     @staticmethod
