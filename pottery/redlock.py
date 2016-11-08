@@ -25,6 +25,8 @@ import random
 import time
 
 from redis import Redis
+from redis.exceptions import ConnectionError
+from redis.exceptions import TimeoutError
 
 from .contexttimer import contexttimer
 
@@ -142,10 +144,11 @@ class Redlock:
         num_masters_acquired = 0
         with contexttimer() as timer, \
              concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
-            futures = {executor.submit(self._acquire_master, master)
-                       for master in self.masters}
+            futures = (executor.submit(self._acquire_master, master)
+                       for master in self.masters)
             for future in concurrent.futures.as_completed(futures):
-                num_masters_acquired += future.result()
+                with contextlib.suppress(TimeoutError, ConnectionError):
+                    num_masters_acquired += future.result()
         quorum = num_masters_acquired >= len(self.masters) // 2 + 1
         validity_time = self.auto_release_time - self._drift
         if quorum and max(validity_time, 0):
@@ -174,12 +177,13 @@ class Redlock:
         with contexttimer() as timer, \
              concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
             num_masters_acquired, ttls = 0, []
-            futures = {executor.submit(self._acquired_master, master)
-                       for master in self.masters}
+            futures = (executor.submit(self._acquired_master, master)
+                       for master in self.masters)
             for future in concurrent.futures.as_completed(futures):
-                ttl = future.result()
-                num_masters_acquired += ttl > 0
-                ttls.append(ttl)
+                with contextlib.suppress(TimeoutError, ConnectionError):
+                    ttl = future.result()
+                    num_masters_acquired += ttl > 0
+                    ttls.append(ttl)
             quorum = num_masters_acquired >= len(self.masters) // 2 + 1
             if quorum:
                 ttls = sorted(ttls, reverse=True)
@@ -193,24 +197,25 @@ class Redlock:
         if self._extension_num >= self.num_extensions:
             raise RuntimeError('extend lock too many times')
         else:
+            num_masters_extended = 0
             with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
-                futures = {executor.submit(self._extend_master, master)
-                           for master in self.masters}
-                extended = sum(
-                    future.result()
-                    for future in concurrent.futures.as_completed(futures)
-                )
-            quorum = extended >= len(self.masters) // 2 + 1
+                futures = (executor.submit(self._extend_master, master)
+                           for master in self.masters)
+                for future in concurrent.futures.as_completed(futures):
+                    with contextlib.suppress(TimeoutError, ConnectionError):
+                        num_masters_extended += future.result()
+            quorum = num_masters_extended >= len(self.masters) // 2 + 1
             self._extension_num += quorum
             return quorum
 
     def release(self):
         num_masters_released = 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
-            futures = {executor.submit(self._release_master, master)
-                       for master in self.masters}
+            futures = (executor.submit(self._release_master, master)
+                       for master in self.masters)
             for future in concurrent.futures.as_completed(futures):
-                num_masters_released += future.result()
+                with contextlib.suppress(TimeoutError, ConnectionError):
+                    num_masters_released += future.result()
         quorum = num_masters_released >= len(self.masters) // 2 + 1
         if not quorum:
             raise RuntimeError('release unlocked lock')
