@@ -172,8 +172,7 @@ class Redlock:
         else:
             raise ValueError("can't specify a timeout for a non-blocking call")
 
-    @property
-    def acquired(self):
+    def locked(self):
         with contexttimer() as timer, \
              concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
             num_masters_acquired, ttls = 0, []

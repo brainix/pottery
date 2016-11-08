@@ -78,13 +78,13 @@ class RedlockTests(TestCase):
 
     def test_acquired(self):
         assert not self.redis.exists(self.redlock.key)
-        assert not self.redlock.acquired
+        assert not self.redlock.locked()
         assert self.redlock.acquire()
         assert self.redis.exists(self.redlock.key)
-        assert self.redlock.acquired
+        assert self.redlock.locked()
         time.sleep(self.redlock.auto_release_time / 1000 + 1)
         assert not self.redis.exists(self.redlock.key)
-        assert not self.redlock.acquired
+        assert not self.redlock.locked()
 
     def test_extend(self):
         assert not self.redis.exists(self.redlock.key)
@@ -131,25 +131,25 @@ class RedlockTests(TestCase):
 
     def test_context_manager_acquired(self):
         assert not self.redis.exists(self.redlock.key)
-        assert not self.redlock.acquired
+        assert not self.redlock.locked()
         with self.redlock:
             assert self.redis.exists(self.redlock.key)
-            assert self.redlock.acquired
+            assert self.redlock.locked()
         assert not self.redis.exists(self.redlock.key)
-        assert not self.redlock.acquired
+        assert not self.redlock.locked()
 
     def test_context_manager_acquired_time_out_before_exit(self):
         assert not self.redis.exists(self.redlock.key)
-        assert not self.redlock.acquired
+        assert not self.redlock.locked()
         with self.assertRaises(RuntimeError):
             with self.redlock:
                 assert self.redis.exists(self.redlock.key)
-                assert self.redlock.acquired
+                assert self.redlock.locked()
                 time.sleep(self.redlock.auto_release_time / 1000 + 1)
                 assert not self.redis.exists(self.redlock.key)
-                assert not self.redlock.acquired
+                assert not self.redlock.locked()
         assert not self.redis.exists(self.redlock.key)
-        assert not self.redlock.acquired
+        assert not self.redlock.locked()
 
     def test_context_manager_release_before_exit(self):
         assert not self.redis.exists(self.redlock.key)
