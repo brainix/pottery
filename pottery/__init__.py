@@ -33,6 +33,7 @@ from .exceptions import RandomKeyError
 from .exceptions import TooManyTriesError
 
 from .contexttimer import contexttimer
+from .nextid import NextId
 from .redlock import Redlock
 
 from .counter import RedisCounter
