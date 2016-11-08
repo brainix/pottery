@@ -25,7 +25,8 @@ from redis import Redis
 class NextId:
     'Distributed Redis-powered monotonically increasing ID generator.'
 
-    KEY = 'nextid:current'
+    KEY_PREFIX = 'nextid'
+    KEY = 'current'
     NUM_TRIES = 3
     default_masters = frozenset({Redis()})
 
@@ -35,6 +36,14 @@ class NextId:
         self.masters = masters
         self._set_id_script = self._register_set_id_script()
         self._init_masters()
+
+    @property
+    def key(self):
+        return self._key
+
+    @key.setter
+    def key(self, value):
+        self._key = '{}:{}'.format(self.KEY_PREFIX, value)
 
     def _register_set_id_script(self):
         master = next(iter(self.masters))

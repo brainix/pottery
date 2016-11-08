@@ -8,8 +8,6 @@
 
 
 
-from redis import Redis
-
 from pottery import NextId
 from tests.base import TestCase
 
@@ -20,13 +18,11 @@ class NextIdTests(TestCase):
 
     def setUp(self):
         super().setUp()
-        self.redis = Redis()
-        self.redis.delete(NextId.KEY)
+        self.ids = NextId()
+        for master in self.ids.masters:
+            master.set(self.ids.key, 0)
 
     def test_nextid(self):
-        assert not self.redis.exists(NextId.KEY)
-        ids = NextId()
-        assert int(self.redis.get(NextId.KEY)) == 0
         for id_ in range(1, 10):
             with self.subTest(id_=id_):
-                assert next(ids) == id_
+                assert next(self.ids) == id_
