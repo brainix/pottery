@@ -65,8 +65,8 @@ class Redlock:
     def _register_acquired_script(self):
         master = next(iter(self.masters))
         acquired_script = master.register_script('''
-            if redis.call("get", KEYS[1]) == ARGV[1] then
-                local pttl = redis.call("pttl", KEYS[1])
+            if redis.call('get', KEYS[1]) == ARGV[1] then
+                local pttl = redis.call('pttl', KEYS[1])
                 return (pttl > 0) and pttl or 0
             else
                 return 0
@@ -77,8 +77,8 @@ class Redlock:
     def _register_extend_script(self):
         master = next(iter(self.masters))
         extend_script = master.register_script('''
-            if redis.call("get", KEYS[1]) == ARGV[1] then
-                return redis.call("pexpire", KEYS[1], ARGV[2])
+            if redis.call('get', KEYS[1]) == ARGV[1] then
+                return redis.call('pexpire', KEYS[1], ARGV[2])
             else
                 return 0
             end
@@ -88,8 +88,8 @@ class Redlock:
     def _register_release_script(self):
         master = next(iter(self.masters))
         release_script = master.register_script('''
-            if redis.call("get", KEYS[1]) == ARGV[1] then
-                return redis.call("del", KEYS[1])
+            if redis.call('get', KEYS[1]) == ARGV[1] then
+                return redis.call('del', KEYS[1])
             else
                 return 0
             end
