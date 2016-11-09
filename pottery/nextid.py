@@ -19,6 +19,8 @@ import concurrent.futures
 import contextlib
 
 from redis import Redis
+from redis.exceptions import ConnectionError
+from redis.exceptions import TimeoutError
 
 
 
@@ -78,12 +80,13 @@ class NextId:
 
     @property
     def _current_id(self):
-        num_masters, current_id = 0, 0
+        current_id, num_masters = 0, 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
             futures = (executor.submit(master.get, self.key) for master in self.masters)
             for future in concurrent.futures.as_completed(futures):
-                num_masters += 1
-                current_id = max(current_id, int(future.result()))
+                with contextlib.suppress(TimeoutError, ConnectionError):
+                    current_id = max(current_id, int(future.result()))
+                    num_masters += 1
         if num_masters < len(self.masters) // 2 + 1:
             raise RuntimeError('quorum not achieved')
         else:
@@ -93,8 +96,9 @@ class NextId:
     def _current_id(self, value):
         num_masters = 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
-            futures = (executor.submit(self._set_id_script, keys=(self.key,), args=(value,), client=master,) for master in self.masters)
+            futures = (executor.submit(self._set_id_script, keys=(self.key,), args=(value,), client=master) for master in self.masters)
             for future in concurrent.futures.as_completed(futures):
-                num_masters += future.result() == value
+                with contextlib.suppress(TimeoutError, ConnectionError):
+                    num_masters += future.result() == value
         if num_masters < len(self.masters) // 2 + 1:
             raise RuntimeError('quorum not achieved')
