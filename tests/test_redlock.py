@@ -13,8 +13,8 @@ import time
 
 from redis import Redis
 
-from pottery import contexttimer
 from pottery import Redlock
+from pottery import contexttimer
 from tests.base import TestCase
 
 

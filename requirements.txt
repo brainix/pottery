@@ -1,6 +1,7 @@
 args==0.1.0
 clint==0.5.1
-pkginfo==1.4.0
+isort==4.2.5
+pkginfo==1.4.1
 redis==2.10.5
 requests==2.11.1
 requests-toolbelt==0.7.0
