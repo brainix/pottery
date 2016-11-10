@@ -10,6 +10,7 @@
 
 import itertools
 import os
+import warnings
 
 from isort import SortImports
 
@@ -19,6 +20,14 @@ from tests.base import TestCase
 
 
 class SourceTests(TestCase):
+    def setUp(self):
+        super().setUp()
+        warnings.filterwarnings('ignore', category=DeprecationWarning)
+
+    def tearDown(self):
+        warnings.filterwarnings('default', category=DeprecationWarning)
+        super().tearDown()
+
     def test_imports(self):
         test_dir = os.path.dirname(__file__)
         test_files = (f for f in os.listdir(test_dir, absolute=True)
