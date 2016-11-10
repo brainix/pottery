@@ -63,8 +63,8 @@ class NextId:
 
     def _init_masters(self):
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
-            futures = {executor.submit(master.setnx, self.key, 0) for master in self.masters}
-            concurrent.futures.wait(futures)
+            for master in self.masters:
+                executor.submit(master.setnx, self.key, 0)
 
     def __iter__(self):
         return self
