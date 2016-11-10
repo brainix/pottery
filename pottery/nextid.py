@@ -82,7 +82,7 @@ class NextId:
     def _current_id(self):
         current_id, num_masters = 0, 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
-            futures = (executor.submit(master.get, self.key) for master in self.masters)
+            futures = {executor.submit(master.get, self.key) for master in self.masters}
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     current_id = max(current_id, int(future.result()))
