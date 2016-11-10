@@ -224,3 +224,9 @@ class Redlock:
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.release()
+
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
