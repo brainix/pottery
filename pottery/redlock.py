@@ -228,5 +228,8 @@ class Redlock:
 
 
 if __name__ == '__main__':
+    # Run the doctests in this module with: $ python3 -m pottery.redlock
     import doctest
-    doctest.testmod()
+    import sys
+    results = doctest.testmod()
+    sys.exit(bool(results.failed))
