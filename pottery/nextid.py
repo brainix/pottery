@@ -63,8 +63,8 @@ class NextId:
 
     def _init_masters(self):
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
-            futures = {executor.submit(master.setnx, self.key, 0) for master in self.masters}
-            concurrent.futures.wait(futures)
+            for master in self.masters:
+                executor.submit(master.setnx, self.key, 0)
 
     def __iter__(self):
         return self
@@ -82,7 +82,7 @@ class NextId:
     def _current_id(self):
         current_id, num_masters = 0, 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
-            futures = (executor.submit(master.get, self.key) for master in self.masters)
+            futures = {executor.submit(master.get, self.key) for master in self.masters}
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     current_id = max(current_id, int(future.result()))
@@ -96,7 +96,7 @@ class NextId:
     def _current_id(self, value):
         num_masters = 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
-            futures = (executor.submit(self._set_id_script, keys=(self.key,), args=(value,), client=master) for master in self.masters)
+            futures = {executor.submit(self._set_id_script, keys=(self.key,), args=(value,), client=master) for master in self.masters}
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     num_masters += future.result() == value

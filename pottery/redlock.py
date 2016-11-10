@@ -144,8 +144,8 @@ class Redlock:
         num_masters_acquired = 0
         with contexttimer() as timer, \
              concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
-            futures = (executor.submit(self._acquire_master, master)
-                       for master in self.masters)
+            futures = {executor.submit(self._acquire_master, master)
+                       for master in self.masters}
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     num_masters_acquired += future.result()
@@ -176,8 +176,8 @@ class Redlock:
         with contexttimer() as timer, \
              concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
             num_masters_acquired, ttls = 0, []
-            futures = (executor.submit(self._acquired_master, master)
-                       for master in self.masters)
+            futures = {executor.submit(self._acquired_master, master)
+                       for master in self.masters}
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     ttl = future.result()
@@ -198,8 +198,8 @@ class Redlock:
         else:
             num_masters_extended = 0
             with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
-                futures = (executor.submit(self._extend_master, master)
-                           for master in self.masters)
+                futures = {executor.submit(self._extend_master, master)
+                           for master in self.masters}
                 for future in concurrent.futures.as_completed(futures):
                     with contextlib.suppress(TimeoutError, ConnectionError):
                         num_masters_extended += future.result()
@@ -210,8 +210,8 @@ class Redlock:
     def release(self):
         num_masters_released = 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
-            futures = (executor.submit(self._release_master, master)
-                       for master in self.masters)
+            futures = {executor.submit(self._release_master, master)
+                       for master in self.masters}
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     num_masters_released += future.result()
