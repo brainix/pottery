@@ -144,8 +144,8 @@ class Redlock:
         num_masters_acquired = 0
         with contexttimer() as timer, \
              concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
-            futures = (executor.submit(self._acquire_master, master)
-                       for master in self.masters)
+            futures = {executor.submit(self._acquire_master, master)
+                       for master in self.masters}
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     num_masters_acquired += future.result()
