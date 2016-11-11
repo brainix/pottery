@@ -131,7 +131,7 @@ class NextId:
 
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     # Run the doctests in this module with: $ python3 -m pottery.nextid
     import doctest
     import sys
