@@ -7,6 +7,7 @@
 
 
 
+from pottery import KeyExistsError
 from pottery import RedisSet
 from tests.base import TestCase
 
@@ -17,12 +18,66 @@ class SetTests(TestCase):
         https://docs.python.org/3/tutorial/datastructures.html#sets
     '''
 
+    def test_init(self):
+        set_ = RedisSet()
+        assert set_ == set()
+
+    def test_keyexistserror(self):
+        fruits = {'apple', 'orange', 'apple', 'pear', 'orange', 'banana'}
+        basket = RedisSet(fruits, key='pottery:basket')
+        with self.assertRaises(KeyExistsError):
+            basket = RedisSet(fruits, key='pottery:basket')
+
     def test_basic_usage(self):
         fruits = {'apple', 'orange', 'apple', 'pear', 'orange', 'banana'}
         basket = RedisSet(fruits)
         assert basket == {'orange', 'banana', 'pear', 'apple'}
         assert 'orange' in basket
         assert not 'crabgrass' in basket
+
+    def test_add(self):
+        basket = RedisSet({'apple', 'orange', 'apple', 'pear', 'orange', 'banana'})
+        basket.add('tomato')
+        assert basket == {'apple', 'orange', 'apple', 'pear', 'orange', 'banana', 'tomato'}
+
+    def test_discard(self):
+        basket = RedisSet({'apple', 'orange', 'apple', 'pear', 'orange', 'banana', 'tomato'})
+        basket.discard('tomato')
+        assert basket == {'apple', 'orange', 'apple', 'pear', 'orange', 'banana'}
+
+    def test_repr(self):
+        basket = RedisSet({'apple'})
+        assert repr(basket) == "RedisSet('apple')"
+
+        basket = RedisSet({'apple', 'orange'})
+        assert repr(basket) in {
+            "RedisSet('apple', 'orange')",
+            "RedisSet('orange', 'apple')",
+        }
+
+    def test_pop(self):
+        fruits = {'apple', 'orange', 'apple', 'pear', 'orange', 'banana'}
+        basket = RedisSet(fruits)
+        for _ in range(len(fruits)):
+            fruit = basket.pop()
+            assert fruit in fruits
+            fruits.discard(fruit)
+
+        assert not fruits
+        assert not basket
+        with self.assertRaises(KeyError):
+            basket.pop()
+
+    def test_remove(self):
+        basket = RedisSet({'apple', 'orange'})
+        basket.remove('orange')
+        assert basket == {'apple'}
+
+        basket.remove('apple')
+        assert basket == set()
+
+        with self.assertRaises(KeyError):
+            basket.remove('apple')
 
     def test_set_operations(self):
         a = RedisSet('abracadabra')
@@ -43,6 +98,11 @@ class SetTests(TestCase):
         assert not a.isdisjoint(b)
         c = RedisSet('def')
         assert a.isdisjoint(c)
+
+        d = {'c', 'd', 'e'}
+        assert not a.isdisjoint(d)
+        e = {'d', 'e', 'f'}
+        assert a.isdisjoint(e)
 
     def test_issubset(self):
         a = RedisSet('abc')
