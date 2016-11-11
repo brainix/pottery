@@ -55,6 +55,8 @@ class _Common:
             equals = True
         else:
             equals = super().__eq__(other)
+            if equals is NotImplemented:
+                equals = False
         return equals
 
     def __ne__(self, other):
@@ -161,14 +163,14 @@ class Base(_Common, _Clearable, Pipelined):
 
 class Iterable(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def _decode(value):
+    def _decode(value):     # pragma: no cover
         ...
 
-    @abc.abstractproperty
+    @abc.abstractproperty   # pragma: no cover
     def key(self):
         'Redis key.'
 
-    @abc.abstractmethod
+    @abc.abstractmethod     # pragma: no cover
     def _scan(self, key, *, cursor=0):
         ...
 
