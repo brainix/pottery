@@ -96,6 +96,13 @@ class NextId(Primitive):
         else:
             raise RuntimeError('quorum not achieved')
 
+    def __repr__(self):
+        return '<{} key={} value={}>'.format(
+            self.__class__.__name__,
+            self.key,
+            self._current_id,
+        )
+
     @property
     def _current_id(self):
         current_id, num_masters = 0, 0
