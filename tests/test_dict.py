@@ -9,6 +9,7 @@
 
 import collections
 
+from pottery import KeyExistsError
 from pottery import RedisDict
 from tests.base import TestCase
 
@@ -18,6 +19,11 @@ class DictTests(TestCase):
     '''These tests come from these examples:
         https://docs.python.org/3/tutorial/datastructures.html#dictionaries
     '''
+
+    def test_keyexistserror(self):
+        d = RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+        with self.assertRaises(KeyExistsError):
+            d = RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
 
     def test_basic_usage(self):
         tel = RedisDict(jack=4098, sape=4139)
@@ -59,6 +65,18 @@ class DictTests(TestCase):
         assert len(a) == 4
         del a['four']
         assert len(a) == 3
+
+    def test_repr(self):
+        a = RedisDict(one=1, two=2)
+        assert repr(a) in {
+            "RedisDict{'one': 1, 'two': 2}",
+            "RedisDict{'two': 2, 'one': 1}",
+        }
+
+    def test_update(self):
+        a = RedisDict(one=1, two=2, three=3)
+        a.update()
+        assert a == {'one': 1, 'two': 2, 'three': 3}
 
     def test_keyerror(self):
         a = RedisDict(one=1, two=2, three=3)
