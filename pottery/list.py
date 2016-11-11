@@ -112,7 +112,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             for index in indices:
                 pipeline.lset(self.key, index, None)
                 num += 1
-            if num:
+            if num: # pragma: no cover
                 pipeline.lrem(self.key, None, num=num)
 
     def __len__(self):
