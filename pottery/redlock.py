@@ -215,6 +215,14 @@ class Redlock(Primitive):
     def __exit__(self, exc_type, exc_value, traceback):
         self.release()
 
+    def __repr__(self):
+        return '<{} key={} value={} timeout={}>'.format(
+            self.__class__.__name__,
+            self.key,
+            self._value,
+            self.locked(),
+        )
+
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -27,7 +27,7 @@ class RedlockTests(TestCase):
         self.redis = Redis()
         self.redlock = Redlock(
             masters={self.redis},
-            key='management-command',
+            key='printer',
             auto_release_time=100,
         )
 
@@ -158,3 +158,6 @@ class RedlockTests(TestCase):
                 assert self.redis.exists(self.redlock.key)
                 self.redlock.release()
                 assert not self.redis.exists(self.redlock.key)
+
+    def test_repr(self):
+        assert repr(self.redlock) == '<Redlock key=redlock:printer value=None timeout=0>'
