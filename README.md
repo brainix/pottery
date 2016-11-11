@@ -55,3 +55,27 @@ you can use your `RedisSet` the same way that you use any other Python set:
     2
     >>> 'bacon' in edible
     False
+
+## Contributing
+
+### Install prerequisites
+
+1. Install [Xcode](https://developer.apple.com/xcode/downloads/).
+
+### Obtain source code
+
+1. Clone the git repo:
+  1. `$ git clone git@github.com:brainix/pottery.git`
+  2. `$ cd pottery/`
+2. Install project-level dependencies:
+  1. `$ make install`
+
+### Run tests
+
+1. In one Terminal session:
+  1. `$ cd pottery/`
+  2. `$ redis-server`
+2. In a second Terminal session:
+  1. `$ cd pottery/`
+  2. `$ coverage3 run -m unittest discover --start-directory tests --verbose`
+  3. `$ coverage3 report`
