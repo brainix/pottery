@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-#   .travis.yml                                                               #
+#   .coveragerc                                                               #
 #                                                                             #
 #   Copyright © 2015-2016, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
@@ -7,13 +7,12 @@
 
 
 
-language: python
-python:
-  - "3.4.2"
-  - "3.4.3"
-  - "3.4.4"
-  - "3.5.0"
-  - "3.5.1"
-  - "3.5.2"
-services: redis-server
-script: coverage3 run -m unittest discover --start-directory tests --verbose
+[run]
+branch = True
+source = .
+omit =
+    tests/*
+    setup.py
+
+[report]
+show_missing = True

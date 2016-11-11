@@ -25,7 +25,33 @@ from redis.exceptions import TimeoutError
 
 
 class NextId:
-    'Distributed Redis-powered monotonically increasing ID generator.'
+    '''Distributed Redis-powered monotonically increasing ID generator.
+
+    This algorithm safely and reliably produces monotonically increasing IDs
+    across threads, processes, and even machines, without a single point of
+    failure.  Two caveats:
+
+        1.  If many clients are generating IDs concurrently, then there may be
+            "holes" in the sequence of IDs (e.g.: 1, 2, 6, 10, 11, 21, ...).
+
+        2.  This algorithm scales to about 5,000 IDs per second (with 5 Redis
+            masters).  If you need IDs faster than that, then you may want to
+            consider other techniques.
+
+    Clean up Redis for the doctest:
+        >>> Redis().delete('nextid:current') in {0, 1}
+        True
+
+    Usage:
+        >>> ids1 = NextId()
+        >>> ids2 = NextId()
+        >>> next(ids1)
+        1
+        >>> next(ids2)
+        2
+        >>> next(ids1)
+        3
+    '''
 
     KEY_PREFIX = 'nextid'
     KEY = 'current'
@@ -102,3 +128,12 @@ class NextId:
                     num_masters += future.result() == value
         if num_masters < len(self.masters) // 2 + 1:
             raise RuntimeError('quorum not achieved')
+
+
+
+if __name__ == '__main__':  # pragma: no cover
+    # Run the doctests in this module with: $ python3 -m pottery.nextid
+    import doctest
+    import sys
+    results = doctest.testmod()
+    sys.exit(bool(results.failed))

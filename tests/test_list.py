@@ -7,6 +7,7 @@
 
 
 
+from pottery import KeyExistsError
 from pottery import RedisList
 from tests.base import TestCase
 
@@ -17,6 +18,16 @@ class ListTests(TestCase):
         https://docs.python.org/3/tutorial/introduction.html#lists
         https://docs.python.org/3/tutorial/datastructures.html#more-on-lists
     '''
+
+    def test_indexerror(self):
+        list_ = RedisList()
+        with self.assertRaises(IndexError):
+            list_[0] = 'raj'
+
+    def test_keyexistserror(self):
+        squares = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
+        with self.assertRaises(KeyExistsError):
+            squares = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
 
     def test_basic_usage(self):
         squares = RedisList((1, 4, 9, 16, 25))
@@ -99,5 +110,24 @@ class ListTests(TestCase):
         del a[:]
         assert tuple(a) == tuple()
 
+    def test_insert_left(self):
+        squares = RedisList((9, 16, 25))
+        squares.insert(-1, 4)
+        assert tuple(squares) == (4, 9, 16, 25)
+        squares.insert(0, 1)
+        assert tuple(squares) == (1, 4, 9, 16, 25)
+
     def test_sort(self):
-        ...
+        squares = RedisList({1, 4, 9, 16, 25})
+        squares.sort()
+        assert tuple(squares) == (1, 4, 9, 16, 25)
+
+        squares.sort(reverse=True)
+        assert tuple(squares) == (25, 16, 9, 4, 1)
+
+        with self.assertRaises(NotImplementedError):
+            squares.sort(key=str)
+
+    def test_repr(self):
+        squares = RedisList((1, 4, 9, 16, 25))
+        assert repr(squares) == 'RedisList[1, 4, 9, 16, 25]'

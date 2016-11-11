@@ -94,41 +94,41 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
         return disjoint
 
     # Where does this method come from?
-    def issubset(self, other):
+    def issubset(self, other):                      # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def issuperset(self, other):
+    def issuperset(self, other):                    # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def union(self, *args):
+    def union(self, *args):                         # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def intersection(self, *args):
+    def intersection(self, *args):                  # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def difference(self, *args):
+    def difference(self, *args):                    # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def symmetric_difference(self, other):
+    def symmetric_difference(self, other):          # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def update(self, *args):
+    def update(self, *args):                        # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def intersection_update(self, *args):
+    def intersection_update(self, *args):           # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def difference_update(self, *args):
+    def difference_update(self, *args):             # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def symmetric_difference_update(self, other):
+    def symmetric_difference_update(self, other):   # pragma: no cover
         raise NotImplementedError

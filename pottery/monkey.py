@@ -8,6 +8,30 @@
 
 
 
+# Monkey patch os.listdir() to optionally return absolute paths.
+
+import os
+
+def _absolutize(*, files, path=None):
+    path = os.path.abspath(path or '.')
+    files = [os.path.join(path, f) for f in files]
+    return files
+
+def _listdir(path=None, *, absolute=False):
+    files = _listdir.listdir(path)
+    if absolute:
+        files = _absolutize(path=path, files=files)
+    return files
+
+_listdir.listdir = os.listdir
+os.listdir = _listdir
+
+
+
+# Monkey patch equality comparisons on to the Redis client.  We consider two
+# Redis clients to be equal if they're connected to the same host, port, and
+# database.
+
 from redis import Redis
 
 @property
@@ -35,3 +59,18 @@ def __ne__(self, other):
 Redis._connection = _connection
 Redis.__eq__ = __eq__
 Redis.__ne__ = __ne__
+
+
+
+# Monkey patch isort.SortImports to have a correctly_sorted property.  Compare:
+#   >>> assert not SortImports('monkey.py').incorrectly_sorted
+#   >>> assert SortImports('monkey.py').correctly_sorted
+
+@property
+def _correctly_sorted(self):
+    return not self.incorrectly_sorted
+
+import contextlib
+with contextlib.suppress(ImportError):
+    from isort import SortImports
+    SortImports.correctly_sorted = _correctly_sorted

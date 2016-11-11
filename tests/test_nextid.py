@@ -8,6 +8,10 @@
 
 
 
+import unittest.mock
+
+from redis.exceptions import TimeoutError
+
 from pottery import NextId
 from tests.base import TestCase
 
@@ -26,3 +30,17 @@ class NextIdTests(TestCase):
         for id_ in range(1, 10):
             with self.subTest(id_=id_):
                 assert next(self.ids) == id_
+
+    def test_iter(self):
+        assert iter(self.ids) is self.ids
+
+    def test_next(self):
+        with self.assertRaises(RuntimeError), \
+             unittest.mock.patch.object(next(iter(self.ids.masters)), 'get') as get:
+            get.side_effect = TimeoutError
+            next(self.ids)
+
+        with self.assertRaises(RuntimeError), \
+             unittest.mock.patch.object(self.ids, '_set_id_script') as _set_id_script:
+            _set_id_script.side_effect = TimeoutError
+            next(self.ids)
