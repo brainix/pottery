@@ -22,9 +22,11 @@ from redis import Redis
 from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
 
+from .base import Primitive
 
 
-class NextId:
+
+class NextId(Primitive):
     '''Distributed Redis-powered monotonically increasing ID generator.
 
     This algorithm safely and reliably produces monotonically increasing IDs
@@ -56,22 +58,12 @@ class NextId:
     KEY_PREFIX = 'nextid'
     KEY = 'current'
     NUM_TRIES = 3
-    default_masters = frozenset({Redis()})
 
-    def __init__(self, *, key=KEY, num_tries=NUM_TRIES, masters=default_masters):
-        self.key = key
+    def __init__(self, *, key=KEY, num_tries=NUM_TRIES, masters=frozenset()):
+        super().__init__(key=key, masters=masters)
         self.num_tries = num_tries
-        self.masters = masters
         self._set_id_script = self._register_set_id_script()
         self._init_masters()
-
-    @property
-    def key(self):
-        return self._key
-
-    @key.setter
-    def key(self, value):
-        self._key = '{}:{}'.format(self.KEY_PREFIX, value)
 
     def _register_set_id_script(self):
         master = next(iter(self.masters))

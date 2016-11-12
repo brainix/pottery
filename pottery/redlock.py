@@ -28,11 +28,12 @@ from redis import Redis
 from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
 
+from .base import Primitive
 from .contexttimer import contexttimer
 
 
 
-class Redlock:
+class Redlock(Primitive):
     'Distributed Redis-powered lock.'
 
     KEY_PREFIX = 'redlock'
@@ -41,12 +42,9 @@ class Redlock:
     RETRY_DELAY = 200
     NUM_EXTENSIONS = 3
 
-    default_masters = frozenset({Redis()})
-
-    def __init__(self, *, key, masters=default_masters,
+    def __init__(self, *, key, masters=frozenset(),
                  auto_release_time=AUTO_RELEASE_TIME, num_extensions=3):
-        self.key = key
-        self.masters = masters
+        super().__init__(key=key, masters=masters)
         self.auto_release_time = auto_release_time
         self.num_extensions = num_extensions
 
@@ -55,14 +53,6 @@ class Redlock:
         self._acquired_script = self._register_acquired_script()
         self._extend_script = self._register_extend_script()
         self._release_script = self._register_release_script()
-
-    @property
-    def key(self):
-        return self._key
-
-    @key.setter
-    def key(self, value):
-        self._key = '{}:{}'.format(self.KEY_PREFIX, value)
 
     def _register_acquired_script(self):
         master = next(iter(self.masters))
