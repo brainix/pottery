@@ -40,11 +40,16 @@ class NextId(Primitive):
             masters).  If you need IDs faster than that, then you may want to
             consider other techniques.
 
+    Rationale and algorithm description:
+        http://antirez.com/news/102
+
     Clean up Redis for the doctest:
+
         >>> Redis().delete('nextid:current') in {0, 1}
         True
 
     Usage:
+
         >>> ids1 = NextId()
         >>> ids2 = NextId()
         >>> next(ids1)
