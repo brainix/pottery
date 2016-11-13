@@ -2,8 +2,8 @@
 
 [Redis](http://redis.io/) is awesome, :grinning: but [Redis
 commands](http://redis.io/commands) are not always fun. :rage:  Pottery is a
-Pythonic way to access Redis.  If you know how to use Python dicts and sets,
-then you already know how to use Pottery.
+Pythonic way to access Redis.  If you know how to use Python dicts, then you
+already know how to use Pottery.
 
 [![Build Status](https://travis-ci.org/brainix/pottery.svg)](https://travis-ci.org/brainix/pottery)
 
@@ -19,6 +19,8 @@ First, set up your Redis client: :alien:
     >>> redis = Redis.from_url('http://localhost:6379/')
 
 That was the hardest part. :grimacing:
+
+
 
 ### Dicts
 
@@ -38,6 +40,8 @@ can use your `RedisDict` the same way that you use any other Python dict:
     >>> raj['vegetarian']
     True
 
+
+
 ### Sets
 
 Create a `RedisSet`:
@@ -55,6 +59,35 @@ you can use your `RedisSet` the same way that you use any other Python set:
     2
     >>> 'bacon' in edible
     False
+
+
+
+### Lists
+
+Create a `RedisList`:
+
+    >>> from pottery import RedisList
+    >>> lyrics = RedisList(redis=redis, key='lyrics')
+
+Again, notice the two keyword arguments to `RedisList()`:  The first is your Redis client.  The second is the Redis key name for your list.  Other than that, you can use your `RedisList` the same way that you use any other Python list:
+
+    >>> lyrics.append('everything')
+    >>> lyrics.extend(['in' 'its' 'right' '...'])
+    >>> len(lyrics)
+    5
+    >>> lyrics[0]
+    'everything'
+    >>> lyrics[4] = 'place'
+
+
+
+### NextId
+
+
+
+### Redlock
+
+
 
 ## Contributing
 
