@@ -44,3 +44,6 @@ class NextIdTests(TestCase):
              unittest.mock.patch.object(self.ids, '_set_id_script') as _set_id_script:
             _set_id_script.side_effect = TimeoutError
             next(self.ids)
+
+    def test_repr(self):
+        assert repr(self.ids) == '<NextId key=nextid:current value=0>'

@@ -16,24 +16,38 @@ class contexttimer:
     'Context manager to measure the execution time of small code snippets.'
 
     def __init__(self):
-        self.start = None
-        self.stop = None
+        self._started = None
+        self._stopped = None
 
     def __enter__(self):
-        self.start = timeit.default_timer()
+        self.start()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.stop = timeit.default_timer()
+        self.stop()
+
+    def start(self):
+        if self._started:
+            raise RuntimeError('contexttimer has already been started')
+        elif self._stopped:
+            raise RuntimeError('contexttimer has already been stopped')
+        else:
+            self._started = timeit.default_timer()
+
+    def stop(self):
+        if self._stopped:
+            raise RuntimeError('contexttimer has already been stopped')
+        elif self._started:
+            self._stopped = timeit.default_timer()
+        else:
+            raise RuntimeError("contexttimer hasn't yet been started")
 
     @property
     def elapsed(self):
         try:
-            value = self.stop - self.start  # in seconds
+            value = (self._stopped or timeit.default_timer()) - self._started
         except TypeError:
-            now = timeit.default_timer()
-            start = self.start or now
-            stop = self.stop or now
-            value = stop - start            # in seconds
-        value = round(value * 1000)         # rounded to the nearest millisecond
-        return value
+            raise RuntimeError("contexttimer hasn't yet been started")
+        else:
+            value = round(value * 1000) # rounded to the nearest millisecond
+            return value

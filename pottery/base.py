@@ -184,3 +184,24 @@ class Iterable(metaclass=abc.ABCMeta):
                 yield decoded
             if cursor == 0:
                 break
+
+
+
+class Primitive(metaclass=abc.ABCMeta):
+    _default_masters = frozenset({Redis()})
+
+    def __init__(self, *, key, masters=_default_masters):
+        self.key = key
+        self.masters = masters or self._default_masters
+
+    @abc.abstractproperty
+    def KEY_PREFIX(self):
+        'Redis key prefix/namespace.'
+
+    @property
+    def key(self):
+        return self._key
+
+    @key.setter
+    def key(self, value):
+        self._key = '{}:{}'.format(self.KEY_PREFIX, value)
