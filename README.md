@@ -83,6 +83,27 @@ Again, notice the two keyword arguments to `RedisList()`:  The first is your Red
 
 ### NextId
 
+`NextId` safely and reliably produces increasing IDs across threads, processes, and even machines, without a single point of failure.  [Rationale and algorithm description.](http://antirez.com/news/102)
+
+Instantiate an ID generator:
+
+    >>> from pottery import NextId
+    >>> user_ids = NextId(key='user-ids', masters={redis})
+
+The `key` argument represents the sequence (so that you can have different sequences for user IDs, comment IDs, etc.), and the `masters` argument specifies your Redis masters across which to distribute ID generation (in production, you should have 5 Redis masters).  Now, whenever you need a user ID, call `next()` on the ID generator:
+
+    >>> next(user_ids)
+    1
+    >>> next(user_ids)
+    2
+    >>> next(user_ids)
+    3
+
+Two caveats:
+
+1. If many clients are generating IDs concurrently, then there may be &ldquo;holes&rdquo; in the sequence of IDs (e.g.: 1, 2, 6, 10, 11, 21, &hellip;).
+2. This algorithm scales to about 5,000 IDs per second (with 5 Redis masters).  If you need IDs faster than that, then you may want to consider other techniques.
+
 
 
 ### Redlock
