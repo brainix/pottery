@@ -108,6 +108,26 @@ Two caveats:
 
 ### Redlock
 
+`Redlock` is a safe and reliable lock to coordinate access to a resource shared across threads, processes, and even machines, without a single point of failure.  [Rationale and algorithm description.](http://redis.io/topics/distlock)
+
+`Redlock` implements Python's excellent [`threading.Lock`](https://docs.python.org/3/library/threading.html#lock-objects) API as closely as is feasible.  In other words, you can use `Redlock` the same way that you use `threading.Lock`.
+
+Instantiate a `Redlock`:
+
+    >>> from pottery import Redlock
+    >>> lock = Redlock(key='printer', masters={redis})
+
+The `key` argument represents the resource, and the `masters` argument specifies your Redis masters across which to distribute the lock (in production, you should have 5 Redis masters).  Now you can protect access to your resource:
+
+    >>> lock.acquire()
+    >>> # Critical section - print stuff here.
+    >>> lock.release()
+
+Or you can protect access to your resource inside a context manager:
+
+    >>> with lock:
+    ...   # Critical section - print stuff here.
+
 
 
 ## Contributing
