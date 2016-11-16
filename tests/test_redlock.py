@@ -13,8 +13,8 @@ import time
 
 from redis import Redis
 
+from pottery import ContextTimer
 from pottery import Redlock
-from pottery import contexttimer
 from tests.base import TestCase
 
 
@@ -45,7 +45,7 @@ class RedlockTests(TestCase):
 
     def test_acquire_same_lock_twice_blocking_without_timeout(self):
         assert not self.redis.exists(self.redlock.key)
-        with contexttimer() as timer:
+        with ContextTimer() as timer:
             assert self.redlock.acquire()
             assert self.redis.exists(self.redlock.key)
             assert self.redlock.acquire()

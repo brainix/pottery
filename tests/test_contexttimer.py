@@ -11,7 +11,7 @@ import time
 
 from redis import Redis
 
-from pottery import contexttimer
+from pottery import ContextTimer
 from tests.base import TestCase
 
 
@@ -21,7 +21,7 @@ class ContextTimerTests(TestCase):
 
     def setUp(self):
         super().setUp()
-        self.timer = contexttimer()
+        self.timer = ContextTimer()
 
     def _confirm_elapsed(self, expected):
         got = round(self.timer.elapsed / self.ACCURACY) * self.ACCURACY
