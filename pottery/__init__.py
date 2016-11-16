@@ -32,7 +32,7 @@ from .exceptions import KeyExistsError
 from .exceptions import RandomKeyError
 from .exceptions import TooManyTriesError
 
-from .contexttimer import contexttimer
+from .contexttimer import ContextTimer
 from .nextid import NextId
 from .redlock import Redlock
 

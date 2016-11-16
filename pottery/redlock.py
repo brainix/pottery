@@ -33,7 +33,7 @@ from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
 
 from .base import Primitive
-from .contexttimer import contexttimer
+from .contexttimer import ContextTimer
 
 
 
@@ -204,7 +204,7 @@ class Redlock(Primitive):
         self._value = random.random()
         self._extension_num = 0
         num_masters_acquired = 0
-        with contexttimer() as timer, \
+        with ContextTimer() as timer, \
              concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
             futures = {executor.submit(self._acquire_master, master)
                        for master in self.masters}
@@ -229,7 +229,7 @@ class Redlock(Primitive):
             >>> printer_lock_1 = Redlock(key='printer')
             >>> printer_lock_1.acquire()
             True
-            >>> timer = contexttimer()
+            >>> timer = ContextTimer()
             >>> timer.start()
             >>> printer_lock_2 = Redlock(key='printer')
             >>> printer_lock_2.acquire()
@@ -265,7 +265,7 @@ class Redlock(Primitive):
             >>> printer_lock_1.release()
         '''
         if blocking:
-            with contexttimer() as timer:
+            with ContextTimer() as timer:
                 while timeout == -1 or timer.elapsed / 1000 < timeout:
                     if self._acquire_masters():
                         return True
@@ -303,7 +303,7 @@ class Redlock(Primitive):
             >>> printer_lock_1.release()
 
         '''
-        with contexttimer() as timer, \
+        with ContextTimer() as timer, \
              concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
             num_masters_acquired, ttls = 0, []
             futures = {executor.submit(self._acquired_master, master)
