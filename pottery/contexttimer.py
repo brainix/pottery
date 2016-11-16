@@ -54,10 +54,10 @@ class ContextTimer:
         self.stop()
 
     def start(self):
-        if self._started:
-            raise RuntimeError('timer has already been started')
-        elif self._stopped:
+        if self._stopped:
             raise RuntimeError('timer has already been stopped')
+        elif self._started:
+            raise RuntimeError('timer has already been started')
         else:
             self._started = timeit.default_timer()
 
