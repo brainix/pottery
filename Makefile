@@ -7,7 +7,6 @@
 
 
 
-init: BREW := $(shell command -v brew 2>/dev/null)
 python: CFLAGS := '-I$(brew --prefix readline)/include -g -O2'
 python: LDFLAGS := -L$(brew --prefix readline)/lib
 
@@ -20,9 +19,7 @@ install: init python
 
 init:
 	-xcode-select --install
-ifndef BREW
-	ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
-endif
+	command -v brew >/dev/null 2>&1 || ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 	brew install {readline,pyenv,pyenv-virtualenv,redis}
 
 python:
