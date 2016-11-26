@@ -20,6 +20,8 @@ install: init python
 init:
 	-xcode-select --install
 	command -v brew >/dev/null 2>&1 || ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+	brew analytics off
+	brew analytics regenerate-uuid
 	brew install {readline,pyenv,pyenv-virtualenv,redis}
 
 python:
