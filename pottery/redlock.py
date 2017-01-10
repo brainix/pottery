@@ -1,7 +1,7 @@
 #-----------------------------------------------------------------------------#
 #   redlock.py                                                                #
 #                                                                             #
-#   Copyright © 2015-2016, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2017, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
 #-----------------------------------------------------------------------------#
 '''Distributed Redis-powered lock.
@@ -28,10 +28,10 @@ import contextlib
 import random
 import time
 
-from redis import Redis
 from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
 
+from tests.base import run_doctests
 from .base import Primitive
 from .contexttimer import ContextTimer
 
@@ -439,7 +439,4 @@ class Redlock(Primitive):
 
 if __name__ == '__main__':  # pragma: no cover
     # Run the doctests in this module with: $ python3 -m pottery.redlock
-    import doctest
-    import sys
-    results = doctest.testmod()
-    sys.exit(bool(results.failed))
+    run_doctests()

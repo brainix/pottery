@@ -1,7 +1,7 @@
 #-----------------------------------------------------------------------------#
 #   __init__.py                                                               #
 #                                                                             #
-#   Copyright © 2015-2016, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2017, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
 #-----------------------------------------------------------------------------#
 '''Redis for Humans.
@@ -14,7 +14,7 @@ know how to use Pottery.
 
 
 __title__ = 'pottery'
-__version__ = '0.34'
+__version__ = '0.35'
 __description__, __long_description__ = (
     s.strip() for s in __doc__.split('\n\n', 1)
 )
@@ -23,7 +23,7 @@ __author__ = 'Rajiv Bakulesh Shah'
 __author_email__ = 'brainix@gmail.com'
 __license__ = 'Apache 2.0'
 __keywords__ = 'Redis client persistent storage'
-__copyright__ = 'Copyright © 2015-2016, {}, original author.'.format(__author__)
+__copyright__ = 'Copyright © 2015-2017, {}, original author.'.format(__author__)
 
 
 

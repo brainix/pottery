@@ -1,7 +1,7 @@
 #-----------------------------------------------------------------------------#
 #   setup.py                                                                  #
 #                                                                             #
-#   Copyright © 2015-2016, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2017, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
 #-----------------------------------------------------------------------------#
 
@@ -32,6 +32,7 @@ setup(
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'License :: OSI Approved :: Apache Software License',
     ],
     keywords=pottery.__keywords__,
