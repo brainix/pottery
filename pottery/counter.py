@@ -87,13 +87,26 @@ class RedisCounter(RedisDict, collections.Counter):
         "Return the min of our counts vs. other's counts (intersection) but keep only counts > 0.  O(n)"
         return self._math_op(other, func=collections.Counter.__and__)
 
-    def __pos__(self, other):
-        'Return our counts > 0.  O(n)'
-        return self._math_op(other, func=collections.Counter.__pos__)
+    def _unary_op(self, *, test_func, modifier_func):
+        counter = collections.Counter()
+        for key, value in self.items():
+            if test_func(value):
+                counter[key] = modifier_func(value)
+        return counter
 
-    def __neg__(self, other):
+    def __pos__(self):
+        'Return our counts > 0.  O(n)'
+        return self._unary_op(
+            test_func=lambda x: x > 0,
+            modifier_func=lambda x: x,
+        )
+
+    def __neg__(self):
         'Return the absolute value of our counts < 0.  O(n)'
-        return self._math_op(other, func=collections.Counter.__neg__)
+        return self._unary_op(
+            test_func=lambda x: x < 0,
+            modifier_func=lambda x: -x,
+        )
 
     @Pipelined._watch
     def _imath_op(self, other, *, sign=+1):

@@ -77,6 +77,11 @@ class CounterTests(TestCase):
             "RedisCounter{'ham': 1, 'eggs': 1}",
         }
 
+    def test_pos_and_neg(self):
+        c = RedisCounter(foo=-2, bar=-1, baz=0, qux=1)
+        assert c.__pos__() == collections.Counter(qux=1)
+        assert c.__neg__() == collections.Counter(foo=2, bar=1)
+
     def test_elements(self):
         c = RedisCounter(a=4, b=2, c=0, d=-2)
         assert sorted(c.elements()) == ['a', 'a', 'a', 'a', 'b', 'b']
