@@ -10,7 +10,7 @@
 python: CFLAGS := "-I$(brew --prefix readline)/include -g -O2"
 python: LDFLAGS := -L$(brew --prefix readline)/lib
 
-version ?= 3.5.2
+version ?= 3.6.0
 venv ?= venv
 
 
