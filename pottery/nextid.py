@@ -18,10 +18,10 @@ Lua scripting:
 import concurrent.futures
 import contextlib
 
-from redis import Redis
 from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
 
+from tests.base import run_doctests
 from .base import Primitive
 
 
@@ -45,6 +45,7 @@ class NextId(Primitive):
 
     Clean up Redis for the doctest:
 
+        >>> from redis import Redis
         >>> Redis().delete('nextid:current') in {0, 1}
         True
 
@@ -137,7 +138,4 @@ class NextId(Primitive):
 
 if __name__ == '__main__':  # pragma: no cover
     # Run the doctests in this module with: $ python3 -m pottery.nextid
-    import doctest
-    import sys
-    results = doctest.testmod()
-    sys.exit(bool(results.failed))
+    run_doctests()

@@ -10,6 +10,8 @@
 
 import timeit
 
+from tests.base import run_doctests
+
 
 
 class ContextTimer:
@@ -83,7 +85,4 @@ class ContextTimer:
 
 if __name__ == '__main__':  # pragma: no cover
     # Run the doctests in this module with: $ python3 -m pottery.redlock
-    import doctest
-    import sys
-    results = doctest.testmod()
-    sys.exit(bool(results.failed))
+    run_doctests()
