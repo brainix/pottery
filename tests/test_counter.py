@@ -23,10 +23,10 @@ class CounterTests(TestCase):
         c = RedisCounter()
         for word in ('red', 'blue', 'red', 'green', 'blue', 'blue'):
             c[word] += 1
+        assert set(c) == {'blue', 'red', 'green'}
         assert c['blue'] == 3
         assert c['red'] == 2
         assert c['green'] == 1
-        assert set(c) == {'blue', 'red', 'green'}
 
     def test_constructor(self):
         c = RedisCounter()
@@ -34,24 +34,24 @@ class CounterTests(TestCase):
 
     def test_constructor_with_iterable(self):
         c = RedisCounter('gallahad')
+        assert set(c) == {'a', 'l', 'g', 'h', 'd'}
         assert c['a'] == 3
         assert c['l'] == 2
         assert c['g'] == 1
         assert c['h'] == 1
         assert c['d'] == 1
-        assert set(c) == {'a', 'l', 'g', 'h', 'd'}
 
     def test_constructor_with_mapping(self):
         c = RedisCounter({'red': 4, 'blue': 2})
+        assert set(c) == {'red', 'blue'}
         assert c['red'] == 4
         assert c['blue'] == 2
-        assert set(c) == {'red', 'blue'}
 
     def test_constructor_with_kwargs(self):
         c = RedisCounter(cats=4, dogs=8)
+        assert set(c) == {'dogs', 'cats'}
         assert c['dogs'] == 8
         assert c['cats'] == 4
-        assert set(c) == {'dogs', 'cats'}
 
     def test_missing_element_doesnt_raise_keyerror(self):
         c = RedisCounter(('eggs', 'ham'))
@@ -60,7 +60,10 @@ class CounterTests(TestCase):
 
     def test_setting_0_count_doesnt_remove_element(self):
         c = RedisCounter(('eggs', 'ham'))
+        assert set(c) == {'eggs', 'ham'}
         c['sausage'] = 0
+        assert set(c) == {'eggs', 'ham', 'sausage'}
+        c['ham'] = 0
         assert set(c) == {'eggs', 'ham', 'sausage'}
 
     def test_del_removes_element(self):
@@ -69,18 +72,8 @@ class CounterTests(TestCase):
         assert set(c) == {'eggs', 'ham', 'sausage'}
         del c['sausage']
         assert set(c) == {'eggs', 'ham'}
-
-    def test_repr(self):
-        c = RedisCounter(('eggs', 'ham'))
-        assert repr(c) in {
-            "RedisCounter{'eggs': 1, 'ham': 1}",
-            "RedisCounter{'ham': 1, 'eggs': 1}",
-        }
-
-    def test_pos_and_neg(self):
-        c = RedisCounter(foo=-2, bar=-1, baz=0, qux=1)
-        assert c.__pos__() == collections.Counter(qux=1)
-        assert c.__neg__() == collections.Counter(foo=2, bar=1)
+        del c['ham']
+        assert set(c) == {'eggs'}
 
     def test_elements(self):
         c = RedisCounter(a=4, b=2, c=0, d=-2)
@@ -94,10 +87,15 @@ class CounterTests(TestCase):
         c = RedisCounter(a=4, b=2, c=0, d=-2)
         d = RedisCounter(a=1, b=2, c=3, d=4)
         c.subtract(d)
-        assert c['a'] == 3
-        assert c['b'] == 0
-        assert c['c'] == -3
-        assert c['d'] == -6
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter(a=3, b=0, c=-3, d=-6)
+
+    def test_repr(self):
+        c = RedisCounter(('eggs', 'ham'))
+        assert repr(c) in {
+            "RedisCounter{'eggs': 1, 'ham': 1}",
+            "RedisCounter{'ham': 1, 'eggs': 1}",
+        }
 
     def test_math_operations(self):
         c = RedisCounter(a=3, b=1)
@@ -107,15 +105,18 @@ class CounterTests(TestCase):
         assert set(e) == {'a', 'b'}
         assert e['a'] == 4
         assert e['b'] == 3
+
         e = c - d
         assert isinstance(e, collections.Counter)
         assert set(e) == {'a'}
         assert e['a'] == 2
+
         e = c & d
         assert isinstance(e, collections.Counter)
         assert set(e) == {'a', 'b'}
         assert e['a'] == 1
         assert e['b'] == 1
+
         e = c | d
         assert isinstance(e, collections.Counter)
         assert e['a'] == 3
@@ -125,9 +126,18 @@ class CounterTests(TestCase):
         c = RedisCounter(a=2, b=-4)
         d = RedisCounter() + c
         assert isinstance(d, collections.Counter)
-        assert set(d) == {'a'}
-        assert d['a'] == 2
+        assert d == collections.Counter(a=2)
+
         d = RedisCounter() - c
         assert isinstance(d, collections.Counter)
-        assert set(d) == {'b'}
-        assert d['b'] == 4
+        assert d == collections.Counter(b=4)
+
+    def test_pos_and_neg(self):
+        c = RedisCounter(foo=-2, bar=-1, baz=0, qux=1)
+        pos = c.__pos__()
+        assert isinstance(pos, collections.Counter)
+        assert pos == collections.Counter(qux=1)
+
+        neg = c.__neg__()
+        assert isinstance(neg, collections.Counter)
+        assert neg == collections.Counter(foo=2, bar=1)
