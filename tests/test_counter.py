@@ -70,6 +70,13 @@ class CounterTests(TestCase):
         del c['sausage']
         assert set(c) == {'eggs', 'ham'}
 
+    def test_repr(self):
+        c = RedisCounter(('eggs', 'ham'))
+        assert repr(c) in {
+            "RedisCounter{'eggs': 1, 'ham': 1}",
+            "RedisCounter{'ham': 1, 'eggs': 1}",
+        }
+
     def test_elements(self):
         c = RedisCounter(a=4, b=2, c=0, d=-2)
         assert sorted(c.elements()) == ['a', 'a', 'a', 'a', 'b', 'b']
