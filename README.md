@@ -151,5 +151,14 @@ Or you can protect access to your resource inside a context manager:
   2. `$ redis-server`
 2. In a second Terminal session:
   1. `$ cd pottery/`
-  2. `$ coverage3 run -m unittest discover --start-directory tests --verbose`
-  3. `$ coverage3 report`
+  2. `$ make test`
+
+`make test` runs all of the unit tests as well as the coverage test.  However, sometimes, when debugging, it can be useful to run an individual test module, class, or method:
+
+1. In one Terminal session:
+  1. `$ cd pottery/`
+  2. `$ redis-server`
+2. In a second Terminal session:
+  1. Run a test module with `$ make test tests=tests.test_dict`
+  2. Run a test class with: `$ make test tests=tests.test_dict.DictTests`
+  3. Run a test method with: `$ make test tests=tests.test_dict.DictTests.test_keyexistserror`
