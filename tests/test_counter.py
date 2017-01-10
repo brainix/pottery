@@ -83,6 +83,32 @@ class CounterTests(TestCase):
         c = RedisCounter('abracadabra')
         assert sorted(c.most_common(3)) == [('a', 5), ('b', 2), ('r', 2)]
 
+    def test_update(self):
+        c = RedisCounter()
+        c.update({})
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter()
+
+        c = RedisCounter()
+        c.update({'foo': 1})
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter(foo=1)
+
+        c = RedisCounter(foo=2)
+        c.update({})
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter(foo=2)
+
+        c = RedisCounter(foo=2)
+        c.update({'foo': 1})
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter(foo=3)
+
+        c = RedisCounter(foo=2, bar=3)
+        c.update({'foo': 1, 'bar': 1, 'baz': 5, 'qux': 6})
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter(foo=3, bar=4, baz=5, qux=6)
+
     def test_subtract(self):
         c = RedisCounter(a=4, b=2, c=0, d=-2)
         d = RedisCounter(a=1, b=2, c=3, d=4)
