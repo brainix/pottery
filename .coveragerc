@@ -12,6 +12,7 @@ branch = True
 source = .
 omit =
     tests/*
+    venv/*
     setup.py
 
 [report]
