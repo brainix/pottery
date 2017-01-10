@@ -141,3 +141,71 @@ class CounterTests(TestCase):
         neg = c.__neg__()
         assert isinstance(neg, collections.Counter)
         assert neg == collections.Counter(foo=2, bar=1)
+
+    def test_in_place_add(self):
+        c = RedisCounter(a=1, b=2)
+        d = RedisCounter()
+        c += d
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter(a=1, b=2)
+
+        c = RedisCounter()
+        d = RedisCounter(a=1, b=2)
+        c += d
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter(a=1, b=2)
+
+        c = RedisCounter(a=1)
+        d = RedisCounter(b=-1)
+        c += d
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter(a=1)
+
+        c = RedisCounter(a=1)
+        d = RedisCounter(a=-1)
+        c += d
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter()
+
+        c = RedisCounter(a=1)
+        d = RedisCounter(a=-2)
+        c += d
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter()
+
+        c = RedisCounter(a=1, b=2)
+        d = RedisCounter(a=-1)
+        c += d
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter(b=2)
+
+        c = RedisCounter(a=1)
+        d = RedisCounter(a=-2, b=2)
+        c += d
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter(b=2)
+
+        c = RedisCounter(a=1, b=1)
+        d = RedisCounter(a=-2, b=1)
+        c += d
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter(b=2)
+
+        c = RedisCounter(a=1, b=2)
+        d = RedisCounter(a=2, b=1)
+        c += d
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter(a=3, b=3)
+
+        c = RedisCounter(a=4, b=2, c=0, d=-2)
+        d = RedisCounter(a=1, b=2, c=3, d=4)
+        c += d
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter(a=5, b=4, c=3, d=2)
+
+    def test_in_place_subtract(self):
+        c = RedisCounter(a=4, b=2, c=0, d=-2)
+        d = RedisCounter(a=1, b=2, c=3, d=4)
+        c -= d
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter(a=3)
