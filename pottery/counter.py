@@ -136,16 +136,21 @@ class RedisCounter(RedisDict, collections.Counter):
     def _iset_op(self, other, *, func):
         to_set, to_del = {}, []
         for k in itertools.chain(self, other):
-            if getattr(self[v], func)(other[v]):
-                to_set[k] = self[v]
+            if getattr(self[k], func)(other[k]):
+                to_set[k] = self[k]
             else:
-                to_set[k] = other[v]
+                to_set[k] = other[k]
             if to_set[k] <= 0:
                 to_del.append(k)
         self.redis.multi()
         if to_set:
+            to_set = {
+                self._encode(k): self._encode(v)
+                for k, v in to_set.items()
+            }
             self.redis.hmset(self.key, to_set)
         if to_del:
+            to_del = [self._encode(k) for k in to_del]
             self.redis.hdel(self.key, *to_del)
         return self
 
