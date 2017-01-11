@@ -20,10 +20,19 @@ class DictTests(TestCase):
         https://docs.python.org/3/tutorial/datastructures.html#dictionaries
     '''
 
-    def test_keyexistserror(self):
+    def test_keyexistserror_raised(self):
         d = RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
         with self.assertRaises(KeyExistsError):
             d = RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+
+    def test_keyexistserror_str(self):
+        d = RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+        try:
+            d = RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+        except KeyExistsError as err:
+            assert str(err) == 'pottery:tel'
+        else:
+            self.fail(msg='KeyExistsError not raised')
 
     def test_basic_usage(self):
         tel = RedisDict(jack=4098, sape=4139)
