@@ -14,7 +14,6 @@ from redis.exceptions import TimeoutError
 
 from pottery import NextId
 from tests.base import TestCase
-from tests.base import ignore_warnings
 
 
 
@@ -35,7 +34,6 @@ class NextIdTests(TestCase):
     def test_iter(self):
         assert iter(self.ids) is self.ids
 
-    @ignore_warnings
     def test_next(self):
         with self.assertRaises(RuntimeError), \
              unittest.mock.patch.object(next(iter(self.ids.masters)), 'get') as get:

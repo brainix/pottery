@@ -10,7 +10,6 @@
 from pottery import KeyExistsError
 from pottery import RedisList
 from tests.base import TestCase
-from tests.base import ignore_warnings
 
 
 
@@ -19,10 +18,6 @@ class ListTests(TestCase):
         https://docs.python.org/3/tutorial/introduction.html#lists
         https://docs.python.org/3/tutorial/datastructures.html#more-on-lists
     '''
-
-    def tearDown(self):
-        self.redis.delete('pottery:squares')
-        super().tearDown()
 
     def test_indexerror(self):
         list_ = RedisList()
@@ -51,7 +46,6 @@ class ListTests(TestCase):
         cubes.append(7**3)
         assert cubes == [1, 8, 27, 64, 125, 216, 343]
 
-    @ignore_warnings
     def test_slices(self):
         letters = RedisList(('a', 'b', 'c', 'd', 'e', 'f', 'g'))
         assert letters == ['a', 'b', 'c', 'd', 'e', 'f', 'g']
@@ -107,7 +101,6 @@ class ListTests(TestCase):
         assert stack.pop() == 5
         assert stack == [3, 4]
 
-    @ignore_warnings
     def test_del(self):
         a = RedisList((-1, 1, 66.25, 333, 333, 1234.5))
         del a[0]
@@ -135,21 +128,18 @@ class ListTests(TestCase):
         with self.assertRaises(NotImplementedError):
             squares.sort(key=str)
 
-    @ignore_warnings
     def test_eq_same_redis_instance_and_key(self):
         squares1 = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
         squares2 = RedisList(key='pottery:squares')
         assert squares1 == squares2
         assert not squares1 != squares2
 
-    @ignore_warnings
     def test_eq_different_lengths(self):
         squares1 = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
         squares2 = (1, 4, 9, 16, 25, 36)
         assert not squares1 == squares2
         assert squares1 != squares2
 
-    @ignore_warnings
     def test_eq_different_types_different_items(self):
         squares1 = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
         squares2 = (4, 9, 16, 25, 36)

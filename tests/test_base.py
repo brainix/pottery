@@ -15,6 +15,7 @@ from redis.client import Pipeline
 from pottery import RandomKeyError
 from pottery import RedisDict
 from pottery import TooManyTriesError
+from pottery.base import _default_redis
 from tests.base import TestCase
 
 
@@ -22,6 +23,7 @@ from tests.base import TestCase
 class _BaseTestCase(TestCase):
     def setUp(self):
         super().setUp()
+        self.redis = _default_redis
         self.raj = RedisDict(key='pottery:raj', hobby='music', vegetarian=True)
         self.nilika = RedisDict(key='pottery:nilika', hobby='music', vegetarian=True)
         self.luvh = RedisDict(key='luvh', hobby='bullying', vegetarian=False)

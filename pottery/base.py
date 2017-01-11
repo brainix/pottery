@@ -24,8 +24,12 @@ from .exceptions import TooManyTriesError
 
 
 
+_default_url = os.environ.get('REDIS_URL', 'http://localhost:6379/')
+_default_redis = Redis.from_url(_default_url)
+
+
+
 class _Common:
-    _DEFAULT_REDIS_URL = 'http://localhost:6379/'
     _NUM_TRIES = 3
     _RANDOM_KEY_PREFIX = 'pottery:'
     _RANDOM_KEY_LENGTH = 16
@@ -64,18 +68,12 @@ class _Common:
         return does_not_equal
 
     @property
-    def _default_redis(self):
-        url = os.environ.get('REDIS_URL', self._DEFAULT_REDIS_URL)
-        redis = Redis.from_url(url)
-        return redis
-
-    @property
     def redis(self):
         return self._redis
 
     @redis.setter
     def redis(self, value):
-        self._redis = self._default_redis if value is None else value
+        self._redis = _default_redis if value is None else value
 
     @property
     def key(self):
