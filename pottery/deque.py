@@ -28,5 +28,22 @@ class RedisDeque(RedisList, collections.deque):
     def maxlen(self):
         return self._maxlen
 
-    def insert(*args, **kwargs):
-        raise NotImplementedError
+    def append(self, value):
+        'Add an element to the right side of the RedisDeque.'
+        value = self._encode(value)
+        self.redis.rpush(self.key, value)
+
+    def appendleft(self, value):
+        'Add an element to the left side of the RedisDeque.'
+        value = self._encode(value)
+        self.redis.lpush(self.key, value)
+
+    def pop(self):
+        value = self.redis.rpop(self.key)
+        decoded = self._decode(value)
+        return decoded
+
+    def popleft(self):
+        value = self.redis.lpop(self.key)
+        decoded = self._decode(value)
+        return decoded

@@ -20,3 +20,11 @@ class DequeTests(TestCase):
     def test_basic_usage(self):
         d = RedisDeque('ghi')
         assert d == ['g', 'h', 'i']
+
+        d.append('j')
+        d.appendleft('f')
+        assert d == ['f', 'g', 'h', 'i', 'j']
+
+        assert d.pop() == 'j'
+        assert d.popleft() == 'f'
+        assert d == ['g', 'h', 'i']
