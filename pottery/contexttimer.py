@@ -10,8 +10,6 @@
 
 import timeit
 
-from tests.base import run_doctests
-
 
 
 class ContextTimer:
@@ -84,5 +82,13 @@ class ContextTimer:
 
 
 if __name__ == '__main__':  # pragma: no cover
-    # Run the doctests in this module with: $ python3 -m pottery.redlock
-    run_doctests()
+    # Run the doctests in this module with:
+    #   $ source venv/bin/activate
+    #   $ python3 -m pottery.contexttimer
+    #   $ deactivate
+    try:
+        from tests.base import run_doctests
+    except ImportError:
+        ...
+    else:
+        run_doctests()

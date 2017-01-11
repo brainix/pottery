@@ -31,7 +31,6 @@ import time
 from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
 
-from tests.base import run_doctests
 from .base import Primitive
 from .contexttimer import ContextTimer
 
@@ -438,5 +437,13 @@ class Redlock(Primitive):
 
 
 if __name__ == '__main__':  # pragma: no cover
-    # Run the doctests in this module with: $ python3 -m pottery.redlock
-    run_doctests()
+    # Run the doctests in this module with:
+    #   $ source venv/bin/activate
+    #   $ python3 -m pottery.redlock
+    #   $ deactivate
+    try:
+        from tests.base import run_doctests
+    except ImportError:
+        ...
+    else:
+        run_doctests()
