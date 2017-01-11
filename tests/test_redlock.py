@@ -11,8 +11,6 @@
 import contextlib
 import time
 
-from redis import Redis
-
 from pottery import ContextTimer
 from pottery import Redlock
 from tests.base import TestCase
@@ -24,7 +22,6 @@ class RedlockTests(TestCase):
 
     def setUp(self):
         super().setUp()
-        self.redis = Redis()
         self.redlock = Redlock(
             masters={self.redis},
             key='printer',

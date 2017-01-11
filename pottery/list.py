@@ -154,6 +154,24 @@ class RedisList(Base, collections.abc.MutableSequence):
         else:
             raise NotImplementedError('sorting by key not implemented')
 
+    @Pipelined._watch
+    def __eq__(self, other):
+        try:
+            if super().__eq__(other):
+                # self and other are both RedisLists, on the same Redis
+                # instance and with the same key.
+                return True
+            elif len(self) != len(other):
+                return False
+            elif len(self) == len(other) == 0:
+                return True
+            elif self[0] != other[0]:
+                return False
+            else:
+                return self[1:] == other[1:]
+        except TypeError:
+            return False
+
     def __add__(self, other):
         'Append the items in other to a RedisList.  O(1)'
         iterable = itertools.chain(self, other)

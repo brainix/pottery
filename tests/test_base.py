@@ -9,7 +9,6 @@
 
 import unittest.mock
 
-from redis import Redis
 from redis import WatchError
 from redis.client import Pipeline
 
@@ -23,7 +22,6 @@ from tests.base import TestCase
 class _BaseTestCase(TestCase):
     def setUp(self):
         super().setUp()
-        self.redis = Redis()
         self.raj = RedisDict(key='pottery:raj', hobby='music', vegetarian=True)
         self.nilika = RedisDict(key='pottery:nilika', hobby='music', vegetarian=True)
         self.luvh = RedisDict(key='luvh', hobby='bullying', vegetarian=False)
