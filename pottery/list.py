@@ -165,19 +165,16 @@ class RedisList(Base, collections.abc.MutableSequence):
                 keys_to_watch.append(other.key)
             with self._watch_context(*keys_to_watch):
                 try:
-                    return self._recursive_eq(other)
+                    if len(self) != len(other):
+                        return False
+                    elif len(self) == len(other) == 0:
+                        return True
+                    elif self[0] != other[0]:
+                        return False
+                    else:
+                        return self[1:] == other[1:]
                 except TypeError:
                     return False
-
-    def _recursive_eq(self, other):
-        if len(self) != len(other):
-            return False
-        elif len(self) == len(other) == 0:
-            return True
-        elif self[0] != other[0]:
-            return False
-        else:
-            return self[1:] == other[1:]
 
     def __add__(self, other):
         'Append the items in other to a RedisList.  O(1)'
