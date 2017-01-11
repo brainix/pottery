@@ -21,7 +21,7 @@ class RedisCounter(RedisDict, collections.Counter):
 
     # Method overrides:
 
-    @Pipelined._watch
+    @Pipelined._watch_method
     def _update(self, iterable=tuple(), *, sign=+1, **kwargs):
         to_set = {}
         try:
@@ -108,7 +108,7 @@ class RedisCounter(RedisDict, collections.Counter):
             modifier_func=lambda x: -x,
         )
 
-    @Pipelined._watch
+    @Pipelined._watch_method
     def _imath_op(self, other, *, sign=+1):
         to_set = {k: self[k] + sign * v for k, v in other.items()}
         to_del = [k for k, v in to_set.items() if v <= 0]
@@ -132,7 +132,7 @@ class RedisCounter(RedisDict, collections.Counter):
         'Same as __sub__(), but in-place.  O(n)'
         return self._imath_op(other, sign=-1)
 
-    @Pipelined._watch
+    @Pipelined._watch_method
     def _iset_op(self, other, *, func):
         to_set, to_del = {}, []
         for k in itertools.chain(self, other):

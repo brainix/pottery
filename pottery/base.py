@@ -118,7 +118,7 @@ class Pipelined(metaclass=abc.ABCMeta):
         finally:
             pipeline.execute()
 
-    def _watch(func):
+    def _watch_method(func):
         @functools.wraps(func)
         def wrap(self, *args, **kwargs):
             for _ in range(self._NUM_TRIES):
@@ -136,6 +136,17 @@ class Pipelined(metaclass=abc.ABCMeta):
             else:
                 raise TooManyTriesError(self.redis, self.key)
         return wrap
+
+    @contextlib.contextmanager
+    def _watch_context(self, *keys):
+        original_redis = self.redis
+        try:
+            with self._pipeline as pipeline:
+                self.redis = pipeline
+                self.redis.watch(*keys)
+                yield
+        finally:
+            self.redis = original_redis
 
 
 

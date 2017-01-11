@@ -67,7 +67,7 @@ class RedisDict(Base, Iterable, collections.abc.MutableMapping):
     # Method overrides:
 
     # From collections.abc.MutableMapping:
-    @Pipelined._watch
+    @Pipelined._watch_method
     def update(self, iterable=tuple(), **kwargs):
         to_set = {}
         with contextlib.suppress(AttributeError):

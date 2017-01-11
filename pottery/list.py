@@ -46,7 +46,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         super().__init__(iterable, redis=redis, key=key)
         self._populate(iterable)
 
-    @Pipelined._watch
+    @Pipelined._watch_method
     def _populate(self, iterable=tuple()):
         values = [self._encode(value) for value in iterable]
         if values:
@@ -119,7 +119,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         'Return the number of items in a RedisList.  O(1)'
         return self.redis.llen(self.key)
 
-    @Pipelined._watch
+    @Pipelined._watch_method
     def insert(self, index, value):
         'Insert an element into a RedisList before the given index.  O(n)'
         value = self._encode(value)
@@ -154,23 +154,30 @@ class RedisList(Base, collections.abc.MutableSequence):
         else:
             raise NotImplementedError('sorting by key not implemented')
 
-    @Pipelined._watch
     def __eq__(self, other):
-        try:
-            if super().__eq__(other):
-                # self and other are both RedisLists, on the same Redis
-                # instance and with the same key.
-                return True
-            elif len(self) != len(other):
-                return False
-            elif len(self) == len(other) == 0:
-                return True
-            elif self[0] != other[0]:
-                return False
-            else:
-                return self[1:] == other[1:]
-        except TypeError:
+        if super().__eq__(other):
+            # self and other are both RedisLists, on the same Redis
+            # instance and with the same key.
+            return True
+        else:
+            keys_to_watch = [self.key]
+            if isinstance(other, Base):
+                keys_to_watch.append(other.key)
+            with self._watch_context(*keys_to_watch):
+                try:
+                    return self._recursive_eq(other)
+                except TypeError:
+                    return False
+
+    def _recursive_eq(self, other):
+        if len(self) != len(other):
             return False
+        elif len(self) == len(other) == 0:
+            return True
+        elif self[0] != other[0]:
+            return False
+        else:
+            return self[1:] == other[1:]
 
     def __add__(self, other):
         'Append the items in other to a RedisList.  O(1)'

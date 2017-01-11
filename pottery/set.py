@@ -24,7 +24,7 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
         super().__init__(iterable, redis=redis, key=key)
         self._populate(iterable)
 
-    @Pipelined._watch
+    @Pipelined._watch_method
     def _populate(self, iterable=tuple()):
         values = {self._encode(value) for value in iterable}
         if values:

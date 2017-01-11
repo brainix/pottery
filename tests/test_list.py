@@ -134,13 +134,19 @@ class ListTests(TestCase):
         assert squares1 == squares2
         assert not squares1 != squares2
 
+    def test_eq_same_redis_instance_different_keys(self):
+        squares1 = RedisList((1, 4, 9, 16, 25), key='pottery:squares1')
+        squares2 = RedisList((1, 4, 9, 16, 25), key='pottery:squares2')
+        assert squares1 == squares2
+        assert not squares1 != squares2
+
     def test_eq_different_lengths(self):
         squares1 = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
         squares2 = (1, 4, 9, 16, 25, 36)
         assert not squares1 == squares2
         assert squares1 != squares2
 
-    def test_eq_different_types_different_items(self):
+    def test_eq_different_items(self):
         squares1 = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
         squares2 = (4, 9, 16, 25, 36)
         assert not squares1 == squares2
