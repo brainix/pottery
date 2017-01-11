@@ -1,7 +1,7 @@
 #-----------------------------------------------------------------------------#
 #   test_source.py                                                            #
 #                                                                             #
-#   Copyright © 2015-2016, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2017, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
 #-----------------------------------------------------------------------------#
 'Python source code tests.'
