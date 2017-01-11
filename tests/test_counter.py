@@ -145,7 +145,7 @@ class CounterTests(TestCase):
         assert -c == collections.Counter(foo=2, bar=1)
 
     def test_in_place_add_with_empty_counter(self):
-        'Test RedisCounter.__iadd__().'
+        'Test RedisCounter.__iadd__() with an empty counter.'
         c = RedisCounter(a=1, b=2)
         d = RedisCounter()
         c += d
@@ -153,7 +153,7 @@ class CounterTests(TestCase):
         assert c == collections.Counter(a=1, b=2)
 
     def test_in_place_add_with_overlapping_counter(self):
-        'Test RedisCounter.__iadd__().'
+        'Test RedisCounter.__iadd__() with a counter with overlapping keys.'
         c = RedisCounter(a=4, b=2, c=0, d=-2)
         d = RedisCounter(a=1, b=2, c=3, d=4)
         c += d
@@ -169,7 +169,7 @@ class CounterTests(TestCase):
         assert c == collections.Counter(a=3)
 
     def test_in_place_or_with_two_empty_counters(self):
-        'Test RedisCounter.__ior__().'
+        'Test RedisCounter.__ior__() with two empty counters.'
         c = RedisCounter()
         d = RedisCounter()
         c |= d
@@ -177,7 +177,7 @@ class CounterTests(TestCase):
         assert c == collections.Counter()
 
     def test_in_place_or_with_two_overlapping_counters(self):
-        'Test RedisCounter.__ior__().'
+        'Test RedisCounter.__ior__() with two counters with overlapping keys.'
         c = RedisCounter(a=4, b=2, c=0, d=-2)
         d = RedisCounter(a=1, b=2, c=3, d=4)
         c |= d
