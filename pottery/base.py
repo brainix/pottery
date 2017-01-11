@@ -34,16 +34,6 @@ class _Common:
     _RANDOM_KEY_PREFIX = 'pottery:'
     _RANDOM_KEY_LENGTH = 16
 
-    @staticmethod
-    def _encode(value):
-        encoded = json.dumps(value, sort_keys=True)
-        return encoded
-
-    @staticmethod
-    def _decode(value):
-        decoded = json.loads(value.decode('utf-8'))
-        return decoded
-
     def __init__(self, *args, redis=None, key=None, **kwargs):
         self.redis = redis
         self.key = key
@@ -51,21 +41,6 @@ class _Common:
     def __del__(self):
         if self.key.startswith(self._RANDOM_KEY_PREFIX):
             self.redis.delete(self.key)
-
-    def __eq__(self, other):
-        if type(self) is type(other) and \
-           self.redis == other.redis and \
-           self.key == other.key:
-            equals = True
-        else:
-            equals = super().__eq__(other)
-            if equals is NotImplemented:
-                equals = False
-        return equals
-
-    def __ne__(self, other):
-        does_not_equal = not self.__eq__(other)
-        return does_not_equal
 
     @property
     def redis(self):
@@ -93,6 +68,58 @@ class _Common:
         if self.redis.exists(random_key):
             random_key = self._random_key(tries=tries-1)
         return random_key
+
+
+
+class _Encodable:
+    @staticmethod
+    def _encode(value):
+        encoded = json.dumps(value, sort_keys=True)
+        return encoded
+
+    @staticmethod
+    def _decode(value):
+        decoded = json.loads(value.decode('utf-8'))
+        return decoded
+
+
+
+class _Comparable(metaclass=abc.ABCMeta):
+    @abc.abstractproperty
+    def redis(self):
+        'Redis client.'
+
+    @abc.abstractproperty
+    def key(self):
+        'Redis key.'
+
+    def __eq__(self, other):
+        if self is other:
+            equals = True
+        elif isinstance(other, _Comparable) and \
+           self.redis == other.redis and \
+           self.key == other.key:
+            equals = True
+        else:
+            equals = super().__eq__(other)
+            if equals is NotImplemented:
+                equals = False
+        return equals
+
+
+
+class _Clearable(metaclass=abc.ABCMeta):
+    @abc.abstractproperty
+    def redis(self):
+        'Redis client.'
+
+    @abc.abstractproperty
+    def key(self):
+        'Redis key.'
+
+    def clear(self):
+        'Remove the elements in a Redis-backed container.  O(n)'
+        self.redis.delete(self.key)
 
 
 
@@ -150,22 +177,7 @@ class Pipelined(metaclass=abc.ABCMeta):
 
 
 
-class _Clearable(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def redis(self):
-        'Redis client.'
-
-    @abc.abstractproperty
-    def key(self):
-        'Redis key.'
-
-    def clear(self):
-        'Remove the elements in a Redis-backed container.  O(n)'
-        self.redis.delete(self.key)
-
-
-
-class Base(_Common, _Clearable, Pipelined):
+class Base(_Common, _Encodable, _Comparable, _Clearable, Pipelined):
     ...
 
 

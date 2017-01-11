@@ -156,18 +156,24 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def __eq__(self, other):
         if super().__eq__(other):
-            # self and other are both RedisLists, on the same Redis
-            # instance and with the same key.
+            # self and other are both RedisLists on the same Redis instance and
+            # with the same key.  No need to compare element by element.
             return True
         else:
+            # At the least, self is a RedisList.  other may or may not be a
+            # Pottery Redis container.  Watch self's Redis key (and other's
+            # Redis key too, if applicable) so that we can do the rest of the
+            # equality comparison unperturbed.
             keys_to_watch = [self.key]
             if isinstance(other, Base):
                 keys_to_watch.append(other.key)
+
             with self._watch_context(*keys_to_watch):
                 try:
                     if len(self) != len(other):
                         return False
-                    elif len(self) == len(other) == 0:
+                    elif isinstance(other, collections.abc.Sequence) and \
+                         len(self) == len(other) == 0:
                         return True
                     elif self[0] != other[0]:
                         return False
