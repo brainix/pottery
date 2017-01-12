@@ -11,10 +11,9 @@
 import contextlib
 import time
 
-from redis import Redis
-
 from pottery import ContextTimer
 from pottery import Redlock
+from pottery.base import _default_redis
 from tests.base import TestCase
 
 
@@ -24,7 +23,7 @@ class RedlockTests(TestCase):
 
     def setUp(self):
         super().setUp()
-        self.redis = Redis()
+        self.redis = _default_redis
         self.redlock = Redlock(
             masters={self.redis},
             key='printer',
@@ -50,7 +49,7 @@ class RedlockTests(TestCase):
             assert self.redis.exists(self.redlock.key)
             assert self.redlock.acquire()
             assert self.redis.exists(self.redlock.key)
-            assert timer.elapsed >= self.redlock.auto_release_time
+            assert timer.elapsed() >= self.redlock.auto_release_time
 
     def test_acquire_same_lock_twice_blocking_with_timeout(self):
         assert not self.redis.exists(self.redlock.key)

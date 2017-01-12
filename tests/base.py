@@ -14,7 +14,7 @@ import unittest
 
 
 class TestCase(unittest.TestCase):
-    REDIS_URL = 'http://localhost:6379/'
+    ...
 
 
 

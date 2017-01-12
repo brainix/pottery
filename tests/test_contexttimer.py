@@ -24,13 +24,13 @@ class ContextTimerTests(TestCase):
         self.timer = ContextTimer()
 
     def _confirm_elapsed(self, expected):
-        got = round(self.timer.elapsed / self.ACCURACY) * self.ACCURACY
+        got = round(self.timer.elapsed() / self.ACCURACY) * self.ACCURACY
         assert got == expected, '{} != {}'.format(got, expected)
 
     def test_start_stop_and_elapsed(self):
         # timer hasn't been started
         with self.assertRaises(RuntimeError):
-            self.timer.elapsed
+            self.timer.elapsed()
         with self.assertRaises(RuntimeError):
             self.timer.stop()
 

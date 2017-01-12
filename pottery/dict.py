@@ -34,11 +34,11 @@ class RedisDict(Base, Iterable, collections.abc.MutableMapping):
 
     def __getitem__(self, key):
         'd.__getitem__(key) <==> d[key].  O(1)'
-        value = self.redis.hget(self.key, self._encode(key))
-        if value is None:
+        encoded_value = self.redis.hget(self.key, self._encode(key))
+        if encoded_value is None:
             raise KeyError(key)
         else:
-            return self._decode(value)
+            return self._decode(encoded_value)
 
     def __setitem__(self, key, value):
         'd.__setitem__(key, value) <==> d[key] = value.  O(1)'
@@ -67,7 +67,7 @@ class RedisDict(Base, Iterable, collections.abc.MutableMapping):
     # Method overrides:
 
     # From collections.abc.MutableMapping:
-    @Pipelined._watch
+    @Pipelined._watch_method
     def update(self, iterable=tuple(), **kwargs):
         to_set = {}
         with contextlib.suppress(AttributeError):

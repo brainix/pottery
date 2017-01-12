@@ -8,9 +8,8 @@
 
 
 
+import contextlib
 import timeit
-
-from tests.base import run_doctests
 
 
 
@@ -25,11 +24,11 @@ class ContextTimer:
         >>> timer = ContextTimer()
         >>> timer.start()
         >>> time.sleep(0.1)
-        >>> 100 <= timer.elapsed < 200
+        >>> 100 <= timer.elapsed() < 200
         True
         >>> timer.stop()
         >>> time.sleep(0.1)
-        >>> 100 <= timer.elapsed < 200
+        >>> 100 <= timer.elapsed() < 200
         True
 
     ...or as a context manager:
@@ -37,9 +36,9 @@ class ContextTimer:
         >>> tests = []
         >>> with ContextTimer() as timer:
         ...     time.sleep(0.1)
-        ...     tests.append(100 <= timer.elapsed < 200)
+        ...     tests.append(100 <= timer.elapsed() < 200)
         >>> time.sleep(0.1)
-        >>> tests.append(100 <= timer.elapsed < 200)
+        >>> tests.append(100 <= timer.elapsed() < 200)
         >>> tests
         [True, True]
     '''
@@ -71,7 +70,6 @@ class ContextTimer:
         else:
             raise RuntimeError("timer hasn't yet been started")
 
-    @property
     def elapsed(self):
         try:
             value = (self._stopped or timeit.default_timer()) - self._started
@@ -84,5 +82,10 @@ class ContextTimer:
 
 
 if __name__ == '__main__':  # pragma: no cover
-    # Run the doctests in this module with: $ python3 -m pottery.redlock
-    run_doctests()
+    # Run the doctests in this module with:
+    #   $ source venv/bin/activate
+    #   $ python3 -m pottery.contexttimer
+    #   $ deactivate
+    with contextlib.suppress(ImportError):
+        from tests.base import run_doctests
+        run_doctests()

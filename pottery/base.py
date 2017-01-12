@@ -24,21 +24,15 @@ from .exceptions import TooManyTriesError
 
 
 
+_default_url = os.environ.get('REDIS_URL', 'http://localhost:6379/')
+_default_redis = Redis.from_url(_default_url)
+
+
+
 class _Common:
-    _DEFAULT_REDIS_URL = 'http://localhost:6379/'
     _NUM_TRIES = 3
     _RANDOM_KEY_PREFIX = 'pottery:'
     _RANDOM_KEY_LENGTH = 16
-
-    @staticmethod
-    def _encode(value):
-        encoded = json.dumps(value, sort_keys=True)
-        return encoded
-
-    @staticmethod
-    def _decode(value):
-        decoded = json.loads(value.decode('utf-8'))
-        return decoded
 
     def __init__(self, *args, redis=None, key=None, **kwargs):
         self.redis = redis
@@ -48,34 +42,13 @@ class _Common:
         if self.key.startswith(self._RANDOM_KEY_PREFIX):
             self.redis.delete(self.key)
 
-    def __eq__(self, other):
-        if type(self) is type(other) and \
-           self.redis == other.redis and \
-           self.key == other.key:
-            equals = True
-        else:
-            equals = super().__eq__(other)
-            if equals is NotImplemented:
-                equals = False
-        return equals
-
-    def __ne__(self, other):
-        does_not_equal = not self.__eq__(other)
-        return does_not_equal
-
-    @property
-    def _default_redis(self):
-        url = os.environ.get('REDIS_URL', self._DEFAULT_REDIS_URL)
-        redis = Redis.from_url(url)
-        return redis
-
     @property
     def redis(self):
         return self._redis
 
     @redis.setter
     def redis(self, value):
-        self._redis = self._default_redis if value is None else value
+        self._redis = _default_redis if value is None else value
 
     @property
     def key(self):
@@ -98,11 +71,20 @@ class _Common:
 
 
 
-class Pipelined(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _NUM_TRIES(self):
-        'The number of times to try generating a random key before giving up.'
+class _Encodable:
+    @staticmethod
+    def _encode(value):
+        encoded = json.dumps(value, sort_keys=True)
+        return encoded
 
+    @staticmethod
+    def _decode(value):
+        decoded = json.loads(value.decode('utf-8'))
+        return decoded
+
+
+
+class _Comparable(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def redis(self):
         'Redis client.'
@@ -111,33 +93,18 @@ class Pipelined(metaclass=abc.ABCMeta):
     def key(self):
         'Redis key.'
 
-    @property
-    @contextlib.contextmanager
-    def _pipeline(self):
-        pipeline = self.redis.pipeline()
-        try:
-            yield pipeline
-        finally:
-            pipeline.execute()
-
-    def _watch(func):
-        @functools.wraps(func)
-        def wrap(self, *args, **kwargs):
-            for _ in range(self._NUM_TRIES):
-                try:
-                    original_redis = self.redis
-                    with self._pipeline as pipeline:
-                        self.redis = pipeline
-                        self.redis.watch(self.key)
-                        value = func(self, *args, **kwargs)
-                    return value
-                except WatchError:
-                    pass
-                finally:
-                    self.redis = original_redis
-            else:
-                raise TooManyTriesError(self.redis, self.key)
-        return wrap
+    def __eq__(self, other):
+        if self is other:
+            equals = True
+        elif isinstance(other, _Comparable) and \
+           self.redis == other.redis and \
+           self.key == other.key:
+            equals = True
+        else:
+            equals = super().__eq__(other)
+            if equals is NotImplemented:
+                equals = False
+        return equals
 
 
 
@@ -156,7 +123,61 @@ class _Clearable(metaclass=abc.ABCMeta):
 
 
 
-class Base(_Common, _Clearable, Pipelined):
+class Pipelined(metaclass=abc.ABCMeta):
+    @abc.abstractproperty
+    def _NUM_TRIES(self):
+        'The number of times to try generating a random key before giving up.'
+
+    @abc.abstractproperty
+    def redis(self):
+        'Redis client.'
+
+    @abc.abstractproperty
+    def key(self):
+        'Redis key.'
+
+    @contextlib.contextmanager
+    def _pipeline(self):
+        pipeline = self.redis.pipeline()
+        try:
+            yield pipeline
+        finally:
+            pipeline.execute()
+
+    @contextlib.contextmanager
+    def _watch_context(self, *keys):
+        original_redis = self.redis
+        keys = keys or (self.key,)
+        try:
+            with self._pipeline() as pipeline:
+                self.redis = pipeline
+                self.redis.watch(*keys)
+                yield self.redis
+        finally:
+            self.redis = original_redis
+
+    def _watch_method(func):
+        @functools.wraps(func)
+        def wrap(self, *args, **kwargs):
+            for _ in range(self._NUM_TRIES):
+                try:
+                    original_redis = self.redis
+                    with self._pipeline() as pipeline:
+                        self.redis = pipeline
+                        self.redis.watch(self.key)
+                        value = func(self, *args, **kwargs)
+                    return value
+                except WatchError:
+                    pass
+                finally:
+                    self.redis = original_redis
+            else:
+                raise TooManyTriesError(self.redis, self.key)
+        return wrap
+
+
+
+class Base(_Common, _Encodable, _Comparable, _Clearable, Pipelined):
     ...
 
 

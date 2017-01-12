@@ -46,26 +46,26 @@ class RedisList(Base, collections.abc.MutableSequence):
         super().__init__(iterable, redis=redis, key=key)
         self._populate(iterable)
 
-    @Pipelined._watch
+    @Pipelined._watch_method
     def _populate(self, iterable=tuple()):
-        values = [self._encode(value) for value in iterable]
-        if values:
+        encoded_values = [self._encode(value) for value in iterable]
+        if encoded_values:
             if self.redis.exists(self.key):
                 raise KeyExistsError(self.redis, self.key)
             else:
                 self.redis.multi()
-                self.redis.rpush(self.key, *values)
+                self.redis.rpush(self.key, *encoded_values)
 
     # Methods required by collections.abc.MutableSequence:
 
     def __getitem__(self, index):
         'l.__getitem__(index) <==> l[index].  O(n)'
         try:
-            value = self.redis.lindex(self.key, index)
-            if value is None:
+            encoded = self.redis.lindex(self.key, index)
+            if encoded is None:
                 raise IndexError('list index out of range')
             else:
-                decoded = self._decode(value)
+                value = self._decode(encoded)
         except ResponseError:
             # This is monumentally stupid.  Python's list API requires us to
             # get elements by slice (defined as a start index, a stop index,
@@ -75,10 +75,10 @@ class RedisList(Base, collections.abc.MutableSequence):
             # Redis, then discard the ones between step in Python.  More info:
             # http://redis.io/commands/lrange
             indices = self._slice_to_indices(index)
-            values = self.redis.lrange(self.key, indices[0], indices[-1])
-            values = values[::index.step]
-            decoded = [self._decode(value) for value in values]
-        return decoded
+            encoded = self.redis.lrange(self.key, indices[0], indices[-1])
+            encoded = encoded[::index.step]
+            value = [self._decode(value) for value in encoded]
+        return value
 
     @_raise_on_error
     def __setitem__(self, index, value):
@@ -86,17 +86,17 @@ class RedisList(Base, collections.abc.MutableSequence):
         try:
             self.redis.lset(self.key, index, self._encode(value))
         except ResponseError:
-            with self._pipeline as pipeline:
+            with self._watch_context():
                 indices, values = self._slice_to_indices(index), value
-                values = [self._encode(value) for value in values]
-                for index, value in zip(indices, values):
-                    pipeline.lset(self.key, index, value)
-                indices, num = indices[len(values):], 0
+                encoded_values = [self._encode(value) for value in values]
+                for index, encoded_value in zip(indices, encoded_values):
+                    self.redis.lset(self.key, index, encoded_value)
+                indices, num = indices[len(encoded_values):], 0
                 for index in indices:
-                    pipeline.lset(self.key, index, None)
+                    self.redis.lset(self.key, index, None)
                     num += 1
                 if num:
-                    pipeline.lrem(self.key, None, num=num)
+                    self.redis.lrem(self.key, None, num=num)
 
     @_raise_on_error
     def __delitem__(self, index):
@@ -107,25 +107,25 @@ class RedisList(Base, collections.abc.MutableSequence):
         # element by *value.*  So our ridiculous hack is to set l[index] to
         # None, then to delete the value None.  More info:
         # http://redis.io/commands/lrem
-        with self._pipeline as pipeline:
+        with self._watch_context():
             indices, num = self._slice_to_indices(index), 0
             for index in indices:
-                pipeline.lset(self.key, index, None)
+                self.redis.lset(self.key, index, None)
                 num += 1
             if num: # pragma: no cover
-                pipeline.lrem(self.key, None, num=num)
+                self.redis.lrem(self.key, None, num=num)
 
     def __len__(self):
         'Return the number of items in a RedisList.  O(1)'
         return self.redis.llen(self.key)
 
-    @Pipelined._watch
+    @Pipelined._watch_method
     def insert(self, index, value):
         'Insert an element into a RedisList before the given index.  O(n)'
-        value = self._encode(value)
+        encoded_value = self._encode(value)
         if index <= 0:
             self.redis.multi()
-            self.redis.lpush(self.key, value)
+            self.redis.lpush(self.key, encoded_value)
         elif index < len(self):
             # This is monumentally stupid.  Python's list API requires us to
             # insert an element before the given *index.*  Of course, Redis
@@ -138,12 +138,17 @@ class RedisList(Base, collections.abc.MutableSequence):
             pivot = self._encode(self[index])
             self.redis.multi()
             self.redis.lset(self.key, index, None)
-            for value in (value, pivot):
-                self.redis.linsert(self.key, 'BEFORE', None, value)
+            for encoded_value in (encoded_value, pivot):
+                self.redis.linsert(self.key, 'BEFORE', None, encoded_value)
             self.redis.lrem(self.key, None, num=1)
         else:
             self.redis.multi()
-            self.redis.rpush(self.key, value)
+            self.redis.rpush(self.key, encoded_value)
+
+    def extend(self, values):
+        'Extend a Redis by appending elements from the iterable.  O(1)'
+        encoded_values = (self._encode(value) for value in values)
+        self.redis.rpush(self.key, *encoded_values)
 
     # Methods required for Raj's sanity:
 
@@ -154,6 +159,34 @@ class RedisList(Base, collections.abc.MutableSequence):
         else:
             raise NotImplementedError('sorting by key not implemented')
 
+    def __eq__(self, other):
+        if super().__eq__(other):
+            # self and other are both RedisLists on the same Redis instance and
+            # with the same key.  No need to compare element by element.
+            return True
+        else:
+            # At the least, self is a RedisList.  other may or may not be a
+            # Pottery Redis container.  Watch self's Redis key (and other's
+            # Redis key too, if applicable) so that we can do the rest of the
+            # equality comparison unperturbed.
+            keys_to_watch = [self.key]
+            if isinstance(other, Base):
+                keys_to_watch.append(other.key)
+
+            with self._watch_context(*keys_to_watch):
+                try:
+                    if len(self) != len(other):
+                        return False
+                    elif isinstance(other, collections.abc.Sequence) and \
+                         len(self) == len(other) == 0:
+                        return True
+                    elif self[0] != other[0]:
+                        return False
+                    else:
+                        return self[1:] == other[1:]
+                except TypeError:
+                    return False
+
     def __add__(self, other):
         'Append the items in other to a RedisList.  O(1)'
         iterable = itertools.chain(self, other)
@@ -161,6 +194,6 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def __repr__(self):
         'Return the string representation of a RedisList.  O(n)'
-        list_ = self.redis.lrange(self.key, 0, -1)
-        list_ = [self._decode(value) for value in list_]
-        return self.__class__.__name__ + str(list_)
+        encoded = self.redis.lrange(self.key, 0, -1)
+        values = [self._decode(value) for value in encoded]
+        return self.__class__.__name__ + str(values)
