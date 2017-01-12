@@ -49,7 +49,7 @@ class RedlockTests(TestCase):
             assert self.redis.exists(self.redlock.key)
             assert self.redlock.acquire()
             assert self.redis.exists(self.redlock.key)
-            assert timer.elapsed >= self.redlock.auto_release_time
+            assert timer.elapsed() >= self.redlock.auto_release_time
 
     def test_acquire_same_lock_twice_blocking_with_timeout(self):
         assert not self.redis.exists(self.redlock.key)

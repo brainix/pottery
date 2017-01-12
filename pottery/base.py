@@ -136,7 +136,6 @@ class Pipelined(metaclass=abc.ABCMeta):
     def key(self):
         'Redis key.'
 
-    @property
     @contextlib.contextmanager
     def _pipeline(self):
         pipeline = self.redis.pipeline()
@@ -150,7 +149,7 @@ class Pipelined(metaclass=abc.ABCMeta):
         original_redis = self.redis
         keys = keys or (self.key,)
         try:
-            with self._pipeline as pipeline:
+            with self._pipeline() as pipeline:
                 self.redis = pipeline
                 self.redis.watch(*keys)
                 yield self.redis
@@ -163,7 +162,7 @@ class Pipelined(metaclass=abc.ABCMeta):
             for _ in range(self._NUM_TRIES):
                 try:
                     original_redis = self.redis
-                    with self._pipeline as pipeline:
+                    with self._pipeline() as pipeline:
                         self.redis = pipeline
                         self.redis.watch(self.key)
                         value = func(self, *args, **kwargs)

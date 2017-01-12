@@ -34,7 +34,6 @@ os.listdir = _listdir
 
 from redis import Redis
 
-@property
 def _connection(self):
     'A dictionary representing a Redis connection (host, port, and database).'
     keys = {'host', 'port', 'db'}
@@ -48,7 +47,7 @@ def __eq__(self, other):
     this method on to the Redis client so that two client instances are equal
     if they're connected to the same Redis host, port, and database.
     '''
-    equals = isinstance(other, Redis) and self._connection == other._connection
+    equals = isinstance(other, Redis) and self._connection() == other._connection()
     return equals
 
 def __ne__(self, other):

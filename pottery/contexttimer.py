@@ -23,11 +23,11 @@ class ContextTimer:
         >>> timer = ContextTimer()
         >>> timer.start()
         >>> time.sleep(0.1)
-        >>> 100 <= timer.elapsed < 200
+        >>> 100 <= timer.elapsed() < 200
         True
         >>> timer.stop()
         >>> time.sleep(0.1)
-        >>> 100 <= timer.elapsed < 200
+        >>> 100 <= timer.elapsed() < 200
         True
 
     ...or as a context manager:
@@ -35,9 +35,9 @@ class ContextTimer:
         >>> tests = []
         >>> with ContextTimer() as timer:
         ...     time.sleep(0.1)
-        ...     tests.append(100 <= timer.elapsed < 200)
+        ...     tests.append(100 <= timer.elapsed() < 200)
         >>> time.sleep(0.1)
-        >>> tests.append(100 <= timer.elapsed < 200)
+        >>> tests.append(100 <= timer.elapsed() < 200)
         >>> tests
         [True, True]
     '''
@@ -69,7 +69,6 @@ class ContextTimer:
         else:
             raise RuntimeError("timer hasn't yet been started")
 
-    @property
     def elapsed(self):
         try:
             value = (self._stopped or timeit.default_timer()) - self._started

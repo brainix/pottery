@@ -195,7 +195,6 @@ class Redlock(Primitive):
         )
         return bool(released)
 
-    @property
     def _drift(self):
         return self.auto_release_time * self.CLOCK_DRIFT_FACTOR + 2
 
@@ -211,7 +210,7 @@ class Redlock(Primitive):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     num_masters_acquired += future.result()
         quorum = num_masters_acquired >= len(self.masters) // 2 + 1
-        validity_time = self.auto_release_time - self._drift
+        validity_time = self.auto_release_time - self._drift()
         if quorum and max(validity_time, 0):
             return True
         else:
@@ -233,7 +232,7 @@ class Redlock(Primitive):
             >>> printer_lock_2 = Redlock(key='printer')
             >>> printer_lock_2.acquire()
             True
-            >>> 10 * 1000 < timer.elapsed < 11 * 1000
+            >>> 10 * 1000 < timer.elapsed() < 11 * 1000
             True
             >>> printer_lock_2.release()
 
@@ -265,7 +264,7 @@ class Redlock(Primitive):
         '''
         if blocking:
             with ContextTimer() as timer:
-                while timeout == -1 or timer.elapsed / 1000 < timeout:
+                while timeout == -1 or timer.elapsed() / 1000 < timeout:
                     if self._acquire_masters():
                         return True
                     else:
@@ -316,7 +315,7 @@ class Redlock(Primitive):
             if quorum:
                 ttls = sorted(ttls, reverse=True)
                 validity_time = ttls[len(self.masters) // 2]
-                validity_time -= timer.elapsed + self._drift
+                validity_time -= timer.elapsed() + self._drift()
                 return max(validity_time, 0)
             else:
                 return 0

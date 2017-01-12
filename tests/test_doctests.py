@@ -17,7 +17,6 @@ from tests.base import TestCase
 
 
 class DoctestTests(TestCase):
-    @property
     def _modules(self):
         test_dir = os.path.dirname(__file__)
         package_dir = os.path.dirname(test_dir)
@@ -30,7 +29,7 @@ class DoctestTests(TestCase):
 
     @unittest.skipUnless('CI' in os.environ, 'run (slow) doctests on only CI')
     def test_doctests(self):
-        for module in self._modules:
+        for module in self._modules():
             with self.subTest(module=module):
                 results = doctest.testmod(m=module)
                 assert not results.failed
