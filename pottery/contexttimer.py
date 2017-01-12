@@ -8,6 +8,7 @@
 
 
 
+import contextlib
 import timeit
 
 
@@ -85,9 +86,6 @@ if __name__ == '__main__':  # pragma: no cover
     #   $ source venv/bin/activate
     #   $ python3 -m pottery.contexttimer
     #   $ deactivate
-    try:
+    with contextlib.suppress(ImportError):
         from tests.base import run_doctests
-    except ImportError:
-        ...
-    else:
         run_doctests()
