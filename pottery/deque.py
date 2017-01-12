@@ -29,41 +29,37 @@ class RedisDeque(RedisList, collections.deque):
     def maxlen(self):
         return self._maxlen
 
-    def append(self, element):
+    def append(self, value):
         'Add an element to the right side of the RedisDeque.'
-        value = self._encode(element)
-        self.redis.rpush(self.key, value)
+        self.redis.rpush(self.key, self._encode(value))
 
-    def appendleft(self, element):
+    def appendleft(self, value):
         'Add an element to the left side of the RedisDeque.'
-        value = self._encode(element)
-        self.redis.lpush(self.key, value)
+        self.redis.lpush(self.key, self._encode(value))
 
     def pop(self):
-        value = self.redis.rpop(self.key)
-        if value is None:
+        encoded_value = self.redis.rpop(self.key)
+        if encoded_value is None:
             raise IndexError('pop from an empty {}'.format(self.__class__.__name__))
         else:
-            element = self._decode(value)
-            return element
+            return self._decode(encoded_value)
 
     def popleft(self):
-        value = self.redis.lpop(self.key)
-        if value is None:
+        encoded_value = self.redis.lpop(self.key)
+        if encoded_value is None:
             raise IndexError('pop from an empty {}'.format(self.__class__.__name__))
         else:
-            element = self._decode(value)
-            return element
+            return self._decode(encoded_value)
 
     @Pipelined._watch_method
     def rotate(self, n=1):
         'Rotate the RedisDeque n steps to the right (default n=1).  If n is negative, rotates left.'
         if n:
             push_method = 'lpush' if n > 0 else 'rpush'
-            elements = self[-n:] if n > 0 else self[:-n]
-            values = [self._encode(element) for element in elements]
+            values = self[-n:] if n > 0 else self[:-n]
+            encoded_values = [self._encode(element) for element in values]
             trim_indices = (0, len(self)-n) if n > 0 else (-n, len(self))
 
             self.redis.multi()
-            getattr(self.redis, push_method)(self.key, *values)
+            getattr(self.redis, push_method)(self.key, *encoded_values)
             self.redis.ltrim(self.key, *trim_indices)

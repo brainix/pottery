@@ -26,13 +26,13 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
 
     @Pipelined._watch_method
     def _populate(self, iterable=tuple()):
-        values = {self._encode(value) for value in iterable}
-        if values:
+        encoded_values = {self._encode(value) for value in iterable}
+        if encoded_values:
             if self.redis.exists(self.key):
                 raise KeyExistsError(self.redis, self.key)
             else:
                 self.redis.multi()
-                self.redis.sadd(self.key, *values)
+                self.redis.sadd(self.key, *encoded_values)
 
     # Methods required by collections.abc.MutableSet:
 
@@ -72,11 +72,11 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
     # From collections.abc.MutableSet:
     def pop(self):
         'Remove and return an element from a RedisSet().  O(1)'
-        value = self.redis.spop(self.key)
-        if value is None:
+        encoded_value = self.redis.spop(self.key)
+        if encoded_value is None:
             raise KeyError('pop from an empty set')
         else:
-            return self._decode(value)
+            return self._decode(encoded_value)
 
     # From collections.abc.MutableSet:
     def remove(self, value):
