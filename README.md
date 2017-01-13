@@ -128,6 +128,64 @@ Or you can protect access to your resource inside a context manager:
     >>> with lock:
     ...   # Critical section - print stuff here.
 
+`Redlock`s time out (by default, after 10 seconds).  You should take care to ensure that your critical section completes well within the timeout.  The reasons that Redlocks time out are to preserve [&ldquo;liveness&rdquo;](http://redis.io/topics/distlock#liveness-arguments) and to avoid deadlocks (in the event that a process dies inside a critical section before it releases its lock).
+
+    >>> import time
+    >>> lock.acquire()
+    True
+    >>> bool(lock.locked())
+    True
+    >>> # Critical section - print stuff here.
+    >>> time.sleep(10)
+    >>> bool(lock.locked())
+    False
+
+If 10 seconds isn't enough to complete executing your critical section, then you can specify your own timeout:
+
+    >>> lock = Redlock(key='printer', auto_release_time=15*1000)
+    >>> lock.acquire()
+    True
+    >>> bool(lock.locked())
+    True
+    >>> # Critical section - print stuff here.
+    >>> time.sleep(10)
+    >>> bool(lock.locked())
+    True
+    >>> time.sleep(5)
+    >>> bool(lock.locked())
+    False
+
+
+
+### ContextTimer
+
+`ContextTimer` helps you easily and accurately measure elapsed time.  Note that `ContextTimer` measures wall (real-world) time, not CPU time; and that `elapsed()` returns time in milliseconds.
+
+You can use `ContextTimer` stand-alone&hellip;
+
+    >>> import time
+    >>> from pottery import ContextTimer
+    >>> timer = ContextTimer()
+    >>> timer.start()
+    >>> time.sleep(0.1)
+    >>> 100 <= timer.elapsed() < 200
+    True
+    >>> timer.stop()
+    >>> time.sleep(0.1)
+    >>> 100 <= timer.elapsed() < 200
+    True
+
+&hellip;or as a context manager:
+
+    >>> tests = []
+    >>> with ContextTimer() as timer:
+    ...     time.sleep(0.1)
+    ...     tests.append(100 <= timer.elapsed() < 200)
+    >>> time.sleep(0.1)
+    >>> tests.append(100 <= timer.elapsed() < 200)
+    >>> tests
+    [True, True]
+
 
 
 ## Contributing

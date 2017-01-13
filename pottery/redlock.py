@@ -85,7 +85,10 @@ class Redlock(Primitive):
         >>> bool(printer_lock.locked())
         True
         >>> # Critical section - print stuff here.
-        >>> time.sleep(15)
+        >>> time.sleep(10)
+        >>> bool(printer_lock.locked())
+        True
+        >>> time.sleep(5)
         >>> bool(printer_lock.locked())
         False
 
