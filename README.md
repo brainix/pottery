@@ -128,7 +128,7 @@ Or you can protect access to your resource inside a context manager:
     >>> with lock:
     ...   # Critical section - print stuff here.
 
-`Redlock`s time out (by default, after 10 seconds).  You should take care to ensure that your critical section completes well within the timeout.  The reasons that Redlocks time out are to preserve [&ldquo;liveness&rdquo;](http://redis.io/topics/distlock#liveness-arguments) and to avoid deadlocks (in the event that a process dies inside a critical section before it releases its lock).
+`Redlock`s time out (by default, after 10 seconds).  You should take care to ensure that your critical section completes well within the timeout.  The reasons that `Redlock`s time out are to preserve [&ldquo;liveness&rdquo;](http://redis.io/topics/distlock#liveness-arguments) and to avoid deadlocks (in the event that a process dies inside a critical section before it releases its lock).
 
     >>> import time
     >>> lock.acquire()
