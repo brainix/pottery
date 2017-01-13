@@ -16,7 +16,8 @@ import timeit
 class ContextTimer:
     '''Measure the execution time of small code snippets.
 
-    Note that ContextTimer measures wall (real-world) time, not CPU time.
+    Note that ContextTimer measures wall (real-world) time, not CPU time; and
+    that elapsed() returns time in milliseconds.
 
     You can use ContextTimer stand-alone...
 

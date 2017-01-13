@@ -132,7 +132,7 @@ Or you can protect access to your resource inside a context manager:
 
 ### ContextTimer
 
-`ContextTimer` helps you easily and accurately measure elapsed time.  Note that `ContextTimer` measures wall (real-world) time, not CPU time.
+`ContextTimer` helps you easily and accurately measure elapsed time.  Note that `ContextTimer` measures wall (real-world) time, not CPU time; and that `elapsed()` returns time in milliseconds.
 
 You can use `ContextTimer` stand-alone&hellip;
 
