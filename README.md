@@ -130,6 +130,37 @@ Or you can protect access to your resource inside a context manager:
 
 
 
+### ContextTimer
+
+`ContextTimer` helps you easily and accurately measure elapsed time.  Note that `ContextTimer` measures wall (real-world) time, not CPU time.
+
+You can use `ContextTimer` stand-alone&hellip;
+
+    >>> import time
+    >>> from pottery import ContextTimer
+    >>> timer = ContextTimer()
+    >>> timer.start()
+    >>> time.sleep(0.1)
+    >>> 100 <= timer.elapsed() < 200
+    True
+    >>> timer.stop()
+    >>> time.sleep(0.1)
+    >>> 100 <= timer.elapsed() < 200
+    True
+
+&hellip;or as a context manager:
+
+    >>> tests = []
+    >>> with ContextTimer() as timer:
+    ...     time.sleep(0.1)
+    ...     tests.append(100 <= timer.elapsed() < 200)
+    >>> time.sleep(0.1)
+    >>> tests.append(100 <= timer.elapsed() < 200)
+    >>> tests
+    [True, True]
+
+
+
 ## Contributing
 
 ### Install prerequisites
