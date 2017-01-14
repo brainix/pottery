@@ -59,6 +59,16 @@ class DequeTests(TestCase):
         with self.assertRaises(AttributeError):
             d.maxlen = 2
 
+    def test_popleft_from_empty(self):
+        d = RedisDeque()
+        with self.assertRaises(IndexError):
+            d.popleft()
+
+    def test_rotate_zero_steps(self):
+        d = RedisDeque(('g', 'h', 'i', 'j', 'k', 'l'))
+        d.rotate(0)
+        assert d == ['g', 'h', 'i', 'j', 'k', 'l']
+
     def test_repr(self):
         d = RedisDeque()
         assert repr(d) == 'RedisDeque([])'
