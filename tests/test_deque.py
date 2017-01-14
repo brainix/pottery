@@ -7,7 +7,10 @@
 
 
 
+import unittest.mock
+
 from pottery import RedisDeque
+from pottery.base import Base
 from tests.base import TestCase
 
 
@@ -44,6 +47,17 @@ class DequeTests(TestCase):
         d.clear()
         with self.assertRaises(IndexError):
             d.pop()
+
+    def test_init_with_wrong_type_maxlen(self):
+        with unittest.mock.patch.object(Base, '__del__') as delete, \
+             self.assertRaises(TypeError):
+            delete.return_value = None
+            RedisDeque(maxlen='2')
+
+    def test_maxlen_not_writable(self):
+        d = RedisDeque()
+        with self.assertRaises(AttributeError):
+            d.maxlen = 2
 
     def test_repr(self):
         d = RedisDeque()

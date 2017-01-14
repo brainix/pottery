@@ -20,14 +20,24 @@ class RedisDeque(RedisList, collections.deque):
     # Method overrides:
 
     def __init__(self, iterable=tuple(), maxlen=None, *, redis=None, key=None):
-        if maxlen:
-            iterable = tuple(iterable)[-maxlen:]
-        super().__init__(iterable, redis=redis, key=key)
         self._maxlen = maxlen
+        super().__init__(iterable, redis=redis, key=key)
+
+    def _populate(self, iterable=tuple()):
+        if self.maxlen:
+            try:
+                iterable = tuple(iterable)[-self.maxlen:]
+            except TypeError:
+                raise TypeError('an integer is required')
+        return super()._populate(iterable)
 
     @property
     def maxlen(self):
         return self._maxlen
+
+    @maxlen.setter
+    def maxlen(self, value):
+        raise AttributeError("attribute 'maxlen' of '{}' objects is not writable".format(self.__class__.__name__))
 
     def append(self, value):
         'Add an element to the right side of the RedisDeque.'
