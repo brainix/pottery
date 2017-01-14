@@ -69,6 +69,24 @@ class RedisDeque(RedisList, collections.deque):
         if self.maxlen is not None and len_ >= self.maxlen:
             self.redis.ltrim(self.key, 0, self.maxlen-1)
 
+    @Pipelined._watch_method
+    def extend(self, values):
+        encoded_values = [self._encode(value) for value in values]
+        len_ = len(self) + len(encoded_values)
+        self.redis.multi()
+        self.redis.rpush(self.key, *encoded_values)
+        if self.maxlen is not None and len_ >= self.maxlen:
+            self.redis.ltrim(self.key, len_-self.maxlen, len_)
+
+    @Pipelined._watch_method
+    def extendleft(self, values):
+        encoded_values = [self._encode(value) for value in values]
+        len_ = len(self) + len(encoded_values)
+        self.redis.multi()
+        self.redis.lpush(self.key, *encoded_values)
+        if self.maxlen is not None and len_ >= self.maxlen:
+            self.redis.ltrim(self.key, 0, self.maxlen-1)
+
     def pop(self):
         encoded_value = self.redis.rpop(self.key)
         if encoded_value is None:

@@ -48,6 +48,9 @@ class DequeTests(TestCase):
         with self.assertRaises(IndexError):
             d.pop()
 
+        d.extendleft('abc')
+        assert d == ['c', 'b', 'a']
+
     def test_init_with_wrong_type_maxlen(self):
         with unittest.mock.patch.object(Base, '__del__') as delete, \
              self.assertRaises(TypeError):
@@ -80,6 +83,13 @@ class DequeTests(TestCase):
         assert d == ['h', 'i', 'j']
         d.appendleft('g')
         assert d == ['g', 'h', 'i']
+
+    def test_extend(self):
+        d = RedisDeque('ghi', maxlen=4)
+        d.extend('jkl')
+        assert d == ['i', 'j', 'k', 'l']
+        d.extendleft('hg')
+        assert d == ['g', 'h', 'i', 'j']
 
     def test_popleft_from_empty(self):
         d = RedisDeque()
