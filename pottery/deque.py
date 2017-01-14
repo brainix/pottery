@@ -8,7 +8,6 @@
 
 
 import collections
-import itertools
 
 from .base import Pipelined
 from .list import RedisList
@@ -21,7 +20,8 @@ class RedisDeque(RedisList, collections.deque):
     # Method overrides:
 
     def __init__(self, iterable=tuple(), maxlen=None, *, redis=None, key=None):
-        iterable = itertools.islice(iterable, maxlen)
+        if maxlen:
+            iterable = tuple(iterable)[-maxlen:]
         super().__init__(iterable, redis=redis, key=key)
         self._maxlen = maxlen
 
@@ -63,3 +63,15 @@ class RedisDeque(RedisList, collections.deque):
             self.redis.multi()
             getattr(self.redis, push_method)(self.key, *encoded_values)
             self.redis.ltrim(self.key, *trim_indices)
+
+    # Methods required for Raj's sanity:
+
+    def __repr__(self):
+        'Return the string representation of a RedisDeque.  O(n)'
+        encoded = self.redis.lrange(self.key, 0, -1)
+        values = [self._decode(value) for value in encoded]
+        repr = self.__class__.__name__ + '(' + str(values)
+        if self.maxlen:
+            repr += ', ' + 'maxlen={}'.format(self.maxlen)
+        repr += ')'
+        return repr

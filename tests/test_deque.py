@@ -44,3 +44,16 @@ class DequeTests(TestCase):
         d.clear()
         with self.assertRaises(IndexError):
             d.pop()
+
+    def test_repr(self):
+        d = RedisDeque()
+        assert repr(d) == 'RedisDeque([])'
+
+        d = RedisDeque('ghi')
+        assert repr(d) == "RedisDeque(['g', 'h', 'i'])"
+
+        d = RedisDeque(maxlen=2)
+        assert repr(d) == 'RedisDeque([], maxlen=2)'
+
+        d = RedisDeque('ghi', maxlen=2)
+        assert repr(d) == "RedisDeque(['h', 'i'], maxlen=2)"
