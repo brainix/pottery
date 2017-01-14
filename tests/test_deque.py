@@ -7,7 +7,10 @@
 
 
 
+import unittest.mock
+
 from pottery import RedisDeque
+from pottery.base import Base
 from tests.base import TestCase
 
 
@@ -44,3 +47,69 @@ class DequeTests(TestCase):
         d.clear()
         with self.assertRaises(IndexError):
             d.pop()
+
+        d.extendleft('abc')
+        assert d == ['c', 'b', 'a']
+
+    def test_init_with_wrong_type_maxlen(self):
+        with unittest.mock.patch.object(Base, '__del__') as delete, \
+             self.assertRaises(TypeError):
+            delete.return_value = None
+            RedisDeque(maxlen='2')
+
+    def test_persistent_deque_bigger_than_maxlen(self):
+        d1 = RedisDeque('ghi')
+        with self.assertRaises(IndexError):
+            d2 = RedisDeque(key=d1.key, maxlen=0)
+
+    def test_maxlen_not_writable(self):
+        d = RedisDeque()
+        with self.assertRaises(AttributeError):
+            d.maxlen = 2
+
+    def test_insert_into_full(self):
+        d = RedisDeque('gh', maxlen=3)
+        d.insert(len(d), 'i')
+        assert d == ['g', 'h', 'i']
+
+        with self.assertRaises(IndexError):
+            d.insert(len(d), 'j')
+
+    def test_append_trims_when_full(self):
+        d = RedisDeque('gh', maxlen=3)
+        d.append('i')
+        assert d == ['g', 'h', 'i']
+        d.append('j')
+        assert d == ['h', 'i', 'j']
+        d.appendleft('g')
+        assert d == ['g', 'h', 'i']
+
+    def test_extend(self):
+        d = RedisDeque('ghi', maxlen=4)
+        d.extend('jkl')
+        assert d == ['i', 'j', 'k', 'l']
+        d.extendleft('hg')
+        assert d == ['g', 'h', 'i', 'j']
+
+    def test_popleft_from_empty(self):
+        d = RedisDeque()
+        with self.assertRaises(IndexError):
+            d.popleft()
+
+    def test_rotate_zero_steps(self):
+        d = RedisDeque(('g', 'h', 'i', 'j', 'k', 'l'))
+        d.rotate(0)
+        assert d == ['g', 'h', 'i', 'j', 'k', 'l']
+
+    def test_repr(self):
+        d = RedisDeque()
+        assert repr(d) == 'RedisDeque([])'
+
+        d = RedisDeque('ghi')
+        assert repr(d) == "RedisDeque(['g', 'h', 'i'])"
+
+        d = RedisDeque(maxlen=2)
+        assert repr(d) == 'RedisDeque([], maxlen=2)'
+
+        d = RedisDeque('ghi', maxlen=2)
+        assert repr(d) == "RedisDeque(['h', 'i'], maxlen=2)"

@@ -117,6 +117,11 @@ class ListTests(TestCase):
         squares.insert(0, 1)
         assert squares == [1, 4, 9, 16, 25]
 
+    def test_extend(self):
+        squares = RedisList((1, 4, 9))
+        squares.extend((16, 25))
+        assert squares == [1, 4, 9, 16, 25]
+
     def test_sort(self):
         squares = RedisList({1, 4, 9, 16, 25})
         squares.sort()

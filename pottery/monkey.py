@@ -19,7 +19,7 @@ def _absolutize(*, files, path=None):
 
 def _listdir(path=None, *, absolute=False):
     files = _listdir.listdir(path)
-    if absolute:
+    if absolute:    # pragma: no cover
         files = _absolutize(path=path, files=files)
     return files
 
