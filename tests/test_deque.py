@@ -54,10 +54,32 @@ class DequeTests(TestCase):
             delete.return_value = None
             RedisDeque(maxlen='2')
 
+    def test_persistent_deque_bigger_than_maxlen(self):
+        d1 = RedisDeque('ghi')
+        with self.assertRaises(IndexError):
+            d2 = RedisDeque(key=d1.key, maxlen=0)
+
     def test_maxlen_not_writable(self):
         d = RedisDeque()
         with self.assertRaises(AttributeError):
             d.maxlen = 2
+
+    def test_insert_into_full(self):
+        d = RedisDeque('gh', maxlen=3)
+        d.insert(len(d), 'i')
+        assert d == ['g', 'h', 'i']
+
+        with self.assertRaises(IndexError):
+            d.insert(len(d), 'j')
+
+    def test_append_trims_when_full(self):
+        d = RedisDeque('gh', maxlen=3)
+        d.append('i')
+        assert d == ['g', 'h', 'i']
+        d.append('j')
+        assert d == ['h', 'i', 'j']
+        d.appendleft('g')
+        assert d == ['g', 'h', 'i']
 
     def test_popleft_from_empty(self):
         d = RedisDeque()
