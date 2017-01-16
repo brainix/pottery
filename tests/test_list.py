@@ -157,6 +157,12 @@ class ListTests(TestCase):
         assert not squares1 == squares2
         assert squares1 != squares2
 
+    def test_eq_unordered_collection(self):
+        squares1 = RedisList((1,), key='pottery:squares')
+        squares2 = {1}
+        assert not squares1 == squares2
+        assert squares1 != squares2
+
     def test_eq_typeerror(self):
         squares = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
         assert not squares == None

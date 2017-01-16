@@ -166,24 +166,32 @@ class RedisList(Base, collections.abc.MutableSequence):
             return True
         else:
             # At the least, self is a RedisList.  other may or may not be a
-            # Pottery Redis container.  Watch self's Redis key (and other's
-            # Redis key too, if applicable) so that we can do the rest of the
-            # equality comparison unperturbed.
+            # Pottery container, and even if it is, self and other may or may
+            # not be on the same Redis instance.  Watch self's Redis key (and
+            # other's Redis key too, if applicable) so that we can do the rest
+            # of the equality comparison unperturbed.
             keys_to_watch = [self.key]
-            if isinstance(other, Base):
+            if isinstance(other, Base) and self.redis == other.redis:
                 keys_to_watch.append(other.key)
 
             with self._watch_context(*keys_to_watch):
                 try:
                     if len(self) != len(other):
+                        # self and other are different lengths.
                         return False
-                    elif isinstance(other, collections.abc.Sequence) and \
-                         len(self) == len(other) == 0:
-                        return True
-                    elif self[0] != other[0]:
-                        return False
+                    elif isinstance(other, collections.abc.Sequence):
+                        # self and other are the same length, and other is an
+                        # ordered collection too.  Compare self's and other's
+                        # elements, pair by pair.
+                        for value1, value2 in zip(self, other):
+                            if value1 != value2:
+                                return False
+                        else:
+                            return True
                     else:
-                        return self[1:] == other[1:]
+                        # self and other are the same length, but other is an
+                        # unordered collection.
+                        return False
                 except TypeError:
                     return False
 
