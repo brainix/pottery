@@ -42,7 +42,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         return indices
 
     def __init__(self, iterable=tuple(), *, redis=None, key=None):
-        'Initialize a RedisList.  O(1)'
+        'Initialize a RedisList.  O(n)'
         super().__init__(iterable, redis=redis, key=key)
         self._populate(iterable)
 
@@ -193,7 +193,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                     return False
 
     def __add__(self, other):
-        'Append the items in other to a RedisList.  O(1)'
+        'Append the items in other to a RedisList.  O(n)'
         iterable = itertools.chain(self, other)
         return self.__class__(iterable, redis=self.redis)
 
@@ -222,7 +222,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             len_ = len(self)
             if index and index >= len_:
                 raise IndexError('pop index out of range')
-            elif index in {0, None, len_, -1}:
+            elif index in {0, None, len_-1, -1}:
                 pop_method = 'lpop' if index == 0 else 'rpop'
                 encoded_value = getattr(self.redis, pop_method)(self.key)
                 if encoded_value is None:

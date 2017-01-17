@@ -20,6 +20,7 @@ class RedisDeque(RedisList, collections.deque):
     # Method overrides:
 
     def __init__(self, iterable=tuple(), maxlen=None, *, redis=None, key=None):
+        'Initialize a RedisDeque.  O(n)'
         self._maxlen = maxlen
         super().__init__(iterable, redis=redis, key=key)
 
@@ -46,6 +47,7 @@ class RedisDeque(RedisList, collections.deque):
 
     @Pipelined._watch_method
     def insert(self, index, value):
+        'Insert an element into a RedisDeque before the given index.  O(n)'
         if self.maxlen is not None and len(self) >= self.maxlen:
             raise IndexError('{} already at its maximum size'.format(self.__class__.__name__))
         else:
@@ -53,7 +55,7 @@ class RedisDeque(RedisList, collections.deque):
 
     @Pipelined._watch_method
     def append(self, value):
-        'Add an element to the right side of the RedisDeque.'
+        'Add an element to the right side of the RedisDeque.  O(1)'
         len_ = len(self) + 1
         self.redis.multi()
         self.redis.rpush(self.key, self._encode(value))
@@ -62,7 +64,7 @@ class RedisDeque(RedisList, collections.deque):
 
     @Pipelined._watch_method
     def appendleft(self, value):
-        'Add an element to the left side of the RedisDeque.'
+        'Add an element to the left side of the RedisDeque.  O(1)'
         len_ = len(self) + 1
         self.redis.multi()
         self.redis.lpush(self.key, self._encode(value))
@@ -71,6 +73,7 @@ class RedisDeque(RedisList, collections.deque):
 
     @Pipelined._watch_method
     def extend(self, values):
+        'Extend a RedisList by appending elements from the iterable.  O(1)'
         encoded_values = [self._encode(value) for value in values]
         len_ = len(self) + len(encoded_values)
         self.redis.multi()
@@ -80,6 +83,15 @@ class RedisDeque(RedisList, collections.deque):
 
     @Pipelined._watch_method
     def extendleft(self, values):
+        '''Extend a RedisList by prepending elements from the iterable.  O(1)
+        
+        Note the order in which the elements are prepended from the iterable:
+
+            >>> d = RedisDeque()
+            >>> d.extendleft('abc')
+            >>> d
+            RedisDeque(['c', 'b', 'a'])
+        '''
         encoded_values = [self._encode(value) for value in values]
         len_ = len(self) + len(encoded_values)
         self.redis.multi()
