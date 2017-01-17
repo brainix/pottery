@@ -216,7 +216,7 @@ class RedisList(Base, collections.abc.MutableSequence):
     # From collections.abc.MutableSequence:
     def append(self, value):
         'Add an element to the right side of the RedisList.  O(1)'
-        self.redis.rpush(self.key, self._encode(value))
+        self.extend((value,))
 
     # From collections.abc.MutableSequence:
     def extend(self, values):

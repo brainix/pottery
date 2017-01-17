@@ -54,31 +54,15 @@ class RedisDeque(RedisList, collections.deque):
 
     def append(self, value):
         'Add an element to the right side of the RedisDeque.  O(1)'
-        with self._watch_context():
-            len_ = len(self) + 1
-            self.redis.multi()
-            self.redis.rpush(self.key, self._encode(value))
-            if self.maxlen is not None and len_ >= self.maxlen:
-                self.redis.ltrim(self.key, len_-self.maxlen, len_)
+        self._extend((value,), right=True)
 
     def appendleft(self, value):
         'Add an element to the left side of the RedisDeque.  O(1)'
-        with self._watch_context():
-            len_ = len(self) + 1
-            self.redis.multi()
-            self.redis.lpush(self.key, self._encode(value))
-            if self.maxlen is not None and len_ >= self.maxlen:
-                self.redis.ltrim(self.key, 0, self.maxlen-1)
+        self._extend((value,), right=False)
 
     def extend(self, values):
         'Extend a RedisList by appending elements from the iterable.  O(1)'
-        with self._watch_context():
-            encoded_values = [self._encode(value) for value in values]
-            len_ = len(self) + len(encoded_values)
-            self.redis.multi()
-            self.redis.rpush(self.key, *encoded_values)
-            if self.maxlen is not None and len_ >= self.maxlen:
-                self.redis.ltrim(self.key, len_-self.maxlen, len_)
+        self._extend(values, right=True)
 
     def extendleft(self, values):
         '''Extend a RedisList by prepending elements from the iterable.  O(1)
@@ -90,23 +74,27 @@ class RedisDeque(RedisList, collections.deque):
             >>> d
             RedisDeque(['c', 'b', 'a'])
         '''
+        self._extend(values, right=False)
+
+    def _extend(self, values, *, right=True):
         with self._watch_context():
             encoded_values = [self._encode(value) for value in values]
             len_ = len(self) + len(encoded_values)
             self.redis.multi()
-            self.redis.lpush(self.key, *encoded_values)
+            push_method = 'rpush' if right else 'lpush'
+            getattr(self.redis, push_method)(self.key, *encoded_values)
             if self.maxlen is not None and len_ >= self.maxlen:
-                self.redis.ltrim(self.key, 0, self.maxlen-1)
+                if right:
+                    trim_indices = len_-self.maxlen, len_
+                else:
+                    trim_indices = 0, self.maxlen-1
+                self.redis.ltrim(self.key, *trim_indices)
 
     def pop(self):
         return super().pop()
 
     def popleft(self):
-        encoded_value = self.redis.lpop(self.key)
-        if encoded_value is None:
-            raise IndexError('pop from an empty {}'.format(self.__class__.__name__))
-        else:
-            return self._decode(encoded_value)
+        return super().pop(0)
 
     def rotate(self, n=1):
         'Rotate the RedisDeque n steps to the right (default n=1).  If n is negative, rotates left.'
