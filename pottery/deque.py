@@ -88,11 +88,7 @@ class RedisDeque(RedisList, collections.deque):
             self.redis.ltrim(self.key, 0, self.maxlen-1)
 
     def pop(self):
-        encoded_value = self.redis.rpop(self.key)
-        if encoded_value is None:
-            raise IndexError('pop from an empty {}'.format(self.__class__.__name__))
-        else:
-            return self._decode(encoded_value)
+        return super().pop()
 
     def popleft(self):
         encoded_value = self.redis.lpop(self.key)

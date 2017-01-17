@@ -151,8 +151,8 @@ class Pipelined(metaclass=abc.ABCMeta):
         try:
             with self._pipeline() as pipeline:
                 self.redis = pipeline
-                self.redis.watch(*keys)
-                yield self.redis
+                pipeline.watch(*keys)
+                yield pipeline
         finally:
             self.redis = original_redis
 
@@ -164,7 +164,7 @@ class Pipelined(metaclass=abc.ABCMeta):
                     original_redis = self.redis
                     with self._pipeline() as pipeline:
                         self.redis = pipeline
-                        self.redis.watch(self.key)
+                        pipeline.watch(self.key)
                         value = func(self, *args, **kwargs)
                     return value
                 except WatchError:

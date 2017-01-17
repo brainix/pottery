@@ -171,3 +171,12 @@ class ListTests(TestCase):
     def test_repr(self):
         squares = RedisList((1, 4, 9, 16, 25))
         assert repr(squares) == 'RedisList[1, 4, 9, 16, 25]'
+
+    def test_pop_out_of_range(self):
+        squares = RedisList((1, 4, 9, 16, 25))
+        with self.assertRaises(IndexError):
+            squares.pop(len(squares))
+
+    def test_pop_index(self):
+        metasyntactic = RedisList(('foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply', 'waldo', 'fred', 'plugh', 'xyzzy', 'thud'))
+        assert metasyntactic.pop(1) == 'bar'

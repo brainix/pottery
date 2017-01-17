@@ -89,6 +89,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             with self._watch_context():
                 indices, values = self._slice_to_indices(index), value
                 encoded_values = [self._encode(value) for value in values]
+                self.redis.multi()
                 for index, encoded_value in zip(indices, encoded_values):
                     self.redis.lset(self.key, index, encoded_value)
                 indices, num = indices[len(encoded_values):], 0
@@ -109,6 +110,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         # http://redis.io/commands/lrem
         with self._watch_context():
             indices, num = self._slice_to_indices(index), 0
+            self.redis.multi()
             for index in indices:
                 self.redis.lset(self.key, index, None)
                 num += 1
@@ -144,11 +146,6 @@ class RedisList(Base, collections.abc.MutableSequence):
         else:
             self.redis.multi()
             self.redis.rpush(self.key, encoded_value)
-
-    def extend(self, values):
-        'Extend a Redis by appending elements from the iterable.  O(1)'
-        encoded_values = (self._encode(value) for value in values)
-        self.redis.rpush(self.key, *encoded_values)
 
     # Methods required for Raj's sanity:
 
@@ -205,3 +202,34 @@ class RedisList(Base, collections.abc.MutableSequence):
         encoded = self.redis.lrange(self.key, 0, -1)
         values = [self._decode(value) for value in encoded]
         return self.__class__.__name__ + str(values)
+
+    # Method overrides:
+
+    # From collections.abc.MutableSequence:
+    def append(self, value):
+        'Add an element to the right side of the RedisList.  O(1)'
+        self.redis.rpush(self.key, self._encode(value))
+
+    # From collections.abc.MutableSequence:
+    def extend(self, values):
+        'Extend a RedisList by appending elements from the iterable.  O(1)'
+        encoded_values = (self._encode(value) for value in values)
+        self.redis.rpush(self.key, *encoded_values)
+
+    # From collections.abc.MutableSequence:
+    def pop(self, index=None):
+        with self._watch_context():
+            len_ = len(self)
+            if index and index >= len_:
+                raise IndexError('pop index out of range')
+            elif index in {0, None, len_, -1}:
+                pop_method = 'lpop' if index == 0 else 'rpop'
+                encoded_value = getattr(self.redis, pop_method)(self.key)
+                if encoded_value is None:
+                    raise IndexError('pop from an empty {}'.format(self.__class__.__name__))
+                else:
+                    return self._decode(encoded_value)
+            else:
+                value = self[index]
+                del self[index]
+                return value
