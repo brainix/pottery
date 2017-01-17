@@ -9,7 +9,6 @@
 
 import collections
 
-from .base import Pipelined
 from .list import RedisList
 
 
@@ -45,43 +44,42 @@ class RedisDeque(RedisList, collections.deque):
     def maxlen(self, value):
         raise AttributeError("attribute 'maxlen' of '{}' objects is not writable".format(self.__class__.__name__))
 
-    @Pipelined._watch_method
     def insert(self, index, value):
         'Insert an element into a RedisDeque before the given index.  O(n)'
-        if self.maxlen is not None and len(self) >= self.maxlen:
-            raise IndexError('{} already at its maximum size'.format(self.__class__.__name__))
-        else:
-            return super().insert(index, value)
+        with self._watch_context():
+            if self.maxlen is not None and len(self) >= self.maxlen:
+                raise IndexError('{} already at its maximum size'.format(self.__class__.__name__))
+            else:
+                return super()._insert(index, value)
 
-    @Pipelined._watch_method
     def append(self, value):
         'Add an element to the right side of the RedisDeque.  O(1)'
-        len_ = len(self) + 1
-        self.redis.multi()
-        self.redis.rpush(self.key, self._encode(value))
-        if self.maxlen is not None and len_ >= self.maxlen:
-            self.redis.ltrim(self.key, len_-self.maxlen, len_)
+        with self._watch_context():
+            len_ = len(self) + 1
+            self.redis.multi()
+            self.redis.rpush(self.key, self._encode(value))
+            if self.maxlen is not None and len_ >= self.maxlen:
+                self.redis.ltrim(self.key, len_-self.maxlen, len_)
 
-    @Pipelined._watch_method
     def appendleft(self, value):
         'Add an element to the left side of the RedisDeque.  O(1)'
-        len_ = len(self) + 1
-        self.redis.multi()
-        self.redis.lpush(self.key, self._encode(value))
-        if self.maxlen is not None and len_ >= self.maxlen:
-            self.redis.ltrim(self.key, 0, self.maxlen-1)
+        with self._watch_context():
+            len_ = len(self) + 1
+            self.redis.multi()
+            self.redis.lpush(self.key, self._encode(value))
+            if self.maxlen is not None and len_ >= self.maxlen:
+                self.redis.ltrim(self.key, 0, self.maxlen-1)
 
-    @Pipelined._watch_method
     def extend(self, values):
         'Extend a RedisList by appending elements from the iterable.  O(1)'
-        encoded_values = [self._encode(value) for value in values]
-        len_ = len(self) + len(encoded_values)
-        self.redis.multi()
-        self.redis.rpush(self.key, *encoded_values)
-        if self.maxlen is not None and len_ >= self.maxlen:
-            self.redis.ltrim(self.key, len_-self.maxlen, len_)
+        with self._watch_context():
+            encoded_values = [self._encode(value) for value in values]
+            len_ = len(self) + len(encoded_values)
+            self.redis.multi()
+            self.redis.rpush(self.key, *encoded_values)
+            if self.maxlen is not None and len_ >= self.maxlen:
+                self.redis.ltrim(self.key, len_-self.maxlen, len_)
 
-    @Pipelined._watch_method
     def extendleft(self, values):
         '''Extend a RedisList by prepending elements from the iterable.  O(1)
         
@@ -92,12 +90,13 @@ class RedisDeque(RedisList, collections.deque):
             >>> d
             RedisDeque(['c', 'b', 'a'])
         '''
-        encoded_values = [self._encode(value) for value in values]
-        len_ = len(self) + len(encoded_values)
-        self.redis.multi()
-        self.redis.lpush(self.key, *encoded_values)
-        if self.maxlen is not None and len_ >= self.maxlen:
-            self.redis.ltrim(self.key, 0, self.maxlen-1)
+        with self._watch_context():
+            encoded_values = [self._encode(value) for value in values]
+            len_ = len(self) + len(encoded_values)
+            self.redis.multi()
+            self.redis.lpush(self.key, *encoded_values)
+            if self.maxlen is not None and len_ >= self.maxlen:
+                self.redis.ltrim(self.key, 0, self.maxlen-1)
 
     def pop(self):
         return super().pop()
@@ -109,18 +108,18 @@ class RedisDeque(RedisList, collections.deque):
         else:
             return self._decode(encoded_value)
 
-    @Pipelined._watch_method
     def rotate(self, n=1):
         'Rotate the RedisDeque n steps to the right (default n=1).  If n is negative, rotates left.'
         if n:
-            push_method = 'lpush' if n > 0 else 'rpush'
-            values = self[-n:] if n > 0 else self[:-n]
-            encoded_values = [self._encode(element) for element in values]
-            trim_indices = (0, len(self)-n) if n > 0 else (-n, len(self))
+            with self._watch_context():
+                push_method = 'lpush' if n > 0 else 'rpush'
+                values = self[-n:] if n > 0 else self[:-n]
+                encoded_values = (self._encode(element) for element in values)
+                trim_indices = (0, len(self)-n) if n > 0 else (-n, len(self))
 
-            self.redis.multi()
-            getattr(self.redis, push_method)(self.key, *encoded_values)
-            self.redis.ltrim(self.key, *trim_indices)
+                self.redis.multi()
+                getattr(self.redis, push_method)(self.key, *encoded_values)
+                self.redis.ltrim(self.key, *trim_indices)
 
     # Methods required for Raj's sanity:
 

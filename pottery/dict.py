@@ -13,7 +13,6 @@ import itertools
 
 from .base import Base
 from .base import Iterable
-from .base import Pipelined
 from .exceptions import KeyExistsError
 
 
@@ -67,14 +66,12 @@ class RedisDict(Base, Iterable, collections.abc.MutableMapping):
     # Method overrides:
 
     # From collections.abc.MutableMapping:
-    @Pipelined._watch_method
     def update(self, iterable=tuple(), **kwargs):
         to_set = {}
         with contextlib.suppress(AttributeError):
             iterable = iterable.items()
         for key, value in itertools.chain(iterable, kwargs.items()):
             to_set[self._encode(key)] = self._encode(value)
-        self.redis.multi()
         if to_set:
             self.redis.hmset(self.key, to_set)
 

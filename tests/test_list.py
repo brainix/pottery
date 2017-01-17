@@ -180,3 +180,8 @@ class ListTests(TestCase):
     def test_pop_index(self):
         metasyntactic = RedisList(('foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply', 'waldo', 'fred', 'plugh', 'xyzzy', 'thud'))
         assert metasyntactic.pop(1) == 'bar'
+
+    def test_remove_nonexistent(self):
+        metasyntactic = RedisList(('foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply', 'waldo', 'fred', 'plugh', 'xyzzy', 'thud'))
+        with self.assertRaises(ValueError):
+            metasyntactic.remove('raj')

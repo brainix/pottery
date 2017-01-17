@@ -16,11 +16,9 @@ import random
 import string
 
 from redis import Redis
-from redis import WatchError
 
 from . import monkey
 from .exceptions import RandomKeyError
-from .exceptions import TooManyTriesError
 
 
 
@@ -155,25 +153,6 @@ class Pipelined(metaclass=abc.ABCMeta):
                 yield pipeline
         finally:
             self.redis = original_redis
-
-    def _watch_method(func):
-        @functools.wraps(func)
-        def wrap(self, *args, **kwargs):
-            for _ in range(self._NUM_TRIES):
-                try:
-                    original_redis = self.redis
-                    with self._pipeline() as pipeline:
-                        self.redis = pipeline
-                        pipeline.watch(self.key)
-                        value = func(self, *args, **kwargs)
-                    return value
-                except WatchError:
-                    pass
-                finally:
-                    self.redis = original_redis
-            else:
-                raise TooManyTriesError(self.redis, self.key)
-        return wrap
 
 
 

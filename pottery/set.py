@@ -11,7 +11,6 @@ import collections.abc
 
 from .base import Base
 from .base import Iterable
-from .base import Pipelined
 from .exceptions import KeyExistsError
 
 
@@ -24,15 +23,15 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
         super().__init__(iterable, redis=redis, key=key)
         self._populate(iterable)
 
-    @Pipelined._watch_method
     def _populate(self, iterable=tuple()):
-        encoded_values = {self._encode(value) for value in iterable}
-        if encoded_values:
-            if self.redis.exists(self.key):
-                raise KeyExistsError(self.redis, self.key)
-            else:
-                self.redis.multi()
-                self.redis.sadd(self.key, *encoded_values)
+        with self._watch_context():
+            encoded_values = {self._encode(value) for value in iterable}
+            if encoded_values:
+                if self.redis.exists(self.key):
+                    raise KeyExistsError(self.redis, self.key)
+                else:
+                    self.redis.multi()
+                    self.redis.sadd(self.key, *encoded_values)
 
     # Methods required by collections.abc.MutableSet:
 

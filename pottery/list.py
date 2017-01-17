@@ -14,7 +14,6 @@ import itertools
 from redis import ResponseError
 
 from .base import Base
-from .base import Pipelined
 from .exceptions import KeyExistsError
 
 
@@ -46,49 +45,51 @@ class RedisList(Base, collections.abc.MutableSequence):
         super().__init__(iterable, redis=redis, key=key)
         self._populate(iterable)
 
-    @Pipelined._watch_method
     def _populate(self, iterable=tuple()):
-        encoded_values = [self._encode(value) for value in iterable]
-        if encoded_values:
-            if self.redis.exists(self.key):
-                raise KeyExistsError(self.redis, self.key)
-            else:
-                self.redis.multi()
-                self.redis.rpush(self.key, *encoded_values)
+        with self._watch_context():
+            encoded_values = [self._encode(value) for value in iterable]
+            if encoded_values:
+                if self.redis.exists(self.key):
+                    raise KeyExistsError(self.redis, self.key)
+                else:
+                    self.redis.multi()
+                    self.redis.rpush(self.key, *encoded_values)
 
     # Methods required by collections.abc.MutableSequence:
 
     def __getitem__(self, index):
         'l.__getitem__(index) <==> l[index].  O(n)'
-        try:
-            encoded = self.redis.lindex(self.key, index)
-            if encoded is None:
-                raise IndexError('list index out of range')
-            else:
-                value = self._decode(encoded)
-        except ResponseError:
-            # This is monumentally stupid.  Python's list API requires us to
-            # get elements by slice (defined as a start index, a stop index,
-            # and a step).  Of course, Redis allows us to only get elements by
-            # start and stop (no step), because it's Redis.  So our ridiculous
-            # hack is to get all of the elements between start and stop from
-            # Redis, then discard the ones between step in Python.  More info:
-            # http://redis.io/commands/lrange
-            indices = self._slice_to_indices(index)
-            encoded = self.redis.lrange(self.key, indices[0], indices[-1])
-            encoded = encoded[::index.step]
-            value = [self._decode(value) for value in encoded]
-        return value
+        with self._watch_context():
+            try:
+                encoded = self.redis.lindex(self.key, index)
+                if encoded is None:
+                    raise IndexError('list index out of range')
+                else:
+                    value = self._decode(encoded)
+            except ResponseError:
+                # This is monumentally stupid.  Python's list API requires us
+                # to get elements by slice (defined as a start index, a stop
+                # index, and a step).  Of course, Redis allows us to only get
+                # elements by start and stop (no step), because it's Redis.  So
+                # our ridiculous hack is to get all of the elements between
+                # start and stop from Redis, then discard the ones between step
+                # in Python.  More info:
+                # http://redis.io/commands/lrange
+                indices = self._slice_to_indices(index)
+                encoded = self.redis.lrange(self.key, indices[0], indices[-1])
+                encoded = encoded[::index.step]
+                value = [self._decode(value) for value in encoded]
+            return value
 
     @_raise_on_error
     def __setitem__(self, index, value):
         'l.__setitem__(index, value) <==> l[index] = value.  O(n)'
-        try:
-            self.redis.lset(self.key, index, self._encode(value))
-        except ResponseError:
-            with self._watch_context():
-                indices, values = self._slice_to_indices(index), value
-                encoded_values = [self._encode(value) for value in values]
+        with self._watch_context():
+            try:
+                self.redis.lset(self.key, index, self._encode(value))
+            except ResponseError:
+                encoded_values = [self._encode(value) for value in value]
+                indices = self._slice_to_indices(index)
                 self.redis.multi()
                 for index, encoded_value in zip(indices, encoded_values):
                     self.redis.lset(self.key, index, encoded_value)
@@ -109,33 +110,40 @@ class RedisList(Base, collections.abc.MutableSequence):
         # None, then to delete the value None.  More info:
         # http://redis.io/commands/lrem
         with self._watch_context():
-            indices, num = self._slice_to_indices(index), 0
-            self.redis.multi()
-            for index in indices:
-                self.redis.lset(self.key, index, None)
-                num += 1
-            if num: # pragma: no cover
-                self.redis.lrem(self.key, None, num=num)
+            self._delete(index)
+
+    def _delete(self, index):
+        indices, num = self._slice_to_indices(index), 0
+        self.redis.multi()
+        for index in indices:
+            self.redis.lset(self.key, index, None)
+            num += 1
+        if num: # pragma: no cover
+            self.redis.lrem(self.key, None, num=num)
 
     def __len__(self):
         'Return the number of items in a RedisList.  O(1)'
         return self.redis.llen(self.key)
 
-    @Pipelined._watch_method
     def insert(self, index, value):
         'Insert an element into a RedisList before the given index.  O(n)'
+        with self._watch_context():
+            self._insert(index, value)
+
+    def _insert(self, index, value):
         encoded_value = self._encode(value)
         if index <= 0:
             self.redis.multi()
             self.redis.lpush(self.key, encoded_value)
         elif index < len(self):
-            # This is monumentally stupid.  Python's list API requires us to
-            # insert an element before the given *index.*  Of course, Redis
-            # doesn't support that, because it's Redis.  Instead, Redis
-            # supports inserting an element before a given (pivot) *value.*  So
-            # our ridiculous hack is to set the pivot value to None, then to
-            # insert the desired value and the original pivot value before the
-            # value None, then to delete the value None.  More info:
+            # This is monumentally stupid.  Python's list API requires us
+            # to insert an element before the given *index.*  Of course,
+            # Redis doesn't support that, because it's Redis.  Instead,
+            # Redis supports inserting an element before a given (pivot)
+            # *value.*  So our ridiculous hack is to set the pivot value to
+            # None, then to insert the desired value and the original pivot
+            # value before the value None, then to delete the value None.
+            # More info:
             # http://redis.io/commands/linsert
             pivot = self._encode(self[index])
             self.redis.multi()
@@ -231,5 +239,15 @@ class RedisList(Base, collections.abc.MutableSequence):
                     return self._decode(encoded_value)
             else:
                 value = self[index]
-                del self[index]
+                self._delete(index)
                 return value
+
+    # From collections.abc.MutableSequence:
+    def remove(self, value):
+        with self._watch_context():
+            for index, element in enumerate(self):
+                if element == value:
+                    self._delete(index)
+                    break
+            else:
+                raise ValueError('{class_}.remove(x): x not in {class_}'.format(class_=self.__class__.__name__))

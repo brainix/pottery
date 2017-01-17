@@ -11,7 +11,7 @@ import collections
 import contextlib
 import itertools
 
-from .base import Pipelined
+from .base import Base
 from .dict import RedisDict
 
 
@@ -21,23 +21,25 @@ class RedisCounter(RedisDict, collections.Counter):
 
     # Method overrides:
 
-    @Pipelined._watch_method
     def _update(self, iterable=tuple(), *, sign=+1, **kwargs):
-        to_set = {}
-        try:
-            for key, value in iterable.items():
-                to_set[key] = sign * value
-        except AttributeError:
-            for key in iterable:
-                to_set[key] = to_set.get(key, self[key]) + sign
-        for key, value in kwargs.items():
-            original = self[key] if to_set.get(key, 0) is 0 else to_set[key]
-            to_set[key] = original + sign * value
-        to_set = {key: self[key] + value for key, value in to_set.items()}
-        to_set = {self._encode(k): self._encode(v) for k, v in to_set.items()}
-        self.redis.multi()
-        if to_set:
-            self.redis.hmset(self.key, to_set)
+        with self._watch_context():
+            to_set = {}
+            try:
+                for key, value in iterable.items():
+                    to_set[key] = sign * value
+            except AttributeError:
+                for key in iterable:
+                    to_set[key] = to_set.get(key, self[key]) + sign
+            for key, value in kwargs.items():
+                original = self[key] if to_set.get(key, 0) is 0 else to_set[key]
+                to_set[key] = original + sign * value
+            to_set = {key: self[key] + value for key, value in to_set.items()}
+            to_set = {
+                self._encode(k): self._encode(v) for k, v in to_set.items()
+            }
+            if to_set:
+                self.redis.multi()
+                self.redis.hmset(self.key, to_set)
 
     def update(self, iterable=tuple(), **kwargs):
         'Like dict.update() but add counts instead of replacing them.  O(n)'
@@ -108,20 +110,27 @@ class RedisCounter(RedisDict, collections.Counter):
             modifier_func=lambda x: -x,
         )
 
-    @Pipelined._watch_method
     def _imath_op(self, other, *, sign=+1):
-        to_set = {k: self[k] + sign * v for k, v in other.items()}
-        to_del = [k for k, v in to_set.items() if v <= 0]
-        to_del.extend([
-            k for k, v in self.items() if k not in to_set and v <= 0
-        ])
-        to_set = {self._encode(k): self._encode(v) for k, v in to_set.items()}
-        to_del = [self._encode(k) for k in to_del]
-        self.redis.multi()
-        if to_set:
-            self.redis.hmset(self.key, to_set)
-        if to_del:
-            self.redis.hdel(self.key, *to_del)
+        keys_to_watch = [self.key]
+        if isinstance(other, Base) and self.redis == other.redis:
+            keys_to_watch.append(other.key)
+
+        with self._watch_context(*keys_to_watch):
+            to_set = {k: self[k] + sign * v for k, v in other.items()}
+            to_del = [k for k, v in to_set.items() if v <= 0]
+            to_del.extend([
+                k for k, v in self.items() if k not in to_set and v <= 0
+            ])
+            to_set = {
+                self._encode(k): self._encode(v) for k, v in to_set.items() if v
+            }
+            to_del = [self._encode(k) for k in to_del]
+            if to_set or to_del:
+                self.redis.multi()
+                if to_set:
+                    self.redis.hmset(self.key, to_set)
+                if to_del:
+                    self.redis.hdel(self.key, *to_del)
         return self
 
     def __iadd__(self, other):
@@ -132,26 +141,32 @@ class RedisCounter(RedisDict, collections.Counter):
         'Same as __sub__(), but in-place.  O(n)'
         return self._imath_op(other, sign=-1)
 
-    @Pipelined._watch_method
     def _iset_op(self, other, *, func):
-        to_set, to_del = {}, []
-        for k in itertools.chain(self, other):
-            if getattr(self[k], func)(other[k]):
-                to_set[k] = self[k]
-            else:
-                to_set[k] = other[k]
-            if to_set[k] <= 0:
-                to_del.append(k)
-        self.redis.multi()
-        if to_set:
-            to_set = {
-                self._encode(k): self._encode(v)
-                for k, v in to_set.items()
-            }
-            self.redis.hmset(self.key, to_set)
-        if to_del:
-            to_del = [self._encode(k) for k in to_del]
-            self.redis.hdel(self.key, *to_del)
+        keys_to_watch = [self.key]
+        if isinstance(other, Base) and self.redis == other.redis:
+            keys_to_watch.append(other.key)
+
+        with self._watch_context(*keys_to_watch):
+            to_set, to_del = {}, []
+            for k in itertools.chain(self, other):
+                if getattr(self[k], func)(other[k]):
+                    to_set[k] = self[k]
+                else:
+                    to_set[k] = other[k]
+                if to_set[k] <= 0:
+                    del to_set[k]
+                    to_del.append(k)
+            if to_set or to_del:
+                self.redis.multi()
+                if to_set:
+                    to_set = {
+                        self._encode(k): self._encode(v)
+                        for k, v in to_set.items()
+                    }
+                    self.redis.hmset(self.key, to_set)
+                if to_del:
+                    to_del = [self._encode(k) for k in to_del]
+                    self.redis.hdel(self.key, *to_del)
         return self
 
     def __ior__(self, other):

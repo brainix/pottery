@@ -14,7 +14,7 @@ class PotteryError(Exception):
         self._redis = redis
         self._key = key
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return str((self._redis, self._key))
 
 
@@ -32,8 +32,3 @@ class RandomKeyError(PotteryError):
 
     def __str__(self):
         return str(self._redis)
-
-
-
-class TooManyTriesError(PotteryError):
-    "Can't complete a Redis transaction; tried too many times."
