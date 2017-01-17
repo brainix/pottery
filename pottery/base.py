@@ -200,9 +200,7 @@ class Iterable(metaclass=abc.ABCMeta):
         cursor = 0
         while True:
             cursor, iterable = self._scan(self.key, cursor=cursor)
-            for value in iterable:
-                decoded = self._decode(value)
-                yield decoded
+            yield from (self._decode(value) for value in iterable)
             if cursor == 0:
                 break
 
