@@ -18,6 +18,7 @@ import random
 import string
 
 from redis import Redis
+from redis import RedisError
 
 from . import monkey
 from .exceptions import RandomKeyError
@@ -139,10 +140,8 @@ class Pipelined(metaclass=abc.ABCMeta):
     @contextlib.contextmanager
     def _pipeline(self):
         pipeline = self.redis.pipeline()
-        try:
-            yield pipeline
-        finally:
-            pipeline.execute()
+        yield pipeline
+        pipeline.execute()
 
     @contextlib.contextmanager
     def _watch_keys(self, *keys):
@@ -153,6 +152,9 @@ class Pipelined(metaclass=abc.ABCMeta):
                 self.redis = pipeline
                 pipeline.watch(*keys)
                 yield pipeline
+                with contextlib.suppress(RedisError):
+                    pipeline.multi()
+                pipeline.ping()
         finally:
             self.redis = original_redis
 

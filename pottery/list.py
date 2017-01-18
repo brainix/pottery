@@ -60,13 +60,7 @@ class RedisList(Base, collections.abc.MutableSequence):
     def __getitem__(self, index):
         'l.__getitem__(index) <==> l[index].  O(n)'
         with self._watch_keys():
-            try:
-                encoded = self.redis.lindex(self.key, index)
-                if encoded is None:
-                    raise IndexError('list index out of range')
-                else:
-                    value = self._decode(encoded)
-            except ResponseError:
+            if isinstance(index, slice):
                 # This is monumentally stupid.  Python's list API requires us
                 # to get elements by slice (defined as a start index, a stop
                 # index, and a step).  Of course, Redis allows us to only get
@@ -76,18 +70,26 @@ class RedisList(Base, collections.abc.MutableSequence):
                 # in Python.  More info:
                 # http://redis.io/commands/lrange
                 indices = self._slice_to_indices(index)
-                encoded = self.redis.lrange(self.key, indices[0], indices[-1])
+                self.redis.multi()
+                self.redis.lrange(self.key, indices[0], indices[-1])
+                encoded = self.redis.execute()[0]
                 encoded = encoded[::index.step]
                 value = [self._decode(value) for value in encoded]
+            else:
+                self.redis.multi()
+                self.redis.lindex(self.key, index)
+                encoded = self.redis.execute()[0]
+                if encoded is None:
+                    raise IndexError('list index out of range')
+                else:
+                    value = self._decode(encoded)
             return value
 
     @_raise_on_error
     def __setitem__(self, index, value):
         'l.__setitem__(index, value) <==> l[index] = value.  O(n)'
         with self._watch_keys():
-            try:
-                self.redis.lset(self.key, index, self._encode(value))
-            except ResponseError:
+            if isinstance(index, slice):
                 encoded_values = [self._encode(value) for value in value]
                 indices = self._slice_to_indices(index)
                 self.redis.multi()
@@ -99,6 +101,9 @@ class RedisList(Base, collections.abc.MutableSequence):
                     num += 1
                 if num:
                     self.redis.lrem(self.key, None, num=num)
+            else:
+                self.redis.multi()
+                self.redis.lset(self.key, index, self._encode(value))
 
     @_raise_on_error
     def __delitem__(self, index):
@@ -223,7 +228,9 @@ class RedisList(Base, collections.abc.MutableSequence):
                 raise IndexError('pop index out of range')
             elif index in {0, None, len_-1, -1}:
                 pop_method = 'lpop' if index == 0 else 'rpop'
-                encoded_value = getattr(self.redis, pop_method)(self.key)
+                self.redis.multi()
+                getattr(self.redis, pop_method)(self.key)
+                encoded_value = self.redis.execute()[0]
                 if encoded_value is None:
                     raise IndexError('pop from an empty {}'.format(self.__class__.__name__))
                 else:
