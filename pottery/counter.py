@@ -11,7 +11,6 @@ import collections
 import contextlib
 import itertools
 
-from .base import Base
 from .dict import RedisDict
 
 
@@ -22,7 +21,7 @@ class RedisCounter(RedisDict, collections.Counter):
     # Method overrides:
 
     def _update(self, iterable=tuple(), *, sign=+1, **kwargs):
-        with self._watch_context():
+        with self._watch_keys():
             to_set = {}
             try:
                 for key, value in iterable.items():
@@ -111,11 +110,7 @@ class RedisCounter(RedisDict, collections.Counter):
         )
 
     def _imath_op(self, other, *, sign=+1):
-        keys_to_watch = [self.key]
-        if isinstance(other, Base) and self.redis == other.redis:
-            keys_to_watch.append(other.key)
-
-        with self._watch_context(*keys_to_watch):
+        with self._watch_contexts(other):
             to_set = {k: self[k] + sign * v for k, v in other.items()}
             to_del = [k for k, v in to_set.items() if v <= 0]
             to_del.extend([
@@ -142,11 +137,7 @@ class RedisCounter(RedisDict, collections.Counter):
         return self._imath_op(other, sign=-1)
 
     def _iset_op(self, other, *, func):
-        keys_to_watch = [self.key]
-        if isinstance(other, Base) and self.redis == other.redis:
-            keys_to_watch.append(other.key)
-
-        with self._watch_context(*keys_to_watch):
+        with self._watch_contexts(other):
             to_set, to_del = {}, []
             for k in itertools.chain(self, other):
                 if getattr(self[k], func)(other[k]):

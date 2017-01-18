@@ -46,7 +46,7 @@ class RedisDeque(RedisList, collections.deque):
 
     def insert(self, index, value):
         'Insert an element into a RedisDeque before the given index.  O(n)'
-        with self._watch_context():
+        with self._watch_keys():
             if self.maxlen is not None and len(self) >= self.maxlen:
                 raise IndexError('{} already at its maximum size'.format(self.__class__.__name__))
             else:
@@ -77,7 +77,7 @@ class RedisDeque(RedisList, collections.deque):
         self._extend(values, right=False)
 
     def _extend(self, values, *, right=True):
-        with self._watch_context():
+        with self._watch_keys():
             encoded_values = [self._encode(value) for value in values]
             len_ = len(self) + len(encoded_values)
             self.redis.multi()
@@ -99,7 +99,7 @@ class RedisDeque(RedisList, collections.deque):
     def rotate(self, n=1):
         'Rotate the RedisDeque n steps to the right (default n=1).  If n is negative, rotates left.'
         if n:
-            with self._watch_context():
+            with self._watch_keys():
                 push_method = 'lpush' if n > 0 else 'rpush'
                 values = self[-n:] if n > 0 else self[:-n]
                 encoded_values = (self._encode(element) for element in values)

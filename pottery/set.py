@@ -24,7 +24,7 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
         self._populate(iterable)
 
     def _populate(self, iterable=tuple()):
-        with self._watch_context():
+        with self._watch_keys():
             encoded_values = {self._encode(value) for value in iterable}
             if encoded_values:
                 if self.redis.exists(self.key):

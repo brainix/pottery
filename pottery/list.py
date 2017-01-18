@@ -46,7 +46,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         self._populate(iterable)
 
     def _populate(self, iterable=tuple()):
-        with self._watch_context():
+        with self._watch_keys():
             encoded_values = [self._encode(value) for value in iterable]
             if encoded_values:
                 if self.redis.exists(self.key):
@@ -59,7 +59,7 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def __getitem__(self, index):
         'l.__getitem__(index) <==> l[index].  O(n)'
-        with self._watch_context():
+        with self._watch_keys():
             try:
                 encoded = self.redis.lindex(self.key, index)
                 if encoded is None:
@@ -84,7 +84,7 @@ class RedisList(Base, collections.abc.MutableSequence):
     @_raise_on_error
     def __setitem__(self, index, value):
         'l.__setitem__(index, value) <==> l[index] = value.  O(n)'
-        with self._watch_context():
+        with self._watch_keys():
             try:
                 self.redis.lset(self.key, index, self._encode(value))
             except ResponseError:
@@ -109,7 +109,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         # element by *value.*  So our ridiculous hack is to set l[index] to
         # None, then to delete the value None.  More info:
         # http://redis.io/commands/lrem
-        with self._watch_context():
+        with self._watch_keys():
             self._delete(index)
 
     def _delete(self, index):
@@ -127,7 +127,7 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def insert(self, index, value):
         'Insert an element into a RedisList before the given index.  O(n)'
-        with self._watch_context():
+        with self._watch_keys():
             self._insert(index, value)
 
     def _insert(self, index, value):
@@ -170,16 +170,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             # with the same key.  No need to compare element by element.
             return True
         else:
-            # At the least, self is a RedisList.  other may or may not be a
-            # Pottery container, and even if it is, self and other may or may
-            # not be on the same Redis instance.  Watch self's Redis key (and
-            # other's Redis key too, if applicable) so that we can do the rest
-            # of the equality comparison unperturbed.
-            keys_to_watch = [self.key]
-            if isinstance(other, Base) and self.redis == other.redis:
-                keys_to_watch.append(other.key)
-
-            with self._watch_context(*keys_to_watch):
+            with self._watch_contexts(other):
                 try:
                     if len(self) != len(other):
                         # self and other are different lengths.
@@ -226,7 +217,7 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     # From collections.abc.MutableSequence:
     def pop(self, index=None):
-        with self._watch_context():
+        with self._watch_keys():
             len_ = len(self)
             if index and index >= len_:
                 raise IndexError('pop index out of range')
@@ -244,7 +235,7 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     # From collections.abc.MutableSequence:
     def remove(self, value):
-        with self._watch_context():
+        with self._watch_keys():
             for index, element in enumerate(self):
                 if element == value:
                     self._delete(index)

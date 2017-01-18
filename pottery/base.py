@@ -8,8 +8,10 @@
 
 
 import abc
+import collections
 import contextlib
 import functools
+import itertools
 import json
 import os
 import random
@@ -143,7 +145,7 @@ class Pipelined(metaclass=abc.ABCMeta):
             pipeline.execute()
 
     @contextlib.contextmanager
-    def _watch_context(self, *keys):
+    def _watch_keys(self, *keys):
         original_redis = self.redis
         keys = keys or (self.key,)
         try:
@@ -153,6 +155,22 @@ class Pipelined(metaclass=abc.ABCMeta):
                 yield pipeline
         finally:
             self.redis = original_redis
+
+    def _context_managers(self, *others):
+        redises = collections.defaultdict(list)
+        for container in itertools.chain((self,), others):
+            if isinstance(container, Base):
+                redises[container.redis].append(container)
+        for containers in redises.values():
+            keys = (container.key for container in containers)
+            yield containers[0]._watch_keys(*keys)
+
+    @contextlib.contextmanager
+    def _watch_contexts(self, *others):
+        with contextlib.ExitStack() as stack:
+            for context_manager in self._context_managers(*others):
+                stack.enter_context(context_manager)
+            yield
 
 
 
