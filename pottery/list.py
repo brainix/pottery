@@ -35,9 +35,11 @@ class RedisList(Base, collections.abc.MutableSequence):
             start = slice_or_index.start or 0
             stop = slice_or_index.stop or len(self)
             step = slice_or_index.step or 1
-            indices = range(start, stop, step)
         except AttributeError:
-            indices = (slice_or_index,)
+            start = slice_or_index
+            stop = slice_or_index + 1
+            step = 1
+        indices = range(start, stop, step)
         return indices
 
     def __init__(self, iterable=tuple(), *, redis=None, key=None):
