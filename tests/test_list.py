@@ -157,6 +157,12 @@ class ListTests(TestCase):
         assert not squares1 == squares2
         assert squares1 != squares2
 
+    def test_eq_unordered_collection(self):
+        squares1 = RedisList((1,), key='pottery:squares')
+        squares2 = {1}
+        assert not squares1 == squares2
+        assert squares1 != squares2
+
     def test_eq_typeerror(self):
         squares = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
         assert not squares == None
@@ -165,3 +171,17 @@ class ListTests(TestCase):
     def test_repr(self):
         squares = RedisList((1, 4, 9, 16, 25))
         assert repr(squares) == 'RedisList[1, 4, 9, 16, 25]'
+
+    def test_pop_out_of_range(self):
+        squares = RedisList((1, 4, 9, 16, 25))
+        with self.assertRaises(IndexError):
+            squares.pop(len(squares))
+
+    def test_pop_index(self):
+        metasyntactic = RedisList(('foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply', 'waldo', 'fred', 'plugh', 'xyzzy', 'thud'))
+        assert metasyntactic.pop(1) == 'bar'
+
+    def test_remove_nonexistent(self):
+        metasyntactic = RedisList(('foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply', 'waldo', 'fred', 'plugh', 'xyzzy', 'thud'))
+        with self.assertRaises(ValueError):
+            metasyntactic.remove('raj')

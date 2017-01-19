@@ -9,12 +9,8 @@
 
 import unittest.mock
 
-from redis import WatchError
-from redis.client import Pipeline
-
 from pottery import RandomKeyError
 from pottery import RedisDict
-from pottery import TooManyTriesError
 from pottery.base import _default_redis
 from tests.base import TestCase
 
@@ -69,28 +65,6 @@ class CommonTests(_BaseTestCase):
                 assert str(err) == "Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>"
             else:
                 self.fail(msg='RandomKeyError not raised')
-
-
-
-class PipelinedTests(_BaseTestCase):
-    def test_toomanytrieserror_raised(self):
-        with self.assertRaises(TooManyTriesError), \
-             unittest.mock.patch.object(Pipeline, 'execute') as execute:
-            execute.side_effect = WatchError
-            self.raj.update({'job': 'software'})
-
-    def test_toomanytrieserror_str(self):
-        with unittest.mock.patch.object(Pipeline, 'execute') as execute:
-            execute.side_effect = WatchError
-            try:
-                self.raj.update({'job': 'software'})
-            except TooManyTriesError as err:
-                assert str(err) == (
-                    "(Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>, "
-                    "'pottery:raj')"
-                )
-            else:
-                self.fail(msg='TooManyTriesError not raised')
 
 
 

@@ -8,19 +8,20 @@
 
 
 import abc
+import collections
 import contextlib
 import functools
+import itertools
 import json
 import os
 import random
 import string
 
 from redis import Redis
-from redis import WatchError
+from redis import RedisError
 
 from . import monkey
 from .exceptions import RandomKeyError
-from .exceptions import TooManyTriesError
 
 
 
@@ -139,41 +140,39 @@ class Pipelined(metaclass=abc.ABCMeta):
     @contextlib.contextmanager
     def _pipeline(self):
         pipeline = self.redis.pipeline()
-        try:
-            yield pipeline
-        finally:
-            pipeline.execute()
+        yield pipeline
+        with contextlib.suppress(RedisError):
+            pipeline.multi()
+        pipeline.ping()
+        pipeline.execute()
 
     @contextlib.contextmanager
-    def _watch_context(self, *keys):
+    def _watch_keys(self, *keys):
         original_redis = self.redis
         keys = keys or (self.key,)
         try:
             with self._pipeline() as pipeline:
                 self.redis = pipeline
-                self.redis.watch(*keys)
-                yield self.redis
+                pipeline.watch(*keys)
+                yield pipeline
         finally:
             self.redis = original_redis
 
-    def _watch_method(func):
-        @functools.wraps(func)
-        def wrap(self, *args, **kwargs):
-            for _ in range(self._NUM_TRIES):
-                try:
-                    original_redis = self.redis
-                    with self._pipeline() as pipeline:
-                        self.redis = pipeline
-                        self.redis.watch(self.key)
-                        value = func(self, *args, **kwargs)
-                    return value
-                except WatchError:
-                    pass
-                finally:
-                    self.redis = original_redis
-            else:
-                raise TooManyTriesError(self.redis, self.key)
-        return wrap
+    def _context_managers(self, *others):
+        redises = collections.defaultdict(list)
+        for container in itertools.chain((self,), others):
+            if isinstance(container, Base):
+                redises[container.redis].append(container)
+        for containers in redises.values():
+            keys = (container.key for container in containers)
+            yield containers[0]._watch_keys(*keys)
+
+    @contextlib.contextmanager
+    def _watch(self, *others):
+        with contextlib.ExitStack() as stack:
+            for context_manager in self._context_managers(*others):
+                stack.enter_context(context_manager)
+            yield
 
 
 
@@ -200,9 +199,7 @@ class Iterable(metaclass=abc.ABCMeta):
         cursor = 0
         while True:
             cursor, iterable = self._scan(self.key, cursor=cursor)
-            for value in iterable:
-                decoded = self._decode(value)
-                yield decoded
+            yield from (self._decode(value) for value in iterable)
             if cursor == 0:
                 break
 

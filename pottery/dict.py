@@ -13,7 +13,6 @@ import itertools
 
 from .base import Base
 from .base import Iterable
-from .base import Pipelined
 from .exceptions import KeyExistsError
 
 
@@ -24,11 +23,22 @@ class RedisDict(Base, Iterable, collections.abc.MutableMapping):
     def __init__(self, iterable=tuple(), *, redis=None, key=None, **kwargs):
         'Initialize a RedisDict.  O(n)'
         super().__init__(redis=redis, key=key, **kwargs)
-        if iterable or kwargs:
-            if self.redis.exists(self.key):
-                raise KeyExistsError(self.redis, self.key)
-            else:
-                self.update(iterable, **kwargs)
+        with self._watch(iterable):
+            if iterable or kwargs:
+                if self.redis.exists(self.key):
+                    raise KeyExistsError(self.redis, self.key)
+                else:
+                    self._populate(iterable, **kwargs)
+
+    def _populate(self, iterable=tuple(), **kwargs):
+        to_set = {}
+        with contextlib.suppress(AttributeError):
+            iterable = iterable.items()
+        for key, value in itertools.chain(iterable, kwargs.items()):
+            to_set[self._encode(key)] = self._encode(value)
+        if to_set:
+            self.redis.multi()
+            self.redis.hmset(self.key, to_set)
 
     # Methods required by collections.abc.MutableMapping:
 
@@ -67,16 +77,9 @@ class RedisDict(Base, Iterable, collections.abc.MutableMapping):
     # Method overrides:
 
     # From collections.abc.MutableMapping:
-    @Pipelined._watch_method
     def update(self, iterable=tuple(), **kwargs):
-        to_set = {}
-        with contextlib.suppress(AttributeError):
-            iterable = iterable.items()
-        for key, value in itertools.chain(iterable, kwargs.items()):
-            to_set[self._encode(key)] = self._encode(value)
-        self.redis.multi()
-        if to_set:
-            self.redis.hmset(self.key, to_set)
+        with self._watch(iterable):
+            self._populate(iterable, **kwargs)
 
     # From collections.abc.Mapping:
     def __contains__(self, key):

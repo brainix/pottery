@@ -160,6 +160,13 @@ class CounterTests(TestCase):
         assert isinstance(c, RedisCounter)
         assert c == collections.Counter(a=5, b=4, c=3, d=2)
 
+    def test_in_place_add_removes_zeroes(self):
+        c = RedisCounter(a=4, b=2, c=0, d=-2)
+        d = collections.Counter(a=-4, b=-2, c=0, d=2)
+        c += d
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter()
+
     def test_in_place_subtract(self):
         'Test RedisCounter.__isub__().'
         c = RedisCounter(a=4, b=2, c=0, d=-2)
@@ -179,7 +186,7 @@ class CounterTests(TestCase):
     def test_in_place_or_with_two_overlapping_counters(self):
         'Test RedisCounter.__ior__() with two counters with overlapping keys.'
         c = RedisCounter(a=4, b=2, c=0, d=-2)
-        d = RedisCounter(a=1, b=2, c=3, d=4)
+        d = collections.Counter(a=1, b=2, c=3, d=4)
         c |= d
         assert isinstance(c, RedisCounter)
         assert c == collections.Counter(a=4, b=2, c=3, d=4)
@@ -191,3 +198,10 @@ class CounterTests(TestCase):
         c &= d
         assert isinstance(c, RedisCounter)
         assert c == collections.Counter(a=1, b=2)
+
+    def test_in_place_and_results_in_empty_counter(self):
+        c = RedisCounter(a=4, b=2)
+        d = RedisCounter(c=3, d=4)
+        c &= d
+        assert isinstance(c, RedisCounter)
+        assert c == collections.Counter()

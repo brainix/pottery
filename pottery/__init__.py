@@ -14,7 +14,7 @@ know how to use Pottery.
 
 
 __title__ = 'pottery'
-__version__ = '0.39'
+__version__ = '0.40'
 __description__, __long_description__ = (
     s.strip() for s in __doc__.split('\n\n', 1)
 )
@@ -30,7 +30,6 @@ __copyright__ = 'Copyright © 2015-2017, {}, original author.'.format(__author__
 from .exceptions import PotteryError
 from .exceptions import KeyExistsError
 from .exceptions import RandomKeyError
-from .exceptions import TooManyTriesError
 
 from .contexttimer import ContextTimer
 from .nextid import NextId

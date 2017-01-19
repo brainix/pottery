@@ -11,7 +11,6 @@ import collections.abc
 
 from .base import Base
 from .base import Iterable
-from .base import Pipelined
 from .exceptions import KeyExistsError
 
 
@@ -22,9 +21,9 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
     def __init__(self, iterable=tuple(), *, redis=None, key=None):
         'Initialize a RedisSet.  O(n)'
         super().__init__(iterable, redis=redis, key=key)
-        self._populate(iterable)
+        with self._watch(iterable):
+            self._populate(iterable)
 
-    @Pipelined._watch_method
     def _populate(self, iterable=tuple()):
         encoded_values = {self._encode(value) for value in iterable}
         if encoded_values:
@@ -87,10 +86,13 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
     # From collections.abc.Set:
     def isdisjoint(self, other):
         'Return True if two sets have a null intersection.  O(n)'
-        if isinstance(other, self.__class__) and self.redis == other.redis:
-            disjoint = not self.redis.sinter(self.key, other.key)
-        else:
-            disjoint = super().isdisjoint(other)
+        with self._watch(other):
+            if isinstance(other, self.__class__) and self.redis == other.redis:
+                self.redis.multi()
+                self.redis.sinter(self.key, other.key)
+                disjoint = not self.redis.execute()[0]
+            else:
+                disjoint = super().isdisjoint(other)
         return disjoint
 
     # Where does this method come from?
