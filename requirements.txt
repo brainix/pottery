@@ -4,6 +4,6 @@ coverage==4.3.4
 isort==4.2.5
 pkginfo==1.4.1
 redis==2.10.5
-requests==2.12.4
+requests==2.12.5
 requests-toolbelt==0.7.0
 twine==1.8.1
