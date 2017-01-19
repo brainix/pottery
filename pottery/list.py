@@ -45,23 +45,23 @@ class RedisList(Base, collections.abc.MutableSequence):
     def __init__(self, iterable=tuple(), *, redis=None, key=None):
         'Initialize a RedisList.  O(n)'
         super().__init__(iterable, redis=redis, key=key)
-        self._populate(iterable)
+        with self._watch(iterable):
+            self._populate(iterable)
 
     def _populate(self, iterable=tuple()):
-        with self._watch_keys():
-            encoded_values = [self._encode(value) for value in iterable]
-            if encoded_values:
-                if self.redis.exists(self.key):
-                    raise KeyExistsError(self.redis, self.key)
-                else:
-                    self.redis.multi()
-                    self.redis.rpush(self.key, *encoded_values)
+        encoded_values = [self._encode(value) for value in iterable]
+        if encoded_values:
+            if self.redis.exists(self.key):
+                raise KeyExistsError(self.redis, self.key)
+            else:
+                self.redis.multi()
+                self.redis.rpush(self.key, *encoded_values)
 
     # Methods required by collections.abc.MutableSequence:
 
     def __getitem__(self, index):
         'l.__getitem__(index) <==> l[index].  O(n)'
-        with self._watch_keys():
+        with self._watch():
             if isinstance(index, slice):
                 # This is monumentally stupid.  Python's list API requires us
                 # to get elements by slice (defined as a start index, a stop
@@ -90,7 +90,7 @@ class RedisList(Base, collections.abc.MutableSequence):
     @_raise_on_error
     def __setitem__(self, index, value):
         'l.__setitem__(index, value) <==> l[index] = value.  O(n)'
-        with self._watch_keys():
+        with self._watch():
             if isinstance(index, slice):
                 encoded_values = [self._encode(value) for value in value]
                 indices = self._slice_to_indices(index)
@@ -116,7 +116,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         # element by *value.*  So our ridiculous hack is to set l[index] to
         # None, then to delete the value None.  More info:
         # http://redis.io/commands/lrem
-        with self._watch_keys():
+        with self._watch():
             self._delete(index)
 
     def _delete(self, index):
@@ -134,7 +134,7 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def insert(self, index, value):
         'Insert an element into a RedisList before the given index.  O(n)'
-        with self._watch_keys():
+        with self._watch():
             self._insert(index, value)
 
     def _insert(self, index, value):
@@ -177,7 +177,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             # with the same key.  No need to compare element by element.
             return True
         else:
-            with self._watch_contexts(other):
+            with self._watch(other):
                 try:
                     if len(self) != len(other):
                         # self and other are different lengths.
@@ -200,8 +200,9 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def __add__(self, other):
         'Append the items in other to a RedisList.  O(n)'
-        iterable = itertools.chain(self, other)
-        return self.__class__(iterable, redis=self.redis)
+        with self._watch(other):
+            iterable = itertools.chain(self, other)
+            return self.__class__(iterable, redis=self.redis)
 
     def __repr__(self):
         'Return the string representation of a RedisList.  O(n)'
@@ -219,12 +220,14 @@ class RedisList(Base, collections.abc.MutableSequence):
     # From collections.abc.MutableSequence:
     def extend(self, values):
         'Extend a RedisList by appending elements from the iterable.  O(1)'
-        encoded_values = (self._encode(value) for value in values)
-        self.redis.rpush(self.key, *encoded_values)
+        with self._watch(values):
+            encoded_values = (self._encode(value) for value in values)
+            self.redis.multi()
+            self.redis.rpush(self.key, *encoded_values)
 
     # From collections.abc.MutableSequence:
     def pop(self, index=None):
-        with self._watch_keys():
+        with self._watch():
             len_ = len(self)
             if index and index >= len_:
                 raise IndexError('pop index out of range')
@@ -244,7 +247,7 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     # From collections.abc.MutableSequence:
     def remove(self, value):
-        with self._watch_keys():
+        with self._watch():
             for index, element in enumerate(self):
                 if element == value:
                     self._delete(index)

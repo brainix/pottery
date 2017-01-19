@@ -141,6 +141,9 @@ class Pipelined(metaclass=abc.ABCMeta):
     def _pipeline(self):
         pipeline = self.redis.pipeline()
         yield pipeline
+        with contextlib.suppress(RedisError):
+            pipeline.multi()
+        pipeline.ping()
         pipeline.execute()
 
     @contextlib.contextmanager
@@ -152,9 +155,6 @@ class Pipelined(metaclass=abc.ABCMeta):
                 self.redis = pipeline
                 pipeline.watch(*keys)
                 yield pipeline
-                with contextlib.suppress(RedisError):
-                    pipeline.multi()
-                pipeline.ping()
         finally:
             self.redis = original_redis
 
@@ -168,7 +168,7 @@ class Pipelined(metaclass=abc.ABCMeta):
             yield containers[0]._watch_keys(*keys)
 
     @contextlib.contextmanager
-    def _watch_contexts(self, *others):
+    def _watch(self, *others):
         with contextlib.ExitStack() as stack:
             for context_manager in self._context_managers(*others):
                 stack.enter_context(context_manager)

@@ -20,33 +20,34 @@ class RedisCounter(RedisDict, collections.Counter):
 
     # Method overrides:
 
-    def _update(self, iterable=tuple(), *, sign=+1, **kwargs):
-        with self._watch_keys():
-            to_set = {}
-            try:
-                for key, value in iterable.items():
-                    to_set[key] = sign * value
-            except AttributeError:
-                for key in iterable:
-                    to_set[key] = to_set.get(key, self[key]) + sign
-            for key, value in kwargs.items():
-                original = self[key] if to_set.get(key, 0) is 0 else to_set[key]
-                to_set[key] = original + sign * value
-            to_set = {key: self[key] + value for key, value in to_set.items()}
-            to_set = {
-                self._encode(k): self._encode(v) for k, v in to_set.items()
-            }
-            if to_set:
-                self.redis.multi()
-                self.redis.hmset(self.key, to_set)
+    def _populate(self, iterable=tuple(), *, sign=+1, **kwargs):
+        to_set = {}
+        try:
+            for key, value in iterable.items():
+                to_set[key] = sign * value
+        except AttributeError:
+            for key in iterable:
+                to_set[key] = to_set.get(key, self[key]) + sign
+        for key, value in kwargs.items():
+            original = self[key] if to_set.get(key, 0) is 0 else to_set[key]
+            to_set[key] = original + sign * value
+        to_set = {key: self[key] + value for key, value in to_set.items()}
+        to_set = {
+            self._encode(k): self._encode(v) for k, v in to_set.items()
+        }
+        if to_set:
+            self.redis.multi()
+            self.redis.hmset(self.key, to_set)
 
     def update(self, iterable=tuple(), **kwargs):
         'Like dict.update() but add counts instead of replacing them.  O(n)'
-        self._update(iterable, sign=+1, **kwargs)
+        with self._watch(iterable):
+            self._populate(iterable, sign=+1, **kwargs)
 
     def subtract(self, iterable=tuple(), **kwargs):
         'Like dict.update() but subtracts counts instead of replacing them.  O(n)'
-        self._update(iterable, sign=-1, **kwargs)
+        with self._watch(iterable):
+            self._populate(iterable, sign=-1, **kwargs)
 
     def __getitem__(self, key):
         'c.__getitem__(key) <==> c.get(key, 0).  O(1)'
@@ -69,8 +70,9 @@ class RedisCounter(RedisDict, collections.Counter):
         return self.__class__.__name__ + '{' + items + '}'
 
     def _math_op(self, other, *, func):
-        counter = collections.Counter(self.elements())
-        return func(counter, other)
+        with self._watch(other):
+            counter = collections.Counter(self.elements())
+            return func(counter, other)
 
     def __add__(self, other):
         "Return the addition our counts to other's counts, but keep only counts > 0.  O(n)"
@@ -110,7 +112,7 @@ class RedisCounter(RedisDict, collections.Counter):
         )
 
     def _imath_op(self, other, *, sign=+1):
-        with self._watch_contexts(other):
+        with self._watch(other):
             to_set = {k: self[k] + sign * v for k, v in other.items()}
             to_del = [k for k, v in to_set.items() if v <= 0]
             to_del.extend([
@@ -137,7 +139,7 @@ class RedisCounter(RedisDict, collections.Counter):
         return self._imath_op(other, sign=-1)
 
     def _iset_op(self, other, *, func):
-        with self._watch_contexts(other):
+        with self._watch(other):
             to_set, to_del = {}, []
             for k in itertools.chain(self, other):
                 if getattr(self[k], func)(other[k]):
