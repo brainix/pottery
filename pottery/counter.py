@@ -114,14 +114,14 @@ class RedisCounter(RedisDict, collections.Counter):
     def _imath_op(self, other, *, sign=+1):
         with self._watch(other):
             to_set = {k: self[k] + sign * v for k, v in other.items()}
-            to_del = [k for k, v in to_set.items() if v <= 0]
-            to_del.extend([
+            to_del = {k for k, v in to_set.items() if v <= 0}
+            to_del.update(
                 k for k, v in self.items() if k not in to_set and v <= 0
-            ])
+            )
             to_set = {
                 self._encode(k): self._encode(v) for k, v in to_set.items() if v
             }
-            to_del = [self._encode(k) for k in to_del]
+            to_del = {self._encode(k) for k in to_del}
             if to_set or to_del:
                 self.redis.multi()
                 if to_set:
@@ -140,7 +140,7 @@ class RedisCounter(RedisDict, collections.Counter):
 
     def _iset_op(self, other, *, func):
         with self._watch(other):
-            to_set, to_del = {}, []
+            to_set, to_del = {}, set()
             for k in itertools.chain(self, other):
                 if getattr(self[k], func)(other[k]):
                     to_set[k] = self[k]
@@ -148,7 +148,7 @@ class RedisCounter(RedisDict, collections.Counter):
                     to_set[k] = other[k]
                 if to_set[k] <= 0:
                     del to_set[k]
-                    to_del.append(k)
+                    to_del.add(k)
             if to_set or to_del:
                 self.redis.multi()
                 if to_set:
@@ -158,7 +158,7 @@ class RedisCounter(RedisDict, collections.Counter):
                     }
                     self.redis.hmset(self.key, to_set)
                 if to_del:
-                    to_del = [self._encode(k) for k in to_del]
+                    to_del = {self._encode(k) for k in to_del}
                     self.redis.hdel(self.key, *to_del)
         return self
 
