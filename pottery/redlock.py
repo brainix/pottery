@@ -105,6 +105,7 @@ class Redlock(Primitive):
         >>> states = []
         >>> with printer_lock:
         ...     states.append(bool(printer_lock.locked()))
+        ...     # Critical section - print stuff here.
         >>> states.append(bool(printer_lock.locked()))
         >>> states
         [True, False]
@@ -399,6 +400,7 @@ class Redlock(Primitive):
             >>> states = []
             >>> with printer_lock:
             ...     states.append(bool(printer_lock.locked()))
+            ...     # Critical section - print stuff here.
             >>> states.append(bool(printer_lock.locked()))
             >>> states
             [True, False]
@@ -422,6 +424,7 @@ class Redlock(Primitive):
             >>> states = []
             >>> with printer_lock:
             ...     states.append(bool(printer_lock.locked()))
+            ...     # Critical section - print stuff here.
             >>> states.append(bool(printer_lock.locked()))
             >>> states
             [True, False]
