@@ -119,17 +119,27 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
     def symmetric_difference(self, other):          # pragma: no cover
         raise NotImplementedError
 
+    def _update(self, *iterables, redis_method):
+        iterables = tuple(iterables)
+        with self._watch(*iterables):
+            encoded_values = []
+            for iterable in iterables:
+                encoded_values.extend(self._encode(value) for value in iterable)
+            if encoded_values:
+                self.redis.multi()
+                getattr(self.redis, redis_method)(self.key, *encoded_values)
+
     # Where does this method come from?
-    def update(self, *args):                        # pragma: no cover
-        raise NotImplementedError
+    def update(self, *iterables):
+        self._update(*iterables, redis_method='sadd')
 
     # Where does this method come from?
     def intersection_update(self, *args):           # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def difference_update(self, *args):             # pragma: no cover
-        raise NotImplementedError
+    def difference_update(self, *iterables):
+        self._update(*iterables, redis_method='srem')
 
     # Where does this method come from?
     def symmetric_difference_update(self, other):   # pragma: no cover
