@@ -188,3 +188,39 @@ class SetTests(TestCase):
         assert silliness == {'foo', 'bar', 'baz', 0, 1, 2, 3, 4}
         silliness.update({'qux'}, range(6))
         assert silliness == {'foo', 'bar', 'baz', 'qux', 0, 1, 2, 3, 4, 5}
+
+    def test_difference_update_with_empty_set(self):
+        ramanujans_friends = RedisSet()
+        ramanujans_friends.difference_update(set())
+        assert ramanujans_friends == set()
+
+        ramanujans_friends = RedisSet(range(10))
+        ramanujans_friends.difference_update(set())
+        assert ramanujans_friends == {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+    def test_difference_update_with_set(self):
+        ramanujans_friends = RedisSet()
+        ramanujans_friends.difference_update({5, 6, 7, 8, 9})
+        assert ramanujans_friends == set()
+
+        ramanujans_friends = RedisSet(range(10))
+        ramanujans_friends.difference_update({5, 6, 7, 8, 9})
+        assert ramanujans_friends == {0, 1, 2, 3, 4}
+
+    def test_difference_update_with_range(self):
+        ramanujans_friends = RedisSet()
+        ramanujans_friends.difference_update(range(5))
+        assert ramanujans_friends == set()
+
+        ramanujans_friends = RedisSet(range(10))
+        ramanujans_friends.difference_update(range(5))
+        assert ramanujans_friends == {5, 6, 7, 8, 9}
+
+    def test_difference_update_with_range_and_set(self):
+        ramanujans_friends = RedisSet()
+        ramanujans_friends.difference_update(range(4), {6, 7, 8, 9})
+        assert ramanujans_friends == set()
+
+        ramanujans_friends = RedisSet(range(10))
+        ramanujans_friends.difference_update(range(4), {6, 7, 8, 9})
+        assert ramanujans_friends == {4, 5}
