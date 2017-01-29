@@ -151,3 +151,40 @@ class SetTests(TestCase):
         assert not d >= a
         assert not a > d
         assert not d > a
+
+    def test_update_with_no_arguments(self):
+        s = RedisSet()
+        s.update()
+        assert s == set()
+
+        s = RedisSet('abcd')
+        s.update()
+        assert s == {'a', 'b', 'c', 'd'}
+
+    def test_update_with_empty_set(self):
+        metasyntactic_variables = RedisSet()
+        metasyntactic_variables.update(set())
+        assert metasyntactic_variables == set()
+
+        metasyntactic_variables = RedisSet({'foo', 'bar', 'baz'})
+        metasyntactic_variables.update(set())
+        assert metasyntactic_variables == {'foo', 'bar', 'baz'}
+
+    def test_update_with_set(self):
+        metasyntactic_variables = RedisSet()
+        metasyntactic_variables.update({'foo', 'bar', 'baz'})
+        assert metasyntactic_variables == {'foo', 'bar', 'baz'}
+        metasyntactic_variables.update({'qux'})
+        assert metasyntactic_variables == {'foo', 'bar', 'baz', 'qux'}
+
+    def test_update_with_range(self):
+        ramanujans_friends = RedisSet()
+        ramanujans_friends.update(range(10))
+        assert ramanujans_friends == {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+    def test_update_with_set_and_range(self):
+        silliness = RedisSet()
+        silliness.update({'foo', 'bar', 'baz'}, range(5))
+        assert silliness == {'foo', 'bar', 'baz', 0, 1, 2, 3, 4}
+        silliness.update({'qux'}, range(6))
+        assert silliness == {'foo', 'bar', 'baz', 'qux', 0, 1, 2, 3, 4, 5}

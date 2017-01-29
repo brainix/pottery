@@ -120,8 +120,15 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
         raise NotImplementedError
 
     # Where does this method come from?
-    def update(self, *args):                        # pragma: no cover
-        raise NotImplementedError
+    def update(self, *iterables):
+        iterables = tuple(iterables)
+        with self._watch(*iterables):
+            encoded_values = []
+            for iterable in iterables:
+                encoded_values.extend(self._encode(value) for value in iterable)
+            if encoded_values:
+                self.redis.multi()
+                self.redis.sadd(self.key, *encoded_values)
 
     # Where does this method come from?
     def intersection_update(self, *args):           # pragma: no cover
