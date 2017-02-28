@@ -7,6 +7,8 @@
 
 
 
+init upgrade: formulae := {openssl,readline,xz,pyenv,redis}
+
 python: CFLAGS := "-I$(brew --prefix readline)/include -g -O2"
 python: LDFLAGS := -L$(brew --prefix readline)/lib
 
@@ -23,7 +25,7 @@ init:
 		ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 	brew analytics off
 	brew analytics regenerate-uuid
-	brew install {openssl,readline,xz,pyenv,redis}
+	brew install $(formulae)
 
 python:
 	pyenv install --skip-existing $(version)
@@ -35,7 +37,7 @@ python:
 
 upgrade:
 	brew update
-	brew upgrade
+	-brew upgrade $(formulae)
 	brew cleanup
 	pyenv rehash
 	source $(venv)/bin/activate && \
