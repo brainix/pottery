@@ -12,7 +12,7 @@ init upgrade: formulae := {openssl,readline,xz,pyenv,redis}
 python: CFLAGS := "-I$(brew --prefix readline)/include -g -O2"
 python: LDFLAGS := -L$(brew --prefix readline)/lib
 
-version ?= 3.6.0
+version ?= 3.6.1
 venv ?= venv
 
 
