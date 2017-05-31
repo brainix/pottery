@@ -14,7 +14,7 @@ import warnings
 
 from isort import SortImports
 
-from pottery import monkey  # NOQA
+from pottery import monkey  # NoQA
 from tests.base import TestCase
 
 
