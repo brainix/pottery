@@ -22,6 +22,7 @@ from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
 
 from .base import Primitive
+from .exceptions import QuorumNotAchieved
 
 
 
@@ -94,12 +95,12 @@ class NextId(Primitive):
 
     def __next__(self):
         for _ in range(self.num_tries):
-            with contextlib.suppress(RuntimeError):
+            with contextlib.suppress(QuorumNotAchieved):
                 next_id = self._current_id + 1
                 self._current_id = next_id
                 return next_id
         else:
-            raise RuntimeError('quorum not achieved')
+            raise QuorumNotAchieved(self.masters, self.key)
 
     def __repr__(self):
         return '<{} key={} value={}>'.format(
@@ -118,7 +119,7 @@ class NextId(Primitive):
                     current_id = max(current_id, int(future.result()))
                     num_masters += 1
         if num_masters < len(self.masters) // 2 + 1:
-            raise RuntimeError('quorum not achieved')
+            raise QuorumNotAchieved(self.masters, self.key)
         else:
             return current_id
 
@@ -131,7 +132,7 @@ class NextId(Primitive):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     num_masters += future.result() == value
         if num_masters < len(self.masters) // 2 + 1:
-            raise RuntimeError('quorum not achieved')
+            raise QuorumNotAchieved(self.masters, self.key)
 
 
 
