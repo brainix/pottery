@@ -215,8 +215,8 @@ class Redlock(Primitive):
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     num_masters_acquired += future.result()
-        quorum = num_masters_acquired >= len(self.masters) // 2 + 1
-        validity_time = self.auto_release_time - self._drift()
+            quorum = num_masters_acquired >= len(self.masters) // 2 + 1
+            validity_time = self.auto_release_time - timer.elapsed() - self._drift()
         if quorum and max(validity_time, 0):
             return True
         else:
