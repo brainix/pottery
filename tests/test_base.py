@@ -56,13 +56,23 @@ class CommonTests(_BaseTestCase):
             exists.return_value = True
             self.raj._random_key()
 
+    def test_randomkeyerror_repr(self):
+        with unittest.mock.patch.object(self.raj.redis, 'exists') as exists:
+            exists.return_value = True
+            try:
+                self.raj._random_key()
+            except RandomKeyError as err:
+                assert repr(err) == 'RandomKeyError(redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>)'
+            else:
+                self.fail(msg='RandomKeyError not raised')
+
     def test_randomkeyerror_str(self):
         with unittest.mock.patch.object(self.raj.redis, 'exists') as exists:
             exists.return_value = True
             try:
                 self.raj._random_key()
             except RandomKeyError as err:
-                assert str(err) == "Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>"
+                assert str(err) == "redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>"
             else:
                 self.fail(msg='RandomKeyError not raised')
 

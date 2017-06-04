@@ -33,6 +33,8 @@ from redis.exceptions import TimeoutError
 
 from .base import Primitive
 from .contexttimer import ContextTimer
+from .exceptions import ReleaseUnlockedLock
+from .exceptions import TooManyExtensions
 
 
 
@@ -218,7 +220,7 @@ class Redlock(Primitive):
         if quorum and max(validity_time, 0):
             return True
         else:
-            with contextlib.suppress(RuntimeError):
+            with contextlib.suppress(ReleaseUnlockedLock):
                 self.release()
             return False
 
@@ -344,7 +346,7 @@ class Redlock(Primitive):
             >>> printer_lock.release()
         '''
         if self._extension_num >= self.num_extensions:
-            raise RuntimeError('extend lock too many times')
+            raise TooManyExtensions(self.masters, self.key)
         else:
             num_masters_extended = 0
             with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
@@ -382,7 +384,7 @@ class Redlock(Primitive):
                     num_masters_released += future.result()
         quorum = num_masters_released >= len(self.masters) // 2 + 1
         if not quorum:
-            raise RuntimeError('release unlocked lock')
+            raise ReleaseUnlockedLock(self.masters, self.key)
 
     def __enter__(self):
         '''You can use a Redlock as a context manager.

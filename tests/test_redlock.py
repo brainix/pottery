@@ -13,6 +13,8 @@ import time
 
 from pottery import ContextTimer
 from pottery import Redlock
+from pottery import ReleaseUnlockedLock
+from pottery import TooManyExtensions
 from pottery.base import _default_redis
 from tests.base import TestCase
 
@@ -31,7 +33,7 @@ class RedlockTests(TestCase):
         )
 
     def tearDown(self):
-        with contextlib.suppress(RuntimeError):
+        with contextlib.suppress(ReleaseUnlockedLock):
             self.redlock.release()
         super().tearDown()
 
@@ -92,7 +94,7 @@ class RedlockTests(TestCase):
         for extension_num in range(3):
             with self.subTest(extension_num=extension_num):
                 assert self.redlock.extend()
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(TooManyExtensions):
             self.redlock.extend()
 
     def test_acquire_then_release(self):
@@ -103,14 +105,32 @@ class RedlockTests(TestCase):
         assert not self.redis.exists(self.redlock.key)
 
     def test_release_unlocked_lock(self):
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ReleaseUnlockedLock):
             self.redlock.release()
+
+    def test_releaseunlockedlock_repr(self):
+        try:
+            self.redlock.release()
+        except ReleaseUnlockedLock as err:
+            assert repr(err) == (
+                "ReleaseUnlockedLock(masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>], "
+                "key='redlock:printer')"
+            )
+
+    def test_releaseunlockedlock_str(self):
+        try:
+            self.redlock.release()
+        except ReleaseUnlockedLock as err:
+            assert str(err) == (
+                "masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>], "
+                "key='redlock:printer'"
+            )
 
     def test_release_same_lock_twice(self):
         assert not self.redis.exists(self.redlock.key)
         assert self.redlock.acquire()
         self.redlock.release()
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ReleaseUnlockedLock):
             self.redlock.release()
 
     def test_context_manager(self):
@@ -121,7 +141,7 @@ class RedlockTests(TestCase):
 
     def test_context_manager_time_out_before_exit(self):
         assert not self.redis.exists(self.redlock.key)
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ReleaseUnlockedLock):
             with self.redlock:
                 assert self.redis.exists(self.redlock.key)
                 time.sleep(self.redlock.auto_release_time / 1000 + 1)
@@ -140,7 +160,7 @@ class RedlockTests(TestCase):
     def test_context_manager_acquired_time_out_before_exit(self):
         assert not self.redis.exists(self.redlock.key)
         assert not self.redlock.locked()
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ReleaseUnlockedLock):
             with self.redlock:
                 assert self.redis.exists(self.redlock.key)
                 assert self.redlock.locked()
@@ -152,7 +172,7 @@ class RedlockTests(TestCase):
 
     def test_context_manager_release_before_exit(self):
         assert not self.redis.exists(self.redlock.key)
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ReleaseUnlockedLock):
             with self.redlock:
                 assert self.redis.exists(self.redlock.key)
                 self.redlock.release()

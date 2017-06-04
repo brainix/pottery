@@ -30,6 +30,10 @@ __copyright__ = 'Copyright © 2015-2017, {}, original author.'.format(__author__
 from .exceptions import PotteryError
 from .exceptions import KeyExistsError
 from .exceptions import RandomKeyError
+from .exceptions import PrimitiveError
+from .exceptions import QuorumNotAchieved
+from .exceptions import TooManyExtensions
+from .exceptions import ReleaseUnlockedLock
 
 from .contexttimer import ContextTimer
 from .nextid import NextId
