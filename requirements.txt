@@ -5,7 +5,7 @@ chardet==3.0.3
 clint==0.5.1
 coverage==4.4.1
 idna==2.5
-isort==4.2.5
+isort==4.2.13
 packaging==16.8
 pkginfo==1.4.1
 pyparsing==2.2.0
