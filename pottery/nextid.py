@@ -111,27 +111,27 @@ class NextId(Primitive):
 
     @property
     def _current_id(self):
-        current_id, num_masters = 0, 0
+        current_id, num_masters_gotten = 0, 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
             futures = {executor.submit(master.get, self.key) for master in self.masters}
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     current_id = max(current_id, int(future.result()))
-                    num_masters += 1
-        if num_masters < len(self.masters) // 2 + 1:
+                    num_masters_gotten += 1
+        if num_masters_gotten < len(self.masters) // 2 + 1:
             raise QuorumNotAchieved(self.masters, self.key)
         else:
             return current_id
 
     @_current_id.setter
     def _current_id(self, value):
-        num_masters = 0
+        num_masters_set = 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
             futures = {executor.submit(self._set_id_script, keys=(self.key,), args=(value,), client=master) for master in self.masters}
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
-                    num_masters += future.result() == value
-        if num_masters < len(self.masters) // 2 + 1:
+                    num_masters_set += future.result() == value
+        if num_masters_set < len(self.masters) // 2 + 1:
             raise QuorumNotAchieved(self.masters, self.key)
 
 
