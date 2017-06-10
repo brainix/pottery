@@ -69,7 +69,10 @@ Create a `RedisList`:
     >>> from pottery import RedisList
     >>> lyrics = RedisList(redis=redis, key='lyrics')
 
-Again, notice the two keyword arguments to `RedisList()`:  The first is your Redis client.  The second is the Redis key name for your list.  Other than that, you can use your `RedisList` the same way that you use any other Python list:
+Again, notice the two keyword arguments to `RedisList()`:  The first is your
+Redis client.  The second is the Redis key name for your list.  Other than
+that, you can use your `RedisList` the same way that you use any other Python
+list:
 
     >>> lyrics.append('everything')
     >>> lyrics.extend(['in' 'its' 'right' '...'])
@@ -83,14 +86,20 @@ Again, notice the two keyword arguments to `RedisList()`:  The first is your Red
 
 ### NextId
 
-`NextId` safely and reliably produces increasing IDs across threads, processes, and even machines, without a single point of failure.  [Rationale and algorithm description.](http://antirez.com/news/102)
+`NextId` safely and reliably produces increasing IDs across threads, processes,
+and even machines, without a single point of failure.  [Rationale and algorithm
+description.](http://antirez.com/news/102)
 
 Instantiate an ID generator:
 
     >>> from pottery import NextId
     >>> user_ids = NextId(key='user-ids', masters={redis})
 
-The `key` argument represents the sequence (so that you can have different sequences for user IDs, comment IDs, etc.), and the `masters` argument specifies your Redis masters across which to distribute ID generation (in production, you should have 5 Redis masters).  Now, whenever you need a user ID, call `next()` on the ID generator:
+The `key` argument represents the sequence (so that you can have different
+sequences for user IDs, comment IDs, etc.), and the `masters` argument
+specifies your Redis masters across which to distribute ID generation (in
+production, you should have 5 Redis masters).  Now, whenever you need a user
+ID, call `next()` on the ID generator:
 
     >>> next(user_ids)
     1
@@ -108,16 +117,25 @@ Two caveats:
 
 ### Redlock
 
-`Redlock` is a safe and reliable lock to coordinate access to a resource shared across threads, processes, and even machines, without a single point of failure.  [Rationale and algorithm description.](http://redis.io/topics/distlock)
+`Redlock` is a safe and reliable lock to coordinate access to a resource shared
+across threads, processes, and even machines, without a single point of
+failure.  [Rationale and algorithm
+description.](http://redis.io/topics/distlock)
 
-`Redlock` implements Python's excellent [`threading.Lock`](https://docs.python.org/3/library/threading.html#lock-objects) API as closely as is feasible.  In other words, you can use `Redlock` the same way that you use `threading.Lock`.
+`Redlock` implements Python's excellent
+[`threading.Lock`](https://docs.python.org/3/library/threading.html#lock-objects)
+API as closely as is feasible.  In other words, you can use `Redlock` the same
+way that you use `threading.Lock`.
 
 Instantiate a `Redlock`:
 
     >>> from pottery import Redlock
     >>> lock = Redlock(key='printer', masters={redis})
 
-The `key` argument represents the resource, and the `masters` argument specifies your Redis masters across which to distribute the lock (in production, you should have 5 Redis masters).  Now you can protect access to your resource:
+The `key` argument represents the resource, and the `masters` argument
+specifies your Redis masters across which to distribute the lock (in
+production, you should have 5 Redis masters).  Now you can protect access to
+your resource:
 
     >>> lock.acquire()
     >>> # Critical section - print stuff here.
@@ -128,7 +146,12 @@ Or you can protect access to your resource inside a context manager:
     >>> with lock:
     ...   # Critical section - print stuff here.
 
-`Redlock`s time out (by default, after 10 seconds).  You should take care to ensure that your critical section completes well within the timeout.  The reasons that `Redlock`s time out are to preserve [&ldquo;liveness&rdquo;](http://redis.io/topics/distlock#liveness-arguments) and to avoid deadlocks (in the event that a process dies inside a critical section before it releases its lock).
+`Redlock`s time out (by default, after 10 seconds).  You should take care to
+ensure that your critical section completes well within the timeout.  The
+reasons that `Redlock`s time out are to preserve
+[&ldquo;liveness&rdquo;](http://redis.io/topics/distlock#liveness-arguments)
+and to avoid deadlocks (in the event that a process dies inside a critical
+section before it releases its lock).
 
     >>> import time
     >>> lock.acquire()
@@ -140,7 +163,8 @@ Or you can protect access to your resource inside a context manager:
     >>> bool(lock.locked())
     False
 
-If 10 seconds isn't enough to complete executing your critical section, then you can specify your own timeout:
+If 10 seconds isn't enough to complete executing your critical section, then
+you can specify your own timeout:
 
     >>> lock = Redlock(key='printer', auto_release_time=15*1000)
     >>> lock.acquire()
@@ -159,7 +183,9 @@ If 10 seconds isn't enough to complete executing your critical section, then you
 
 ### ContextTimer
 
-`ContextTimer` helps you easily and accurately measure elapsed time.  Note that `ContextTimer` measures wall (real-world) time, not CPU time; and that `elapsed()` returns time in milliseconds.
+`ContextTimer` helps you easily and accurately measure elapsed time.  Note that
+`ContextTimer` measures wall (real-world) time, not CPU time; and that
+`elapsed()` returns time in milliseconds.
 
 You can use `ContextTimer` stand-alone&hellip;
 
@@ -211,7 +237,9 @@ You can use `ContextTimer` stand-alone&hellip;
   1. `$ cd pottery/`
   2. `$ make test`
 
-`make test` runs all of the unit tests as well as the coverage test.  However, sometimes, when debugging, it can be useful to run an individual test module, class, or method:
+`make test` runs all of the unit tests as well as the coverage test.  However,
+sometimes, when debugging, it can be useful to run an individual test module,
+class, or method:
 
 1. In one Terminal session:
   1. `$ cd pottery/`
