@@ -4,13 +4,13 @@ certifi==2017.7.27.1
 chardet==3.0.4
 clint==0.5.1
 coverage==4.4.1
-idna==2.5
+idna==2.6
 isort==4.2.15
 packaging==16.8
 pkginfo==1.4.1
 pyparsing==2.2.0
 redis==2.10.5
-requests==2.18.2
+requests==2.18.4
 requests-toolbelt==0.8.0
 six==1.10.0
 tqdm==4.15.0
