@@ -12,7 +12,7 @@ init upgrade: formulae := {openssl,readline,xz,pyenv,redis}
 python: CFLAGS := "-I$(brew --prefix readline)/include -g -O2"
 python: LDFLAGS := -L$(brew --prefix readline)/lib
 
-version ?= 3.6.1
+version ?= 3.6.2
 venv ?= venv
 
 
@@ -30,6 +30,7 @@ init:
 python:
 	pyenv install --skip-existing $(version)
 	pyenv rehash
+	rm -rf $(venv)
 	~/.pyenv/versions/$(version)/bin/python3 -m venv $(venv)
 	source $(venv)/bin/activate && \
 		pip3 install --upgrade pip && \
