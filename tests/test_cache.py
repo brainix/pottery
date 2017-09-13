@@ -83,3 +83,7 @@ class CacheTests(TestCase):
 
         self.expensive_method('raj')
         assert self.redis.ttl(self._KEY) == _DEFAULT_TIMEOUT
+
+    def test_wrapped(self):
+        assert self.expensive_method() == self.expensive_method()
+        assert self.expensive_method() != self.expensive_method.__wrapped__()

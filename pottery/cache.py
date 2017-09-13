@@ -25,6 +25,12 @@ def _arg_hash(*args, **kwargs):
 
 
 def redis_cache(*, key, redis=None, timeout=_DEFAULT_TIMEOUT):
+    '''Redis-backed caching decorator.
+
+    Arguments to the cached function must be hashable.
+
+    Access the underlying function with f.__wrapped__.
+    '''
     redis = Redis() if redis is None else redis
     cache = RedisDict(redis=redis, key=key)
 
@@ -39,5 +45,6 @@ def redis_cache(*, key, redis=None, timeout=_DEFAULT_TIMEOUT):
                 cache[hash_] = return_value
             redis.expire(key, timeout)
             return return_value
+        wrapper.__wrapped__ = func
         return wrapper
     return decorator
