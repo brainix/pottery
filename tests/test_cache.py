@@ -8,10 +8,12 @@
 
 
 import random
+import time
 
 from pottery import RedisDict
 from pottery import redis_cache
 from pottery.base import _default_redis
+from pottery.cache import _DEFAULT_TIMEOUT
 from tests.base import TestCase
 
 
@@ -67,3 +69,21 @@ class CacheTests(TestCase):
         assert value5 != value4
         assert self.expensive_method('raj', last='shah') == value5
         assert len(self.cache) == 4
+
+    def test_expiration(self):
+        self.expensive_method()
+        assert self.redis.ttl(self._KEY) == _DEFAULT_TIMEOUT
+        time.sleep(1)
+        assert self.redis.ttl(self._KEY) == _DEFAULT_TIMEOUT - 1
+
+        self.expensive_method()
+        assert self.redis.ttl(self._KEY) == _DEFAULT_TIMEOUT
+        time.sleep(1)
+        assert self.redis.ttl(self._KEY) == _DEFAULT_TIMEOUT - 1
+
+        self.expensive_method('raj')
+        assert self.redis.ttl(self._KEY) == _DEFAULT_TIMEOUT
+
+    def test_wrapped(self):
+        assert self.expensive_method() == self.expensive_method()
+        assert self.expensive_method() != self.expensive_method.__wrapped__()
