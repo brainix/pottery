@@ -9,9 +9,6 @@
 
 init upgrade: formulae := {openssl,readline,xz,pyenv,redis}
 
-python: CFLAGS := "-I$(brew --prefix readline)/include -g -O2"
-python: LDFLAGS := -L$(brew --prefix readline)/lib
-
 version ?= 3.6.2
 venv ?= venv
 
@@ -28,7 +25,9 @@ init:
 	brew install $(formulae)
 
 python:
-	pyenv install --skip-existing $(version)
+	CFLAGS="-I$(shell brew --prefix openssl)/include -I$(shell brew --prefix readline)/include -g -O2" \
+		LDFLAGS="-L$(shell brew --prefix openssl)/lib -L$(shell brew --prefix readline)/lib" \
+		pyenv install --skip-existing $(version)
 	pyenv rehash
 	rm -rf $(venv)
 	~/.pyenv/versions/$(version)/bin/python3 -m venv $(venv)
