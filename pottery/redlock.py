@@ -118,7 +118,6 @@ class Redlock(Primitive):
     CLOCK_DRIFT_FACTOR = 0.01
     RETRY_DELAY = 200
     NUM_EXTENSIONS = 3
-    FUTURE_TIMEOUT = 1
 
     def __init__(self, *, key, masters=frozenset(),
                  auto_release_time=AUTO_RELEASE_TIME, num_extensions=3):
@@ -206,19 +205,18 @@ class Redlock(Primitive):
         return self.auto_release_time * self.CLOCK_DRIFT_FACTOR + 2
 
     def _acquire_masters(self):
-        self._value, self._extension_num = random.random(), 0
-        num_masters_acquired, quorum = 0, False
+        self._value = random.random()
+        self._extension_num = 0
+        num_masters_acquired = 0
         with ContextTimer() as timer, \
              concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
             futures = {executor.submit(self._acquire_master, master)
                        for master in self.masters}
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
-                    num_masters_acquired += future.result(timeout=self.FUTURE_TIMEOUT)
-                quorum = num_masters_acquired >= len(self.masters) // 2 + 1
-                if quorum:
-                    break
-        validity_time = self.auto_release_time - timer.elapsed() - self._drift()
+                    num_masters_acquired += future.result()
+            quorum = num_masters_acquired >= len(self.masters) // 2 + 1
+            validity_time = self.auto_release_time - timer.elapsed() - self._drift()
         if quorum and max(validity_time, 0):
             return True
         else:
