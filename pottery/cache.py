@@ -31,7 +31,7 @@ def redis_cache(*, key, redis=None, timeout=_DEFAULT_TIMEOUT):
 
     Access the underlying function with f.__wrapped__.
     '''
-    redis = Redis() if redis is None else redis
+    redis = Redis(socket_timeout=1) if redis is None else redis
     cache = RedisDict(redis=redis, key=key)
 
     def decorator(func):

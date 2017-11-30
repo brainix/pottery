@@ -46,7 +46,7 @@ class NextId(Primitive):
     Clean up Redis for the doctest:
 
         >>> from redis import Redis
-        >>> Redis().delete('nextid:current') in {0, 1}
+        >>> Redis(socket_timeout=1).delete('nextid:current') in {0, 1}
         True
 
     Usage:
