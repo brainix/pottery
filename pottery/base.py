@@ -206,7 +206,7 @@ class Iterable(metaclass=abc.ABCMeta):
 
 
 class Primitive(metaclass=abc.ABCMeta):
-    _default_masters = frozenset({Redis()})
+    _default_masters = frozenset({Redis(socket_timeout=1)})
 
     def __init__(self, *, key, masters=_default_masters):
         self.key = key

@@ -46,7 +46,7 @@ class NextId(Primitive):
     Clean up Redis for the doctest:
 
         >>> from redis import Redis
-        >>> Redis().delete('nextid:current') in {0, 1}
+        >>> Redis(socket_timeout=1).delete('nextid:current') in {0, 1}
         True
 
     Usage:
@@ -111,9 +111,10 @@ class NextId(Primitive):
 
     @property
     def _current_id(self):
-        current_id, num_masters_gotten = 0, 0
+        futures, current_id, num_masters_gotten = set(), 0, 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
-            futures = {executor.submit(master.get, self.key) for master in self.masters}
+            for master in self.masters:
+                futures.add(executor.submit(master.get, self.key))
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     current_id = max(current_id, int(future.result()))
@@ -125,9 +126,16 @@ class NextId(Primitive):
 
     @_current_id.setter
     def _current_id(self, value):
-        num_masters_set = 0
+        futures, num_masters_set = set(), 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
-            futures = {executor.submit(self._set_id_script, keys=(self.key,), args=(value,), client=master) for master in self.masters}
+            for master in self.masters:
+                future = executor.submit(
+                    self._set_id_script,
+                    keys=(self.key,),
+                    args=(value,),
+                    client=master,
+                )
+                futures.add(future)
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     num_masters_set += future.result() == value
