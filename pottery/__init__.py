@@ -35,6 +35,7 @@ from .exceptions import QuorumNotAchieved
 from .exceptions import TooManyExtensions
 from .exceptions import ReleaseUnlockedLock
 
+from .bloom import BloomFilter
 from .cache import redis_cache
 from .contexttimer import ContextTimer
 from .nextid import NextId

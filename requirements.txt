@@ -6,6 +6,7 @@ clint==0.5.1
 coverage==4.4.2
 idna==2.6
 isort==4.2.15
+murmurhash3==2.3.5
 packaging==16.8
 pkginfo==1.4.1
 pyparsing==2.2.0

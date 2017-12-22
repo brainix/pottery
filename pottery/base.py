@@ -26,7 +26,7 @@ from .exceptions import RandomKeyError
 
 
 _default_url = os.environ.get('REDIS_URL', 'http://localhost:6379/')
-_default_redis = Redis.from_url(_default_url)
+_default_redis = Redis.from_url(_default_url, socket_timeout=1)
 
 
 
@@ -206,7 +206,7 @@ class Iterable(metaclass=abc.ABCMeta):
 
 
 class Primitive(metaclass=abc.ABCMeta):
-    _default_masters = frozenset({Redis(socket_timeout=1)})
+    _default_masters = frozenset({_default_redis})
 
     def __init__(self, *, key, masters=_default_masters):
         self.key = key

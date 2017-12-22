@@ -11,10 +11,14 @@ import doctest
 import sys
 import unittest
 
+from pottery.base import _default_redis
+
 
 
 class TestCase(unittest.TestCase):
-    ...
+    def setUp(self):
+        super().setUp()
+        self.redis = _default_redis
 
 
 

@@ -8,6 +8,7 @@
 
 
 redis
+murmurhash3
 
 isort
 coverage

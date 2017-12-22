@@ -214,6 +214,63 @@ You can use `ContextTimer` stand-alone&hellip;
 
 
 
+### Bloom filters
+
+Bloom filters are a powerful data structure that help you to answer the
+question, *&ldquo;Have I seen this element before?&rdquo;* but not the
+question, *&ldquo;What are all of the elements that I&rsquo;ve seen
+before?&rdquo;*  So think of Bloom filters as Python sets that you can add
+elements to and use to test element membership, but that you can&rsquo;t
+iterate through or get elements back out of.
+
+Bloom filters are probabilistic, which means that they can sometimes generate
+false positives (as in, they may report that you&rsquo;ve seen a particular
+element before even though you haven&rsquo;t).  But they will never generate
+false negatives (so every time that they report that you haven&rsquo;t seen a
+particular element before, you really must never have seen it).  The good news
+is that you can tune your acceptable false positive probability, though at the
+expense of the storage size of your Bloom filter.
+
+Create a `BloomFilter`:
+
+    >>> from pottery import BloomFilter
+    >>> dilberts = BloomFilter(
+    ...     num_values=100,
+    ...     false_positives=0.01,
+    ...     redis=redis,
+    ...     key='dilberts',
+    ... )
+
+Here, `num_values` represents the number of elements that you expect to insert
+into your `BloomFilter`, and `false_positives` represents your acceptable false
+positive probability.  Using these two parameters, `BloomFilter` automatically
+computes its own storage size such that it can guarantee a false positive rate
+at or below what you can tolerate, given that you&rsquo;re going to insert your
+specified number of elements.
+
+Insert an element into the Bloom filter:
+
+    >>> dilberts.add('rajiv')
+
+Test for membership in the Bloom filter:
+
+    >>> 'rajiv' in dilberts
+    True
+    >>> 'raj' in dilberts
+    False
+    >>> 'dan' in dilberts
+    False
+
+See how many elements we&rsquo;ve inserted into the Bloom filter:
+
+    >>> len(dilberts)
+    1
+
+Note that `BloomFilter.__len__()` is an approximation, so please don&rsquo;t
+rely on it for anything important like financial systems or cat gif websites.
+
+
+
 ## Contributing
 
 ### Install prerequisites
