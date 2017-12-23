@@ -61,11 +61,11 @@ class DictTests(TestCase):
         assert 'guido' in tel
         assert not 'jack' not in tel
 
-    def test_constructor_with_key_value_pairs(self):
+    def test_init_with_key_value_pairs(self):
         d = RedisDict([('sape', 4139), ('guido', 4127), ('jack', 4098)])
         assert d == {'sape': 4139, 'jack': 4098, 'guido': 4127}
 
-    def test_constructor_with_kwargs(self):
+    def test_init_with_kwargs(self):
         d = RedisDict(sape=4139, guido=4127, jack=4098)
         assert d == {'sape': 4139, 'jack': 4098, 'guido': 4127}
 
