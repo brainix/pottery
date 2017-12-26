@@ -32,13 +32,17 @@ os.listdir = _listdir
 # comparisons on to the Redis client.  We consider two Redis clients to be
 # equal if they're connected to the same host, port, and database.
 
+import collections
 from redis import Redis
 
+Connection = collections.namedtuple('Connection', ('host', 'port', 'db'))
+
 def _connection(self):
-    'A dictionary representing a Redis connection (host, port, and database).'
+    'An object representing a Redis connection (host, port, and database).'
     keys = {'host', 'port', 'db'}
     dict_ = {key: self.connection_pool.connection_kwargs[key] for key in keys}
-    return dict_
+    obj = Connection(**dict_)
+    return obj
 
 def __eq__(self, other):
     '''True if two Redis clients are equal.
