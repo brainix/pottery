@@ -8,6 +8,7 @@
 
 
 import collections.abc
+import itertools
 
 from .base import Base
 from .base import Iterable
@@ -122,9 +123,9 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
     def _update(self, *iterables, redis_method):
         iterables = tuple(iterables)
         with self._watch(*iterables):
-            encoded_values = []
-            for iterable in iterables:
-                encoded_values.extend(self._encode(value) for value in iterable)
+            encoded_values = set()
+            for value in itertools.chain(*iterables):
+                encoded_values.add(self._encode(value))
             if encoded_values:
                 self.redis.multi()
                 getattr(self.redis, redis_method)(self.key, *encoded_values)
