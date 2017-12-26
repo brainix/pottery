@@ -28,9 +28,9 @@ os.listdir = _listdir
 
 
 
-# Monkey patch equality comparisons on to the Redis client.  We consider two
-# Redis clients to be equal if they're connected to the same host, port, and
-# database.
+# The Redis client doesn't have a sane equality test.  So monkey patch equality
+# comparisons on to the Redis client.  We consider two Redis clients to be
+# equal if they're connected to the same host, port, and database.
 
 from redis import Redis
 

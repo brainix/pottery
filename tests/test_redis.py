@@ -18,9 +18,9 @@ class RedisTests(TestCase):
     _REDIS_URL = 'http://localhost:6379/'
 
     def test_redis_clients_equal_if_same_url(self):
-        # The Redis client doesn't have a sane equality test.  Monkey patch the
-        # Redis client so that two client instances are equal if they're
-        # connected to the same Redis host, port, and database.
+        # The Redis client doesn't have a sane equality test.  So we've monkey
+        # patched the Redis client so that two client instances are equal if
+        # they're connected to the same Redis host, port, and database.
         redis1 = Redis.from_url(self._REDIS_URL)
         redis2 = Redis.from_url(self._REDIS_URL)
         assert redis1 == redis2
