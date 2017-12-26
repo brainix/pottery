@@ -11,7 +11,6 @@ import unittest.mock
 
 from pottery import RandomKeyError
 from pottery import RedisDict
-from pottery.base import _default_redis
 from tests.base import TestCase
 
 
@@ -19,7 +18,6 @@ from tests.base import TestCase
 class _BaseTestCase(TestCase):
     def setUp(self):
         super().setUp()
-        self.redis = _default_redis
 
         self.redis.delete('pottery:raj')
         self.raj = RedisDict(key='pottery:raj', hobby='music', vegetarian=True)
@@ -31,7 +29,7 @@ class _BaseTestCase(TestCase):
         self.luvh = RedisDict(key='luvh', hobby='bullying', vegetarian=False)
 
     def tearDown(self):
-        self.redis.delete('luvh')
+        self.redis.delete('pottery:raj', 'pottery:nilika', 'luvh')
         super().tearDown()
 
 

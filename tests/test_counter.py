@@ -25,19 +25,19 @@ class CounterTests(TestCase):
             c[word] += 1
         assert c == collections.Counter(blue=3, red=2, green=1)
 
-    def test_constructor(self):
+    def test_init(self):
         c = RedisCounter()
         assert c == collections.Counter()
 
-    def test_constructor_with_iterable(self):
+    def test_init_with_iterable(self):
         c = RedisCounter('gallahad')
         assert c == collections.Counter(a=3, l=2, g=1, h=1, d=1)
 
-    def test_constructor_with_mapping(self):
+    def test_init_with_mapping(self):
         c = RedisCounter({'red': 4, 'blue': 2})
         assert c == collections.Counter(red=4, blue=2)
 
-    def test_constructor_with_kwargs(self):
+    def test_init_with_kwargs(self):
         c = RedisCounter(cats=4, dogs=8)
         assert c == collections.Counter(dogs=8, cats=4)
 

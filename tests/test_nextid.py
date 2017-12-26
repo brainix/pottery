@@ -23,9 +23,14 @@ class NextIdTests(TestCase):
 
     def setUp(self):
         super().setUp()
+        self.redis.delete('nextid:current')
         self.ids = NextId()
         for master in self.ids.masters:
             master.set(self.ids.key, 0)
+
+    def tearDown(self):
+        self.redis.delete('nextid:current')
+        super().tearDown()
 
     def test_nextid(self):
         for id_ in range(1, 10):

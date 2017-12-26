@@ -14,7 +14,7 @@ know how to use Pottery.
 
 
 __title__ = 'pottery'
-__version__ = '0.46'
+__version__ = '0.47'
 __description__, __long_description__ = (
     s.strip() for s in __doc__.split('\n\n', 1)
 )
@@ -35,6 +35,7 @@ from .exceptions import QuorumNotAchieved
 from .exceptions import TooManyExtensions
 from .exceptions import ReleaseUnlockedLock
 
+from .bloom import BloomFilter
 from .cache import redis_cache
 from .contexttimer import ContextTimer
 from .nextid import NextId

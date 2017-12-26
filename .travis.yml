@@ -13,4 +13,6 @@ python:
   - "3.5"
   - "3.6"
 services: redis-server
-script: coverage3 run -m unittest discover --start-directory tests --verbose
+script:
+  - coverage3 run -m unittest discover --start-directory tests --verbose
+  - coverage3 report
