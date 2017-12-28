@@ -25,6 +25,7 @@ from .exceptions import RandomKeyError
 
 
 
+monkey  # Workaround for Pyflakes.  :-(
 _default_url = os.environ.get('REDIS_URL', 'http://localhost:6379/')
 _default_redis = Redis.from_url(_default_url, socket_timeout=1)
 

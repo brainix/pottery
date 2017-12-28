@@ -14,6 +14,10 @@ from tests.base import TestCase
 
 
 
+monkey  # Workaround for Pyflakes.  :-(
+
+
+
 class RedisTests(TestCase):
     _REDIS_URL = 'http://localhost:6379/'
 

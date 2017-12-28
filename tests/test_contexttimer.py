@@ -9,8 +9,6 @@
 
 import time
 
-from redis import Redis
-
 from pottery import ContextTimer
 from tests.base import TestCase
 
