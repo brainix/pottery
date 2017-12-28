@@ -16,3 +16,4 @@ services: redis-server
 script:
   - coverage3 run -m unittest discover --start-directory tests --verbose
   - coverage3 report
+  - pyflakes setup.py pottery/*\.py tests/*\.py
