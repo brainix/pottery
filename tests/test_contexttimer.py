@@ -49,7 +49,7 @@ class ContextTimerTests(TestCase):
             self.timer.stop()
 
     def test_context_manager(self):
-        with self.timer as timer:
+        with self.timer:
             self._confirm_elapsed(0)
             for iteration in range(1, 3):
                 with self.subTest(iteration=iteration):
@@ -59,5 +59,5 @@ class ContextTimerTests(TestCase):
         time.sleep(0.1)
         self._confirm_elapsed(iteration*100)
 
-        with self.assertRaises(RuntimeError), self.timer as timer:
+        with self.assertRaises(RuntimeError), self.timer:
             ...
