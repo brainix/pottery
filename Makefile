@@ -51,7 +51,8 @@ test:
 ifeq ($(tests),)
 	source $(venv)/bin/activate && \
 		coverage3 run -m unittest discover --start-directory tests --verbose && \
-		coverage3 report
+		coverage3 report && \
+		pyflakes setup.py pottery/*\.py tests/*\.py
 else
 	source $(venv)/bin/activate && \
 		python3 -m unittest --verbose $(tests)

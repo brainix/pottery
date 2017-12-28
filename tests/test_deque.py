@@ -59,8 +59,9 @@ class DequeTests(TestCase):
 
     def test_persistent_deque_bigger_than_maxlen(self):
         d1 = RedisDeque('ghi')
+        d1  # Workaround for Pyflakes.  :-(
         with self.assertRaises(IndexError):
-            d2 = RedisDeque(key=d1.key, maxlen=0)
+            RedisDeque(key=d1.key, maxlen=0)
 
     def test_maxlen_not_writable(self):
         d = RedisDeque()

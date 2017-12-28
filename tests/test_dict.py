@@ -22,13 +22,15 @@ class DictTests(TestCase):
 
     def test_keyexistserror_raised(self):
         d = RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+        d   # Workaround for Pyflakes.  :-(
         with self.assertRaises(KeyExistsError):
-            d = RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+            RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
 
     def test_keyexistserror_repr(self):
         d = RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+        d   # Workaround for Pyflakes.  :-(
         try:
-            d = RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+            RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
         except KeyExistsError as err:
             assert repr(err) == (
                 "KeyExistsError(redis=Pipeline<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>, "
@@ -39,8 +41,9 @@ class DictTests(TestCase):
 
     def test_keyexistserror_str(self):
         d = RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+        d   # Workaround for Pyflakes.  :-(
         try:
-            d = RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+            RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
         except KeyExistsError as err:
             assert str(err) == (
                 "redis=Pipeline<ConnectionPool<Connection<host=localhost,port=6379,db=0>>> "

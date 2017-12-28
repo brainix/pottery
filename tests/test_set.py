@@ -25,8 +25,9 @@ class SetTests(TestCase):
     def test_keyexistserror(self):
         fruits = {'apple', 'orange', 'apple', 'pear', 'orange', 'banana'}
         basket = RedisSet(fruits, key='pottery:basket')
+        basket  # Workaround for Pyflakes.  :-(
         with self.assertRaises(KeyExistsError):
-            basket = RedisSet(fruits, key='pottery:basket')
+            RedisSet(fruits, key='pottery:basket')
 
     def test_basic_usage(self):
         fruits = {'apple', 'orange', 'apple', 'pear', 'orange', 'banana'}

@@ -12,6 +12,7 @@ murmurhash3
 
 isort
 coverage
+pyflakes
 
 wheel
 twine

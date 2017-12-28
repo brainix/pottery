@@ -14,8 +14,12 @@ import warnings
 
 from isort import SortImports
 
-from pottery import monkey  # NoQA
+from pottery import monkey
 from tests.base import TestCase
+
+
+
+monkey  # Workaround for Pyflakes.  :-(
 
 
 

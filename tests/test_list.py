@@ -26,8 +26,9 @@ class ListTests(TestCase):
 
     def test_keyexistserror(self):
         squares = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
+        squares     # Workaround for Pyflakes.  :-(
         with self.assertRaises(KeyExistsError):
-            squares = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
+            RedisList((1, 4, 9, 16, 25), key='pottery:squares')
 
     def test_basic_usage(self):
         squares = RedisList((1, 4, 9, 16, 25))

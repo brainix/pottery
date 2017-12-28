@@ -29,9 +29,10 @@ class BloomFilter(Base):
     generate false positives (as in, they may report that you've seen a
     particular element before even though you haven't).  But they will never
     generate false negatives (so every time that they report that you haven't
-    seen a particular element before, you really must never have seen it).  The
-    good news is that you can tune your acceptable false positive probability,
-    though at the expense of the storage size of your Bloom filter.
+    seen a particular element before, you really must never have seen it).  You
+    can tune your acceptable false positive probability, though at the expense
+    of the storage size and the element insertion/lookup time of your Bloom
+    filter.
 
     Wikipedia article:
         https://en.wikipedia.org/wiki/Bloom_filter
@@ -39,24 +40,20 @@ class BloomFilter(Base):
     Reference implementation:
         http://www.maxburstein.com/blog/creating-a-simple-bloom-filter/
 
-    Clean up Redis before the doctest:
-
-        >>> from redis import Redis
-        >>> Redis(socket_timeout=1).delete('dilberts') in {0, 1}
-        True
-
-    Instantiate a Bloom filter:
+    Instantiate a Bloom filter and clean up Redis before the doctest:
 
         >>> dilberts = BloomFilter(
         ...     num_values=100,
         ...     false_positives=0.01,
         ...     key='dilberts',
         ... )
+        >>> dilberts.clear()
 
     Here, num_values represents the number of elements that you expect to
     insert into your BloomFilter, and false_positives represents your
     acceptable false positive probability.  Using these two parameters,
-    BloomFilter automatically computes its own storage size such that it can
+    BloomFilter automatically computes its own storage size and number of times
+    to run its hash functions on element insertion/lookup such that it can
     guarantee a false positive rate at or below what you can tolerate, given
     that you're going to insert your specified number of elements.
 
@@ -81,11 +78,13 @@ class BloomFilter(Base):
     Note that BloomFilter.__len__() is an approximation, so please don't rely
     on it for anything important like financial systems or cat gif websites.
 
-    Clean up Redis after the doctest:
+    Insert multiple elements into the Bloom filter:
 
-        >>> from redis import Redis
-        >>> Redis(socket_timeout=1).delete('dilberts') in {0, 1}
-        True
+        >>> dilberts.update({'raj', 'dan'})
+
+    Remove all of the elements from the Bloom filter:
+
+        >>> dilberts.clear()
     '''
 
     def __init__(self, iterable=frozenset(), *, num_values, false_positives,
