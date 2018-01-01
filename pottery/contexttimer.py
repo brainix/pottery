@@ -1,7 +1,7 @@
 #-----------------------------------------------------------------------------#
 #   contexttimer.py                                                           #
 #                                                                             #
-#   Copyright © 2015-2017, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2018, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
 #-----------------------------------------------------------------------------#
 'Measure the execution time of small code snippets.'
