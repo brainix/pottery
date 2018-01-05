@@ -26,7 +26,7 @@ class BloomFilterTests(TestCase):
         super().tearDown()
 
     def test_init_without_iterable(self):
-        'Test BloomFilter.__init__() without an iterable for initialization.'
+        'Test BloomFilter.__init__() without an iterable for initialization'
         dilberts = BloomFilter(num_values=100, false_positives=0.01)
         assert dilberts.num_values == 100
         assert dilberts.false_positives == 0.01
@@ -38,7 +38,7 @@ class BloomFilterTests(TestCase):
         assert len(dilberts) == 0
 
     def test_init_with_iterable(self):
-        'Test BloomFilter.__init__() with an iterable for initialization.'
+        'Test BloomFilter.__init__() with an iterable for initialization'
         dilberts = BloomFilter(
             {'rajiv', 'raj'},
             num_values=100,
@@ -57,103 +57,77 @@ class BloomFilterTests(TestCase):
         assert dilberts._num_bits_set() > dilberts.num_hashes() + 1
         assert len(dilberts) == 2
 
-    def test_size(self):
-        'Test BloomFilter.size().'
+    def test_size_and_num_hashes(self):
+        'Test BloomFilter.size()'
         dilberts = BloomFilter(num_values=100, false_positives=0.1)
         assert dilberts.size() == 480
+        assert dilberts.num_hashes() == 4
 
         dilberts = BloomFilter(num_values=1000, false_positives=0.1)
         assert dilberts.size() == 4793
+        assert dilberts.num_hashes() == 4
 
         dilberts = BloomFilter(num_values=100, false_positives=0.01)
         assert dilberts.size() == 959
+        assert dilberts.num_hashes() == 7
 
         dilberts = BloomFilter(num_values=1000, false_positives=0.01)
         assert dilberts.size() == 9586
-
-    def test_num_hashes(self):
-        'Test BloomFilter.num_hashes().'
-        dilberts = BloomFilter(num_values=100, false_positives=0.1)
-        assert dilberts.num_hashes() == 4
-
-        dilberts = BloomFilter(num_values=1000, false_positives=0.1)
-        assert dilberts.num_hashes() == 4
-
-        dilberts = BloomFilter(num_values=100, false_positives=0.01)
         assert dilberts.num_hashes() == 7
 
-        dilberts = BloomFilter(num_values=1000, false_positives=0.01)
-        assert dilberts.num_hashes() == 7
-
-    def test_bloom_filter_membership(self):
-        'Test BloomFilter.add() and BloomFilter.__contains__().'
+    def test_add(self):
+        'Test BloomFilter add(), __contains__(), and __len__()'
         dilberts = BloomFilter(num_values=100, false_positives=0.01)
         assert 'rajiv' not in dilberts
         assert 'raj' not in dilberts
         assert 'dan' not in dilberts
         assert 'eric' not in dilberts
+        assert len(dilberts) == 0
 
         dilberts.add('rajiv')
         assert 'rajiv' in dilberts
         assert 'raj' not in dilberts
         assert 'dan' not in dilberts
         assert 'eric' not in dilberts
+        assert len(dilberts) == 1
 
         dilberts.add('raj')
         assert 'rajiv' in dilberts
         assert 'raj' in dilberts
         assert 'dan' not in dilberts
         assert 'eric' not in dilberts
+        assert len(dilberts) == 2
 
         dilberts.add('rajiv')
         assert 'rajiv' in dilberts
         assert 'raj' in dilberts
         assert 'dan' not in dilberts
         assert 'eric' not in dilberts
+        assert len(dilberts) == 2
 
         dilberts.add('raj')
         assert 'rajiv' in dilberts
         assert 'raj' in dilberts
         assert 'dan' not in dilberts
         assert 'eric' not in dilberts
+        assert len(dilberts) == 2
 
         dilberts.add('dan')
         assert 'rajiv' in dilberts
         assert 'raj' in dilberts
         assert 'dan' in dilberts
         assert 'eric' not in dilberts
+        assert len(dilberts) == 3
 
         dilberts.add('eric')
         assert 'rajiv' in dilberts
         assert 'raj' in dilberts
         assert 'dan' in dilberts
         assert 'eric' in dilberts
-
-    def test_bloom_filter_len(self):
-        'Test BloomFilter.add() and BloomFilter.__len__().'
-        dilberts = BloomFilter(num_values=100, false_positives=0.01)
-        assert len(dilberts) == 0
-
-        dilberts.add('rajiv')
-        assert len(dilberts) == 1
-
-        dilberts.add('raj')
-        assert len(dilberts) == 2
-
-        dilberts.add('rajiv')
-        assert len(dilberts) == 2
-
-        dilberts.add('raj')
-        assert len(dilberts) == 2
-
-        dilberts.add('dan')
-        assert len(dilberts) == 3
-
-        dilberts.add('eric')
         assert len(dilberts) == 4
 
-    def test_bloom_filter_update(self):
-        'Test BloomFilter.update() and BloomFilter.__contains__().'
+    def test_update(self):
+        'Test BloomFilter update(), __contains__(), and __len__()'
         dilberts = BloomFilter(num_values=100, false_positives=0.01)
         assert 'rajiv' not in dilberts
         assert 'raj' not in dilberts
@@ -162,6 +136,7 @@ class BloomFilterTests(TestCase):
         assert 'jenny' not in dilberts
         assert 'will' not in dilberts
         assert 'rhodes' not in dilberts
+        assert len(dilberts) == 0
 
         dilberts.update({'rajiv', 'raj'}, {'dan', 'eric'})
         assert 'rajiv' in dilberts
@@ -171,6 +146,7 @@ class BloomFilterTests(TestCase):
         assert 'jenny' not in dilberts
         assert 'will' not in dilberts
         assert 'rhodes' not in dilberts
+        assert len(dilberts) == 4
 
         dilberts.update({'jenny', 'will'})
         assert 'rajiv' in dilberts
@@ -180,6 +156,7 @@ class BloomFilterTests(TestCase):
         assert 'jenny' in dilberts
         assert 'will' in dilberts
         assert 'rhodes' not in dilberts
+        assert len(dilberts) == 6
 
         dilberts.update(set())
         assert 'rajiv' in dilberts
@@ -189,9 +166,10 @@ class BloomFilterTests(TestCase):
         assert 'jenny' in dilberts
         assert 'will' in dilberts
         assert 'rhodes' not in dilberts
+        assert len(dilberts) == 6
 
     def test_repr(self):
-        'Test BloomFilter.__repr__().'
+        'Test BloomFilter.__repr__()'
         dilberts = BloomFilter(
             num_values=100,
             false_positives=0.01,
@@ -258,12 +236,12 @@ class RecentlyConsumedTests(TestCase):
             return round(number, ndigits)
 
     def test_zero_false_negatives(self):
-        'Ensure that we produce zero false negatives.'
+        'Ensure that we produce zero false negatives'
         for seen_link in self.seen_links:
             assert seen_link in self.recently_consumed
 
     def test_acceptable_false_positives(self):
-        'Ensure that we produce false positives at an acceptable rate.'
+        'Ensure that we produce false positives at an acceptable rate'
         acceptable, actual = self.recently_consumed.false_positives, 0
 
         for unseen_link in self.unseen_links:
