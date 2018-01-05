@@ -93,7 +93,7 @@ class CounterTests(TestCase):
         assert c == collections.Counter(a=3, b=0, c=-3, d=-6)
 
     def test_repr(self):
-        'Test RedisCounter.__repr__().'
+        'Test RedisCounter.__repr__()'
         c = RedisCounter(('eggs', 'ham'))
         assert repr(c) in {
             "RedisCounter{'eggs': 1, 'ham': 1}",
@@ -101,7 +101,7 @@ class CounterTests(TestCase):
         }
 
     def test_add(self):
-        'Test RedisCounter.__add__().'
+        'Test RedisCounter.__add__()'
         c = RedisCounter(a=3, b=1)
         d = RedisCounter(a=1, b=2)
         e = c + d
@@ -109,7 +109,7 @@ class CounterTests(TestCase):
         assert e == collections.Counter(a=4, b=3)
 
     def test_sub(self):
-        'Test RedisCounter.__sub__().'
+        'Test RedisCounter.__sub__()'
         c = RedisCounter(a=3, b=1)
         d = RedisCounter(a=1, b=2)
         e = c - d
@@ -117,7 +117,7 @@ class CounterTests(TestCase):
         assert e == collections.Counter(a=2)
 
     def test_or(self):
-        'Test RedisCounter.__or__().'
+        'Test RedisCounter.__or__()'
         c = RedisCounter(a=3, b=1)
         d = RedisCounter(a=1, b=2)
         e = c | d
@@ -125,7 +125,7 @@ class CounterTests(TestCase):
         assert e == collections.Counter(a=3, b=2)
 
     def test_and(self):
-        'Test RedisCounter.__and__().'
+        'Test RedisCounter.__and__()'
         c = RedisCounter(a=3, b=1)
         d = RedisCounter(a=1, b=2)
         e = c & d
@@ -133,19 +133,19 @@ class CounterTests(TestCase):
         assert e == collections.Counter(a=1, b=1)
 
     def test_pos(self):
-        'Test RedisCounter.__pos__().'
+        'Test RedisCounter.__pos__()'
         c = RedisCounter(foo=-2, bar=-1, baz=0, qux=1)
         assert isinstance(+c, collections.Counter)
         assert +c == collections.Counter(qux=1)
 
     def test_neg(self):
-        'Test RedisCounter.__neg__().'
+        'Test RedisCounter.__neg__()'
         c = RedisCounter(foo=-2, bar=-1, baz=0, qux=1)
         assert isinstance(-c, collections.Counter)
         assert -c == collections.Counter(foo=2, bar=1)
 
     def test_in_place_add_with_empty_counter(self):
-        'Test RedisCounter.__iadd__() with an empty counter.'
+        'Test RedisCounter.__iadd__() with an empty counter'
         c = RedisCounter(a=1, b=2)
         d = RedisCounter()
         c += d
@@ -153,7 +153,7 @@ class CounterTests(TestCase):
         assert c == collections.Counter(a=1, b=2)
 
     def test_in_place_add_with_overlapping_counter(self):
-        'Test RedisCounter.__iadd__() with a counter with overlapping keys.'
+        'Test RedisCounter.__iadd__() with a counter with overlapping keys'
         c = RedisCounter(a=4, b=2, c=0, d=-2)
         d = RedisCounter(a=1, b=2, c=3, d=4)
         c += d
@@ -168,7 +168,7 @@ class CounterTests(TestCase):
         assert c == collections.Counter()
 
     def test_in_place_subtract(self):
-        'Test RedisCounter.__isub__().'
+        'Test RedisCounter.__isub__()'
         c = RedisCounter(a=4, b=2, c=0, d=-2)
         d = RedisCounter(a=1, b=2, c=3, d=4)
         c -= d
@@ -176,7 +176,7 @@ class CounterTests(TestCase):
         assert c == collections.Counter(a=3)
 
     def test_in_place_or_with_two_empty_counters(self):
-        'Test RedisCounter.__ior__() with two empty counters.'
+        'Test RedisCounter.__ior__() with two empty counters'
         c = RedisCounter()
         d = RedisCounter()
         c |= d
@@ -184,7 +184,7 @@ class CounterTests(TestCase):
         assert c == collections.Counter()
 
     def test_in_place_or_with_two_overlapping_counters(self):
-        'Test RedisCounter.__ior__() with two counters with overlapping keys.'
+        'Test RedisCounter.__ior__() with two counters with overlapping keys'
         c = RedisCounter(a=4, b=2, c=0, d=-2)
         d = collections.Counter(a=1, b=2, c=3, d=4)
         c |= d
@@ -192,7 +192,7 @@ class CounterTests(TestCase):
         assert c == collections.Counter(a=4, b=2, c=3, d=4)
 
     def test_in_place_and(self):
-        'Test RedisCounter.__iand__().'
+        'Test RedisCounter.__iand__()'
         c = RedisCounter(a=4, b=2, c=0, d=-2)
         d = RedisCounter(a=1, b=2, c=3, d=4)
         c &= d
