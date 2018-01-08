@@ -141,11 +141,10 @@ class RedlockTests(TestCase):
 
     def test_context_manager_time_out_before_exit(self):
         assert not self.redis.exists(self.redlock.key)
-        with self.assertRaises(ReleaseUnlockedLock):
-            with self.redlock:
-                assert self.redis.exists(self.redlock.key)
-                time.sleep(self.redlock.auto_release_time / 1000 + 1)
-                assert not self.redis.exists(self.redlock.key)
+        with self.assertRaises(ReleaseUnlockedLock), self.redlock:
+            assert self.redis.exists(self.redlock.key)
+            time.sleep(self.redlock.auto_release_time / 1000 + 1)
+            assert not self.redis.exists(self.redlock.key)
         assert not self.redis.exists(self.redlock.key)
 
     def test_context_manager_acquired(self):
@@ -160,23 +159,21 @@ class RedlockTests(TestCase):
     def test_context_manager_acquired_time_out_before_exit(self):
         assert not self.redis.exists(self.redlock.key)
         assert not self.redlock.locked()
-        with self.assertRaises(ReleaseUnlockedLock):
-            with self.redlock:
-                assert self.redis.exists(self.redlock.key)
-                assert self.redlock.locked()
-                time.sleep(self.redlock.auto_release_time / 1000 + 1)
-                assert not self.redis.exists(self.redlock.key)
-                assert not self.redlock.locked()
+        with self.assertRaises(ReleaseUnlockedLock), self.redlock:
+            assert self.redis.exists(self.redlock.key)
+            assert self.redlock.locked()
+            time.sleep(self.redlock.auto_release_time / 1000 + 1)
+            assert not self.redis.exists(self.redlock.key)
+            assert not self.redlock.locked()
         assert not self.redis.exists(self.redlock.key)
         assert not self.redlock.locked()
 
     def test_context_manager_release_before_exit(self):
         assert not self.redis.exists(self.redlock.key)
-        with self.assertRaises(ReleaseUnlockedLock):
-            with self.redlock:
-                assert self.redis.exists(self.redlock.key)
-                self.redlock.release()
-                assert not self.redis.exists(self.redlock.key)
+        with self.assertRaises(ReleaseUnlockedLock), self.redlock:
+            assert self.redis.exists(self.redlock.key)
+            self.redlock.release()
+            assert not self.redis.exists(self.redlock.key)
 
     def test_repr(self):
         assert repr(self.redlock) == '<Redlock key=redlock:printer value=None timeout=0>'
