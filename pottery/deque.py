@@ -97,7 +97,10 @@ class RedisDeque(RedisList, collections.deque):
         return super().pop(0)
 
     def rotate(self, n=1):
-        'Rotate the RedisDeque n steps to the right (default n=1).  If n is negative, rotates left.'
+        '''Rotate the RedisDeque n steps to the right (default n=1).
+
+        If n is negative, rotates left.
+        '''
         if n:
             with self._watch():
                 push_method = 'lpush' if n > 0 else 'rpush'
@@ -117,6 +120,6 @@ class RedisDeque(RedisList, collections.deque):
         values = [self._decode(value) for value in encoded]
         repr = self.__class__.__name__ + '(' + str(values)
         if self.maxlen is not None:
-            repr += ', ' + 'maxlen={}'.format(self.maxlen)
+            repr += ', maxlen={}'.format(self.maxlen)
         repr += ')'
         return repr

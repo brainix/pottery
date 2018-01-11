@@ -7,9 +7,9 @@
 
 
 
-init upgrade: formulae := {openssl,readline,xz,pyenv,redis}
+init upgrade: formulae := {openssl,readline,xz,redis}
 
-version ?= 3.6.3
+version ?= 3.6.4
 venv ?= venv
 
 
@@ -22,7 +22,9 @@ init:
 		ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 	brew analytics off
 	brew analytics regenerate-uuid
-	brew install $(formulae)
+	-brew install $(formulae)
+	command -v pyenv >/dev/null 2>&1 || \
+		curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
 
 python:
 	CFLAGS="-I$(shell brew --prefix openssl)/include -I$(shell brew --prefix readline)/include -g -O2" \
@@ -39,6 +41,7 @@ upgrade:
 	brew update
 	-brew upgrade $(formulae)
 	brew cleanup
+	pyenv update
 	pyenv rehash
 	source $(venv)/bin/activate && \
 		pip3 install --upgrade pip && \
