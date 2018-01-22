@@ -1,6 +1,6 @@
 appdirs==1.4.3
 args==0.1.0
-certifi==2017.11.5
+certifi==2018.1.18
 chardet==3.0.4
 clint==0.5.1
 coverage==4.4.2
