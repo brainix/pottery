@@ -13,13 +13,21 @@ from tests.base import TestCase
 
 
 class HyperLogLogTests(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.redis.delete('hll')
+
+    def tearDown(self):
+        self.redis.delete('hll')
+        super().tearDown()
+
     def test_init_without_iterable(self):
         hll = HyperLogLog()
         assert len(hll) == 0
 
     def test_init_with_iterable(self):
-        hll = HyperLogLog({'rajiv', 'raj'})
-        assert len(hll) == 2
+        hll = HyperLogLog({'foo', 'bar', 'zap', 'a'})
+        assert len(hll) == 4
 
     def test_add(self):
         hll = HyperLogLog()
@@ -67,3 +75,8 @@ class HyperLogLogTests(TestCase):
         assert len(hll1.union(hll2)) == 6
         assert len(hll1.union({'b', 'c', 'd', 'foo'})) == 7
         assert len(hll1.union(hll2, {'b', 'c', 'd', 'baz'})) == 8
+
+    def test_repr(self):
+        'Test HyperLogLog.__repr__()'
+        hll = HyperLogLog({'foo', 'bar', 'zap', 'a'}, key='hll')
+        assert repr(hll) == '<HyperLogLog key=hll len=4>'

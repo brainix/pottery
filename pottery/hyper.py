@@ -59,3 +59,11 @@ class HyperLogLog(Base):
         financial systems or cat gif websites.
         '''
         return self.redis.pfcount(self.key)
+
+    def __repr__(self):
+        'Return the string representation of a HyperLogLog.  O(1)'
+        return '<{} key={} len={}>'.format(
+            self.__class__.__name__,
+            self.key,
+            len(self),
+        )
