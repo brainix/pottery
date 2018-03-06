@@ -38,6 +38,7 @@ from .exceptions import ReleaseUnlockedLock
 from .bloom import BloomFilter
 from .cache import redis_cache
 from .contexttimer import ContextTimer
+from .hyper import HyperLogLog
 from .nextid import NextId
 from .redlock import Redlock
 
@@ -60,6 +61,7 @@ __all__ = [
     'BloomFilter',
     'redis_cache',
     'ContextTimer',
+    'HyperLogLog',
     'NextId',
     'Redlock',
     'RedisCounter',
