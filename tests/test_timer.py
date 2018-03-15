@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-#   test_contexttimer.py                                                      #
+#   test_timer.py                                                             #
 #                                                                             #
 #   Copyright © 2015-2018, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #

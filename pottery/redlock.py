@@ -32,9 +32,9 @@ from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
 
 from .base import Primitive
-from .contexttimer import ContextTimer
 from .exceptions import ReleaseUnlockedLock
 from .exceptions import TooManyExtensions
+from .timer import ContextTimer
 
 
 

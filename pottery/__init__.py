@@ -37,10 +37,10 @@ from .exceptions import ReleaseUnlockedLock
 
 from .bloom import BloomFilter
 from .cache import redis_cache
-from .contexttimer import ContextTimer
 from .hyper import HyperLogLog
 from .nextid import NextId
 from .redlock import Redlock
+from .timer import ContextTimer
 
 from .counter import RedisCounter
 from .deque import RedisDeque
@@ -60,10 +60,10 @@ __all__ = [
     'ReleaseUnlockedLock',
     'BloomFilter',
     'redis_cache',
-    'ContextTimer',
     'HyperLogLog',
     'NextId',
     'Redlock',
+    'ContextTimer',
     'RedisCounter',
     'RedisDeque',
     'RedisDict',
