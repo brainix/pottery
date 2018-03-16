@@ -15,6 +15,6 @@ redis==2.10.6
 requests==2.18.4
 requests-toolbelt==0.8.0
 six==1.10.0
-tqdm==4.19.7
+tqdm==4.19.8
 twine==1.10.0
 urllib3==1.22
