@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-#   contexttimer.py                                                           #
+#   timer.py                                                                  #
 #                                                                             #
 #   Copyright © 2015-2018, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
@@ -84,7 +84,7 @@ class ContextTimer:
 if __name__ == '__main__':  # pragma: no cover
     # Run the doctests in this module with:
     #   $ source venv/bin/activate
-    #   $ python3 -m pottery.contexttimer
+    #   $ python3 -m pottery.timer
     #   $ deactivate
     import contextlib
     with contextlib.suppress(ImportError):

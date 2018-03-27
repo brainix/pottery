@@ -16,7 +16,7 @@ know how to use Pottery.
 __title__ = 'pottery'
 __version__ = '0.47'
 __description__, __long_description__ = (
-    s.strip() for s in __doc__.split('\n\n', 1)
+    s.strip() for s in __doc__.split(sep='\n\n', maxsplit=1)
 )
 __url__ = 'https://github.com/brainix/pottery'
 __author__ = 'Rajiv Bakulesh Shah'
@@ -37,9 +37,10 @@ from .exceptions import ReleaseUnlockedLock
 
 from .bloom import BloomFilter
 from .cache import redis_cache
-from .contexttimer import ContextTimer
+from .hyper import HyperLogLog
 from .nextid import NextId
 from .redlock import Redlock
+from .timer import ContextTimer
 
 from .counter import RedisCounter
 from .deque import RedisDeque
@@ -59,9 +60,10 @@ __all__ = [
     'ReleaseUnlockedLock',
     'BloomFilter',
     'redis_cache',
-    'ContextTimer',
+    'HyperLogLog',
     'NextId',
     'Redlock',
+    'ContextTimer',
     'RedisCounter',
     'RedisDeque',
     'RedisDict',
