@@ -23,7 +23,11 @@ class _BaseTestCase(TestCase):
         self.raj = RedisDict(key='pottery:raj', hobby='music', vegetarian=True)
 
         self.redis.delete('pottery:nilika')
-        self.nilika = RedisDict(key='pottery:nilika', hobby='music', vegetarian=True)
+        self.nilika = RedisDict(
+            key='pottery:nilika',
+            hobby='music',
+            vegetarian=True,
+        )
 
         self.redis.delete('luvh')
         self.luvh = RedisDict(key='luvh', hobby='bullying', vegetarian=False)

@@ -176,4 +176,5 @@ class RedlockTests(TestCase):
             assert not self.redis.exists(self.redlock.key)
 
     def test_repr(self):
-        assert repr(self.redlock) == '<Redlock key=redlock:printer value=None timeout=0>'
+        assert repr(self.redlock) == \
+            '<Redlock key=redlock:printer value=None timeout=0>'

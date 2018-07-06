@@ -237,7 +237,9 @@ class RedisList(Base, collections.abc.MutableSequence):
                 getattr(self.redis, pop_method)(self.key)
                 encoded_value = self.redis.execute()[0]
                 if encoded_value is None:
-                    raise IndexError('pop from an empty {}'.format(self.__class__.__name__))
+                    raise IndexError(
+                        'pop from an empty {}'.format(self.__class__.__name__),
+                    )
                 else:
                     return self._decode(encoded_value)
             else:
@@ -253,4 +255,8 @@ class RedisList(Base, collections.abc.MutableSequence):
                     self._delete(index)
                     break
             else:
-                raise ValueError('{class_}.remove(x): x not in {class_}'.format(class_=self.__class__.__name__))
+                raise ValueError(
+                    '{class_}.remove(x): x not in {class_}'.format(
+                        class_=self.__class__.__name__,
+                    ),
+                )

@@ -34,7 +34,11 @@ class RedisDeque(RedisList, collections.deque):
                 raise TypeError('an integer is required')
         super()._populate(iterable)
         if not iterable and self.maxlen is not None and len(self) > self.maxlen:
-            raise IndexError('persistent {} beyond its maximum size'.format(self.__class__.__name__))
+            raise IndexError(
+                'persistent {} beyond its maximum size'.format(
+                    self.__class__.__name__,
+                ),
+            )
 
     @property
     def maxlen(self):
@@ -42,13 +46,21 @@ class RedisDeque(RedisList, collections.deque):
 
     @maxlen.setter
     def maxlen(self, value):
-        raise AttributeError("attribute 'maxlen' of '{}' objects is not writable".format(self.__class__.__name__))
+        raise AttributeError(
+            "attribute 'maxlen' of '{}' objects is not writable".format(
+                self.__class__.__name__,
+            ),
+        )
 
     def insert(self, index, value):
         'Insert an element into a RedisDeque before the given index.  O(n)'
         with self._watch():
             if self.maxlen is not None and len(self) >= self.maxlen:
-                raise IndexError('{} already at its maximum size'.format(self.__class__.__name__))
+                raise IndexError(
+                    '{} already at its maximum size'.format(
+                        self.__class__.__name__,
+                    ),
+                )
             else:
                 return super()._insert(index, value)
 

@@ -86,7 +86,9 @@ class NextId(Primitive):
         return set_id_script
 
     def _init_masters(self):
-        with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=len(self.masters),
+        ) as executor:
             for master in self.masters:
                 executor.submit(master.setnx, self.key, 0)
 
@@ -112,7 +114,9 @@ class NextId(Primitive):
     @property
     def _current_id(self):
         futures, current_id, num_masters_gotten = set(), 0, 0
-        with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=len(self.masters),
+        ) as executor:
             for master in self.masters:
                 futures.add(executor.submit(master.get, self.key))
             for future in concurrent.futures.as_completed(futures):
@@ -127,7 +131,9 @@ class NextId(Primitive):
     @_current_id.setter
     def _current_id(self, value):
         futures, num_masters_set = set(), 0
-        with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=len(self.masters),
+        ) as executor:
             for master in self.masters:
                 future = executor.submit(
                     self._set_id_script,
