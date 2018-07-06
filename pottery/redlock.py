@@ -208,14 +208,17 @@ class Redlock(Primitive):
         self._value, self._extension_num = random.random(), 0
         futures, num_masters_acquired = set(), 0
         with ContextTimer() as timer, \
-             concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
+             concurrent.futures.ThreadPoolExecutor(
+                max_workers=len(self.masters),
+             ) as executor:
             for master in self.masters:
                 futures.add(executor.submit(self._acquire_master, master))
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     num_masters_acquired += future.result()
             quorum = num_masters_acquired >= len(self.masters) // 2 + 1
-            validity_time = self.auto_release_time - timer.elapsed() - self._drift()
+            elapsed = timer.elapsed() - self._drift()
+            validity_time = self.auto_release_time - elapsed
         if quorum and max(validity_time, 0):
             return True
         else:
@@ -308,7 +311,9 @@ class Redlock(Primitive):
         '''
         futures, num_masters_acquired, ttls = set(), 0, []
         with ContextTimer() as timer, \
-             concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
+             concurrent.futures.ThreadPoolExecutor(
+                max_workers=len(self.masters),
+             ) as executor:
             for master in self.masters:
                 futures.add(executor.submit(self._acquired_master, master))
             for future in concurrent.futures.as_completed(futures):
@@ -348,7 +353,9 @@ class Redlock(Primitive):
             raise TooManyExtensions(self.masters, self.key)
         else:
             futures, num_masters_extended = set(), 0
-            with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=len(self.masters),
+            ) as executor:
                 for master in self.masters:
                     futures.add(executor.submit(self._extend_master, master))
                 for future in concurrent.futures.as_completed(futures):
@@ -375,7 +382,9 @@ class Redlock(Primitive):
             False
         '''
         futures, num_masters_released = set(), 0
-        with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.masters)) as executor:
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=len(self.masters),
+        ) as executor:
             for master in self.masters:
                 futures.add(executor.submit(self._release_master, master))
             for future in concurrent.futures.as_completed(futures):

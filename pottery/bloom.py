@@ -114,7 +114,11 @@ class BloomFilter(Base):
         try:
             return self._size
         except AttributeError:
-            self._size = -self.num_values * math.log(self.false_positives) / math.log(2)**2
+            self._size = (
+                -self.num_values *
+                math.log(self.false_positives) /
+                math.log(2)**2
+            )
             self._size = math.ceil(self._size)
             return self.size()
 
@@ -234,7 +238,11 @@ class BloomFilter(Base):
         More about the formula that this method implements:
             https://en.wikipedia.org/wiki/Bloom_filter#Approximating_the_number_of_items_in_a_Bloom_filter
         '''
-        len_ = -self.size() / self.num_hashes() * math.log(1 - self._num_bits_set() / self.size())
+        len_ = (
+            -self.size() /
+            self.num_hashes() *
+            math.log(1 - self._num_bits_set() / self.size())
+        )
         return math.floor(len_)
 
     def __repr__(self):

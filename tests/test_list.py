@@ -37,7 +37,8 @@ class ListTests(TestCase):
         assert squares[-1] == 25
         assert squares[-3:] == [9, 16, 25]
         assert squares[:] == [1, 4, 9, 16, 25]
-        assert squares + [36, 49, 64, 81, 100] == [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
+        assert squares + [36, 49, 64, 81, 100] == \
+            [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
 
     def test_mutability_and_append(self):
         cubes = RedisList((1, 8, 27, 65, 125))
@@ -179,10 +180,16 @@ class ListTests(TestCase):
             squares.pop(len(squares))
 
     def test_pop_index(self):
-        metasyntactic = RedisList(('foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply', 'waldo', 'fred', 'plugh', 'xyzzy', 'thud'))
+        metasyntactic = RedisList((
+            'foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply',
+            'waldo', 'fred', 'plugh', 'xyzzy', 'thud',
+        ))
         assert metasyntactic.pop(1) == 'bar'
 
     def test_remove_nonexistent(self):
-        metasyntactic = RedisList(('foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply', 'waldo', 'fred', 'plugh', 'xyzzy', 'thud'))
+        metasyntactic = RedisList((
+            'foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply',
+            'waldo', 'fred', 'plugh', 'xyzzy', 'thud',
+        ))
         with self.assertRaises(ValueError):
             metasyntactic.remove('raj')

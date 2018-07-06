@@ -37,14 +37,22 @@ class SetTests(TestCase):
         assert not 'crabgrass' in basket
 
     def test_add(self):
-        basket = RedisSet({'apple', 'orange', 'apple', 'pear', 'orange', 'banana'})
+        basket = RedisSet({
+            'apple', 'orange', 'apple', 'pear', 'orange', 'banana',
+        })
         basket.add('tomato')
-        assert basket == {'apple', 'orange', 'apple', 'pear', 'orange', 'banana', 'tomato'}
+        assert basket == {
+            'apple', 'orange', 'apple', 'pear', 'orange', 'banana', 'tomato',
+        }
 
     def test_discard(self):
-        basket = RedisSet({'apple', 'orange', 'apple', 'pear', 'orange', 'banana', 'tomato'})
+        basket = RedisSet({
+            'apple', 'orange', 'apple', 'pear', 'orange', 'banana', 'tomato',
+        })
         basket.discard('tomato')
-        assert basket == {'apple', 'orange', 'apple', 'pear', 'orange', 'banana'}
+        assert basket == {
+            'apple', 'orange', 'apple', 'pear', 'orange', 'banana',
+        }
 
     def test_repr(self):
         basket = RedisSet({'apple'})

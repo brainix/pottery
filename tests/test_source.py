@@ -34,12 +34,15 @@ class SourceTests(TestCase):
 
     def test_imports(self):
         test_dir = os.path.dirname(__file__)
-        test_files = (f for f in os.listdir(test_dir, absolute=True)
-                      if f.endswith('.py'))
+        test_files = (
+            f for f in os.listdir(test_dir, absolute=True) if f.endswith('.py')
+        )
 
         source_dir = os.path.dirname(test_dir)
-        source_files = (f for f in os.listdir(source_dir, absolute=True)
-                        if f.endswith('.py'))
+        source_files = (
+            f for f in os.listdir(source_dir, absolute=True)
+            if f.endswith('.py')
+        )
 
         for f in itertools.chain(source_files, test_files):
             with self.subTest(f=f):

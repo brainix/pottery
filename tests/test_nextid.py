@@ -42,12 +42,18 @@ class NextIdTests(TestCase):
 
     def test_next(self):
         with self.assertRaises(QuorumNotAchieved), \
-             unittest.mock.patch.object(next(iter(self.ids.masters)), 'get') as get:
+             unittest.mock.patch.object(
+                 next(iter(self.ids.masters)),
+                 'get',
+             ) as get:
             get.side_effect = TimeoutError
             next(self.ids)
 
         with self.assertRaises(QuorumNotAchieved), \
-             unittest.mock.patch.object(self.ids, '_set_id_script') as _set_id_script:
+             unittest.mock.patch.object(
+                 self.ids,
+                 '_set_id_script',
+             ) as _set_id_script:
             _set_id_script.side_effect = TimeoutError
             next(self.ids)
 
