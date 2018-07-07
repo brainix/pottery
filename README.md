@@ -35,6 +35,8 @@ can use your `RedisDict` the same way that you use any other Python dict:
 
     >>> raj['hobby'] = 'music'
     >>> raj['vegetarian'] = True
+    >>> raj
+    RedisDict{'hobby': 'music', 'vegetarian': True}
     >>> len(raj)
     2
     >>> raj['vegetarian']
@@ -53,10 +55,12 @@ Again, notice the two keyword arguments to `RedisSet()`:  The first is your
 Redis client.  The second is the Redis key name for your set.  Other than that,
 you can use your `RedisSet` the same way that you use any other Python set:
 
-    >>> edible.add('tofu')
-    >>> edible.add('avocado')
+    >>> edible.add('eggs')
+    >>> edible.extend({'beans', 'tofu', 'avocado'})
+    >>> edible
+    RedisSet{'tofu', 'avocado', 'eggs', 'beans'}
     >>> len(edible)
-    2
+    4
     >>> 'bacon' in edible
     False
 
@@ -75,12 +79,16 @@ that, you can use your `RedisList` the same way that you use any other Python
 list:
 
     >>> lyrics.append('everything')
-    >>> lyrics.extend(['in' 'its' 'right' '...'])
+    >>> lyrics.extend(['in', 'its', 'right', '...'])
+    >>> lyrics
+    RedisList['everything', 'in', 'its', 'right', '...']
     >>> len(lyrics)
     5
     >>> lyrics[0]
     'everything'
     >>> lyrics[4] = 'place'
+    >>> lyrics
+    RedisList['everything', 'in', 'its', 'right', 'place']
 
 
 

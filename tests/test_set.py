@@ -56,12 +56,12 @@ class SetTests(TestCase):
 
     def test_repr(self):
         basket = RedisSet({'apple'})
-        assert repr(basket) == "RedisSet('apple')"
+        assert repr(basket) == "RedisSet{'apple'}"
 
         basket = RedisSet({'apple', 'orange'})
         assert repr(basket) in {
-            "RedisSet('apple', 'orange')",
-            "RedisSet('orange', 'apple')",
+            "RedisSet{'apple', 'orange'}",
+            "RedisSet{'orange', 'apple'}",
         }
 
     def test_pop(self):
