@@ -222,14 +222,27 @@ You can use `ContextTimer` stand-alone&hellip;
 
 
 
+### HyperLogLogs
+
+HyperLogLogs are an interesting data structure that allow you to answer the
+question, *&ldquo;How many distinct elements have I seen?&rdquo;* but not the
+questions, *&ldquo;Have I seen this element before?&rdquo;* or *&ldquo;What are
+all of the elements that I&rsquo;ve seen before?&rdquo;*  So think of
+HyperLogLogs as Python sets that you can add elements to and get the length of,
+but that you can&rsquo;t use to test element membership, iterate through, or
+get elements back out of.
+
+
+
 ### Bloom filters
 
 Bloom filters are a powerful data structure that help you to answer the
-question, *&ldquo;Have I seen this element before?&rdquo;* but not the
-question, *&ldquo;What are all of the elements that I&rsquo;ve seen
-before?&rdquo;*  So think of Bloom filters as Python sets that you can add
-elements to and use to test element membership, but that you can&rsquo;t
-iterate through or get elements back out of.
+questions, *&ldquo;Have I seen this element before?&rdquo;* and *&ldquo;How
+many distinct elements have I seen?&rdquo;* but not the question, *&ldquo;What
+are all of the elements that I&rsquo;ve seen before?&rdquo;*  So think of Bloom
+filters as Python sets that you can add elements to, use to test element
+membership, and get the length of, but that you can&rsquo;t iterate through or
+get elements back out of.
 
 Bloom filters are probabilistic, which means that they can sometimes generate
 false positives (as in, they may report that you&rsquo;ve seen a particular
