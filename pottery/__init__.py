@@ -14,7 +14,7 @@ know how to use Pottery.
 
 
 __title__ = 'pottery'
-__version__ = '0.48'
+__version__ = '0.49'
 __description__, __long_description__ = (
     s.strip() for s in __doc__.split(sep='\n\n', maxsplit=1)
 )
@@ -36,6 +36,7 @@ from .exceptions import TooManyExtensions
 from .exceptions import ReleaseUnlockedLock
 
 from .bloom import BloomFilter
+from .cache import CachedOrderedDict
 from .cache import redis_cache
 from .hyper import HyperLogLog
 from .nextid import NextId
@@ -58,12 +59,15 @@ __all__ = [
     'QuorumNotAchieved',
     'TooManyExtensions',
     'ReleaseUnlockedLock',
+
     'BloomFilter',
+    'CachedOrderedDict',
     'redis_cache',
     'HyperLogLog',
     'NextId',
     'Redlock',
     'ContextTimer',
+
     'RedisCounter',
     'RedisDeque',
     'RedisDict',
