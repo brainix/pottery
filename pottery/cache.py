@@ -11,6 +11,7 @@ import collections
 import functools
 
 from redis import Redis
+from redis.exceptions import WatchError
 
 from .dict import RedisDict
 
@@ -53,10 +54,19 @@ def redis_cache(*, key, redis=None, timeout=_DEFAULT_TIMEOUT):
 
 
 class CachedOrderedDict(collections.OrderedDict):
+    _RETRIES = 3
     _SENTINEL = object()
 
     def __init__(self, *, redis=None, key=None, keys=tuple()):
-        self._cache = RedisDict(redis=redis, key=key)
+        for _ in range(self._RETRIES):  # pragma: no cover
+            try:
+                self._cache = RedisDict(redis=redis, key=key)
+            except WatchError:
+                continue
+            else:
+                break
+        else:                           # pragma: no cover
+            raise
         self.misses = set()
 
         items, miss_count, hit_count = [], 0, 0
@@ -79,4 +89,12 @@ class CachedOrderedDict(collections.OrderedDict):
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None:    # pragma: no cover
             cache = {key_: self[key_] for key_ in self.misses}
-            self._cache.update(cache)
+            for _ in range(self._RETRIES):
+                try:
+                    self._cache.update(cache)
+                except WatchError:
+                    continue
+                else:
+                    break
+            else:
+                raise
