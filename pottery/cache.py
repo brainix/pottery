@@ -7,6 +7,7 @@
 
 
 
+import collections
 import functools
 
 from redis import Redis
@@ -48,3 +49,34 @@ def redis_cache(*, key, redis=None, timeout=_DEFAULT_TIMEOUT):
         wrapper.__wrapped__ = func
         return wrapper
     return decorator
+
+
+
+class CachedOrderedDict(collections.OrderedDict):
+    _SENTINEL = object()
+
+    def __init__(self, *, redis=None, key=None, keys=tuple()):
+        self._cache = RedisDict(redis=redis, key=key)
+        self.misses = set()
+
+        items, miss_count, hit_count = [], 0, 0
+        for key_ in keys:
+            try:
+                value = self._cache[key_]
+            except KeyError:
+                self.misses.add(key_)
+                item = (key_, self._SENTINEL)
+                miss_count += 1
+            else:
+                item = (key_, value)
+                hit_count += 1
+            items.append(item)
+        super().__init__(items)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type is None:    # pragma: no cover
+            cache = {key_: self[key_] for key_ in self.misses}
+            self._cache.update(cache)

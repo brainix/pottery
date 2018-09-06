@@ -14,6 +14,7 @@ from pottery import RedisDict
 from pottery import redis_cache
 from pottery.base import _default_redis
 from pottery.cache import _DEFAULT_TIMEOUT
+from pottery.cache import CachedOrderedDict
 from tests.base import TestCase
 
 
@@ -87,3 +88,46 @@ class CacheTests(TestCase):
     def test_wrapped(self):
         assert self.expensive_method() == self.expensive_method()
         assert self.expensive_method() != self.expensive_method.__wrapped__()
+
+
+
+class CachedOrderedDictTests(TestCase):
+    _KEY = 'cache-ordereddict'
+
+    def setUp(self):
+        super().setUp()
+        self.redis = _default_redis
+        self.redis.delete(self._KEY)
+
+    def tearDown(self):
+        self.redis.delete(self._KEY)
+        super().tearDown()
+
+    def test_cachedorderedict(self):
+        # Populate the cache with three hits:
+        with CachedOrderedDict(
+            redis=self.redis,
+            key=self._KEY,
+            keys=('hit1', 'hit2', 'hit3'),
+        ) as cache:
+            cache['hit1'] = 'value1'
+            cache['hit2'] = 'value2'
+            cache['hit3'] = 'value3'
+
+        # Instantiate the cache again with the three hits and three misses:
+        cache = CachedOrderedDict(
+            redis=self.redis,
+            key=self._KEY,
+            keys=('hit1', 'miss1', 'hit2', 'miss2', 'hit3', 'miss3'),
+        )
+
+        # Ensure that the hits are hits, the misses are misses, and the cache
+        # is ordered:
+        assert tuple(cache.items()) == (
+            ('hit1', 'value1'),
+            ('miss1', CachedOrderedDict._SENTINEL),
+            ('hit2', 'value2'),
+            ('miss2', CachedOrderedDict._SENTINEL),
+            ('hit3', 'value3'),
+            ('miss3', CachedOrderedDict._SENTINEL),
+        )
