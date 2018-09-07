@@ -54,32 +54,23 @@ def redis_cache(*, key, redis=None, timeout=_DEFAULT_TIMEOUT):
 
 
 class CachedOrderedDict(collections.OrderedDict):
-    _RETRIES = 3
     _SENTINEL = object()
+    _NUM_RETRIES = 3
 
-    def __init__(self, *, redis=None, key=None, keys=tuple()):
-        for _ in range(self._RETRIES):  # pragma: no cover
-            try:
-                self._cache = RedisDict(redis=redis, key=key)
-            except WatchError:
-                continue
-            else:
-                break
-        else:                           # pragma: no cover
-            raise
+    def __init__(self, *, redis=None, key=None, keys=tuple(),
+                 num_retries=_NUM_RETRIES):
+        self._num_retries = num_retries
+        partial = functools.partial(RedisDict, redis=redis, key=key)
+        self._cache = self._retry(partial)
         self.misses = set()
 
-        items, miss_count, hit_count = [], 0, 0
+        items = []
         for key_ in keys:
             try:
-                value = self._cache[key_]
+                item = (key_, self._cache[key_])
             except KeyError:
                 self.misses.add(key_)
                 item = (key_, self._SENTINEL)
-                miss_count += 1
-            else:
-                item = (key_, value)
-                hit_count += 1
             items.append(item)
         super().__init__(items)
 
@@ -87,14 +78,15 @@ class CachedOrderedDict(collections.OrderedDict):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type is None:    # pragma: no cover
+        if exc_type is None:                        # pragma: no cover
             cache = {key_: self[key_] for key_ in self.misses}
-            for _ in range(self._RETRIES):
-                try:
-                    self._cache.update(cache)
-                except WatchError:
-                    continue
-                else:
-                    break
-            else:
-                raise
+            partial = functools.partial(self._cache.update, cache)
+            self._retry(partial)
+
+    def _retry(self, partial):
+        for retry_num in range(self._num_retries):  # pragma: no cover
+            try:
+                return partial()
+            except WatchError:
+                if retry_num == self._num_retries - 1:
+                    raise
