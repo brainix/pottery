@@ -13,6 +13,7 @@ import contextlib
 import functools
 import itertools
 import json
+import logging
 import os
 import random
 import string
@@ -28,6 +29,7 @@ from .exceptions import RandomKeyError
 monkey  # Workaround for Pyflakes.  :-(
 _default_url = os.environ.get('REDIS_URL', 'http://localhost:6379/')
 _default_redis = Redis.from_url(_default_url, socket_timeout=1)
+_logger = logging.getLogger('pottery')
 
 
 
@@ -43,6 +45,11 @@ class _Common:
     def __del__(self):
         if self.key.startswith(self._RANDOM_KEY_PREFIX):
             self.redis.delete(self.key)
+            _logger.info(
+                "Deleted tmp <%s key='%s'> (went out of scope)",
+                self.__class__.__name__,
+                self.key,
+            )
 
     @property
     def redis(self):
@@ -69,6 +76,11 @@ class _Common:
         random_key = self._RANDOM_KEY_PREFIX + suffix
         if self.redis.exists(random_key):
             random_key = self._random_key(tries=tries-1)
+        _logger.info(
+            "Self-assigning tmp key <%s key='%s'>",
+            self.__class__.__name__,
+            random_key,
+        )
         return random_key
 
 

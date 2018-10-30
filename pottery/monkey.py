@@ -8,6 +8,14 @@
 
 
 
+import logging
+
+
+
+_logger = logging.getLogger('pottery')
+
+
+
 # Monkey patch os.listdir() to optionally return absolute paths.
 
 import os
@@ -25,6 +33,8 @@ def _listdir(path=None, *, absolute=False):
 
 _listdir.listdir = os.listdir
 os.listdir = _listdir
+
+_logger.info('Monkey patched os.listdir() to optionally return absolute paths')
 
 
 
@@ -64,6 +74,11 @@ Redis._connection = _connection
 Redis.__eq__ = __eq__
 Redis.__ne__ = __ne__
 
+_logger.info(
+    'Monkey patched Redis._connection(), Redis.__eq__() and Redis.__ne__() to '
+    'compare Redis clients by connection params'
+)
+
 
 
 # Monkey patch isort.SortImports to have a correctly_sorted property.  Compare:
@@ -78,3 +93,8 @@ import contextlib
 with contextlib.suppress(ImportError):
     from isort import SortImports
     SortImports.correctly_sorted = _correctly_sorted
+
+_logger.info(
+    'Monkey patched SortImports.correctly_sorted in order to test for positive '
+    'condition'
+)
