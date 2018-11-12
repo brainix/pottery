@@ -6,7 +6,7 @@ cffi==1.11.5
 chardet==3.0.4
 clint==0.5.1
 cmarkgfm==0.4.2
-coverage==4.5.1
+coverage==4.5.2
 docutils==0.14
 future==0.16.0
 html5lib==1.0.1
