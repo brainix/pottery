@@ -99,10 +99,10 @@ class RedisList(Base, collections.abc.MutableSequence):
                     self.redis.lset(self.key, index, encoded_value)
                 indices, num = indices[len(encoded_values):], 0
                 for index in indices:
-                    self.redis.lset(self.key, index, None)
+                    self.redis.lset(self.key, index, 0)
                     num += 1
                 if num:
-                    self.redis.lrem(self.key, None, num=num)
+                    self.redis.lrem(self.key, num, 0)
             else:
                 self.redis.multi()
                 self.redis.lset(self.key, index, self._encode(value))
@@ -123,10 +123,10 @@ class RedisList(Base, collections.abc.MutableSequence):
         indices, num = self._slice_to_indices(index), 0
         self.redis.multi()
         for index in indices:
-            self.redis.lset(self.key, index, None)
+            self.redis.lset(self.key, index, 0)
             num += 1
         if num: # pragma: no cover
-            self.redis.lrem(self.key, None, num=num)
+            self.redis.lrem(self.key, num, 0)
 
     def __len__(self):
         'Return the number of items in a RedisList.  O(1)'
@@ -154,10 +154,10 @@ class RedisList(Base, collections.abc.MutableSequence):
             # http://redis.io/commands/linsert
             pivot = self._encode(self[index])
             self.redis.multi()
-            self.redis.lset(self.key, index, None)
+            self.redis.lset(self.key, index, 0)
             for encoded_value in (encoded_value, pivot):
-                self.redis.linsert(self.key, 'BEFORE', None, encoded_value)
-            self.redis.lrem(self.key, None, num=1)
+                self.redis.linsert(self.key, 'BEFORE', 0, encoded_value)
+            self.redis.lrem(self.key, 1, 0)
         else:
             self.redis.multi()
             self.redis.rpush(self.key, encoded_value)

@@ -177,4 +177,4 @@ class RedlockTests(TestCase):
 
     def test_repr(self):
         assert repr(self.redlock) == \
-            '<Redlock key=redlock:printer value=None timeout=0>'
+            '<Redlock key=redlock:printer value=0 timeout=0>'
