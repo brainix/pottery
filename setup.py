@@ -37,7 +37,7 @@ setup(
     ],
     keywords=pottery.__keywords__,
     packages=find_packages(exclude=('contrib', 'docs', 'tests*')),
-    install_requires=('redis', 'murmurhash3',),
+    install_requires=('redis>=3.0.0', 'murmurhash3',),
     extras_require={},
     package_data={},
     data_files=tuple(),

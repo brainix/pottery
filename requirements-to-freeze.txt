@@ -7,7 +7,7 @@
 
 
 
-redis
+redis>=3.0.0
 murmurhash3
 
 isort

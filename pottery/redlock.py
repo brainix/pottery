@@ -125,7 +125,7 @@ class Redlock(Primitive):
         self.auto_release_time = auto_release_time
         self.num_extensions = num_extensions
 
-        self._value = None
+        self._value = 0
         self._extension_num = 0
         self._acquired_script = self._register_acquired_script()
         self._extend_script = self._register_extend_script()
@@ -205,7 +205,11 @@ class Redlock(Primitive):
         return self.auto_release_time * self.CLOCK_DRIFT_FACTOR + 2
 
     def _acquire_masters(self):
-        self._value, self._extension_num = random.random(), 0
+        while True:
+            self._value = random.random()
+            if self._value:
+                break
+        self._extension_num = 0
         futures, num_masters_acquired = set(), 0
         with ContextTimer() as timer, \
              concurrent.futures.ThreadPoolExecutor(
