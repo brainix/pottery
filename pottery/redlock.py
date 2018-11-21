@@ -25,8 +25,8 @@ Lua scripting:
 
 import concurrent.futures
 import contextlib
+import os
 import random
-import secrets
 import time
 
 from redis.exceptions import ConnectionError
@@ -210,7 +210,7 @@ class Redlock(Primitive):
         return self.auto_release_time * self.CLOCK_DRIFT_FACTOR + 2
 
     def _acquire_masters(self):
-        self._value = secrets.token_bytes(nbytes=self.num_random_bytes)
+        self._value = os.urandom(self.num_random_bytes)
         self._extension_num = 0
         futures, num_masters_acquired = set(), 0
         with ContextTimer() as timer, \
