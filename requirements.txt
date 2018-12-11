@@ -21,7 +21,7 @@ Pygments==2.2.0
 pyparsing==2.2.0
 readme-renderer==22.0
 redis==3.0.1
-requests==2.20.1
+requests==2.21.0
 requests-toolbelt==0.8.0
 six==1.10.0
 tqdm==4.22.0
