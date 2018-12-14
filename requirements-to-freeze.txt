@@ -24,3 +24,9 @@ twine
 # pulls in.  For more info:
 #   https://nvd.nist.gov/vuln/detail/CVE-2018-18074
 requests>=2.20.0
+
+# We don't need urllib3 at the top-level.  However, it's pulled in from
+# something else, and there's a security vulnerability in the version that it
+# pulls in.  For more info:
+#   https://nvd.nist.gov/vuln/detail/CVE-2018-20060
+urllib3>=1.23
