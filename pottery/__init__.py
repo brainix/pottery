@@ -1,7 +1,7 @@
 #-----------------------------------------------------------------------------#
 #   __init__.py                                                               #
 #                                                                             #
-#   Copyright © 2015-2018, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
 #-----------------------------------------------------------------------------#
 '''Redis for Humans.
@@ -23,7 +23,7 @@ __author__ = 'Rajiv Bakulesh Shah'
 __author_email__ = 'brainix@gmail.com'
 __license__ = 'Apache 2.0'
 __keywords__ = 'Redis client persistent storage'
-__copyright__ = 'Copyright © 2015-2018, {}, original author.'.format(__author__)
+__copyright__ = 'Copyright © 2015-2019, {}, original author.'.format(__author__)
 
 
 
