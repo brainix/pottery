@@ -1,7 +1,7 @@
 #-----------------------------------------------------------------------------#
 #   test_hyper.py                                                             #
 #                                                                             #
-#   Copyright © 2015-2018, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
 #-----------------------------------------------------------------------------#
 
