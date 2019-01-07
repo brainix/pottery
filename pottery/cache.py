@@ -31,7 +31,8 @@ def redis_cache(*, key, redis=None, timeout=_DEFAULT_TIMEOUT):
 
     Arguments to the cached function must be hashable.
 
-    Access the underlying function with f.__wrapped__.
+    Access the underlying function with f.__wrapped__, and bypass the cache
+    (force a cache reset) with f.__bypass__.
     '''
     redis = Redis(socket_timeout=1) if redis is None else redis
     cache = RedisDict(redis=redis, key=key)
@@ -47,7 +48,17 @@ def redis_cache(*, key, redis=None, timeout=_DEFAULT_TIMEOUT):
                 cache[hash_] = return_value
             redis.expire(key, timeout)
             return return_value
+
+        @functools.wraps(func)
+        def bypass(*args, **kwargs):
+            hash_ = _arg_hash(*args, **kwargs)
+            return_value = func(*args, **kwargs)
+            cache[hash_] = return_value
+            redis.expire(key, timeout)
+            return return_value
+
         wrapper.__wrapped__ = func
+        wrapper.__bypass__ = bypass
         return wrapper
     return decorator
 
