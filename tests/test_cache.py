@@ -9,6 +9,7 @@
 
 import random
 import time
+import unittest
 
 from pottery import RedisDict
 from pottery import redis_cache
@@ -35,6 +36,7 @@ class CacheTests(TestCase):
     @staticmethod
     @redis_cache(key=_KEY)
     def expensive_method(*args, **kwargs):
+        'random() -> x in the interval [0, 1).'
         return random.random()
 
     def test_cache(self):
@@ -88,6 +90,22 @@ class CacheTests(TestCase):
     def test_wrapped(self):
         assert self.expensive_method() == self.expensive_method()
         assert self.expensive_method() != self.expensive_method.__wrapped__()
+
+    @unittest.mock.patch('random.random')
+    def test_bypass(self, random):
+        random.return_value = 0.5
+
+        self.expensive_method()
+        assert random.call_count == 1
+
+        self.expensive_method()
+        assert random.call_count == 1
+
+        self.expensive_method.__bypass__()
+        assert random.call_count == 2
+
+        self.expensive_method()
+        assert random.call_count == 2
 
 
 
