@@ -8,6 +8,7 @@
 
 
 import collections
+import contextlib
 import functools
 
 from redis import Redis
@@ -21,6 +22,20 @@ _DEFAULT_TIMEOUT = 365 * 24 * 60 * 60
 
 
 
+CacheInfo = collections.namedtuple(
+    'CacheInfo',
+    ('hits', 'misses', 'maxsize', 'currsize'),
+)
+CacheInfo.__new__.__defaults__ = 0, 0, None, 0
+CacheInfo.__doc__ = ''
+with contextlib.suppress(AttributeError):
+    CacheInfo.hits.__doc__ = ''
+    CacheInfo.misses.__doc__ = ''
+    CacheInfo.maxsize.__doc__ = ''
+    CacheInfo.currsize.__doc__ = ''
+
+
+
 def _arg_hash(*args, **kwargs):
     return hash((args, frozenset(kwargs.items())))
 
@@ -29,23 +44,29 @@ def _arg_hash(*args, **kwargs):
 def redis_cache(*, key, redis=None, timeout=_DEFAULT_TIMEOUT):
     '''Redis-backed caching decorator.
 
-    Arguments to the cached function must be hashable.
+    Arguments to the cached function must be hashable, and return values from
+    the function must be JSON serializable.
 
-    Access the underlying function with f.__wrapped__, and bypass the cache
-    (force a cache reset) with f.__bypass__.
+    Access the underlying function with f.__wrapped__, bypass the cache (force
+    a cache reset for your args/kwargs) with f.__bypass__, and clear/invalidate
+    the entire cache with f.cache_clear.
     '''
     redis = Redis(socket_timeout=1) if redis is None else redis
     cache = RedisDict(redis=redis, key=key)
+    hits, misses = 0, 0
 
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            nonlocal hits, misses
             hash_ = _arg_hash(*args, **kwargs)
             try:
                 return_value = cache[hash_]
+                hits += 1
             except KeyError:
                 return_value = func(*args, **kwargs)
                 cache[hash_] = return_value
+                misses += 1
             redis.expire(key, timeout)
             return return_value
 
@@ -57,8 +78,23 @@ def redis_cache(*, key, redis=None, timeout=_DEFAULT_TIMEOUT):
             redis.expire(key, timeout)
             return return_value
 
+        def cache_info():
+            return CacheInfo(
+                hits=hits,
+                misses=misses,
+                maxsize=None,
+                currsize=len(cache),
+            )
+
+        def cache_clear():
+            nonlocal hits, misses
+            redis.delete(key)
+            hits, misses = 0, 0
+
         wrapper.__wrapped__ = func
         wrapper.__bypass__ = bypass
+        wrapper.cache_info = cache_info
+        wrapper.cache_clear = cache_clear
         return wrapper
     return decorator
 
