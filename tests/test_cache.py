@@ -11,11 +11,11 @@ import random
 import time
 import unittest
 
-from pottery import RedisDict
 from pottery import redis_cache
 from pottery.base import _default_redis
 from pottery.cache import _DEFAULT_TIMEOUT
 from pottery.cache import CachedOrderedDict
+from pottery.cache import CacheInfo
 from tests.base import TestCase
 
 
@@ -26,52 +26,101 @@ class CacheTests(TestCase):
     def setUp(self):
         super().setUp()
         self.redis = _default_redis
-        self.cache = RedisDict(key=self._KEY)
-        self.redis.delete(self._KEY)
+        self.expensive_method.cache_clear()
 
     def tearDown(self):
-        self.redis.delete(self._KEY)
+        self.expensive_method.cache_clear()
         super().tearDown()
 
     @staticmethod
     @redis_cache(key=_KEY)
     def expensive_method(*args, **kwargs):
-        'random() -> x in the interval [0, 1).'
-        return random.random()
+        'getrandbits(16) -> x.  Generates a 16-bit random int.'
+        return random.getrandbits(16)
 
     def test_cache(self):
-        assert len(self.cache) == 0
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=0,
+            misses=0,
+            maxsize=None,
+            currsize=0,
+        )
 
         value1 = self.expensive_method()
-        assert len(self.cache) == 1
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=0,
+            misses=1,
+            maxsize=None,
+            currsize=1,
+        )
         assert self.expensive_method() == value1
-        assert len(self.cache) == 1
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=1,
+            misses=1,
+            maxsize=None,
+            currsize=1,
+        )
 
         value2 = self.expensive_method('raj')
-        assert len(self.cache) == 2
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=1,
+            misses=2,
+            maxsize=None,
+            currsize=2,
+        )
         assert value2 != value1
         assert self.expensive_method('raj') == value2
-        assert len(self.cache) == 2
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=2,
+            misses=2,
+            maxsize=None,
+            currsize=2,
+        )
 
         value3 = self.expensive_method(first='raj', last='shah')
-        assert len(self.cache) == 3
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=2,
+            misses=3,
+            maxsize=None,
+            currsize=3,
+        )
         assert value3 != value1
         assert value3 != value2
         assert self.expensive_method(first='raj', last='shah') == value3
-        assert len(self.cache) == 3
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=3,
+            misses=3,
+            maxsize=None,
+            currsize=3,
+        )
 
         value4 = self.expensive_method(last='shah', first='raj')
-        assert len(self.cache) == 3
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=4,
+            misses=3,
+            maxsize=None,
+            currsize=3,
+        )
         assert value4 == value3
 
         value5 = self.expensive_method('raj', last='shah')
-        assert len(self.cache) == 4
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=4,
+            misses=4,
+            maxsize=None,
+            currsize=4,
+        )
         assert value5 != value1
         assert value5 != value2
         assert value5 != value3
         assert value5 != value4
         assert self.expensive_method('raj', last='shah') == value5
-        assert len(self.cache) == 4
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=5,
+            misses=4,
+            maxsize=None,
+            currsize=4,
+        )
 
     def test_expiration(self):
         self.expensive_method()
@@ -88,24 +137,106 @@ class CacheTests(TestCase):
         assert self.redis.ttl(self._KEY) == _DEFAULT_TIMEOUT
 
     def test_wrapped(self):
-        assert self.expensive_method() == self.expensive_method()
-        assert self.expensive_method() != self.expensive_method.__wrapped__()
+        value1 = self.expensive_method()
+        assert self.expensive_method() == value1
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=1,
+            misses=1,
+            maxsize=None,
+            currsize=1,
+        )
 
-    @unittest.mock.patch('random.random')
-    def test_bypass(self, random):
-        random.return_value = 0.5
+        value2 = self.expensive_method.__wrapped__()
+        assert value2 != value1
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=1,
+            misses=1,
+            maxsize=None,
+            currsize=1,
+        )
+
+        assert self.expensive_method() == value1
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=2,
+            misses=1,
+            maxsize=None,
+            currsize=1,
+        )
+
+    @unittest.mock.patch('random.getrandbits')
+    def test_bypass(self, getrandbits):
+        getrandbits.return_value = 5
 
         self.expensive_method()
-        assert random.call_count == 1
+        assert getrandbits.call_count == 1
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=0,
+            misses=1,
+            maxsize=None,
+            currsize=1,
+        )
 
         self.expensive_method()
-        assert random.call_count == 1
+        assert getrandbits.call_count == 1
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=1,
+            misses=1,
+            maxsize=None,
+            currsize=1,
+        )
 
         self.expensive_method.__bypass__()
-        assert random.call_count == 2
+        assert getrandbits.call_count == 2
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=1,
+            misses=1,
+            maxsize=None,
+            currsize=1,
+        )
 
         self.expensive_method()
-        assert random.call_count == 2
+        assert getrandbits.call_count == 2
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=2,
+            misses=1,
+            maxsize=None,
+            currsize=1,
+        )
+
+    def test_cache_clear(self):
+        self.expensive_method()
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=0,
+            misses=1,
+            maxsize=None,
+            currsize=1,
+        )
+
+        self.expensive_method.cache_clear()
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=0,
+            misses=0,
+            maxsize=None,
+            currsize=0,
+        )
+
+        self.expensive_method()
+        self.expensive_method()
+        self.expensive_method('raj')
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=1,
+            misses=2,
+            maxsize=None,
+            currsize=2,
+        )
+
+        self.expensive_method.cache_clear()
+        assert self.expensive_method.cache_info() == CacheInfo(
+            hits=0,
+            misses=0,
+            maxsize=None,
+            currsize=0,
+        )
 
 
 
