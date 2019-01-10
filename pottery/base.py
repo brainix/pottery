@@ -33,10 +33,26 @@ _logger = logging.getLogger('pottery')
 
 
 
+def random_key(*, redis, prefix='pottery:', length=16, tries=3):
+    if tries <= 0:
+        raise RandomKeyError(redis)
+    all_chars = string.digits + string.ascii_letters
+    random_char = functools.partial(random.choice, all_chars)
+    suffix = ''.join(random_char() for n in range(length))
+    key = prefix + suffix
+    if redis.exists(key):
+        key = random_key(
+            redis=redis,
+            prefix=prefix,
+            length=length,
+            tries=tries-1,
+        )
+    return key
+
+
+
 class _Common:
-    _NUM_TRIES = 3
     _RANDOM_KEY_PREFIX = 'pottery:'
-    _RANDOM_KEY_LENGTH = 16
 
     def __init__(self, *args, redis=None, key=None, **kwargs):
         self.redis = redis
@@ -67,21 +83,14 @@ class _Common:
     def key(self, value):
         self._key = value or self._random_key()
 
-    def _random_key(self, *, tries=_NUM_TRIES):
-        if tries <= 0:
-            raise RandomKeyError(self.redis, self.key)
-        all_chars = string.digits + string.ascii_letters
-        random_char = functools.partial(random.choice, all_chars)
-        suffix = ''.join(random_char() for n in range(self._RANDOM_KEY_LENGTH))
-        random_key = self._RANDOM_KEY_PREFIX + suffix
-        if self.redis.exists(random_key):
-            random_key = self._random_key(tries=tries-1)
+    def _random_key(self):
+        key = random_key(redis=self.redis, prefix=self._RANDOM_KEY_PREFIX)
         _logger.info(
             "Self-assigning tmp key <%s key='%s'>",
             self.__class__.__name__,
-            random_key,
+            key,
         )
-        return random_key
+        return key
 
 
 
@@ -138,10 +147,6 @@ class _Clearable(metaclass=abc.ABCMeta):
 
 
 class Pipelined(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _NUM_TRIES(self):
-        'The number of times to try generating a random key before giving up.'
-
     @abc.abstractproperty
     def redis(self):
         'Redis client.'
@@ -219,11 +224,11 @@ class Iterable(metaclass=abc.ABCMeta):
 
 
 class Primitive(metaclass=abc.ABCMeta):
-    _default_masters = frozenset({_default_redis})
+    _DEFAULT_MASTERS = frozenset({_default_redis})
 
-    def __init__(self, *, key, masters=_default_masters):
+    def __init__(self, *, key, masters=frozenset()):
         self.key = key
-        self.masters = masters or self._default_masters
+        self.masters = masters or self._DEFAULT_MASTERS
 
     @abc.abstractproperty
     def KEY_PREFIX(self):

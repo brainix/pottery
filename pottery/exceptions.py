@@ -31,6 +31,9 @@ class KeyExistsError(PotteryError):
 class RandomKeyError(PotteryError, RuntimeError):
     "Can't create a random Redis key; all of our attempts already exist."
 
+    def __init__(self, redis):
+        super().__init__(redis, None)
+
     def __repr__(self):
         return "{}(redis={})".format(self.__class__.__name__, self._redis)
 
