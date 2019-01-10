@@ -50,7 +50,7 @@ def redis_cache(*, redis=None, key=None, timeout=_DEFAULT_TIMEOUT):
     Additionally, this decorator provides the following functions:
 
     f.__wrapped__(*args, **kwargs)
-        Provide access to the original underlying function.  This is useful for
+        Access the original underlying function.  This is useful for
         introspection, for bypassing the cache, or for rewrapping the function
         with a different cache.
 
@@ -62,9 +62,18 @@ def redis_cache(*, redis=None, key=None, timeout=_DEFAULT_TIMEOUT):
     f.cache_info()
         Return a namedtuple showing hits, misses, maxsize, and currsize.  This
         information is helpful for measuring the effectiveness of the cache.
+
         Note that maxsize is always None, meaning that this cache is always
         unbounded.  maxsize is only included for compatibility with
         functools.lru_cache().
+
+        While redis_cache() is thread-safe, also note that hits/misses only
+        instrument your local process - not other processes, even if connected
+        to the same Redis-backed redis_cache() key.  And in some cases,
+        hits/misses may be incorrect in multiprocess/distributed applications.
+
+        That said, currsize is always correct, even if other remote processes
+        modify the same Redis-backed redis_cache() key.
 
     f.cache_clear()
         Clear/invalidate the entire cache (for all args/kwargs previously
