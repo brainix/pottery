@@ -45,7 +45,7 @@ upgrade:
 	pyenv rehash
 	source $(venv)/bin/activate && \
 		pip3 install --upgrade pip && \
-		pip3 install --requirement requirements-to-freeze.txt --upgrade --no-cache-dir && \
+		pip3 install --requirement requirements-to-freeze.txt --upgrade && \
 		pip3 freeze > requirements.txt
 	git status
 	git diff
