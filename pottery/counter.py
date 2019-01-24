@@ -29,7 +29,7 @@ class RedisCounter(RedisDict, collections.Counter):
             for key in iterable:
                 to_set[key] = to_set.get(key, self[key]) + sign
         for key, value in kwargs.items():
-            original = self[key] if to_set.get(key, 0) is 0 else to_set[key]
+            original = self[key] if to_set.get(key, 0) == 0 else to_set[key]
             to_set[key] = original + sign * value
         to_set = {key: self[key] + value for key, value in to_set.items()}
         to_set = {
