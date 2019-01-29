@@ -19,7 +19,7 @@ monkey  # Workaround for Pyflakes.  :-(
 
 
 class RedisTests(TestCase):
-    _REDIS_URL = 'http://localhost:6379/'
+    _REDIS_URL = 'redis://localhost:6379/'
 
     def test_redis_clients_equal_if_same_url(self):
         # The Redis client doesn't have a sane equality test.  So we've monkey
