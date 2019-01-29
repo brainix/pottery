@@ -21,7 +21,7 @@ Python](https://github.com/vinta/awesome-python#awesome-python-) list!
 First, set up your Redis client: :alien:
 
     >>> from redis import Redis
-    >>> redis = Redis.from_url('http://localhost:6379/')
+    >>> redis = Redis.from_url('redis://localhost:6379/')
 
 That was the hardest part. :grimacing:
 
