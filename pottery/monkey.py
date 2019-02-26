@@ -90,7 +90,14 @@ def _correctly_sorted(self):
     return not self.incorrectly_sorted
 
 import contextlib
-with contextlib.suppress(ImportError):
+
+# XXX: This is a workaround for pip 9.0.2, which is the version that runs on
+# Heroku.  For some reason, the following isort import imports requests, and if
+# we import requests before/without importing pip, we get a KeyError.
+#
+# For more info:
+#   https://github.com/pypa/pip/issues/5079#issuecomment-373927413
+with contextlib.suppress(ImportError, KeyError):
     from isort import SortImports
     SortImports.correctly_sorted = _correctly_sorted
 
