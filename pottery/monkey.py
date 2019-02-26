@@ -78,30 +78,3 @@ _logger.info(
     'Monkey patched Redis._connection(), Redis.__eq__() and Redis.__ne__() to '
     'compare Redis clients by connection params'
 )
-
-
-
-# Monkey patch isort.SortImports to have a correctly_sorted property.  Compare:
-#   >>> assert not SortImports('monkey.py').incorrectly_sorted
-#   >>> assert SortImports('monkey.py').correctly_sorted
-
-@property
-def _correctly_sorted(self):
-    return not self.incorrectly_sorted
-
-import contextlib
-
-# XXX: This is a workaround for pip 9.0.2, which is the version that runs on
-# Heroku.  For some reason, the following isort import imports requests, and if
-# we import requests before/without importing pip, we get a KeyError.
-#
-# For more info:
-#   https://github.com/pypa/pip/issues/5079#issuecomment-373927413
-with contextlib.suppress(ImportError, KeyError):
-    from isort import SortImports
-    SortImports.correctly_sorted = _correctly_sorted
-
-_logger.info(
-    'Monkey patched SortImports.correctly_sorted in order to test for positive '
-    'condition'
-)
