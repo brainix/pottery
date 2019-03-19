@@ -69,8 +69,8 @@ class CommonTests(_BaseTestCase):
             exists.return_value = True
             try:
                 self.raj._random_key()
-            except RandomKeyError as err:
-                assert repr(err) == 'RandomKeyError(redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>)'
+            except RandomKeyError as wtf:
+                assert repr(wtf) == 'RandomKeyError(redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>)'
             else:
                 self.fail(msg='RandomKeyError not raised')
 
@@ -79,8 +79,8 @@ class CommonTests(_BaseTestCase):
             exists.return_value = True
             try:
                 self.raj._random_key()
-            except RandomKeyError as err:
-                assert str(err) == "redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>"
+            except RandomKeyError as wtf:
+                assert str(wtf) == "redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>"
             else:
                 self.fail(msg='RandomKeyError not raised')
 

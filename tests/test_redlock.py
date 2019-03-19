@@ -111,8 +111,8 @@ class RedlockTests(TestCase):
     def test_releaseunlockedlock_repr(self):
         try:
             self.redlock.release()
-        except ReleaseUnlockedLock as err:
-            assert repr(err) == (
+        except ReleaseUnlockedLock as wtf:
+            assert repr(wtf) == (
                 "ReleaseUnlockedLock(masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>], "
                 "key='redlock:printer')"
             )
@@ -120,8 +120,8 @@ class RedlockTests(TestCase):
     def test_releaseunlockedlock_str(self):
         try:
             self.redlock.release()
-        except ReleaseUnlockedLock as err:
-            assert str(err) == (
+        except ReleaseUnlockedLock as wtf:
+            assert str(wtf) == (
                 "masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>], "
                 "key='redlock:printer'"
             )
