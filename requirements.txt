@@ -11,7 +11,7 @@ docutils==0.14
 future==0.16.0
 html5lib==1.0.1
 idna==2.6
-isort==4.3.17
+isort==4.3.18
 murmurhash3==2.3.5
 packaging==16.8
 pkginfo==1.4.2
@@ -26,5 +26,5 @@ requests-toolbelt==0.8.0
 six==1.10.0
 tqdm==4.22.0
 twine==1.13.0
-urllib3==1.24.2
+urllib3==1.24.3
 webencodings==0.5.1
