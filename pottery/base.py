@@ -108,11 +108,13 @@ class _Encodable:
 
 
 class _Comparable(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def redis(self):
         'Redis client.'
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def key(self):
         'Redis key.'
 
@@ -132,11 +134,13 @@ class _Comparable(metaclass=abc.ABCMeta):
 
 
 class _Clearable(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def redis(self):
         'Redis client.'
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def key(self):
         'Redis key.'
 
@@ -147,11 +151,13 @@ class _Clearable(metaclass=abc.ABCMeta):
 
 
 class Pipelined(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def redis(self):
         'Redis client.'
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def key(self):
         'Redis key.'
 
@@ -204,7 +210,8 @@ class Iterable(metaclass=abc.ABCMeta):
     def _decode(value):     # pragma: no cover
         ...
 
-    @abc.abstractproperty   # pragma: no cover
+    @property               # pragma: no cover
+    @abc.abstractmethod
     def key(self):
         'Redis key.'
 
@@ -230,7 +237,8 @@ class Primitive(metaclass=abc.ABCMeta):
         self.key = key
         self.masters = masters or self._DEFAULT_MASTERS
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def KEY_PREFIX(self):
         'Redis key prefix/namespace.'
 
