@@ -214,9 +214,7 @@ class Redlock(Primitive):
         self._extension_num = 0
         futures, num_masters_acquired = set(), 0
         with ContextTimer() as timer, \
-             concurrent.futures.ThreadPoolExecutor(
-                max_workers=len(self.masters),
-             ) as executor:
+             concurrent.futures.ThreadPoolExecutor() as executor:
             for master in self.masters:
                 futures.add(executor.submit(self._acquire_master, master))
             for future in concurrent.futures.as_completed(futures):
@@ -317,9 +315,7 @@ class Redlock(Primitive):
         '''
         futures, num_masters_acquired, ttls = set(), 0, []
         with ContextTimer() as timer, \
-             concurrent.futures.ThreadPoolExecutor(
-                max_workers=len(self.masters),
-             ) as executor:
+             concurrent.futures.ThreadPoolExecutor() as executor:
             for master in self.masters:
                 futures.add(executor.submit(self._acquired_master, master))
             for future in concurrent.futures.as_completed(futures):
@@ -359,9 +355,7 @@ class Redlock(Primitive):
             raise TooManyExtensions(self.masters, self.key)
         else:
             futures, num_masters_extended = set(), 0
-            with concurrent.futures.ThreadPoolExecutor(
-                max_workers=len(self.masters),
-            ) as executor:
+            with concurrent.futures.ThreadPoolExecutor() as executor:
                 for master in self.masters:
                     futures.add(executor.submit(self._extend_master, master))
                 for future in concurrent.futures.as_completed(futures):
@@ -388,9 +382,7 @@ class Redlock(Primitive):
             False
         '''
         futures, num_masters_released = set(), 0
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=len(self.masters),
-        ) as executor:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
             for master in self.masters:
                 futures.add(executor.submit(self._release_master, master))
             for future in concurrent.futures.as_completed(futures):
