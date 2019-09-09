@@ -9,7 +9,7 @@
 
 init upgrade: formulae := {openssl,readline,xz,redis}
 
-version ?= 3.7.3
+version ?= 3.7.4
 venv ?= venv
 
 
@@ -27,7 +27,7 @@ init:
 		curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
 
 python:
-	CFLAGS="-I$(shell xcrun --show-sdk-path)/usr/include -I$(shell brew --prefix openssl)/include -I$(shell brew --prefix readline)/include -g -O2" \
+	CFLAGS="-I$(shell brew --prefix openssl)/include -I$(shell brew --prefix readline)/include -g -O2" \
 		LDFLAGS="-L$(shell brew --prefix openssl)/lib -L$(shell brew --prefix readline)/lib" \
 		pyenv install --skip-existing $(version)
 	pyenv rehash
