@@ -12,7 +12,6 @@ import time
 import unittest
 
 from pottery import redis_cache
-from pottery.base import _default_redis
 from pottery.cache import _DEFAULT_TIMEOUT
 from pottery.cache import CachedOrderedDict
 from pottery.cache import CacheInfo
@@ -25,7 +24,6 @@ class CacheTests(TestCase):
 
     def setUp(self):
         super().setUp()
-        self.redis = _default_redis
         self.expensive_method.cache_clear()
 
     def tearDown(self):
@@ -245,7 +243,6 @@ class CachedOrderedDictTests(TestCase):
 
     def setUp(self):
         super().setUp()
-        self.redis = _default_redis
         self.redis.delete(self._KEY)
 
     def tearDown(self):
