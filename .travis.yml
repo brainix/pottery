@@ -12,6 +12,7 @@ language: python
 python:
   - "3.6"
   - "3.7"
+  - "3.8"
 services: redis-server
 script:
   - coverage3 run -m unittest discover --start-directory tests --verbose

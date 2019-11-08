@@ -9,7 +9,7 @@
 
 init upgrade: formulae := {openssl,readline,xz,redis}
 
-version ?= 3.7.5
+version ?= 3.8.0
 venv ?= venv
 
 
