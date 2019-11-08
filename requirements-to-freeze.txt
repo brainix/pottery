@@ -31,3 +31,8 @@ requests>=2.20.0
 #   https://nvd.nist.gov/vuln/detail/CVE-2018-20060
 #   https://nvd.nist.gov/vuln/detail/CVE-2019-11324
 urllib3>=1.24.2,<1.25
+
+# We don't need CFFI at the top-level.  However, it's pulled in from
+# something else, and there's an issue in the version that it pulls in that
+# prevents it from working with Python 3.8.0.
+cffi>=1.13.2
