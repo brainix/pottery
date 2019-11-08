@@ -184,10 +184,9 @@ class BloomFilter(Base):
         functions on each element.
         '''
         iterables, bit_offsets = tuple(iterables), set()
-        for value in itertools.chain(*iterables):
-            bit_offsets.update(self._bit_offsets(value))
-
         with self._watch(iterables):
+            for value in itertools.chain(*iterables):
+                bit_offsets.update(self._bit_offsets(value))
             self.redis.multi()
             for bit_offset in bit_offsets:
                 self.redis.setbit(self.key, bit_offset, 1)
