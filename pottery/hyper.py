@@ -36,12 +36,12 @@ class HyperLogLog(Base):
 
     def update(self, *objs):
         objs, other_hll_keys, encoded_values = (self,) + tuple(objs), [], []
-        for obj in objs:
-            if isinstance(obj, self.__class__):
-                other_hll_keys.append(obj.key)
-            else:
-                encoded_values.extend(self._encode(value) for value in obj)
         with self._watch(objs[1:]):
+            for obj in objs:
+                if isinstance(obj, self.__class__):
+                    other_hll_keys.append(obj.key)
+                else:
+                    encoded_values.extend(self._encode(value) for value in obj)
             self.redis.multi()
             self.redis.pfmerge(self.key, *other_hll_keys)
             self.redis.pfadd(self.key, *encoded_values)
