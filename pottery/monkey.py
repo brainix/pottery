@@ -27,7 +27,7 @@ def _absolutize(*, files, path=None):
 
 def _listdir(path=None, *, absolute=False):
     files = _listdir.listdir(path)
-    if absolute:    # pragma: no cover
+    if absolute:            # pragma: no cover
         files = _absolutize(path=path, files=files)
     return files
 
@@ -42,17 +42,16 @@ _logger.info('Monkey patched os.listdir() to optionally return absolute paths')
 # comparisons on to the Redis client.  We consider two Redis clients to be
 # equal if they're connected to the same host, port, and database.
 
-import collections
+from redis import ConnectionPool
 from redis import Redis
 
-Connection = collections.namedtuple('Connection', ('host', 'port', 'db'))
+def __eq__(self, other):
+    try:
+        return self.connection_kwargs == other.connection_kwargs
+    except AttributeError:  # pragma: no cover
+        return False
 
-def _connection(self):
-    'An object representing a Redis connection (host, port, and database).'
-    keys = {'host', 'port', 'db'}
-    dict_ = {key: self.connection_pool.connection_kwargs[key] for key in keys}
-    obj = Connection(**dict_)
-    return obj
+ConnectionPool.__eq__ = __eq__
 
 def __eq__(self, other):
     '''True if two Redis clients are equal.
@@ -61,20 +60,14 @@ def __eq__(self, other):
     this method on to the Redis client so that two client instances are equal
     if they're connected to the same Redis host, port, and database.
     '''
-    equals = isinstance(other, Redis) and \
-        self._connection() == other._connection()
-    return equals
+    try:
+        return self.connection_pool == other.connection_pool
+    except AttributeError:
+        return False
 
-def __ne__(self, other):
-    'True if two Redis clients are *not* equal.'
-    does_not_equal = not self.__eq__(other)
-    return does_not_equal
-
-Redis._connection = _connection
 Redis.__eq__ = __eq__
-Redis.__ne__ = __ne__
 
 _logger.info(
-    'Monkey patched Redis._connection(), Redis.__eq__() and Redis.__ne__() to '
-    'compare Redis clients by connection params'
+    'Monkey patched ConnectionPool.__eq__() and Redis.__eq__() to compare '
+    'Redis clients by connection params'
 )
