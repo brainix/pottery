@@ -7,6 +7,8 @@
 
 
 
+from redis import Redis
+
 from pottery import KeyExistsError
 from pottery import RedisSet
 from tests.base import TestCase
@@ -106,6 +108,13 @@ class SetTests(TestCase):
         b = RedisSet('cde')
         assert not a.isdisjoint(b)
         c = RedisSet('def')
+        assert a.isdisjoint(c)
+
+        other_url = 'redis://127.0.0.1:6379/'
+        other_redis = Redis.from_url(other_url, socket_timeout=1)
+        b = RedisSet('cde', redis=other_redis)
+        assert not a.isdisjoint(b)
+        c = RedisSet('def', redis=other_redis)
         assert a.isdisjoint(c)
 
         d = {'c', 'd', 'e'}
