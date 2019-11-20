@@ -6,9 +6,11 @@ cffi==1.13.2
 chardet==3.0.4
 coverage==4.5.4
 docutils==0.15.2
+entrypoints==0.3
 html5lib==1.0.1
 idna==2.8
 isort==4.3.21
+keyring==19.2.0
 murmurhash3==2.3.5
 pkginfo==1.5.0.1
 pycparser==2.19
@@ -20,6 +22,6 @@ requests==2.22.0
 requests-toolbelt==0.9.1
 six==1.10.0
 tqdm==4.37.0
-twine==2.0.0
+twine==3.0.0
 urllib3==1.24.3
 webencodings==0.5.1
