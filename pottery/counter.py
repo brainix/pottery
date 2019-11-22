@@ -69,26 +69,26 @@ class RedisCounter(RedisDict, collections.Counter):
         items = ', '.join(items)
         return self.__class__.__name__ + '{' + items + '}'
 
-    def _math_op(self, other, *, func):
+    def _math_op(self, other, *, method):
         with self._watch(other):
             counter = collections.Counter(self.elements())
-            return func(counter, other)
+            return method(counter, other)
 
     def __add__(self, other):
         "Return the addition our counts to other's counts, but keep only counts > 0.  O(n)"
-        return self._math_op(other, func=collections.Counter.__add__)
+        return self._math_op(other, method=collections.Counter.__add__)
 
     def __sub__(self, other):
         "Return the subtraction other's counts from our counts, but keep only counts > 0.  O(n)"
-        return self._math_op(other, func=collections.Counter.__sub__)
+        return self._math_op(other, method=collections.Counter.__sub__)
 
     def __or__(self, other):
         "Return the max of our counts vs. other's counts (union), but keep only counts > 0.  O(n)"
-        return self._math_op(other, func=collections.Counter.__or__)
+        return self._math_op(other, method=collections.Counter.__or__)
 
     def __and__(self, other):
         "Return the min of our counts vs. other's counts (intersection) but keep only counts > 0.  O(n)"
-        return self._math_op(other, func=collections.Counter.__and__)
+        return self._math_op(other, method=collections.Counter.__and__)
 
     def _unary_op(self, *, test_func, modifier_func):
         counter = collections.Counter()
@@ -138,11 +138,11 @@ class RedisCounter(RedisDict, collections.Counter):
         'Same as __sub__(), but in-place.  O(n)'
         return self._imath_op(other, sign=-1)
 
-    def _iset_op(self, other, *, func):
+    def _iset_op(self, other, *, method_name):
         with self._watch(other):
             to_set, to_del = {}, set()
             for k in itertools.chain(self, other):
-                if getattr(self[k], func)(other[k]):
+                if getattr(self[k], method_name)(other[k]):
                     to_set[k] = self[k]
                 else:
                     to_set[k] = other[k]
@@ -164,8 +164,8 @@ class RedisCounter(RedisDict, collections.Counter):
 
     def __ior__(self, other):
         'Same as __or__(), but in-place.  O(n)'
-        return self._iset_op(other, func='__gt__')
+        return self._iset_op(other, method_name='__gt__')
 
     def __iand__(self, other):
         'Same as __and__(), but in-place.  O(n)'
-        return self._iset_op(other, func='__lt__')
+        return self._iset_op(other, method_name='__lt__')
