@@ -142,38 +142,63 @@ def redis_cache(*, redis=None, key=None, timeout=_DEFAULT_TIMEOUT):
 
 class CachedOrderedDict(collections.OrderedDict):
     _SENTINEL = object()
-    _NUM_RETRIES = 3
+    _NUM_TRIES = 3
 
     def __init__(self, *, redis=None, key=None, keys=tuple(),
-                 num_retries=_NUM_RETRIES):
-        self._num_retries = num_retries
+                 num_tries=_NUM_TRIES):
+        self._num_tries = num_tries
         partial = functools.partial(RedisDict, redis=redis, key=key)
         self._cache = self._retry(partial)
-        self.misses = set()
+        self._misses = set()
 
         items = []
         for key_ in keys:
             try:
                 item = (key_, self._cache[key_])
             except KeyError:
-                self.misses.add(key_)
                 item = (key_, self._SENTINEL)
+                self._misses.add(key_)
             items.append(item)
-        super().__init__(items)
+        return super().__init__(items)
+
+    def misses(self):
+        return frozenset(self._misses)
+
+    def __setitem__(self, key, value):
+        if value is not self._SENTINEL:
+            self._cache[key] = value
+            self._misses.discard(key)
+        return super().__setitem__(key, value)
+
+    def setdefault(self, key, default=None):
+        partial = functools.partial(
+            self._retry_setdefault,
+            key,
+            default=default,
+        )
+        self._retry(partial)
+        self._misses.discard(key)
+        if key not in self or self[key] is self._SENTINEL:
+            self[key] = default
+        return self[key]
+
+    def _retry_setdefault(self, key, default=None):
+        with self._cache._watch():
+            if key not in self._cache:
+                self._cache.redis.multi()
+                self._cache[key] = default
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type is None:                        # pragma: no cover
-            cache = {key_: self[key_] for key_ in self.misses}
-            partial = functools.partial(self._cache.update, cache)
-            self._retry(partial)
+        pass
 
-    def _retry(self, partial):
-        for retry_num in range(self._num_retries):  # pragma: no cover
-            try:
-                return partial()
-            except WatchError:
-                if retry_num == self._num_retries - 1:
-                    raise
+    def _retry(self, partial, try_num=0):
+        try:
+            return partial()
+        except WatchError:  # pragma: no cover
+            if try_num < self._num_tries - 1:
+                return self._retry(partial, try_num=try_num+1)
+            else:
+                raise
