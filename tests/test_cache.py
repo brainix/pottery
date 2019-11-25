@@ -7,6 +7,7 @@
 
 
 
+import collections
 import random
 import time
 import unittest
@@ -19,8 +20,8 @@ from tests.base import TestCase
 
 
 
-class CacheTests(TestCase):
-    _KEY = 'expensive-method'
+class CacheDecoratorTests(TestCase):
+    _KEY = '{}expensive-method'.format(TestCase._TEST_KEY_PREFIX)
 
     def setUp(self):
         super().setUp()
@@ -239,17 +240,11 @@ class CacheTests(TestCase):
 
 
 class CachedOrderedDictTests(TestCase):
-    _KEY = 'cache-ordereddict'
+    _KEY = '{}cached-ordereddict'.format(TestCase._TEST_KEY_PREFIX)
 
     def setUp(self):
         super().setUp()
-        self.redis.delete(self._KEY)
 
-    def tearDown(self):
-        self.redis.delete(self._KEY)
-        super().tearDown()
-
-    def test_cachedorderedict(self):
         # Populate the cache with three hits:
         with CachedOrderedDict(
             redis=self.redis,
@@ -261,19 +256,146 @@ class CachedOrderedDictTests(TestCase):
             cache['hit3'] = 'value3'
 
         # Instantiate the cache again with the three hits and three misses:
-        cache = CachedOrderedDict(
+        self.cache = CachedOrderedDict(
             redis=self.redis,
             key=self._KEY,
             keys=('hit1', 'miss1', 'hit2', 'miss2', 'hit3', 'miss3'),
         )
 
-        # Ensure that the hits are hits, the misses are misses, and the cache
-        # is ordered:
-        assert tuple(cache.items()) == (
+    def test_setitem(self):
+        assert self.cache == collections.OrderedDict((
             ('hit1', 'value1'),
             ('miss1', CachedOrderedDict._SENTINEL),
             ('hit2', 'value2'),
             ('miss2', CachedOrderedDict._SENTINEL),
             ('hit3', 'value3'),
             ('miss3', CachedOrderedDict._SENTINEL),
-        )
+        ))
+        assert self.cache._cache == {
+            'hit1': 'value1',
+            'hit2': 'value2',
+            'hit3': 'value3',
+        }
+        assert self.cache.misses() == {'miss1', 'miss2', 'miss3'}
+
+        self.cache['hit4'] = 'value4'
+        assert self.cache == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', CachedOrderedDict._SENTINEL),
+            ('hit2', 'value2'),
+            ('miss2', CachedOrderedDict._SENTINEL),
+            ('hit3', 'value3'),
+            ('miss3', CachedOrderedDict._SENTINEL),
+            ('hit4', 'value4'),
+        ))
+        assert self.cache._cache == {
+            'hit1': 'value1',
+            'hit2': 'value2',
+            'hit3': 'value3',
+            'hit4': 'value4',
+        }
+        assert self.cache.misses() == {'miss1', 'miss2', 'miss3'}
+
+        self.cache['miss1'] = 'value1'
+        assert self.cache == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', 'value1'),
+            ('hit2', 'value2'),
+            ('miss2', CachedOrderedDict._SENTINEL),
+            ('hit3', 'value3'),
+            ('miss3', CachedOrderedDict._SENTINEL),
+            ('hit4', 'value4'),
+        ))
+        assert self.cache._cache == {
+            'hit1': 'value1',
+            'hit2': 'value2',
+            'hit3': 'value3',
+            'hit4': 'value4',
+            'miss1': 'value1',
+        }
+        assert self.cache.misses() == {'miss2', 'miss3'}
+
+    def test_setdefault(self):
+        'Ensure setdefault() sets the key iff the key does not exist.'
+        for default in ('rajiv', 'raj'):
+            with self.subTest(default=default):
+                self.cache.setdefault('first', default=default)
+                assert self.cache == collections.OrderedDict((
+                    ('hit1', 'value1'),
+                    ('miss1', CachedOrderedDict._SENTINEL),
+                    ('hit2', 'value2'),
+                    ('miss2', CachedOrderedDict._SENTINEL),
+                    ('hit3', 'value3'),
+                    ('miss3', CachedOrderedDict._SENTINEL),
+                    ('first', 'rajiv'),
+                ))
+                assert self.cache._cache == {
+                    'hit1': 'value1',
+                    'hit2': 'value2',
+                    'hit3': 'value3',
+                    'first': 'rajiv',
+                }
+                assert self.cache.misses() == {'miss1', 'miss2', 'miss3'}
+
+        self.cache.setdefault('miss1', default='value1')
+        assert self.cache == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', 'value1'),
+            ('hit2', 'value2'),
+            ('miss2', CachedOrderedDict._SENTINEL),
+            ('hit3', 'value3'),
+            ('miss3', CachedOrderedDict._SENTINEL),
+            ('first', 'rajiv'),
+        ))
+        assert self.cache._cache == {
+            'hit1': 'value1',
+            'hit2': 'value2',
+            'hit3': 'value3',
+            'first': 'rajiv',
+            'miss1': 'value1',
+        }
+        assert self.cache.misses() == {'miss2', 'miss3'}
+
+    def test_update(self):
+        self.cache.update()
+        assert self.cache == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', CachedOrderedDict._SENTINEL),
+            ('hit2', 'value2'),
+            ('miss2', CachedOrderedDict._SENTINEL),
+            ('hit3', 'value3'),
+            ('miss3', CachedOrderedDict._SENTINEL),
+        ))
+        assert self.cache._cache == {
+            'hit1': 'value1',
+            'hit2': 'value2',
+            'hit3': 'value3',
+        }
+        assert self.cache.misses() == {'miss1', 'miss2', 'miss3'}
+
+        self.cache.update((
+            ('miss1', 'value1'),
+            ('miss2', 'value2'),
+            ('hit4', 'value4'),
+            ('hit5', 'value5'),
+        ))
+        assert self.cache == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', 'value1'),
+            ('hit2', 'value2'),
+            ('miss2', 'value2'),
+            ('hit3', 'value3'),
+            ('miss3', CachedOrderedDict._SENTINEL),
+            ('hit4', 'value4'),
+            ('hit5', 'value5'),
+        ))
+        assert self.cache._cache == {
+            'hit1': 'value1',
+            'hit2': 'value2',
+            'hit3': 'value3',
+            'miss1': 'value1',
+            'miss2': 'value2',
+            'hit4': 'value4',
+            'hit5': 'value5',
+        }
+        assert self.cache.misses() == {'miss3'}

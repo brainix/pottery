@@ -105,6 +105,33 @@ class DictTests(TestCase):
         a.update()
         assert a == {'one': 1, 'two': 2, 'three': 3}
 
+        a.update({'four': 4, 'five': 5})
+        assert a == {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5}
+
+        a.update((('six', 6), ('seven', 7)))
+        assert a == {
+            'one': 1,
+            'two': 2,
+            'three': 3,
+            'four': 4,
+            'five': 5,
+            'six': 6,
+            'seven': 7,
+        }
+
+        a.update(eight=8, nine=9)
+        assert a == {
+            'one': 1,
+            'two': 2,
+            'three': 3,
+            'four': 4,
+            'five': 5,
+            'six': 6,
+            'seven': 7,
+            'eight': 8,
+            'nine': 9,
+        }
+
     def test_keyerror(self):
         a = RedisDict(one=1, two=2, three=3)
         assert a['one'] == 1

@@ -17,15 +17,21 @@ from pottery.base import _default_redis
 
 
 class TestCase(unittest.TestCase):
+    _TEST_KEY_PREFIX = 'pottery-test:'
+
     def setUp(self):
         super().setUp()
         self.redis = _default_redis
 
     def tearDown(self):
-        tmp_key_pattern = Base._RANDOM_KEY_PREFIX + '*'
-        tmp_keys = self.redis.keys(pattern=tmp_key_pattern)
-        tmp_keys = ' '.join(tmp_key.decode('utf-8') for tmp_key in tmp_keys)
-        self.redis.delete(tmp_keys)
+        keys_to_delete = []
+        for prefix in {Base._RANDOM_KEY_PREFIX, self._TEST_KEY_PREFIX}:
+            pattern = prefix + '*'
+            keys = self.redis.keys(pattern=pattern)
+            keys = (key.decode('utf-8') for key in keys)
+            keys_to_delete.extend(keys)
+        if keys_to_delete:
+            self.redis.delete(*keys_to_delete)
         super().tearDown()
 
 
