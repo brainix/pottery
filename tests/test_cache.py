@@ -21,7 +21,7 @@ from tests.base import TestCase
 
 
 class CacheDecoratorTests(TestCase):
-    _KEY = 'expensive-method'
+    _KEY = '{}expensive-method'.format(TestCase._TEST_KEY_PREFIX)
 
     def setUp(self):
         super().setUp()
@@ -240,11 +240,10 @@ class CacheDecoratorTests(TestCase):
 
 
 class CachedOrderedDictTests(TestCase):
-    _KEY = 'cached-ordereddict'
+    _KEY = '{}cached-ordereddict'.format(TestCase._TEST_KEY_PREFIX)
 
     def setUp(self):
         super().setUp()
-        self.redis.delete(self._KEY)
 
         # Populate the cache with three hits:
         with CachedOrderedDict(
@@ -262,10 +261,6 @@ class CachedOrderedDictTests(TestCase):
             key=self._KEY,
             keys=('hit1', 'miss1', 'hit2', 'miss2', 'hit3', 'miss3'),
         )
-
-    def tearDown(self):
-        self.redis.delete(self._KEY)
-        super().tearDown()
 
     def test_setitem(self):
         assert self.cache == collections.OrderedDict((

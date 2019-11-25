@@ -19,16 +19,18 @@ class ListTests(TestCase):
         https://docs.python.org/3/tutorial/datastructures.html#more-on-lists
     '''
 
+    _KEY = '{}squares'.format(TestCase._TEST_KEY_PREFIX)
+
     def test_indexerror(self):
         list_ = RedisList()
         with self.assertRaises(IndexError):
             list_[0] = 'raj'
 
     def test_keyexistserror(self):
-        squares = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
+        squares = RedisList((1, 4, 9, 16, 25), key=self._KEY)
         squares     # Workaround for Pyflakes.  :-(
         with self.assertRaises(KeyExistsError):
-            RedisList((1, 4, 9, 16, 25), key='pottery:squares')
+            RedisList((1, 4, 9, 16, 25), key=self._KEY)
 
     def test_basic_usage(self):
         squares = RedisList((1, 4, 9, 16, 25))
@@ -136,37 +138,39 @@ class ListTests(TestCase):
             squares.sort(key=str)
 
     def test_eq_same_redis_instance_and_key(self):
-        squares1 = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
-        squares2 = RedisList(key='pottery:squares')
+        squares1 = RedisList((1, 4, 9, 16, 25), key=self._KEY)
+        squares2 = RedisList(key=self._KEY)
         assert squares1 == squares2
         assert not squares1 != squares2
 
     def test_eq_same_redis_instance_different_keys(self):
-        squares1 = RedisList((1, 4, 9, 16, 25), key='pottery:squares1')
-        squares2 = RedisList((1, 4, 9, 16, 25), key='pottery:squares2')
+        key1 = '{}squares1'.format(TestCase._TEST_KEY_PREFIX)
+        key2 = '{}squares2'.format(TestCase._TEST_KEY_PREFIX)
+        squares1 = RedisList((1, 4, 9, 16, 25), key=key1)
+        squares2 = RedisList((1, 4, 9, 16, 25), key=key2)
         assert squares1 == squares2
         assert not squares1 != squares2
 
     def test_eq_different_lengths(self):
-        squares1 = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
+        squares1 = RedisList((1, 4, 9, 16, 25))
         squares2 = (1, 4, 9, 16, 25, 36)
         assert not squares1 == squares2
         assert squares1 != squares2
 
     def test_eq_different_items(self):
-        squares1 = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
+        squares1 = RedisList((1, 4, 9, 16, 25))
         squares2 = (4, 9, 16, 25, 36)
         assert not squares1 == squares2
         assert squares1 != squares2
 
     def test_eq_unordered_collection(self):
-        squares1 = RedisList((1,), key='pottery:squares')
+        squares1 = RedisList((1,))
         squares2 = {1}
         assert not squares1 == squares2
         assert squares1 != squares2
 
     def test_eq_typeerror(self):
-        squares = RedisList((1, 4, 9, 16, 25), key='pottery:squares')
+        squares = RedisList((1, 4, 9, 16, 25))
         assert not squares == None
         assert squares != None
 

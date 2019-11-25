@@ -18,29 +18,31 @@ from tests.base import TestCase
 class _BaseTestCase(TestCase):
     def setUp(self):
         super().setUp()
-
-        self.redis.delete('pottery:raj')
         self.raj = RedisDict(key='pottery:raj', hobby='music', vegetarian=True)
-
-        self.redis.delete('pottery:nilika')
         self.nilika = RedisDict(
             key='pottery:nilika',
             hobby='music',
             vegetarian=True,
         )
-
-        self.redis.delete('luvh')
         self.luvh = RedisDict(key='luvh', hobby='bullying', vegetarian=False)
 
     def tearDown(self):
-        self.redis.delete('pottery:raj', 'pottery:nilika', 'luvh')
+        self.redis.delete('luvh')
         super().tearDown()
 
 
 
 class CommonTests(_BaseTestCase):
     def test_del(self):
-        with unittest.mock.patch.object(self.luvh.redis, 'delete') as delete:
+        with unittest.mock.patch.object(self.redis, 'delete') as delete:
+            del self.raj
+            delete.assert_called_with('pottery:raj')
+            delete.reset_mock()
+
+            del self.nilika
+            delete.assert_called_with('pottery:nilika')
+            delete.reset_mock()
+
             del self.luvh
             delete.assert_not_called()
 

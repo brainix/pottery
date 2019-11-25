@@ -17,13 +17,7 @@ from tests.base import TestCase
 
 
 class BloomFilterTests(TestCase):
-    def setUp(self):
-        super().setUp()
-        self.redis.delete('dilberts')
-
-    def tearDown(self):
-        self.redis.delete('dilberts')
-        super().tearDown()
+    _KEY = '{}dilberts'.format(TestCase._TEST_KEY_PREFIX)
 
     def test_init_without_iterable(self):
         'Test BloomFilter.__init__() without an iterable for initialization'
@@ -173,18 +167,19 @@ class BloomFilterTests(TestCase):
         dilberts = BloomFilter(
             num_values=100,
             false_positives=0.01,
-            key='dilberts',
+            key=self._KEY,
         )
-        assert repr(dilberts) == '<BloomFilter key=dilberts>'
+        assert repr(dilberts) == '<BloomFilter key={}>'.format(self._KEY)
 
 
 
 class RecentlyConsumedTests(TestCase):
     "Simulate reddit's recently consumed problem to test our Bloom filter."
 
+    _KEY = '{}recently-consumed'.format(TestCase._TEST_KEY_PREFIX)
+
     def setUp(self):
         super().setUp()
-        self.redis.delete('recently-consumed')
 
         # Construct a set of links that the user has seen.
         self.seen_links = set()
@@ -205,11 +200,10 @@ class RecentlyConsumedTests(TestCase):
             self.seen_links,
             num_values=1000,
             false_positives=0.001,
-            key='recently-consumed',
+            key=self._KEY,
         )
 
     def tearDown(self):
-        self.recently_consumed.clear()
         super().tearDown()
 
     @staticmethod

@@ -12,7 +12,6 @@ import itertools
 import os
 import sys
 import unittest
-import warnings
 
 from isort import SortImports
 
@@ -26,14 +25,6 @@ monkey  # Workaround for Pyflakes.  :-(
 
 
 class SourceTests(TestCase):
-    def setUp(self):
-        super().setUp()
-        warnings.filterwarnings('ignore', category=DeprecationWarning)
-
-    def tearDown(self):
-        warnings.filterwarnings('default', category=DeprecationWarning)
-        super().tearDown()
-
     @unittest.skipIf(
         sys.version_info[:2] == (3, 5),
         'isort is broken on Python 3.5 for no good reason ¯\\_(ツ)_/¯'
