@@ -246,14 +246,14 @@ class CachedOrderedDictTests(TestCase):
         super().setUp()
 
         # Populate the cache with three hits:
-        with CachedOrderedDict(
+        cache = CachedOrderedDict(
             redis=self.redis,
             key=self._KEY,
             keys=('hit1', 'hit2', 'hit3'),
-        ) as cache:
-            cache['hit1'] = 'value1'
-            cache['hit2'] = 'value2'
-            cache['hit3'] = 'value3'
+        )
+        cache['hit1'] = 'value1'
+        cache['hit2'] = 'value2'
+        cache['hit3'] = 'value3'
 
         # Instantiate the cache again with the three hits and three misses:
         self.cache = CachedOrderedDict(
