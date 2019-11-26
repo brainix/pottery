@@ -25,6 +25,10 @@ monkey  # Workaround for Pyflakes.  :-(
 
 
 class SourceTests(TestCase):
+    _EXCLUDES = (
+        '/__init__.py',
+    )
+
     @unittest.skipIf(
         sys.version_info[:2] == (3, 5),
         'isort is broken on Python 3.5 for no good reason ¯\\_(ツ)_/¯'
@@ -35,12 +39,19 @@ class SourceTests(TestCase):
             f for f in os.listdir(test_dir, absolute=True) if f.endswith('.py')
         )
 
-        source_dir = os.path.dirname(test_dir)
+        root_dir = os.path.dirname(test_dir)
+        root_files = (
+            f for f in os.listdir(root_dir, absolute=True)
+            if f.endswith('.py')
+        )
+
+        source_dir = os.path.join(root_dir, 'pottery')
         source_files = (
             f for f in os.listdir(source_dir, absolute=True)
             if f.endswith('.py')
         )
 
-        for f in itertools.chain(source_files, test_files):
-            with self.subTest(f=f):
-                assert SortImports(f, check=True).correctly_sorted
+        for f in itertools.chain(test_files, root_files, source_files):
+            if not f.endswith(self._EXCLUDES):
+                with self.subTest(f=f):
+                    assert SortImports(f, check=True).correctly_sorted
