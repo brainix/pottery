@@ -14,7 +14,7 @@ know how to use Pottery.
 
 
 __title__ = 'pottery'
-__version__ = '0.64'
+__version__ = '0.65'
 __description__, __long_description__ = (
     s.strip() for s in __doc__.split(sep='\n\n', maxsplit=1)
 )

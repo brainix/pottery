@@ -188,12 +188,6 @@ class CachedOrderedDict(collections.OrderedDict):
                 self._cache.redis.multi()
                 self._cache[key] = default
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        pass
-
     def _retry(self, partial, try_num=0):
         try:
             return partial()
