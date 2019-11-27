@@ -1,15 +1,13 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   timer.py                                                                  #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 'Measure the execution time of small code snippets.'
 
 
-
 import timeit
-
 
 
 class ContextTimer:
@@ -76,9 +74,8 @@ class ContextTimer:
         except TypeError:
             raise RuntimeError("timer hasn't yet been started")
         else:
-            value = round(value * 1000) # rounded to the nearest millisecond
+            value = round(value * 1000)     # rounded to the nearest millisecond
             return value
-
 
 
 if __name__ == '__main__':  # pragma: no cover

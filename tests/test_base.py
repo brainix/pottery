@@ -1,10 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   test_base.py                                                              #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 import unittest.mock
@@ -12,7 +11,6 @@ import unittest.mock
 from pottery import RandomKeyError
 from pottery import RedisDict
 from tests.base import TestCase
-
 
 
 class _BaseTestCase(TestCase):
@@ -29,7 +27,6 @@ class _BaseTestCase(TestCase):
     def tearDown(self):
         self.redis.delete('luvh')
         super().tearDown()
-
 
 
 class CommonTests(_BaseTestCase):
@@ -85,7 +82,6 @@ class CommonTests(_BaseTestCase):
                 assert str(wtf) == "redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>"
             else:
                 self.fail(msg='RandomKeyError not raised')
-
 
 
 class IterableTests(TestCase):

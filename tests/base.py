@@ -1,10 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   base.py                                                                   #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 import doctest
@@ -13,7 +12,6 @@ import unittest
 
 from pottery.base import Base
 from pottery.base import _default_redis
-
 
 
 class TestCase(unittest.TestCase):
@@ -33,7 +31,6 @@ class TestCase(unittest.TestCase):
         if keys_to_delete:
             self.redis.delete(*keys_to_delete)
         super().tearDown()
-
 
 
 def run_doctests():

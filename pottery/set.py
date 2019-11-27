@@ -1,10 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   set.py                                                                    #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 import collections.abc
@@ -13,7 +12,6 @@ import itertools
 from .base import Base
 from .base import Iterable
 from .exceptions import KeyExistsError
-
 
 
 class RedisSet(Base, Iterable, collections.abc.MutableSet):

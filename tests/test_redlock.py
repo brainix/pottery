@@ -1,11 +1,10 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   test_redlock.py                                                           #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 'Distributed Redis-powered lock tests.'
-
 
 
 import contextlib
@@ -16,7 +15,6 @@ from pottery import Redlock
 from pottery import ReleaseUnlockedLock
 from pottery import TooManyExtensions
 from tests.base import TestCase
-
 
 
 class RedlockTests(TestCase):

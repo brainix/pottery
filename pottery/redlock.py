@@ -1,11 +1,11 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   redlock.py                                                                #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 '''Distributed Redis-powered lock.
-    
+
 This algorithm safely and reliably provides a mutually-exclusive locking
 primitive to protect a resource shared across threads, processes, and even
 machines, without a single point of failure.
@@ -20,7 +20,6 @@ Reference implementations:
 Lua scripting:
     https://github.com/andymccurdy/redis-py#lua-scripting
 '''
-
 
 
 import concurrent.futures
@@ -38,10 +37,9 @@ from .exceptions import TooManyExtensions
 from .timer import ContextTimer
 
 
-
 class Redlock(Primitive):
     '''Distributed Redis-powered lock.
-    
+
     This algorithm safely and reliably provides a mutually-exclusive locking
     primitive to protect a resource shared across threads, processes, and even
     machines, without a single point of failure.
@@ -446,7 +444,6 @@ class Redlock(Primitive):
             self._value,
             self.locked(),
         )
-
 
 
 if __name__ == '__main__':  # pragma: no cover

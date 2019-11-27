@@ -1,10 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   bloom.py                                                                  #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 import itertools
@@ -13,7 +12,6 @@ import math
 import mmh3
 
 from .base import Base
-
 
 
 class BloomFilter(Base):
@@ -247,7 +245,6 @@ class BloomFilter(Base):
     def __repr__(self):
         'Return the string representation of a BloomFilter.  O(1)'
         return '<{} key={}>'.format(self.__class__.__name__, self.key)
-
 
 
 if __name__ == '__main__':  # pragma: no cover

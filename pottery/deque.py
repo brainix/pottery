@@ -1,16 +1,14 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   deque.py                                                                  #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 import collections
 
 from .list import RedisList
-
 
 
 class RedisDeque(RedisList, collections.deque):
@@ -78,7 +76,7 @@ class RedisDeque(RedisList, collections.deque):
 
     def extendleft(self, values):
         '''Extend a RedisList by prepending elements from the iterable.  O(1)
-        
+
         Note the order in which the elements are prepended from the iterable:
 
             >>> d = RedisDeque()

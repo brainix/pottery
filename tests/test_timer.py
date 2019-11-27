@@ -1,17 +1,15 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   test_timer.py                                                             #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 import time
 
 from pottery import ContextTimer
 from tests.base import TestCase
-
 
 
 class ContextTimerTests(TestCase):

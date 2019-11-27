@@ -1,10 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   test_deque.py                                                             #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 import unittest.mock
@@ -12,7 +11,6 @@ import unittest.mock
 from pottery import RedisDeque
 from pottery.base import Base
 from tests.base import TestCase
-
 
 
 class DequeTests(TestCase):
