@@ -1,0 +1,36 @@
+# --------------------------------------------------------------------------- #
+#   .flake8                                                                   #
+#                                                                             #
+#   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
+#   All rights reserved.                                                      #
+# --------------------------------------------------------------------------- #
+
+
+[flake8]
+
+# Legend
+# ------
+# E126: continuation line over-indented for hanging indent
+# E127: continuation line over-indented for visual indent
+# E226: missing whitespace around arithmetic operator
+# E302: expected 2 blank lines, found 1
+# E305: expected 2 blank lines after class or function definition, found 1
+# E402: module level import not at top of file
+# E501: line too long (80 > 79 characters)
+# E711: comparison to None should be 'if cond is None:'
+# E713: test for membership should be 'not in'
+# F401: '.monkey' imported but unused
+# W504: line break after binary operator
+
+ignore = E226,E501
+
+per-file-ignores =
+   pottery/__init__.py:E402
+   pottery/base.py:F401
+   pottery/bloom.py:W504
+   pottery/exceptions.py:E302
+   pottery/monkey.py:E302,E305,E402
+   pottery/redlock.py:E127
+   tests/*.py:E126,E127,E711,E713
+   tests/test_redis.py:E711,F401
+   tests/test_source.py:F401

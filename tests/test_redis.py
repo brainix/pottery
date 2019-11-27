@@ -1,21 +1,15 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   test_redis.py                                                             #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 from redis import Redis
 
 from pottery import monkey
 from tests.base import TestCase
-
-
-
-monkey  # Workaround for Pyflakes.  :-(
-
 
 
 class RedisTests(TestCase):

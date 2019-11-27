@@ -1,16 +1,14 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   test_list.py                                                              #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 from pottery import KeyExistsError
 from pottery import RedisList
 from tests.base import TestCase
-
 
 
 class ListTests(TestCase):

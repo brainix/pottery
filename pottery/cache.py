@@ -1,10 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   cache.py                                                                  #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 import collections
@@ -18,13 +17,9 @@ from .base import random_key
 from .dict import RedisDict
 
 
-
 _DEFAULT_TIMEOUT = 60   # seconds
 
-
-
 _logger = logging.getLogger('pottery')
-
 
 
 CacheInfo = collections.namedtuple(
@@ -35,10 +30,8 @@ CacheInfo.__new__.__defaults__ = 0, 0, None, 0
 CacheInfo.__doc__ = ''
 
 
-
 def _arg_hash(*args, **kwargs):
     return hash((args, frozenset(kwargs.items())))
-
 
 
 def redis_cache(*, redis=None, key=None, timeout=_DEFAULT_TIMEOUT):
@@ -137,7 +130,6 @@ def redis_cache(*, redis=None, key=None, timeout=_DEFAULT_TIMEOUT):
         wrapper.cache_clear = cache_clear
         return wrapper
     return decorator
-
 
 
 class CachedOrderedDict(collections.OrderedDict):

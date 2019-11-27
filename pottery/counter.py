@@ -1,10 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   counter.py                                                                #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 import collections
@@ -12,7 +11,6 @@ import contextlib
 import itertools
 
 from .dict import RedisDict
-
 
 
 class RedisCounter(RedisDict, collections.Counter):

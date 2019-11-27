@@ -1,10 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   base.py                                                                   #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 import abc
@@ -25,12 +24,9 @@ from . import monkey
 from .exceptions import RandomKeyError
 
 
-
-monkey  # Workaround for Pyflakes.  :-(
 _default_url = os.environ.get('REDIS_URL', 'redis://localhost:6379/')
 _default_redis = Redis.from_url(_default_url, socket_timeout=1)
 _logger = logging.getLogger('pottery')
-
 
 
 def random_key(*, redis, prefix='pottery:', length=16, tries=3):
@@ -48,7 +44,6 @@ def random_key(*, redis, prefix='pottery:', length=16, tries=3):
             tries=tries-1,
         )
     return key
-
 
 
 class _Common:
@@ -93,7 +88,6 @@ class _Common:
         return key
 
 
-
 class _Encodable:
     @staticmethod
     def _encode(value):
@@ -104,7 +98,6 @@ class _Encodable:
     def _decode(value):
         decoded = json.loads(value.decode('utf-8'))
         return decoded
-
 
 
 class _Comparable(metaclass=abc.ABCMeta):
@@ -121,16 +114,17 @@ class _Comparable(metaclass=abc.ABCMeta):
     def __eq__(self, other):
         if self is other:
             equals = True
-        elif isinstance(other, _Comparable) and \
-           self.redis == other.redis and \
-           self.key == other.key:
+        elif (
+            isinstance(other, _Comparable)
+            and self.redis == other.redis   # NoQA: W503
+            and self.key == other.key       # NoQA: W503
+        ):
             equals = True
         else:
             equals = super().__eq__(other)
             if equals is NotImplemented:
                 equals = False
         return equals
-
 
 
 class _Clearable(metaclass=abc.ABCMeta):
@@ -147,7 +141,6 @@ class _Clearable(metaclass=abc.ABCMeta):
     def clear(self):
         'Remove the elements in a Redis-backed container.  O(n)'
         self.redis.delete(self.key)
-
 
 
 class Pipelined(metaclass=abc.ABCMeta):
@@ -199,10 +192,8 @@ class Pipelined(metaclass=abc.ABCMeta):
             yield
 
 
-
 class Base(_Common, _Encodable, _Comparable, _Clearable, Pipelined):
     ...
-
 
 
 class Iterable(metaclass=abc.ABCMeta):
@@ -227,7 +218,6 @@ class Iterable(metaclass=abc.ABCMeta):
             yield from (self._decode(value) for value in iterable)
             if cursor == 0:
                 break
-
 
 
 class Primitive(metaclass=abc.ABCMeta):

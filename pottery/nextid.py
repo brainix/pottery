@@ -1,9 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   nextid.py                                                                 #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 '''Distributed Redis-powered monotonically increasing ID generator.
 
 Rationale and algorithm description:
@@ -14,7 +14,6 @@ Lua scripting:
 '''
 
 
-
 import concurrent.futures
 import contextlib
 
@@ -23,7 +22,6 @@ from redis.exceptions import TimeoutError
 
 from .base import Primitive
 from .exceptions import QuorumNotAchieved
-
 
 
 class NextId(Primitive):
@@ -141,7 +139,6 @@ class NextId(Primitive):
                     num_masters_set += future.result() == value
         if num_masters_set < len(self.masters) // 2 + 1:
             raise QuorumNotAchieved(self.masters, self.key)
-
 
 
 if __name__ == '__main__':  # pragma: no cover

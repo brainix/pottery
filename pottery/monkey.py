@@ -1,19 +1,16 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   monkey.py                                                                 #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 'Monkey patches.'
-
 
 
 import logging
 
 
-
 _logger = logging.getLogger('pottery')
-
 
 
 # Monkey patch os.listdir() to optionally return absolute paths.
@@ -35,7 +32,6 @@ _listdir.listdir = os.listdir
 os.listdir = _listdir
 
 _logger.info('Monkey patched os.listdir() to optionally return absolute paths')
-
 
 
 # The Redis client doesn't have a sane equality test.  So monkey patch equality

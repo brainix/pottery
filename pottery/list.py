@@ -1,10 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   list.py                                                                   #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 import collections.abc
@@ -15,7 +14,6 @@ from redis import ResponseError
 
 from .base import Base
 from .exceptions import KeyExistsError
-
 
 
 class RedisList(Base, collections.abc.MutableSequence):
@@ -125,7 +123,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         for index in indices:
             self.redis.lset(self.key, index, 0)
             num += 1
-        if num: # pragma: no cover
+        if num:     # pragma: no cover
             self.redis.lrem(self.key, num, 0)
 
     def __len__(self):

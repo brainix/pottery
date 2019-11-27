@@ -1,10 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   requirements-to-freeze.txt                                                #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 redis>=3.0.0
@@ -12,11 +11,10 @@ mmh3
 
 isort
 coverage
-pyflakes
+flake8
 
 wheel
 twine
-
 
 
 # We don't need Requests at the top-level.  However, it's pulled in from

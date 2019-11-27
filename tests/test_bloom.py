@@ -1,10 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   test_bloom.py                                                             #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 import math
@@ -13,7 +12,6 @@ import string
 
 from pottery import BloomFilter
 from tests.base import TestCase
-
 
 
 class BloomFilterTests(TestCase):
@@ -170,7 +168,6 @@ class BloomFilterTests(TestCase):
             key=self._KEY,
         )
         assert repr(dilberts) == '<BloomFilter key={}>'.format(self._KEY)
-
 
 
 class RecentlyConsumedTests(TestCase):

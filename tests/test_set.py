@@ -1,10 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   test_set.py                                                               #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 from redis import Redis
@@ -12,7 +11,6 @@ from redis import Redis
 from pottery import KeyExistsError
 from pottery import RedisSet
 from tests.base import TestCase
-
 
 
 class SetTests(TestCase):

@@ -1,11 +1,10 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   test_nextid.py                                                            #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 'Distributed Redis-powered monotonically increasing ID generator tests.'
-
 
 
 import unittest.mock
@@ -15,7 +14,6 @@ from redis.exceptions import TimeoutError
 from pottery import NextId
 from pottery import QuorumNotAchieved
 from tests.base import TestCase
-
 
 
 class NextIdTests(TestCase):

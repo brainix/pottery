@@ -1,10 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   test_dict.py                                                              #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 import collections
@@ -12,7 +11,6 @@ import collections
 from pottery import KeyExistsError
 from pottery import RedisDict
 from tests.base import TestCase
-
 
 
 class DictTests(TestCase):

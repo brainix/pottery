@@ -1,11 +1,10 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   test_source.py                                                            #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 'Python source code tests.'
-
 
 
 import itertools
@@ -19,14 +18,9 @@ from pottery import monkey
 from tests.base import TestCase
 
 
-
-monkey  # Workaround for Pyflakes.  :-(
-
-
-
 class SourceTests(TestCase):
     _EXCLUDES = (
-        '/__init__.py',
+        '/pottery/__init__.py',
     )
 
     @unittest.skipIf(

@@ -1,10 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   exceptions.py                                                             #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 class PotteryError(Exception):
@@ -39,7 +38,6 @@ class RandomKeyError(PotteryError, RuntimeError):
 
     def __str__(self):
         return 'redis={}'.format(self._redis)
-
 
 
 class PrimitiveError(Exception):

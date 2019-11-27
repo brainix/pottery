@@ -1,10 +1,9 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   test_cache.py                                                             #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 import collections
@@ -17,7 +16,6 @@ from pottery.cache import _DEFAULT_TIMEOUT
 from pottery.cache import CachedOrderedDict
 from pottery.cache import CacheInfo
 from tests.base import TestCase
-
 
 
 class CacheDecoratorTests(TestCase):
@@ -236,7 +234,6 @@ class CacheDecoratorTests(TestCase):
             maxsize=None,
             currsize=0,
         )
-
 
 
 class CachedOrderedDictTests(TestCase):
