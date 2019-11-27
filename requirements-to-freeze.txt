@@ -12,7 +12,7 @@ mmh3
 
 isort
 coverage
-pyflakes
+flake8
 
 wheel
 twine

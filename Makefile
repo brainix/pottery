@@ -1,17 +1,15 @@
-#-----------------------------------------------------------------------------#
+# --------------------------------------------------------------------------- #
 #   Makefile                                                                  #
 #                                                                             #
 #   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
-#-----------------------------------------------------------------------------#
-
+# --------------------------------------------------------------------------- #
 
 
 init upgrade: formulae := {openssl,readline,xz,redis}
 
 version ?= 3.8.0
 venv ?= venv
-
 
 
 install: init python
@@ -52,10 +50,12 @@ upgrade:
 
 test:
 ifeq ($(tests),)
+	$(eval $@_SOURCE_FILES := $(shell ls *\.py pottery/*\.py tests/*\.py))
 	source $(venv)/bin/activate && \
 		coverage3 run -m unittest discover --start-directory tests --verbose && \
 		coverage3 report && \
-		pyflakes setup.py pottery/*\.py tests/*\.py
+		echo Running Flake8 on $($@_SOURCE_FILES) && \
+		flake8 $($@_SOURCE_FILES)
 else
 	source $(venv)/bin/activate && \
 		python3 -m unittest --verbose $(tests)
