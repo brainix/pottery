@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   redlock.py                                                                #
 #                                                                             #
-#   Copyright © 2015-2019, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2020, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
 # --------------------------------------------------------------------------- #
 '''Distributed Redis-powered lock.
