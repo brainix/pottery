@@ -90,27 +90,27 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
         return disjoint
 
     # Where does this method come from?
-    def issubset(self, other):                      # pragma: no cover
+    def issubset(self, other):  # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def issuperset(self, other):                    # pragma: no cover
+    def issuperset(self, other):  # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def union(self, *args):                         # pragma: no cover
+    def union(self, *args):  # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def intersection(self, *args):                  # pragma: no cover
+    def intersection(self, *args):  # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def difference(self, *args):                    # pragma: no cover
+    def difference(self, *args):  # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def symmetric_difference(self, other):          # pragma: no cover
+    def symmetric_difference(self, other):  # pragma: no cover
         raise NotImplementedError
 
     def _update(self, *iterables, redis_method):
@@ -128,7 +128,7 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
         self._update(*iterables, redis_method='sadd')
 
     # Where does this method come from?
-    def intersection_update(self, *args):           # pragma: no cover
+    def intersection_update(self, *args):  # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
@@ -136,5 +136,5 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
         self._update(*iterables, redis_method='srem')
 
     # Where does this method come from?
-    def symmetric_difference_update(self, other):   # pragma: no cover
+    def symmetric_difference_update(self, other):  # pragma: no cover
         raise NotImplementedError
