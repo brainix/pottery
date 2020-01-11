@@ -84,7 +84,7 @@ def redis_cache(*, redis=None, key=None, timeout=_DEFAULT_TIMEOUT):
     def decorator(func):
         nonlocal redis, key
         redis = Redis(socket_timeout=1) if redis is None else redis
-        if key is None:                             # pragma: no cover
+        if key is None:  # pragma: no cover
             key = random_key(redis=redis)
             _logger.info(
                 "Self-assigning key redis_cache(key='%s') for function %s",

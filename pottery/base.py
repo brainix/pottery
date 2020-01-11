@@ -116,8 +116,8 @@ class _Comparable(metaclass=abc.ABCMeta):
             equals = True
         elif (
             isinstance(other, _Comparable)
-            and self.redis == other.redis   # NoQA: W503
-            and self.key == other.key       # NoQA: W503
+            and self.redis == other.redis  # NoQA: W503
+            and self.key == other.key  # NoQA: W503
         ):
             equals = True
         else:
@@ -198,15 +198,15 @@ class Base(_Common, _Encodable, _Comparable, _Clearable, Pipelined):
 
 class Iterable(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def _decode(value):     # pragma: no cover
+    def _decode(value):  # pragma: no cover
         ...
 
-    @property               # pragma: no cover
+    @property  # pragma: no cover
     @abc.abstractmethod
     def key(self):
         'Redis key.'
 
-    @abc.abstractmethod     # pragma: no cover
+    @abc.abstractmethod  # pragma: no cover
     def _scan(self, key, *, cursor=0):
         ...
 

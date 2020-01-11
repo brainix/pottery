@@ -29,7 +29,7 @@ class CounterTests(TestCase):
 
     def test_init_with_iterable(self):
         c = RedisCounter('gallahad')
-        assert c == collections.Counter(a=3, l=2, g=1, h=1, d=1)    # NoQA: E741
+        assert c == collections.Counter(a=3, l=2, g=1, h=1, d=1)  # NoQA: E741
 
     def test_init_with_mapping(self):
         c = RedisCounter({'red': 4, 'blue': 2})
