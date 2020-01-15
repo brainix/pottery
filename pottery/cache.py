@@ -105,7 +105,8 @@ def redis_cache(*, redis=None, key=None, timeout=_DEFAULT_TIMEOUT):
                 return_value = func(*args, **kwargs)
                 cache[hash_] = return_value
                 misses += 1
-            redis.expire(key, timeout)
+            if timeout:
+                redis.expire(key, timeout)
             return return_value
 
         @functools.wraps(func)
@@ -113,7 +114,8 @@ def redis_cache(*, redis=None, key=None, timeout=_DEFAULT_TIMEOUT):
             hash_ = _arg_hash(*args, **kwargs)
             return_value = func(*args, **kwargs)
             cache[hash_] = return_value
-            redis.expire(key, timeout)
+            if timeout:
+                redis.expire(key, timeout)
             return return_value
 
         def cache_info():
