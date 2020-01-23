@@ -21,5 +21,5 @@ requests-toolbelt==0.9.1
 six==1.13.0
 tqdm==4.39.0
 twine==3.1.1
-urllib3==1.25.7
+urllib3==1.25.8
 webencodings==0.5.1
