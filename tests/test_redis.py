@@ -50,6 +50,6 @@ class RedisTests(TestCase):
 
     def test_clients_unequal_if_different_dbs(self):
         r1 = Redis.from_url('redis://localhost:6379/9')
-        r2 = Redis.from_url('redis://localhost:6380/10')
+        r2 = Redis.from_url('redis://localhost:6379/10')
         assert r1 != r2
         assert hash(r1) != hash(r2)
