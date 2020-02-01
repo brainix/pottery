@@ -34,13 +34,41 @@ os.listdir = _listdir
 _logger.info('Monkey patched os.listdir() to optionally return absolute paths')
 
 
-# lolwut for some reason, Redis doesn't have a __hash__() method.
+# The Redis client doesn't have a sane equality test.  So monkey patch equality
+# comparisons on to the Redis client.  We consider two Redis clients to be
+# equal if they're connected to the same host, port, and database.
+#
+# I've submitted this change to redis-py:
+#     https://github.com/andymccurdy/redis-py/pull/1240
+#
+# If it gets merged upstream, then I'll be able to delete this monkey patch.
 
+from redis import ConnectionPool
 from redis import Redis
 
-Redis.__hash__ = lambda self: hash(str(self))
+def __eq__(self, other):
+    try:
+        return self.connection_kwargs == other.connection_kwargs
+    except AttributeError:  # pragma: no cover
+        return False
+
+ConnectionPool.__eq__ = __eq__
+
+def __eq__(self, other):
+    '''True if two Redis clients are equal.
+
+    The Redis client doesn't have a sane equality test.  So we monkey patch
+    this method on to the Redis client so that two client instances are equal
+    if they're connected to the same Redis host, port, and database.
+    '''
+    try:
+        return self.connection_pool == other.connection_pool
+    except AttributeError:
+        return False
+
+Redis.__eq__ = __eq__
 
 _logger.info(
-    'Monkey patched Redis.__hash__() in order to be able to put Redis clients '
-    'into sets'
+    'Monkey patched ConnectionPool.__eq__() and Redis.__eq__() to compare '
+    'Redis clients by connection params'
 )
