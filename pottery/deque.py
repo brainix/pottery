@@ -18,25 +18,24 @@ class RedisDeque(RedisList, collections.deque):
 
     def __init__(self, iterable=tuple(), maxlen=None, *, redis=None, key=None):
         'Initialize a RedisDeque.  O(n)'
+        if maxlen is not None and not isinstance(maxlen, int):
+            raise TypeError('an integer is required')
         self._maxlen = maxlen
         super().__init__(iterable, redis=redis, key=key)
-
-    def _populate(self, iterable=tuple()):
-        if self.maxlen is not None:
-            try:
-                if self.maxlen:
-                    iterable = tuple(iterable)[-self.maxlen:]
-                else:
-                    iterable = tuple()
-            except TypeError:
-                raise TypeError('an integer is required')
-        super()._populate(iterable)
         if not iterable and self.maxlen is not None and len(self) > self.maxlen:
             raise IndexError(
                 'persistent {} beyond its maximum size'.format(
                     self.__class__.__name__,
                 ),
             )
+
+    def _populate(self, iterable=tuple()):
+        if self.maxlen is not None:
+            if self.maxlen:
+                iterable = tuple(iterable)[-self.maxlen:]
+            else:  # pragma: no cover
+                iterable = tuple()
+        super()._populate(iterable)
 
     @property
     def maxlen(self):

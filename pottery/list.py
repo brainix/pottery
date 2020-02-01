@@ -43,12 +43,13 @@ class RedisList(Base, collections.abc.MutableSequence):
     def __init__(self, iterable=tuple(), *, redis=None, key=None):
         'Initialize a RedisList.  O(n)'
         super().__init__(iterable, redis=redis, key=key)
-        with self._watch(iterable):
-            self._populate(iterable)
+        if iterable:
+            with self._watch(iterable):
+                self._populate(iterable)
 
     def _populate(self, iterable=tuple()):
         encoded_values = [self._encode(value) for value in iterable]
-        if encoded_values:
+        if encoded_values:  # pragma: no cover
             if self.redis.exists(self.key):
                 raise KeyExistsError(self.redis, self.key)
             else:

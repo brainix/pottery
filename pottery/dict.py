@@ -21,8 +21,8 @@ class RedisDict(Base, Iterable, collections.abc.MutableMapping):
     def __init__(self, iterable=tuple(), *, redis=None, key=None, **kwargs):
         'Initialize a RedisDict.  O(n)'
         super().__init__(redis=redis, key=key, **kwargs)
-        with self._watch(iterable):
-            if iterable or kwargs:
+        if iterable or kwargs:
+            with self._watch(iterable):
                 if self.redis.exists(self.key):
                     raise KeyExistsError(self.redis, self.key)
                 else:
