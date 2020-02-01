@@ -20,14 +20,13 @@
 # E711: comparison to None should be 'if cond is None:'
 # E713: test for membership should be 'not in'
 # F401: '.monkey' imported but unused
-# W504: line break after binary operator
+# W503: line break after binary operator
 
-ignore = E226,E501
+ignore = E226,E501,W503
 
 per-file-ignores =
    pottery/__init__.py:E402
    pottery/base.py:F401
-   pottery/bloom.py:W504
    pottery/exceptions.py:E302
    pottery/monkey.py:E302,E305,E402
    pottery/redlock.py:E127
