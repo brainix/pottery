@@ -36,7 +36,7 @@ setup(
     ],
     keywords=pottery.__keywords__,
     packages=find_packages(exclude=('contrib', 'docs', 'tests*')),
-    install_requires=('redis>=3.0.0', 'mmh3'),
+    install_requires=('redis>=3.0.0,<3.4.0', 'mmh3'),
     extras_require={},
     package_data={},
     data_files=tuple(),
