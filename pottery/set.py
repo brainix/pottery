@@ -81,7 +81,10 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
     def isdisjoint(self, other):
         'Return True if two sets have a null intersection.  O(n)'
         with self._watch(other):
-            if isinstance(other, self.__class__) and self.redis == other.redis:
+            if (
+                isinstance(other, self.__class__)
+                and self.redis.connection_pool == other.redis.connection_pool
+            ):
                 self.redis.multi()
                 self.redis.sinter(self.key, other.key)
                 disjoint = not self.redis.execute()[0]
