@@ -116,8 +116,8 @@ class _Comparable(metaclass=abc.ABCMeta):
             equals = True
         elif (
             isinstance(other, _Comparable)
-            and self.redis == other.redis  # NoQA: W503
-            and self.key == other.key  # NoQA: W503
+            and self.redis.connection_pool == other.redis.connection_pool
+            and self.key == other.key
         ):
             equals = True
         else:
