@@ -6,7 +6,10 @@
 # --------------------------------------------------------------------------- #
 
 
-# redis>=3.0.0
+# There's a bug in redis-py 3.4.0 that prevents connecting to Redis with
+# authentication (a username and password).  For more info:
+#   https://github.com/andymccurdy/redis-py/issues/1278
+redis>=3.4.1
 mmh3
 
 isort
@@ -29,9 +32,3 @@ requests>=2.20.0
 #   https://nvd.nist.gov/vuln/detail/CVE-2018-20060
 #   https://nvd.nist.gov/vuln/detail/CVE-2019-11324
 urllib3>=1.24.2
-
-# There's a bug in redis-py 3.4.0 that prevents connecting to Redis with
-# authentication (a username and password).  Until they fix it and release a
-# new version, stay on redis-py <3.4.0.  For more info:
-#   https://github.com/andymccurdy/redis-py/issues/1278
-redis>=3.0.0,<3.4.0

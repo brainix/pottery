@@ -37,11 +37,6 @@ _logger.info('Monkey patched os.listdir() to optionally return absolute paths')
 # The Redis client doesn't have a sane equality test.  So monkey patch equality
 # comparisons on to the Redis client.  We consider two Redis clients to be
 # equal if they're connected to the same host, port, and database.
-#
-# I've submitted this change to redis-py:
-#     https://github.com/andymccurdy/redis-py/pull/1240
-#
-# If it gets merged upstream, then I'll be able to delete this monkey patch.
 
 from redis import ConnectionPool
 from redis import Redis
