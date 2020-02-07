@@ -57,5 +57,5 @@ class ContextTimerTests(TestCase):
         time.sleep(0.1)
         self._confirm_elapsed(iteration*100)
 
-        with self.assertRaises(RuntimeError), self.timer:
+        with self.assertRaises(RuntimeError), self.timer:  # pragma: no cover
             ...

@@ -34,7 +34,7 @@ class DictTests(TestCase):
                 "KeyExistsError(redis=Pipeline<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>, "
                 "key='pottery:tel')"
             )
-        else:
+        else:  # pragma: no cover
             self.fail(msg='KeyExistsError not raised')
 
     def test_keyexistserror_str(self):
@@ -47,7 +47,7 @@ class DictTests(TestCase):
                 "redis=Pipeline<ConnectionPool<Connection<host=localhost,port=6379,db=0>>> "
                 "key='pottery:tel'"
             )
-        else:
+        else:  # pragma: no cover
             self.fail(msg='KeyExistsError not raised')
 
     def test_basic_usage(self):
