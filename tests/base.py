@@ -33,6 +33,6 @@ class TestCase(unittest.TestCase):
         super().tearDown()
 
 
-def run_doctests():
+def run_doctests():  # pragma: no cover
     results = doctest.testmod()
     sys.exit(bool(results.failed))

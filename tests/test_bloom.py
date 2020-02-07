@@ -189,7 +189,7 @@ class RecentlyConsumedTests(TestCase):
         self.unseen_links = set()
         while len(self.unseen_links) < 100:
             fullname = self.random_fullname()
-            if fullname not in self.seen_links:
+            if fullname not in self.seen_links:  # pragma: no cover
                 self.unseen_links.add(fullname)
 
         # Initialize the recently consumed Bloom filter on the seen set.
@@ -223,7 +223,7 @@ class RecentlyConsumedTests(TestCase):
             # math.log10(number) raised a ValueError, so number must be 0.0.
             # No need to round 0.0.
             return number
-        else:
+        else:  # pragma: no cover
             return round(number, ndigits)
 
     def test_zero_false_negatives(self):

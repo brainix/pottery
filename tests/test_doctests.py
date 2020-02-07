@@ -14,7 +14,7 @@ import unittest
 from tests.base import TestCase
 
 
-class DoctestTests(TestCase):
+class DoctestTests(TestCase):  # pragma: no cover
     def _modules(self):
         test_dir = os.path.dirname(__file__)
         package_dir = os.path.dirname(test_dir)

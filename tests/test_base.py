@@ -70,7 +70,7 @@ class CommonTests(_BaseTestCase):
                 self.raj._random_key()
             except RandomKeyError as wtf:
                 assert repr(wtf) == 'RandomKeyError(redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>)'
-            else:
+            else:  # pragma: no cover
                 self.fail(msg='RandomKeyError not raised')
 
     def test_randomkeyerror_str(self):
@@ -80,7 +80,7 @@ class CommonTests(_BaseTestCase):
                 self.raj._random_key()
             except RandomKeyError as wtf:
                 assert str(wtf) == "redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>"
-            else:
+            else:  # pragma: no cover
                 self.fail(msg='RandomKeyError not raised')
 
 
