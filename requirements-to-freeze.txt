@@ -32,3 +32,9 @@ requests>=2.20.0
 #   https://nvd.nist.gov/vuln/detail/CVE-2018-20060
 #   https://nvd.nist.gov/vuln/detail/CVE-2019-11324
 urllib3>=1.24.2
+
+# We don't need bleach at the top-level.  However, it's pulled in from
+# something else, and there's a security vulnerability in the version that it
+# pulls in.  For more info:
+#   https://bugzilla.mozilla.org/show_bug.cgi?id=1615315
+bleach>=3.1.1
