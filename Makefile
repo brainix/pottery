@@ -21,14 +21,11 @@ init:
 	brew analytics off
 	brew analytics regenerate-uuid
 	-brew install $(formulae)
-	command -v pyenv >/dev/null 2>&1 || \
-		curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
 
 python:
 	CFLAGS="-I$(shell brew --prefix openssl)/include -I$(shell brew --prefix readline)/include -g -O2" \
 		LDFLAGS="-L$(shell brew --prefix openssl)/lib -L$(shell brew --prefix readline)/lib" \
 		pyenv install --skip-existing $(version)
-	pyenv rehash
 	rm -rf $(venv)
 	~/.pyenv/versions/$(version)/bin/python3 -m venv $(venv)
 	source $(venv)/bin/activate && \
@@ -39,8 +36,6 @@ upgrade:
 	brew update
 	-brew upgrade $(formulae)
 	brew cleanup
-	pyenv update
-	pyenv rehash
 	source $(venv)/bin/activate && \
 		pip3 install --upgrade pip && \
 		pip3 install --requirement requirements-to-freeze.txt --upgrade --no-cache-dir && \
