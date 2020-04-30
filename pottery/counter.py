@@ -35,7 +35,7 @@ class RedisCounter(RedisDict, collections.Counter):
         }
         if to_set:
             self.redis.multi()
-            self.redis.hmset(self.key, to_set)
+            self.redis.hset(self.key, mapping=to_set)
 
     def update(self, iterable=tuple(), **kwargs):
         'Like dict.update() but add counts instead of replacing them.  O(n)'
@@ -123,7 +123,7 @@ class RedisCounter(RedisDict, collections.Counter):
             if to_set or to_del:
                 self.redis.multi()
                 if to_set:
-                    self.redis.hmset(self.key, to_set)
+                    self.redis.hset(self.key, mapping=to_set)
                 if to_del:
                     self.redis.hdel(self.key, *to_del)
         return self
@@ -154,7 +154,7 @@ class RedisCounter(RedisDict, collections.Counter):
                         self._encode(k): self._encode(v)
                         for k, v in to_set.items()
                     }
-                    self.redis.hmset(self.key, to_set)
+                    self.redis.hset(self.key, mapping=to_set)
                 if to_del:
                     to_del = {self._encode(k) for k in to_del}
                     self.redis.hdel(self.key, *to_del)
