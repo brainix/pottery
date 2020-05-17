@@ -4,7 +4,7 @@ chardet==3.0.4
 coverage==5.1
 docutils==0.15.2
 entrypoints==0.3
-flake8==3.7.9
+flake8==3.8.1
 idna==2.8
 isort==4.3.21
 keyring==19.2.0
@@ -12,12 +12,12 @@ mccabe==0.6.1
 mmh3==2.5.1
 packaging==20.3
 pkginfo==1.5.0.1
-pycodestyle==2.5.0
-pyflakes==2.1.1
+pycodestyle==2.6.0
+pyflakes==2.2.0
 Pygments==2.5.1
 pyparsing==2.4.7
 readme-renderer==24.0
-redis==3.5.1
+redis==3.5.2
 requests==2.23.0
 requests-toolbelt==0.9.1
 six==1.13.0
