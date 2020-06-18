@@ -36,7 +36,7 @@ class RedisDict(Base, Iterable, collections.abc.MutableMapping):
             to_set[self._encode(key)] = self._encode(value)
         if to_set:
             self.redis.multi()
-            self.redis.hmset(self.key, to_set)
+            self.redis.hset(self.key, mapping=to_set)
 
     # Methods required by collections.abc.MutableMapping:
 
