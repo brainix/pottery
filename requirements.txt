@@ -1,6 +1,7 @@
 bleach==3.1.5
 certifi==2019.9.11
 chardet==3.0.4
+colorama==0.4.3
 coverage==5.1
 docutils==0.15.2
 entrypoints==0.3
@@ -20,8 +21,9 @@ readme-renderer==24.0
 redis==3.5.3
 requests==2.24.0
 requests-toolbelt==0.9.1
+rfc3986==1.4.0
 six==1.13.0
 tqdm==4.39.0
-twine==3.1.1
+twine==3.2.0
 urllib3==1.25.9
 webencodings==0.5.1
