@@ -45,12 +45,14 @@ upgrade:
 
 test:
 ifeq ($(tests),)
-	$(eval $@_SOURCE_FILES := $(shell ls *\.py pottery/*\.py tests/*\.py))
+	$(eval $@_SOURCE_FILES := $(shell find . -name '*.py' -not -path './build/*' -not -path './dist/*' -not -path './pottery.egg-info/*' -not -path './venv/*'))
 	source $(venv)/bin/activate && \
 		coverage3 run -m unittest discover --start-directory tests --verbose && \
 		coverage3 report && \
 		echo Running Flake8 on $($@_SOURCE_FILES) && \
-		flake8 $($@_SOURCE_FILES)
+		flake8 $($@_SOURCE_FILES) && \
+		echo Running isort on $($@_SOURCE_FILES) && \
+		isort $($@_SOURCE_FILES) --check-only --diff
 else
 	source $(venv)/bin/activate && \
 		python3 -m unittest --verbose $(tests)

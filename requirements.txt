@@ -2,12 +2,12 @@ bleach==3.1.5
 certifi==2019.9.11
 chardet==3.0.4
 colorama==0.4.3
-coverage==5.1
+coverage==5.2
 docutils==0.15.2
 entrypoints==0.3
 flake8==3.8.3
 idna==2.8
-isort==4.3.21
+isort==5.0.6
 keyring==19.2.0
 mccabe==0.6.1
 mmh3==2.5.1
