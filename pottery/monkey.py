@@ -13,33 +13,12 @@ import logging
 _logger = logging.getLogger('pottery')
 
 
-# Monkey patch os.listdir() to optionally return absolute paths.
-
-import os
-
-def _absolutize(*, files, path=None):
-    path = os.path.abspath(path or '.')
-    files = [os.path.join(path, f) for f in files]
-    return files
-
-def _listdir(path=None, *, absolute=False):
-    files = _listdir.listdir(path)
-    if absolute:  # pragma: no cover
-        files = _absolutize(path=path, files=files)
-    return files
-
-_listdir.listdir = os.listdir
-os.listdir = _listdir
-
-_logger.info('Monkey patched os.listdir() to optionally return absolute paths')
-
-
 # The Redis client doesn't have a sane equality test.  So monkey patch equality
 # comparisons on to the Redis client.  We consider two Redis clients to be
 # equal if they're connected to the same host, port, and database.
 
-from redis import ConnectionPool
-from redis import Redis
+from redis import ConnectionPool  # isort:skip
+from redis import Redis  # isort:skip
 
 def __eq__(self, other):
     try:

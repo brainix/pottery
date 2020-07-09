@@ -17,3 +17,4 @@ script:
   - coverage3 run -m unittest discover --start-directory tests --verbose
   - coverage3 report
   - flake8 *\.py pottery/*\.py tests/*\.py
+  - isort *\.py pottery/*\.py tests/*\.py --check-only --diff
