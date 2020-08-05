@@ -442,3 +442,8 @@ class CachedOrderedDictTests(TestCase):
             'hit5': 'value5',
         }
         assert self.cache.misses() == {'miss3'}
+
+    def test_no_keys(self):
+        cache = CachedOrderedDict(redis=self.redis)
+        assert cache == {}
+        assert cache.misses() == set()
