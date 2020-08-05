@@ -146,12 +146,16 @@ class CachedOrderedDict(collections.OrderedDict):
         self._misses = set()
 
         items = []
-        for key_ in keys:
-            try:
-                item = (key_, self._cache[key_])
-            except KeyError:
-                item = (key_, self._SENTINEL)
+        keys = tuple(keys)
+        encoded_keys = (self._cache._encode(key_) for key_ in keys)
+        encoded_values = redis.hmget(key, *encoded_keys)
+        for key_, encoded_value in zip(keys, encoded_values):
+            if encoded_value is None:
+                value = self._SENTINEL
                 self._misses.add(key_)
+            else:
+                value = self._cache._decode(encoded_value)
+            item = (key_, value)
             items.append(item)
         return super().__init__(items)
 

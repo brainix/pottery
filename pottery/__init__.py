@@ -13,7 +13,7 @@ know how to use Pottery.
 
 
 __title__ = 'pottery'
-__version__ = '0.71'
+__version__ = '0.72'
 __description__, __long_description__ = (
     s.strip() for s in __doc__.split(sep='\n\n', maxsplit=1)
 )
@@ -22,7 +22,7 @@ __author__ = 'Rajiv Bakulesh Shah'
 __author_email__ = 'brainix@gmail.com'
 __license__ = 'Apache 2.0'
 __keywords__ = 'Redis client persistent storage'
-__copyright__ = 'Copyright © 2015-2019, {}, original author.'.format(__author__)
+__copyright__ = 'Copyright © 2015-2020, {}, original author.'.format(__author__)
 
 
 from .exceptions import PotteryError  # isort:skip
