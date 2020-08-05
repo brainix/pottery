@@ -7,7 +7,7 @@ docutils==0.15.2
 entrypoints==0.3
 flake8==3.8.3
 idna==2.8
-isort==5.2.2
+isort==5.3.0
 keyring==19.2.0
 mccabe==0.6.1
 mmh3==2.5.1
