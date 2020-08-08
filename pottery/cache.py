@@ -26,7 +26,7 @@ CacheInfo = collections.namedtuple(
     'CacheInfo',
     ('hits', 'misses', 'maxsize', 'currsize'),
 )
-CacheInfo.__new__.__defaults__ = 0, 0, None, 0
+CacheInfo.__new__.__defaults__ = (0, 0, None, 0)
 CacheInfo.__doc__ = ''
 
 

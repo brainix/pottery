@@ -33,7 +33,8 @@ class HyperLogLog(Base):
         self.update({value})
 
     def update(self, *objs):
-        objs, other_hll_keys, encoded_values = (self,) + tuple(objs), [], []
+        objs = (self,) + tuple(objs)
+        other_hll_keys, encoded_values = [], []
         with self._watch(objs[1:]):
             for obj in objs:
                 if isinstance(obj, self.__class__):

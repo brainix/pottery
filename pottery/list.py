@@ -142,15 +142,16 @@ class RedisList(Base, collections.abc.MutableSequence):
             self.redis.multi()
             self.redis.lpush(self.key, encoded_value)
         elif index < len(self):
-            # This is monumentally stupid.  Python's list API requires us
-            # to insert an element before the given *index.*  Of course,
-            # Redis doesn't support that, because it's Redis.  Instead,
-            # Redis supports inserting an element before a given (pivot)
-            # *value.*  So our ridiculous hack is to set the pivot value to
-            # None, then to insert the desired value and the original pivot
-            # value before the value None, then to delete the value None.
+            # This is monumentally stupid.  Python's list API requires us to
+            # insert an element before the given *index.*  Of course, Redis
+            # doesn't support that, because it's Redis.  Instead, Redis
+            # supports inserting an element before a given (pivot) *value.*  So
+            # our ridiculous hack is to set the pivot value to 0, then to
+            # insert the desired value and the original pivot value before the
+            # value 0, then to delete the value 0.
+            #
             # More info:
-            # http://redis.io/commands/linsert
+            #   http://redis.io/commands/linsert
             pivot = self._encode(self[index])
             self.redis.multi()
             self.redis.lset(self.key, index, 0)
@@ -185,11 +186,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                         # self and other are the same length, and other is an
                         # ordered collection too.  Compare self's and other's
                         # elements, pair by pair.
-                        for value1, value2 in zip(self, other):
-                            if value1 != value2:
-                                return False
-                        else:
-                            return True
+                        return all(x == y for x, y in zip(self, other))
                     else:
                         # self and other are the same length, but other is an
                         # unordered collection.
