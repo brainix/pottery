@@ -13,12 +13,12 @@ import logging
 _logger = logging.getLogger('pottery')
 
 
-# The Redis client doesn't have a sane equality test.  So monkey patch equality
-# comparisons on to the Redis client.  We consider two Redis clients to be
-# equal if they're connected to the same host, port, and database.
+# The Redis client connection pool doesn't have a sane equality test.  So
+# monkey patch equality comparisons on to the connection pool.  We consider two
+# connection pools to be equal if they're connected to the same host, port, and
+# database.
 
 from redis import ConnectionPool  # isort:skip
-from redis import Redis  # isort:skip
 
 def __eq__(self, other):
     try:
@@ -28,21 +28,7 @@ def __eq__(self, other):
 
 ConnectionPool.__eq__ = __eq__
 
-def __eq__(self, other):
-    '''True if two Redis clients are equal.
-
-    The Redis client doesn't have a sane equality test.  So we monkey patch
-    this method on to the Redis client so that two client instances are equal
-    if they're connected to the same Redis host, port, and database.
-    '''
-    try:
-        return self.connection_pool == other.connection_pool
-    except AttributeError:
-        return False
-
-Redis.__eq__ = __eq__
-
 _logger.info(
-    'Monkey patched ConnectionPool.__eq__() and Redis.__eq__() to compare '
-    'Redis clients by connection params'
+    'Monkey patched ConnectionPool.__eq__() to compare clients by connection '
+    'params'
 )
