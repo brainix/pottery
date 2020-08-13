@@ -141,12 +141,14 @@ class CachedOrderedDict(collections.OrderedDict):
     def __init__(self, *, redis=None, key=None, keys=tuple(),
                  num_tries=_NUM_TRIES):
         self._num_tries = num_tries
-        partial = functools.partial(RedisDict, redis=redis, key=key)
-        self._cache = self._retry(partial)
+        init_cache = functools.partial(RedisDict, redis=redis, key=key)
+        self._cache = self._retry(init_cache)
         self._misses = set()
 
-        items = []
-        keys = tuple(keys)
+        # We have to iterate over keys multiple times, so cast it to a tuple.
+        # This allows the caller to pass in a generator for keys, and we can
+        # still iterate over it multiple times.
+        items, keys = [], tuple(keys)
         if keys:
             encoded_keys = (self._cache._encode(key_) for key_ in keys)
             encoded_values = redis.hmget(key, *encoded_keys)
@@ -170,28 +172,28 @@ class CachedOrderedDict(collections.OrderedDict):
         return super().__setitem__(key, value)
 
     def setdefault(self, key, default=None):
-        partial = functools.partial(
-            self._retry_setdefault,
+        retriable_setdefault = functools.partial(
+            self._retriable_setdefault,
             key,
             default=default,
         )
-        self._retry(partial)
+        self._retry(retriable_setdefault)
         self._misses.discard(key)
         if key not in self or self[key] is self._SENTINEL:
             self[key] = default
         return self[key]
 
-    def _retry_setdefault(self, key, default=None):
+    def _retriable_setdefault(self, key, default=None):
         with self._cache._watch():
             if key not in self._cache:
                 self._cache.redis.multi()
                 self._cache[key] = default
 
-    def _retry(self, partial, try_num=0):
+    def _retry(self, callable, try_num=0):
         try:
-            return partial()
+            return callable()
         except WatchError:  # pragma: no cover
             if try_num < self._num_tries - 1:
-                return self._retry(partial, try_num=try_num+1)
+                return self._retry(callable, try_num=try_num+1)
             else:
                 raise
