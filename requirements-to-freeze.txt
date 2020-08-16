@@ -12,11 +12,10 @@
 redis>=3.4.1
 mmh3
 
-isort
 coverage
+isort
 flake8
 
-wheel
 twine
 
 

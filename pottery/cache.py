@@ -135,6 +135,22 @@ def redis_cache(*, redis=None, key=None, timeout=_DEFAULT_TIMEOUT):
 
 
 class CachedOrderedDict(collections.OrderedDict):
+    '''Redis-backed container that extends Python's OrderedDicts.
+
+    The best way that I can explain CachedOrderedDict is through an example
+    use-case.  Imagine that your search engine returns document IDs, which then
+    you have to hydrate into full documents via the database to return to the
+    client.  The data structure used to represent such search results must have
+    the following properties:
+
+        1. It must preserve the order of the document IDs returned by the
+           search engine
+        2. It must map document IDs to hydrated documents
+        3. It must cache previously hydrated documents
+
+    Properties 1 and 2 are satisfied by Python's OrderedDict.  However,
+    CachedOrderedDict extends Python's OrderedDict to also satisfy property 3.
+    '''
     _SENTINEL = object()
     _NUM_TRIES = 3
 

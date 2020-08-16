@@ -29,7 +29,7 @@ python:
 	rm -rf $(venv)
 	~/.pyenv/versions/$(version)/bin/python3 -m venv $(venv)
 	source $(venv)/bin/activate && \
-		pip3 install --upgrade pip && \
+		pip3 install --upgrade pip wheel && \
 		pip3 install --requirement requirements.txt
 
 upgrade:
@@ -37,7 +37,7 @@ upgrade:
 	-brew upgrade $(formulae)
 	brew cleanup
 	source $(venv)/bin/activate && \
-		pip3 install --upgrade pip && \
+		pip3 install --upgrade pip wheel && \
 		pip3 install --requirement requirements-to-freeze.txt --upgrade --no-cache-dir && \
 		pip3 freeze > requirements.txt
 	git status
