@@ -27,7 +27,14 @@ import contextlib
 import os
 import random
 import time
+from types import TracebackType
+from typing import ClassVar
+from typing import Iterable
+from typing import Optional
+from typing import Type
 
+from redis import Redis
+from redis.client import Script
 from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
 
@@ -112,17 +119,21 @@ class Redlock(Primitive):
         [True, False]
     '''
 
-    KEY_PREFIX = 'redlock'
-    AUTO_RELEASE_TIME = 10 * 1000
-    CLOCK_DRIFT_FACTOR = 0.01
-    RETRY_DELAY = 200
-    NUM_EXTENSIONS = 3
-    NUM_RANDOM_BYTES = 20
+    KEY_PREFIX: ClassVar[str] = 'redlock'
+    AUTO_RELEASE_TIME: ClassVar[int] = 10 * 1000
+    CLOCK_DRIFT_FACTOR: ClassVar[float] = 0.01
+    RETRY_DELAY: ClassVar[int] = 200
+    NUM_EXTENSIONS: ClassVar[int] = 3
+    NUM_RANDOM_BYTES: ClassVar[int] = 20
 
-    def __init__(self, *, key, masters=frozenset(),
-                 auto_release_time=AUTO_RELEASE_TIME,
-                 num_extensions=NUM_EXTENSIONS,
-                 num_random_bytes=NUM_RANDOM_BYTES):
+    def __init__(self,
+                 *,
+                 key: str,
+                 masters: Iterable[Redis] = frozenset(),
+                 auto_release_time: int = AUTO_RELEASE_TIME,
+                 num_extensions: int = NUM_EXTENSIONS,
+                 num_random_bytes: int = NUM_RANDOM_BYTES,
+                 ) -> None:
         super().__init__(key=key, masters=masters)
         self.auto_release_time = auto_release_time
         self.num_extensions = num_extensions
@@ -134,7 +145,7 @@ class Redlock(Primitive):
         self._extend_script = self._register_extend_script()
         self._release_script = self._register_release_script()
 
-    def _register_acquired_script(self):
+    def _register_acquired_script(self) -> Script:
         master = next(iter(self.masters))
         acquired_script = master.register_script('''
             if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -146,7 +157,7 @@ class Redlock(Primitive):
         ''')
         return acquired_script
 
-    def _register_extend_script(self):
+    def _register_extend_script(self) -> Script:
         master = next(iter(self.masters))
         extend_script = master.register_script('''
             if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -157,7 +168,7 @@ class Redlock(Primitive):
         ''')
         return extend_script
 
-    def _register_release_script(self):
+    def _register_release_script(self) -> Script:
         master = next(iter(self.masters))
         release_script = master.register_script('''
             if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -168,7 +179,7 @@ class Redlock(Primitive):
         ''')
         return release_script
 
-    def _acquire_master(self, master):
+    def _acquire_master(self, master: Redis) -> bool:
         acquired = master.set(
             self.key,
             self._value,
@@ -177,7 +188,7 @@ class Redlock(Primitive):
         )
         return bool(acquired)
 
-    def _acquired_master(self, master):
+    def _acquired_master(self, master: Redis) -> int:
         if self._value:
             ttl = self._acquired_script(
                 keys=(self.key,),
@@ -188,7 +199,7 @@ class Redlock(Primitive):
             ttl = 0
         return ttl
 
-    def _extend_master(self, master):
+    def _extend_master(self, master: Redis) -> bool:
         extended = self._extend_script(
             keys=(self.key,),
             args=(self._value, self.auto_release_time),
@@ -196,7 +207,7 @@ class Redlock(Primitive):
         )
         return bool(extended)
 
-    def _release_master(self, master):
+    def _release_master(self, master: Redis) -> bool:
         released = self._release_script(
             keys=(self.key,),
             args=(self._value,),
@@ -204,10 +215,10 @@ class Redlock(Primitive):
         )
         return bool(released)
 
-    def _drift(self):
+    def _drift(self) -> float:
         return self.auto_release_time * self.CLOCK_DRIFT_FACTOR + 2
 
-    def _acquire_masters(self):
+    def _acquire_masters(self) -> bool:
         self._value = os.urandom(self.num_random_bytes)
         self._extension_num = 0
         futures, num_masters_acquired = set(), 0
@@ -228,7 +239,7 @@ class Redlock(Primitive):
                 self.release()
             return False
 
-    def acquire(self, *, blocking=True, timeout=-1):
+    def acquire(self, *, blocking: bool = True, timeout: int = -1) -> bool:
         '''Lock the lock.
 
         If blocking is True and timeout is -1, then wait for as long as
@@ -285,7 +296,7 @@ class Redlock(Primitive):
         else:
             raise ValueError("can't specify a timeout for a non-blocking call")
 
-    def locked(self):
+    def locked(self) -> int:
         '''How much longer we'll hold the lock (unless we extend or release it).
 
         If we don't currently hold the lock, then this method returns 0.
@@ -330,7 +341,7 @@ class Redlock(Primitive):
             else:
                 return 0
 
-    def extend(self):
+    def extend(self) -> bool:
         '''Extend our hold on the lock (if we currently hold it).
 
         Usage:
@@ -363,7 +374,7 @@ class Redlock(Primitive):
             self._extension_num += quorum
             return quorum
 
-    def release(self):
+    def release(self) -> None:
         '''Unlock the lock.
 
         Usage:
@@ -390,7 +401,7 @@ class Redlock(Primitive):
         if not quorum:
             raise ReleaseUnlockedLock(self.masters, self.key)
 
-    def __enter__(self):
+    def __enter__(self) -> 'Redlock':
         '''You can use a Redlock as a context manager.
 
         Usage:
@@ -414,7 +425,11 @@ class Redlock(Primitive):
         self.acquire()
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self,
+                 exc_type: Optional[Type[BaseException]],
+                 exc_value: Optional[BaseException],
+                 traceback: Optional[TracebackType],
+                 ) -> None:
         '''You can use a Redlock as a context manager.
 
         Usage:
@@ -437,8 +452,8 @@ class Redlock(Primitive):
         '''
         self.release()
 
-    def __repr__(self):
-        return '<{} key={} value={} timeout={}>'.format(
+    def __repr__(self) -> str:
+        return '<{} key={} value={!r} timeout={}>'.format(
             self.__class__.__name__,
             self.key,
             self._value,
