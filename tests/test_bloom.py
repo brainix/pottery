@@ -11,7 +11,7 @@ import random
 import string
 
 from pottery import BloomFilter
-from tests.base import TestCase
+from tests.base import TestCase  # type: ignore
 
 
 class BloomFilterTests(TestCase):

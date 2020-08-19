@@ -11,7 +11,7 @@ import importlib
 import os
 import unittest
 
-from tests.base import TestCase
+from tests.base import TestCase  # type: ignore
 
 
 class DoctestTests(TestCase):  # pragma: no cover

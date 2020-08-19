@@ -9,6 +9,8 @@
 import collections
 import functools
 import logging
+from typing import NamedTuple
+from typing import Optional
 
 from redis import Redis
 from redis.exceptions import WatchError
@@ -22,11 +24,11 @@ _DEFAULT_TIMEOUT = 60   # seconds
 _logger = logging.getLogger('pottery')
 
 
-CacheInfo = collections.namedtuple(
+CacheInfo = NamedTuple(
     'CacheInfo',
-    ('hits', 'misses', 'maxsize', 'currsize'),
+    (('hits', int), ('misses', int), ('maxsize', Optional[int]), ('currsize', int)),
 )
-CacheInfo.__new__.__defaults__ = (0, 0, None, 0)
+CacheInfo.__new__.__defaults__ = (0, 0, None, 0)  # type: ignore
 CacheInfo.__doc__ = ''
 
 

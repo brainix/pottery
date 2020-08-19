@@ -26,7 +26,7 @@ def __eq__(self, other):
     except AttributeError:  # pragma: no cover
         return False
 
-ConnectionPool.__eq__ = __eq__
+ConnectionPool.__eq__ = __eq__  # type: ignore
 
 _logger.info(
     'Monkey patched ConnectionPool.__eq__() to compare clients by connection '

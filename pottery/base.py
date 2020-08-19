@@ -16,6 +16,10 @@ import logging
 import os
 import random
 import string
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Union
 
 from redis import Redis
 from redis import RedisError
@@ -88,14 +92,17 @@ class _Common:
         return key
 
 
+JSONTypes = Union[None, bool, int, float, str, List[Any], Dict[str, Any]]
+
+
 class _Encodable:
     @staticmethod
-    def _encode(value):
+    def _encode(value: JSONTypes) -> str:
         encoded = json.dumps(value, sort_keys=True)
         return encoded
 
     @staticmethod
-    def _decode(value):
+    def _decode(value: bytes) -> JSONTypes:
         decoded = json.loads(value.decode('utf-8'))
         return decoded
 
@@ -197,8 +204,9 @@ class Base(_Common, _Encodable, _Comparable, _Clearable, Pipelined):
 
 
 class Iterable(metaclass=abc.ABCMeta):
+    @staticmethod  # pragma: no cover
     @abc.abstractmethod
-    def _decode(value):  # pragma: no cover
+    def _decode(value: bytes) -> JSONTypes:
         ...
 
     @property  # pragma: no cover

@@ -254,5 +254,5 @@ if __name__ == '__main__':  # pragma: no cover
     #   $ deactivate
     import contextlib
     with contextlib.suppress(ImportError):
-        from tests.base import run_doctests
+        from tests.base import run_doctests  # type: ignore
         run_doctests()

@@ -16,17 +16,18 @@ from .base import Base
 from .exceptions import KeyExistsError
 
 
+def _raise_on_error(func):
+    @functools.wraps(func)
+    def wrap(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except ResponseError:
+            raise IndexError('list assignment index out of range')
+    return wrap
+
+
 class RedisList(Base, collections.abc.MutableSequence):
     'Redis-backed container compatible with Python lists.'
-
-    def _raise_on_error(func):
-        @functools.wraps(func)
-        def wrap(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except ResponseError:
-                raise IndexError('list assignment index out of range')
-        return wrap
 
     def _slice_to_indices(self, slice_or_index):
         try:

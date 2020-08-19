@@ -147,5 +147,5 @@ if __name__ == '__main__':  # pragma: no cover
     #   $ python3 -m pottery.nextid
     #   $ deactivate
     with contextlib.suppress(ImportError):
-        from tests.base import run_doctests
+        from tests.base import run_doctests  # type: ignore
         run_doctests()

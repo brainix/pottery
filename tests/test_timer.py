@@ -9,7 +9,7 @@
 import time
 
 from pottery import ContextTimer
-from tests.base import TestCase
+from tests.base import TestCase  # type: ignore
 
 
 class ContextTimerTests(TestCase):

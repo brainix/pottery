@@ -10,7 +10,7 @@ import collections
 
 from pottery import KeyExistsError
 from pottery import RedisDict
-from tests.base import TestCase
+from tests.base import TestCase  # type: ignore
 
 
 class DictTests(TestCase):
