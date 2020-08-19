@@ -10,11 +10,11 @@ import collections.abc
 import itertools
 
 from .base import Base
-from .base import Iterable
+from .base import Iterable_
 from .exceptions import KeyExistsError
 
 
-class RedisSet(Base, Iterable, collections.abc.MutableSet):
+class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     'Redis-backed container compatible with Python sets.'
 
     def __init__(self, iterable=tuple(), *, redis=None, key=None):
@@ -39,8 +39,8 @@ class RedisSet(Base, Iterable, collections.abc.MutableSet):
         's.__contains__(element) <==> element in s.  O(1)'
         return self.redis.sismember(self.key, self._encode(value))
 
-    def _scan(self, key, *, cursor=0):
-        return self.redis.sscan(key, cursor=cursor)
+    def _scan(self, *, cursor=0):
+        return self.redis.sscan(self.key, cursor=cursor)
 
     def __len__(self):
         'Return the number of elements in a RedisSet.  O(1)'

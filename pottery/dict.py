@@ -11,11 +11,11 @@ import contextlib
 import itertools
 
 from .base import Base
-from .base import Iterable
+from .base import Iterable_
 from .exceptions import KeyExistsError
 
 
-class RedisDict(Base, Iterable, collections.abc.MutableMapping):
+class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
     'Redis-backed container compatible with Python dicts.'
 
     def __init__(self, iterable=tuple(), *, redis=None, key=None, **kwargs):
@@ -57,8 +57,8 @@ class RedisDict(Base, Iterable, collections.abc.MutableMapping):
         if not self.redis.hdel(self.key, self._encode(key)):
             raise KeyError(key)
 
-    def _scan(self, key, *, cursor=0):
-        return self.redis.hscan(key, cursor=cursor)
+    def _scan(self, *, cursor=0):
+        return self.redis.hscan(self.key, cursor=cursor)
 
     def __len__(self):
         'Return the number of items in a RedisDict.  O(1)'
