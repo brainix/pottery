@@ -8,6 +8,9 @@
 
 
 import timeit
+from types import TracebackType
+from typing import Optional
+from typing import Type
 
 
 class ContextTimer:
@@ -41,41 +44,45 @@ class ContextTimer:
         [True, True]
     '''
 
-    def __init__(self):
-        self._started = None
-        self._stopped = None
+    def __init__(self) -> None:
+        self._started = 0
+        self._stopped = 0
 
-    def __enter__(self):
+    def __enter__(self) -> 'ContextTimer':
         self.start()
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self,
+                 exc_type: Optional[Type[BaseException]],
+                 exc_value: Optional[BaseException],
+                 traceback: Optional[TracebackType],
+                 ) -> None:
         self.stop()
 
-    def start(self):
+    def start(self) -> None:
         if self._stopped:
             raise RuntimeError('timer has already been stopped')
         elif self._started:
             raise RuntimeError('timer has already been started')
         else:
-            self._started = timeit.default_timer()
+            self._started = self._now()
 
-    def stop(self):
+    def stop(self) -> None:
         if self._stopped:
             raise RuntimeError('timer has already been stopped')
         elif self._started:
-            self._stopped = timeit.default_timer()
+            self._stopped = self._now()
         else:
             raise RuntimeError("timer hasn't yet been started")
 
-    def elapsed(self):
-        try:
-            value = (self._stopped or timeit.default_timer()) - self._started
-        except TypeError:
-            raise RuntimeError("timer hasn't yet been started")
+    def elapsed(self) -> int:
+        if self._started:
+            return (self._stopped or self._now()) - self._started
         else:
-            value = round(value * 1000)     # rounded to the nearest millisecond
-            return value
+            raise RuntimeError("timer hasn't yet been started")
+
+    def _now(self) -> int:
+        return round(timeit.default_timer() * 1000)
 
 
 if __name__ == '__main__':  # pragma: no cover

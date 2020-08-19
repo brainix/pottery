@@ -336,7 +336,7 @@ class Redlock(Primitive):
             if quorum:
                 ttls = sorted(ttls, reverse=True)
                 validity_time = ttls[len(self.masters) // 2]
-                validity_time -= timer.elapsed() + self._drift()
+                validity_time -= round(timer.elapsed() + self._drift())
                 return max(validity_time, 0)
             else:
                 return 0
