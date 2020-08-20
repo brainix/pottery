@@ -6,7 +6,17 @@
 # --------------------------------------------------------------------------- #
 
 
+from typing import Iterable
+from typing import List
+from typing import Optional
+from typing import Union
+from typing import cast
+
+from redis import Redis
+from redis.client import Pipeline
+
 from .base import Base
+from .base import JSONTypes
 
 
 class HyperLogLog(Base):
@@ -19,7 +29,12 @@ class HyperLogLog(Base):
         http://antirez.com/news/75
     '''
 
-    def __init__(self, iterable=frozenset(), *, redis=None, key=None):
+    def __init__(self,
+                 iterable: Iterable[JSONTypes] = frozenset(),
+                 *,
+                 redis: Optional[Redis] = None,
+                 key: Optional[str] = None,
+                 ) -> None:
         '''Initialize a HyperLogLog.  O(n)
 
         Here, n is the number of elements in iterable that you want to insert
@@ -28,29 +43,35 @@ class HyperLogLog(Base):
         super().__init__(redis=redis, key=key)
         self.update(iterable)
 
-    def add(self, value):
+    def add(self, value: JSONTypes) -> None:
         'Add an element to a HyperLogLog.  O(1)'
         self.update({value})
 
-    def update(self, *objs):
+    def update(self, *objs: Union['HyperLogLog', Iterable[JSONTypes]]) -> None:
         objs = (self,) + tuple(objs)
-        other_hll_keys, encoded_values = [], []
+        other_hll_keys: List[str] = []
+        encoded_values: List[JSONTypes] = []
         with self._watch(objs[1:]):
             for obj in objs:
                 if isinstance(obj, self.__class__):
                     other_hll_keys.append(obj.key)
                 else:
-                    encoded_values.extend(self._encode(value) for value in obj)
-            self.redis.multi()
+                    for value in cast(Iterable[JSONTypes], obj):
+                        encoded_values.append(self._encode(value))
+            cast(Pipeline, self.redis).multi()
             self.redis.pfmerge(self.key, *other_hll_keys)
             self.redis.pfadd(self.key, *encoded_values)
 
-    def union(self, *objs, redis=None, key=None):
+    def union(self,
+              *objs: Iterable[JSONTypes],
+              redis: Optional[Redis] = None,
+              key: Optional[str] = None,
+              ) -> 'HyperLogLog':
         new_hll = self.__class__(redis=redis, key=key)
         new_hll.update(self, *objs)
         return new_hll
 
-    def __len__(self):
+    def __len__(self) -> int:
         '''Return the approximate number of elements in a HyperLogLog.  O(1)
 
         Please note that this method returns an approximation, not an exact
@@ -59,7 +80,7 @@ class HyperLogLog(Base):
         '''
         return self.redis.pfcount(self.key)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         'Return the string representation of a HyperLogLog.  O(1)'
         return '<{} key={} len={}>'.format(
             self.__class__.__name__,
