@@ -11,7 +11,7 @@ import collections
 from .list import RedisList
 
 
-class RedisDeque(RedisList, collections.deque):
+class RedisDeque(RedisList, collections.deque):  # type: ignore
     'Redis-backed container compatible with collections.deque.'
 
     # Method overrides:
