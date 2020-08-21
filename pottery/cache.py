@@ -34,12 +34,11 @@ _DEFAULT_TIMEOUT: Final[int] = 60   # seconds
 _logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
-CacheInfo = NamedTuple(
-    'CacheInfo',
-    (('hits', int), ('misses', int), ('maxsize', Optional[int]), ('currsize', int)),
-)
-CacheInfo.__new__.__defaults__ = (0, 0, None, 0)  # type: ignore
-CacheInfo.__doc__ = ''
+class CacheInfo(NamedTuple):
+    hits: int = 0
+    misses: int = 0
+    maxsize: Optional[int] = None
+    currsize: int = 0
 
 
 def _arg_hash(*args: Any, **kwargs: Any) -> int:
@@ -72,7 +71,7 @@ def redis_cache(*,
         future calls to f(*args, **kwargs).
 
     f.cache_info()
-        Return a namedtuple showing hits, misses, maxsize, and currsize.  This
+        Return a NamedTuple showing hits, misses, maxsize, and currsize.  This
         information is helpful for measuring the effectiveness of the cache.
 
         Note that maxsize is always None, meaning that this cache is always
