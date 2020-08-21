@@ -11,6 +11,7 @@ import contextlib
 import itertools
 from typing import Callable
 from typing import Iterable
+from typing import Literal
 from typing import Union
 from typing import cast
 
@@ -32,7 +33,7 @@ class RedisCounter(RedisDict, collections.Counter):
     def _populate(self,  # type: ignore
                   arg: InitArg = tuple(),
                   *,
-                  sign: int = +1,
+                  sign: Literal[-1, 1] = 1,
                   **kwargs: int,
                   ) -> None:
         to_set = {}
@@ -56,7 +57,7 @@ class RedisCounter(RedisDict, collections.Counter):
     def update(self, arg: InitArg = tuple(), **kwargs: int) -> None:  # type: ignore
         'Like dict.update() but add counts instead of replacing them.  O(n)'
         with self._watch(arg):
-            self._populate(arg, sign=+1, **kwargs)
+            self._populate(arg, sign=1, **kwargs)
 
     def subtract(self, arg: InitArg = tuple(), **kwargs: int) -> None:  # type: ignore
         'Like dict.update() but subtracts counts instead of replacing them.  O(n)'
@@ -136,7 +137,7 @@ class RedisCounter(RedisDict, collections.Counter):
     def _imath_op(self,
                   other: collections.Counter,
                   *,
-                  sign: int = +1,
+                  sign: Literal[-1, 1] = 1,
                   ) -> 'RedisCounter':
         with self._watch(other):
             to_set = {k: self[k] + sign * v for k, v in other.items()}
@@ -158,7 +159,7 @@ class RedisCounter(RedisDict, collections.Counter):
 
     def __iadd__(self, other: collections.Counter) -> collections.Counter:
         'Same as __add__(), but in-place.  O(n)'
-        return self._imath_op(other, sign=+1)
+        return self._imath_op(other, sign=1)
 
     def __isub__(self, other: collections.Counter) -> collections.Counter:
         'Same as __sub__(), but in-place.  O(n)'
