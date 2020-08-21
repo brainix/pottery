@@ -10,7 +10,7 @@ import collections
 
 from pottery import KeyExistsError
 from pottery import RedisDict
-from tests.base import TestCase
+from tests.base import TestCase  # type: ignore
 
 
 class DictTests(TestCase):
@@ -223,3 +223,7 @@ class DictTests(TestCase):
         assert set(a.values()) == {1, 2, 3}
         assert 1 in a.values()
         assert 4 not in a.values()
+
+    def test_membership_for_non_jsonifyable_element(self):
+        redis_dict = RedisDict()
+        assert not BaseException in redis_dict

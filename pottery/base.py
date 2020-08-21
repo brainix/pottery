@@ -16,25 +16,45 @@ import logging
 import os
 import random
 import string
+from typing import Any
+from typing import ClassVar
+from typing import ContextManager
+from typing import Dict
+from typing import FrozenSet
+from typing import Generator
+from typing import Iterable
+from typing import List
+from typing import Mapping
+from typing import Optional
+from typing import Tuple
+from typing import Union
+from typing import cast
 
 from redis import Redis
 from redis import RedisError
+from redis.client import Pipeline
+from typing_extensions import Final
 
 from . import monkey
 from .exceptions import RandomKeyError
 
 
-_default_url = os.environ.get('REDIS_URL', 'redis://localhost:6379/')
-_default_redis = Redis.from_url(_default_url, socket_timeout=1)
-_logger = logging.getLogger('pottery')
+_default_url: Final[str] = os.environ.get('REDIS_URL', 'redis://localhost:6379/')
+_default_redis: Final[Redis] = Redis.from_url(_default_url, socket_timeout=1)
+_logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
-def random_key(*, redis, prefix='pottery:', length=16, tries=3):
+def random_key(*,
+               redis: Redis,
+               prefix: str = 'pottery:',
+               length: int = 16,
+               tries: int = 3,
+               ) -> str:
     if tries <= 0:
         raise RandomKeyError(redis)
     all_chars = string.digits + string.ascii_letters
     random_char = functools.partial(random.choice, all_chars)
-    suffix = ''.join(random_char() for n in range(length))
+    suffix = ''.join(cast(str, random_char()) for n in range(length))
     key = prefix + suffix
     if redis.exists(key):
         key = random_key(
@@ -47,13 +67,18 @@ def random_key(*, redis, prefix='pottery:', length=16, tries=3):
 
 
 class _Common:
-    _RANDOM_KEY_PREFIX = 'pottery:'
+    _RANDOM_KEY_PREFIX: ClassVar[str] = 'pottery:'
 
-    def __init__(self, *args, redis=None, key=None, **kwargs):
-        self.redis = redis
-        self.key = key
+    def __init__(self,
+                 *args: Any,
+                 redis: Optional[Redis] = None,
+                 key: Optional[str] = None,
+                 **kwargs: Any,
+                 ) -> None:
+        self.redis = _default_redis if redis is None else redis
+        self.key = key or self._random_key()
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self.key.startswith(self._RANDOM_KEY_PREFIX):
             self.redis.delete(self.key)
             _logger.info(
@@ -63,22 +88,22 @@ class _Common:
             )
 
     @property
-    def redis(self):
+    def redis(self) -> Redis:
         return self._redis
 
     @redis.setter
-    def redis(self, value):
+    def redis(self, value: Optional[Redis]) -> None:
         self._redis = _default_redis if value is None else value
 
     @property
-    def key(self):
+    def key(self) -> str:
         return self._key
 
     @key.setter
-    def key(self, value):
+    def key(self, value: str) -> None:
         self._key = value or self._random_key()
 
-    def _random_key(self):
+    def _random_key(self) -> str:
         key = random_key(redis=self.redis, prefix=self._RANDOM_KEY_PREFIX)
         _logger.info(
             "Self-assigning tmp key <%s key='%s'>",
@@ -88,30 +113,33 @@ class _Common:
         return key
 
 
+JSONTypes = Union[None, bool, int, float, str, List, Dict[str, Any]]
+
+
 class _Encodable:
     @staticmethod
-    def _encode(value):
+    def _encode(value: JSONTypes) -> str:
         encoded = json.dumps(value, sort_keys=True)
         return encoded
 
     @staticmethod
-    def _decode(value):
+    def _decode(value: bytes) -> JSONTypes:
         decoded = json.loads(value.decode('utf-8'))
-        return decoded
+        return cast(JSONTypes, decoded)
 
 
 class _Comparable(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
-    def redis(self):
+    def redis(self) -> Redis:
         'Redis client.'
 
     @property
     @abc.abstractmethod
-    def key(self):
+    def key(self) -> str:
         'Redis key.'
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if self is other:
             equals = True
         elif (
@@ -130,15 +158,15 @@ class _Comparable(metaclass=abc.ABCMeta):
 class _Clearable(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
-    def redis(self):
+    def redis(self) -> Redis:
         'Redis client.'
 
     @property
     @abc.abstractmethod
-    def key(self):
+    def key(self) -> str:
         'Redis key.'
 
-    def clear(self):
+    def clear(self) -> None:
         'Remove the elements in a Redis-backed container.  O(n)'
         self.redis.delete(self.key)
 
@@ -146,16 +174,16 @@ class _Clearable(metaclass=abc.ABCMeta):
 class Pipelined(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
-    def redis(self):
+    def redis(self) -> Redis:
         'Redis client.'
 
     @property
     @abc.abstractmethod
-    def key(self):
+    def key(self) -> str:
         'Redis key.'
 
     @contextlib.contextmanager
-    def _pipeline(self):
+    def _pipeline(self) -> Generator[Pipeline, None, None]:
         pipeline = self.redis.pipeline()
         yield pipeline
         with contextlib.suppress(RedisError):
@@ -164,18 +192,22 @@ class Pipelined(metaclass=abc.ABCMeta):
         pipeline.execute()
 
     @contextlib.contextmanager
-    def _watch_keys(self, *keys):
+    def _watch_keys(self,
+                    *keys: Iterable[str],
+                    ) -> Generator[Pipeline, None, None]:
         original_redis = self.redis
         keys = keys or (self.key,)
         try:
             with self._pipeline() as pipeline:
-                self.redis = pipeline
+                self.redis = pipeline  # type: ignore
                 pipeline.watch(*keys)
                 yield pipeline
         finally:
-            self.redis = original_redis
+            self.redis = original_redis  # type: ignore
 
-    def _context_managers(self, *others):
+    def _context_managers(self,
+                          *others: Any,
+                          ) -> Generator[ContextManager[Pipeline], None, None]:
         redises = collections.defaultdict(list)
         for container in itertools.chain((self,), others):
             if isinstance(container, Base):
@@ -185,7 +217,9 @@ class Pipelined(metaclass=abc.ABCMeta):
             yield containers[0]._watch_keys(*keys)
 
     @contextlib.contextmanager
-    def _watch(self, *others):
+    def _watch(self,
+               *others: Any,
+               ) -> Generator[None, None, None]:
         with contextlib.ExitStack() as stack:
             for context_manager in self._context_managers(*others):
                 stack.enter_context(context_manager)
@@ -196,46 +230,52 @@ class Base(_Common, _Encodable, _Comparable, _Clearable, Pipelined):
     ...
 
 
-class Iterable(metaclass=abc.ABCMeta):
+class Iterable_(metaclass=abc.ABCMeta):
+    @staticmethod  # pragma: no cover
     @abc.abstractmethod
-    def _decode(value):  # pragma: no cover
+    def _decode(value: bytes) -> JSONTypes:
         ...
 
     @property  # pragma: no cover
     @abc.abstractmethod
-    def key(self):
+    def key(self) -> str:
         'Redis key.'
 
     @abc.abstractmethod  # pragma: no cover
-    def _scan(self, key, *, cursor=0):
+    def _scan(self,
+              *, cursor: int = 0,
+              ) -> Tuple[int, Union[Iterable[JSONTypes], Mapping[JSONTypes, JSONTypes]]]:
         ...
 
-    def __iter__(self):
+    def __iter__(self) -> Generator[JSONTypes, None, None]:
         'Iterate over the items in a Redis-backed container.  O(n)'
         cursor = 0
         while True:
-            cursor, iterable = self._scan(self.key, cursor=cursor)
-            yield from (self._decode(value) for value in iterable)
+            cursor, iterable = self._scan(cursor=cursor)
+            yield from (self._decode(cast(bytes, value)) for value in iterable)
             if cursor == 0:
                 break
 
 
 class Primitive(metaclass=abc.ABCMeta):
-    _DEFAULT_MASTERS = frozenset({_default_redis})
+    _DEFAULT_MASTERS: ClassVar[FrozenSet[Redis]] = frozenset({_default_redis})
 
-    def __init__(self, *, key, masters=frozenset()):
+    def __init__(self,
+                 *, key: str,
+                 masters: Iterable[Redis] = frozenset(),
+                 ) -> None:
         self.key = key
-        self.masters = masters or self._DEFAULT_MASTERS
+        self.masters = frozenset(masters) or self._DEFAULT_MASTERS
 
     @property
     @abc.abstractmethod
-    def KEY_PREFIX(self):
+    def KEY_PREFIX(self) -> str:
         'Redis key prefix/namespace.'
 
     @property
-    def key(self):
+    def key(self) -> str:
         return self._key
 
     @key.setter
-    def key(self, value):
+    def key(self, value: str) -> None:
         self._key = '{}:{}'.format(self.KEY_PREFIX, value)

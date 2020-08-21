@@ -9,7 +9,7 @@
 from redis import Redis
 
 from pottery import monkey
-from tests.base import TestCase
+from tests.base import TestCase  # type: ignore
 
 
 class RedisTests(TestCase):

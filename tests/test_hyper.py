@@ -7,7 +7,7 @@
 
 
 from pottery import HyperLogLog
-from tests.base import TestCase
+from tests.base import TestCase  # type: ignore
 
 
 class HyperLogLogTests(TestCase):

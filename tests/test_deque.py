@@ -10,7 +10,7 @@ import unittest.mock
 
 from pottery import RedisDeque
 from pottery.base import Base
-from tests.base import TestCase
+from tests.base import TestCase  # type: ignore
 
 
 class DequeTests(TestCase):

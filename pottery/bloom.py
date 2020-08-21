@@ -8,10 +8,18 @@
 
 import itertools
 import math
+from typing import Generator
+from typing import Iterable
+from typing import Optional
+from typing import Set
+from typing import cast
 
 import mmh3
+from redis import Redis
+from redis.client import Pipeline
 
 from .base import Base
+from .base import JSONTypes
 
 
 class BloomFilter(Base):
@@ -85,8 +93,14 @@ class BloomFilter(Base):
         >>> dilberts.clear()
     '''
 
-    def __init__(self, iterable=frozenset(), *, num_values, false_positives,
-                 redis=None, key=None):
+    def __init__(self,
+                 iterable: Iterable[JSONTypes] = frozenset(),
+                 *,
+                 num_values: int,
+                 false_positives: float,
+                 redis: Optional[Redis] = None,
+                 key: Optional[str] = None,
+                 ) -> None:
         '''Initialize a BloomFilter.  O(n * k)
 
         Here, n is the number of elements in iterable that you want to insert
@@ -98,7 +112,7 @@ class BloomFilter(Base):
         self.false_positives = false_positives
         self.update(iterable)
 
-    def size(self):
+    def size(self) -> int:
         '''The required number of bits (m) given n and p.
 
         This method returns the required number of bits (m) for the underlying
@@ -110,7 +124,7 @@ class BloomFilter(Base):
             https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions
         '''
         try:
-            return self._size
+            return self._size  # type: ignore
         except AttributeError:
             self._size = (
                 -self.num_values
@@ -120,7 +134,7 @@ class BloomFilter(Base):
             self._size = math.ceil(self._size)
             return self.size()
 
-    def num_hashes(self):
+    def num_hashes(self) -> int:
         '''The number of hash functions (k) given m and n, minimizing p.
 
         This method returns the number of times (k) to run our hash functions
@@ -133,13 +147,13 @@ class BloomFilter(Base):
             https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions
         '''
         try:
-            return self._num_hashes
+            return self._num_hashes  # type: ignore
         except AttributeError:
             self._num_hashes = self.size() / self.num_values * math.log(2)
             self._num_hashes = math.ceil(self._num_hashes)
             return self.num_hashes()
 
-    def _bit_offsets(self, value):
+    def _bit_offsets(self, value: JSONTypes) -> Generator[int, None, None]:
         '''The bit offsets to set/check in this Bloom filter for a given value.
 
         Instantiate a Bloom filter:
@@ -174,22 +188,23 @@ class BloomFilter(Base):
         for seed in range(self.num_hashes()):
             yield mmh3.hash(encoded_value, seed=seed) % self.size()
 
-    def update(self, *iterables):
+    def update(self, *iterables: Iterable[JSONTypes]) -> None:
         '''Populate a Bloom filter with the elements in iterables.  O(n * k)
 
         Here, n is the number of elements in iterables that you want to insert
         into this Bloom filter, and k is the number of times to run our hash
         functions on each element.
         '''
-        iterables, bit_offsets = tuple(iterables), set()
+        iterables = tuple(iterables)
+        bit_offsets: Set[int] = set()
         with self._watch(iterables):
             for value in itertools.chain(*iterables):
                 bit_offsets.update(self._bit_offsets(value))
-            self.redis.multi()
+            cast(Pipeline, self.redis).multi()
             for bit_offset in bit_offsets:
                 self.redis.setbit(self.key, bit_offset, 1)
 
-    def __contains__(self, value):
+    def __contains__(self, value: JSONTypes) -> bool:
         '''bf.__contains__(element) <==> element in bf.  O(k)
 
         Here, k is the number of times to run our hash functions on a given
@@ -199,13 +214,13 @@ class BloomFilter(Base):
         bit_offsets = set(self._bit_offsets(value))
 
         with self._watch():
-            self.redis.multi()
+            cast(Pipeline, self.redis).multi()
             for bit_offset in bit_offsets:
                 self.redis.getbit(self.key, bit_offset)
-            bits = self.redis.execute()
+            bits = cast(Pipeline, self.redis).execute()
         return all(bits)
 
-    def add(self, value):
+    def add(self, value: JSONTypes) -> None:
         '''Add an element to a BloomFilter.  O(k)
 
         Here, k is the number of times to run our hash functions on a given
@@ -214,7 +229,7 @@ class BloomFilter(Base):
         '''
         self.update({value})
 
-    def _num_bits_set(self):
+    def _num_bits_set(self) -> int:
         '''The number of bits set to 1 in this Bloom filter.  O(m)
 
         Here, m is the size in bits of the underlying string representing this
@@ -222,7 +237,7 @@ class BloomFilter(Base):
         '''
         return self.redis.bitcount(self.key)
 
-    def __len__(self):
+    def __len__(self) -> int:
         '''Return the approximate the number of elements in a BloomFilter.  O(m)
 
         Here, m is the size in bits of the underlying string representing this
@@ -242,7 +257,7 @@ class BloomFilter(Base):
         )
         return math.floor(len_)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         'Return the string representation of a BloomFilter.  O(1)'
         return '<{} key={}>'.format(self.__class__.__name__, self.key)
 
@@ -254,5 +269,5 @@ if __name__ == '__main__':  # pragma: no cover
     #   $ deactivate
     import contextlib
     with contextlib.suppress(ImportError):
-        from tests.base import run_doctests
+        from tests.base import run_doctests  # type: ignore
         run_doctests()

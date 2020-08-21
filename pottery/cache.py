@@ -9,32 +9,51 @@
 import collections
 import functools
 import logging
+from typing import Any
+from typing import Callable
+from typing import ClassVar
+from typing import FrozenSet
+from typing import NamedTuple
+from typing import Optional
+from typing import Tuple
+from typing import TypeVar
+from typing import cast
 
 from redis import Redis
 from redis.exceptions import WatchError
+from typing_extensions import Final
 
+from .base import JSONTypes
+from .base import _default_redis
 from .base import random_key
 from .dict import RedisDict
 
 
-_DEFAULT_TIMEOUT = 60   # seconds
+_DEFAULT_TIMEOUT: Final[int] = 60   # seconds
 
-_logger = logging.getLogger('pottery')
+_logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
-CacheInfo = collections.namedtuple(
+CacheInfo = NamedTuple(
     'CacheInfo',
-    ('hits', 'misses', 'maxsize', 'currsize'),
+    (('hits', int), ('misses', int), ('maxsize', Optional[int]), ('currsize', int)),
 )
-CacheInfo.__new__.__defaults__ = (0, 0, None, 0)
+CacheInfo.__new__.__defaults__ = (0, 0, None, 0)  # type: ignore
 CacheInfo.__doc__ = ''
 
 
-def _arg_hash(*args, **kwargs):
+def _arg_hash(*args: Any, **kwargs: Any) -> int:
     return hash((args, frozenset(kwargs.items())))
 
 
-def redis_cache(*, redis=None, key=None, timeout=_DEFAULT_TIMEOUT):
+F = TypeVar('F', bound=Callable[..., JSONTypes])
+
+
+def redis_cache(*,
+                redis: Optional[Redis] = None,
+                key: Optional[str] = None,
+                timeout: Optional[int] = _DEFAULT_TIMEOUT,
+                ) -> Callable[[F], F]:
     '''Redis-backed caching decorator with an API like functools.lru_cache().
 
     Arguments to the original underlying function must be hashable, and return
@@ -81,11 +100,13 @@ def redis_cache(*, redis=None, key=None, timeout=_DEFAULT_TIMEOUT):
     redis_cache() for a function that needs to create a distinct mutable object
     on each call.
     '''
-    def decorator(func):
+
+    redis = _default_redis if redis is None else redis
+
+    def decorator(func: F) -> F:
         nonlocal redis, key
-        redis = Redis(socket_timeout=1) if redis is None else redis
         if key is None:  # pragma: no cover
-            key = random_key(redis=redis)
+            key = random_key(redis=cast(Redis, redis))
             _logger.info(
                 "Self-assigning key redis_cache(key='%s') for function %s",
                 key,
@@ -95,7 +116,7 @@ def redis_cache(*, redis=None, key=None, timeout=_DEFAULT_TIMEOUT):
         hits, misses = 0, 0
 
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> JSONTypes:
             nonlocal hits, misses
             hash_ = _arg_hash(*args, **kwargs)
             try:
@@ -106,31 +127,36 @@ def redis_cache(*, redis=None, key=None, timeout=_DEFAULT_TIMEOUT):
                 cache[hash_] = return_value
                 misses += 1
             if timeout:
-                redis.expire(key, timeout)
+                cast(Redis, redis).expire(cast(str, key), timeout)
             return return_value
 
         @functools.wraps(func)
-        def bypass(*args, **kwargs):
+        def bypass(*args: Any, **kwargs: Any) -> JSONTypes:
             hash_ = _arg_hash(*args, **kwargs)
             return_value = func(*args, **kwargs)
             cache[hash_] = return_value
             if timeout:
-                redis.expire(key, timeout)
+                cast(Redis, redis).expire(cast(str, key), timeout)
             return return_value
 
-        def cache_info():
-            return CacheInfo(hits=hits, misses=misses, currsize=len(cache))
+        def cache_info() -> CacheInfo:
+            return CacheInfo(
+                hits=hits,
+                misses=misses,
+                maxsize=None,
+                currsize=len(cache),
+            )
 
-        def cache_clear():
+        def cache_clear() -> None:
             nonlocal hits, misses
-            redis.delete(key)
+            cast(Redis, redis).delete(cast(str, key))
             hits, misses = 0, 0
 
-        wrapper.__wrapped__ = func
-        wrapper.__bypass__ = bypass
-        wrapper.cache_info = cache_info
-        wrapper.cache_clear = cache_clear
-        return wrapper
+        wrapper.__wrapped__ = func  # type: ignore
+        wrapper.__bypass__ = bypass  # type: ignore
+        wrapper.cache_info = cache_info  # type: ignore
+        wrapper.cache_clear = cache_clear  # type: ignore
+        return cast(F, wrapper)
     return decorator
 
 
@@ -151,12 +177,18 @@ class CachedOrderedDict(collections.OrderedDict):
     Properties 1 and 2 are satisfied by Python's OrderedDict.  However,
     CachedOrderedDict extends Python's OrderedDict to also satisfy property 3.
     '''
-    _SENTINEL = object()
-    _NUM_TRIES = 3
+    _SENTINEL: ClassVar[object] = object()
+    _NUM_TRIES: ClassVar[int] = 3
 
-    def __init__(self, *, redis=None, key=None, keys=tuple(),
-                 num_tries=_NUM_TRIES):
+    def __init__(self,
+                 *,
+                 redis: Optional[Redis] = None,
+                 key: Optional[str] = None,
+                 keys: Tuple[JSONTypes, ...] = tuple(),
+                 num_tries: int = _NUM_TRIES,
+                 ) -> None:
         self._num_tries = num_tries
+        redis = _default_redis if redis is None else redis
         init_cache = functools.partial(RedisDict, redis=redis, key=key)
         self._cache = self._retry(init_cache)
         self._misses = set()
@@ -167,7 +199,7 @@ class CachedOrderedDict(collections.OrderedDict):
         items, keys = [], tuple(keys)
         if keys:
             encoded_keys = (self._cache._encode(key_) for key_ in keys)
-            encoded_values = redis.hmget(key, *encoded_keys)
+            encoded_values = redis.hmget(self._cache.key, *encoded_keys)
             for key_, encoded_value in zip(keys, encoded_values):
                 if encoded_value is None:
                     value = self._SENTINEL
@@ -178,16 +210,19 @@ class CachedOrderedDict(collections.OrderedDict):
                 items.append(item)
         return super().__init__(items)
 
-    def misses(self):
+    def misses(self) -> FrozenSet[JSONTypes]:
         return frozenset(self._misses)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: JSONTypes, value: JSONTypes) -> None:
         if value is not self._SENTINEL:
             self._cache[key] = value
             self._misses.discard(key)
         return super().__setitem__(key, value)
 
-    def setdefault(self, key, default=None):
+    def setdefault(self,
+                   key: JSONTypes,
+                   default: JSONTypes = None,
+                   ) -> JSONTypes:
         retriable_setdefault = functools.partial(
             self._retriable_setdefault,
             key,
@@ -197,15 +232,18 @@ class CachedOrderedDict(collections.OrderedDict):
         self._misses.discard(key)
         if key not in self or self[key] is self._SENTINEL:
             self[key] = default
-        return self[key]
+        return cast(JSONTypes, self[key])
 
-    def _retriable_setdefault(self, key, default=None):
+    def _retriable_setdefault(self,
+                              key: JSONTypes,
+                              default: JSONTypes = None,
+                              ) -> None:
         with self._cache._watch():
             if key not in self._cache:
                 self._cache.redis.multi()
                 self._cache[key] = default
 
-    def _retry(self, callable, try_num=0):
+    def _retry(self, callable: Callable[[], Any], try_num: int = 0) -> Any:
         try:
             return callable()
         except WatchError:  # pragma: no cover

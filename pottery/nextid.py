@@ -16,7 +16,11 @@ Lua scripting:
 
 import concurrent.futures
 import contextlib
+from typing import ClassVar
+from typing import Iterable
 
+from redis import Redis
+from redis.client import Script
 from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
 
@@ -59,17 +63,21 @@ class NextId(Primitive):
         3
     '''
 
-    KEY_PREFIX = 'nextid'
-    KEY = 'current'
-    NUM_TRIES = 3
+    KEY_PREFIX: ClassVar[str] = 'nextid'
+    KEY: ClassVar[str] = 'current'
+    NUM_TRIES: ClassVar[int] = 3
 
-    def __init__(self, *, key=KEY, num_tries=NUM_TRIES, masters=frozenset()):
+    def __init__(self,
+                 *, key: str = KEY,
+                 num_tries: int = NUM_TRIES,
+                 masters: Iterable[Redis] = frozenset(),
+                 ) -> None:
         super().__init__(key=key, masters=masters)
         self.num_tries = num_tries
         self._set_id_script = self._register_set_id_script()
         self._init_masters()
 
-    def _register_set_id_script(self):
+    def _register_set_id_script(self) -> Script:
         master = next(iter(self.masters))
         set_id_script = master.register_script('''
             local curr = tonumber(redis.call('get', KEYS[1]))
@@ -83,15 +91,15 @@ class NextId(Primitive):
         ''')
         return set_id_script
 
-    def _init_masters(self):
+    def _init_masters(self) -> None:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for master in self.masters:
                 executor.submit(master.setnx, self.key, 0)
 
-    def __iter__(self):
+    def __iter__(self) -> 'NextId':
         return self
 
-    def __next__(self):
+    def __next__(self) -> int:
         for _ in range(self.num_tries):
             with contextlib.suppress(QuorumNotAchieved):
                 next_id = self._current_id + 1
@@ -100,7 +108,7 @@ class NextId(Primitive):
         else:
             raise QuorumNotAchieved(self.masters, self.key)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<{} key={} value={}>'.format(
             self.__class__.__name__,
             self.key,
@@ -108,7 +116,7 @@ class NextId(Primitive):
         )
 
     @property
-    def _current_id(self):
+    def _current_id(self) -> int:
         futures, current_id, num_masters_gotten = set(), 0, 0
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for master in self.masters:
@@ -123,7 +131,7 @@ class NextId(Primitive):
             return current_id
 
     @_current_id.setter
-    def _current_id(self, value):
+    def _current_id(self, value: int) -> None:
         futures, num_masters_set = set(), 0
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for master in self.masters:
@@ -147,5 +155,5 @@ if __name__ == '__main__':  # pragma: no cover
     #   $ python3 -m pottery.nextid
     #   $ deactivate
     with contextlib.suppress(ImportError):
-        from tests.base import run_doctests
+        from tests.base import run_doctests  # type: ignore
         run_doctests()

@@ -8,9 +8,13 @@
 
 
 import logging
+from typing import Any
+from typing import cast
+
+from typing_extensions import Final
 
 
-_logger = logging.getLogger('pottery')
+_logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
 # The Redis client connection pool doesn't have a sane equality test.  So
@@ -20,13 +24,13 @@ _logger = logging.getLogger('pottery')
 
 from redis import ConnectionPool  # isort:skip
 
-def __eq__(self, other):
+def __eq__(self: ConnectionPool, other: Any) -> bool:
     try:
-        return self.connection_kwargs == other.connection_kwargs
+        return cast(bool, self.connection_kwargs == other.connection_kwargs)
     except AttributeError:  # pragma: no cover
         return False
 
-ConnectionPool.__eq__ = __eq__
+ConnectionPool.__eq__ = __eq__  # type: ignore
 
 _logger.info(
     'Monkey patched ConnectionPool.__eq__() to compare clients by connection '

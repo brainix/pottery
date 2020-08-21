@@ -29,7 +29,7 @@ python:
 	rm -rf $(venv)
 	~/.pyenv/versions/$(version)/bin/python3 -m venv $(venv)
 	source $(venv)/bin/activate && \
-		pip3 install --upgrade pip wheel && \
+		pip3 install --upgrade --no-cache-dir pip wheel && \
 		pip3 install --requirement requirements.txt
 
 upgrade:
@@ -37,7 +37,7 @@ upgrade:
 	-brew upgrade $(formulae)
 	brew cleanup
 	source $(venv)/bin/activate && \
-		pip3 install --upgrade pip wheel && \
+		pip3 install --upgrade --no-cache-dir pip wheel && \
 		pip3 install --requirement requirements-to-freeze.txt --upgrade --no-cache-dir && \
 		pip3 freeze > requirements.txt
 	git status
@@ -49,6 +49,8 @@ ifeq ($(tests),)
 	source $(venv)/bin/activate && \
 		coverage3 run -m unittest discover --start-directory tests --verbose && \
 		coverage3 report && \
+		echo Running static type checks && \
+		mypy && \
 		echo Running Flake8 on $($@_SOURCE_FILES) && \
 		flake8 $($@_SOURCE_FILES) && \
 		echo Running isort on $($@_SOURCE_FILES) && \

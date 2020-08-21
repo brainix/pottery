@@ -15,7 +15,7 @@ from pottery import redis_cache
 from pottery.cache import _DEFAULT_TIMEOUT
 from pottery.cache import CachedOrderedDict
 from pottery.cache import CacheInfo
-from tests.base import TestCase
+from tests.base import TestCase  # type: ignore
 
 
 class CacheDecoratorTests(TestCase):
@@ -442,6 +442,70 @@ class CachedOrderedDictTests(TestCase):
             'hit5': 'value5',
         }
         assert self.cache.misses() == {'miss3'}
+
+    def test_non_string_keys(self):
+        assert self.cache == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', CachedOrderedDict._SENTINEL),
+            ('hit2', 'value2'),
+            ('miss2', CachedOrderedDict._SENTINEL),
+            ('hit3', 'value3'),
+            ('miss3', CachedOrderedDict._SENTINEL),
+        ))
+
+        self.cache[None] = None
+        assert self.cache == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', CachedOrderedDict._SENTINEL),
+            ('hit2', 'value2'),
+            ('miss2', CachedOrderedDict._SENTINEL),
+            ('hit3', 'value3'),
+            ('miss3', CachedOrderedDict._SENTINEL),
+            (None, None),
+        ))
+
+        self.cache[False] = False
+        self.cache[True] = True
+        assert self.cache == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', CachedOrderedDict._SENTINEL),
+            ('hit2', 'value2'),
+            ('miss2', CachedOrderedDict._SENTINEL),
+            ('hit3', 'value3'),
+            ('miss3', CachedOrderedDict._SENTINEL),
+            (None, None),
+            (False, False),
+            (True, True),
+        ))
+
+        self.cache[0] = 0
+        assert self.cache == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', CachedOrderedDict._SENTINEL),
+            ('hit2', 'value2'),
+            ('miss2', CachedOrderedDict._SENTINEL),
+            ('hit3', 'value3'),
+            ('miss3', CachedOrderedDict._SENTINEL),
+            (None, None),
+            (False, False),
+            (True, True),
+            (0, 0),
+        ))
+
+        self.cache[0.0] = 0.0
+        assert self.cache == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', CachedOrderedDict._SENTINEL),
+            ('hit2', 'value2'),
+            ('miss2', CachedOrderedDict._SENTINEL),
+            ('hit3', 'value3'),
+            ('miss3', CachedOrderedDict._SENTINEL),
+            (None, None),
+            (False, False),
+            (True, True),
+            (0, 0),
+            (0.0, 0.0),
+        ))
 
     def test_no_keys(self):
         cache = CachedOrderedDict(redis=self.redis)

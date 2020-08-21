@@ -9,56 +9,76 @@
 import collections.abc
 import functools
 import itertools
+from typing import Any
+from typing import Callable
+from typing import Iterable
+from typing import List
+from typing import Optional
+from typing import TypeVar
+from typing import Union
+from typing import cast
 
+from redis import Redis
 from redis import ResponseError
+from redis.client import Pipeline
 
 from .base import Base
+from .base import JSONTypes
 from .exceptions import KeyExistsError
+
+
+F = TypeVar('F', bound=Callable[..., Any])
+
+
+def _raise_on_error(func: F) -> Callable[[F], F]:
+    @functools.wraps(func)
+    def wrap(*args: Any, **kwargs: Any) -> Any:
+        try:
+            return func(*args, **kwargs)
+        except ResponseError:
+            raise IndexError('list assignment index out of range')
+    return wrap
 
 
 class RedisList(Base, collections.abc.MutableSequence):
     'Redis-backed container compatible with Python lists.'
 
-    def _raise_on_error(func):
-        @functools.wraps(func)
-        def wrap(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except ResponseError:
-                raise IndexError('list assignment index out of range')
-        return wrap
-
-    def _slice_to_indices(self, slice_or_index):
+    def _slice_to_indices(self, slice_or_index: Union[slice, int]) -> range:
         try:
-            start = slice_or_index.start or 0
-            stop = slice_or_index.stop or len(self)
-            step = slice_or_index.step or 1
+            start = cast(slice, slice_or_index).start or 0
+            stop = cast(slice, slice_or_index).stop or len(self)
+            step = cast(slice, slice_or_index).step or 1
         except AttributeError:
             start = slice_or_index
-            stop = slice_or_index + 1
+            stop = cast(int, slice_or_index) + 1
             step = 1
         indices = range(start, stop, step)
         return indices
 
-    def __init__(self, iterable=tuple(), *, redis=None, key=None):
+    def __init__(self,
+                 iterable: Iterable[JSONTypes] = tuple(),
+                 *,
+                 redis: Optional[Redis] = None,
+                 key: Optional[str] = None,
+                 ) -> None:
         'Initialize a RedisList.  O(n)'
         super().__init__(iterable, redis=redis, key=key)
         if iterable:
             with self._watch(iterable):
                 self._populate(iterable)
 
-    def _populate(self, iterable=tuple()):
+    def _populate(self, iterable: Iterable[JSONTypes] = tuple()) -> None:
         encoded_values = [self._encode(value) for value in iterable]
         if encoded_values:  # pragma: no cover
             if self.redis.exists(self.key):
                 raise KeyExistsError(self.redis, self.key)
             else:
-                self.redis.multi()
+                cast(Pipeline, self.redis).multi()
                 self.redis.rpush(self.key, *encoded_values)
 
     # Methods required by collections.abc.MutableSequence:
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: Union[slice, int]) -> Any:
         'l.__getitem__(index) <==> l[index].  O(n)'
         with self._watch():
             if isinstance(index, slice):
@@ -71,15 +91,15 @@ class RedisList(Base, collections.abc.MutableSequence):
                 # in Python.  More info:
                 # http://redis.io/commands/lrange
                 indices = self._slice_to_indices(index)
-                self.redis.multi()
+                cast(Pipeline, self.redis).multi()
                 self.redis.lrange(self.key, indices[0], indices[-1])
-                encoded = self.redis.execute()[0]
+                encoded = cast(Pipeline, self.redis).execute()[0]
                 encoded = encoded[::index.step]
-                value = [self._decode(value) for value in encoded]
+                value: Union[List[JSONTypes], JSONTypes] = [self._decode(value) for value in encoded]
             else:
-                self.redis.multi()
+                cast(Pipeline, self.redis).multi()
                 self.redis.lindex(self.key, index)
-                encoded = self.redis.execute()[0]
+                encoded = cast(Pipeline, self.redis).execute()[0]
                 if encoded is None:
                     raise IndexError('list index out of range')
                 else:
@@ -87,7 +107,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             return value
 
     @_raise_on_error
-    def __setitem__(self, index, value):
+    def __setitem__(self, index: int, value: JSONTypes) -> None:  # type: ignore
         'l.__setitem__(index, value) <==> l[index] = value.  O(n)'
         with self._watch():
             if isinstance(index, slice):
@@ -103,11 +123,11 @@ class RedisList(Base, collections.abc.MutableSequence):
                 if num:
                     self.redis.lrem(self.key, num, 0)
             else:
-                self.redis.multi()
+                cast(Pipeline, self.redis).multi()
                 self.redis.lset(self.key, index, self._encode(value))
 
     @_raise_on_error
-    def __delitem__(self, index):
+    def __delitem__(self, index: Union[slice, int]) -> None:  # type: ignore
         'l.__delitem__(index) <==> del l[index].  O(n)'
         # This is monumentally stupid.  Python's list API requires us to
         # delete an element by *index.*  Of course, Redis doesn't support
@@ -118,28 +138,28 @@ class RedisList(Base, collections.abc.MutableSequence):
         with self._watch():
             self._delete(index)
 
-    def _delete(self, index):
+    def _delete(self, index: Union[slice, int]) -> None:
         indices, num = self._slice_to_indices(index), 0
-        self.redis.multi()
+        cast(Pipeline, self.redis).multi()
         for index in indices:
             self.redis.lset(self.key, index, 0)
             num += 1
         if num:  # pragma: no cover
             self.redis.lrem(self.key, num, 0)
 
-    def __len__(self):
+    def __len__(self) -> int:
         'Return the number of items in a RedisList.  O(1)'
         return self.redis.llen(self.key)
 
-    def insert(self, index, value):
+    def insert(self, index: int, value: JSONTypes) -> None:
         'Insert an element into a RedisList before the given index.  O(n)'
         with self._watch():
             self._insert(index, value)
 
-    def _insert(self, index, value):
+    def _insert(self, index: int, value: JSONTypes) -> None:
         encoded_value = self._encode(value)
         if index <= 0:
-            self.redis.multi()
+            cast(Pipeline, self.redis).multi()
             self.redis.lpush(self.key, encoded_value)
         elif index < len(self):
             # This is monumentally stupid.  Python's list API requires us to
@@ -153,25 +173,25 @@ class RedisList(Base, collections.abc.MutableSequence):
             # More info:
             #   http://redis.io/commands/linsert
             pivot = self._encode(self[index])
-            self.redis.multi()
+            cast(Pipeline, self.redis).multi()
             self.redis.lset(self.key, index, 0)
             for encoded_value in (encoded_value, pivot):
                 self.redis.linsert(self.key, 'BEFORE', 0, encoded_value)
             self.redis.lrem(self.key, 1, 0)
         else:
-            self.redis.multi()
+            cast(Pipeline, self.redis).multi()
             self.redis.rpush(self.key, encoded_value)
 
     # Methods required for Raj's sanity:
 
-    def sort(self, *, key=None, reverse=False):
+    def sort(self, *, key: Optional[str] = None, reverse: bool = False) -> None:
         'Sort a RedisList in place.  O(n)'
         if key is None:
             self.redis.sort(self.key, desc=reverse, store=self.key)
         else:
             raise NotImplementedError('sorting by key not implemented')
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if super().__eq__(other):
             # self and other are both RedisLists on the same Redis instance and
             # with the same key.  No need to compare element by element.
@@ -194,13 +214,13 @@ class RedisList(Base, collections.abc.MutableSequence):
                 except TypeError:
                     return False
 
-    def __add__(self, other):
+    def __add__(self, other: List[JSONTypes]) -> 'RedisList':
         'Append the items in other to a RedisList.  O(n)'
         with self._watch(other):
             iterable = itertools.chain(self, other)
             return self.__class__(iterable, redis=self.redis)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         'Return the string representation of a RedisList.  O(n)'
         encoded = self.redis.lrange(self.key, 0, -1)
         values = [self._decode(value) for value in encoded]
@@ -209,29 +229,29 @@ class RedisList(Base, collections.abc.MutableSequence):
     # Method overrides:
 
     # From collections.abc.MutableSequence:
-    def append(self, value):
+    def append(self, value: JSONTypes) -> None:
         'Add an element to the right side of the RedisList.  O(1)'
         self.extend((value,))
 
     # From collections.abc.MutableSequence:
-    def extend(self, values):
+    def extend(self, values: Iterable[JSONTypes]) -> None:
         'Extend a RedisList by appending elements from the iterable.  O(1)'
         with self._watch(values):
             encoded_values = (self._encode(value) for value in values)
-            self.redis.multi()
+            cast(Pipeline, self.redis).multi()
             self.redis.rpush(self.key, *encoded_values)
 
     # From collections.abc.MutableSequence:
-    def pop(self, index=None):
+    def pop(self, index: Optional[int] = None) -> JSONTypes:
         with self._watch():
             len_ = len(self)
             if index and index >= len_:
                 raise IndexError('pop index out of range')
             elif index in {0, None, len_-1, -1}:
                 pop_method = 'lpop' if index == 0 else 'rpop'
-                self.redis.multi()
+                cast(Pipeline, self.redis).multi()
                 getattr(self.redis, pop_method)(self.key)
-                encoded_value = self.redis.execute()[0]
+                encoded_value = cast(Pipeline, self.redis).execute()[0]
                 if encoded_value is None:
                     raise IndexError(
                         'pop from an empty {}'.format(self.__class__.__name__),
@@ -239,12 +259,12 @@ class RedisList(Base, collections.abc.MutableSequence):
                 else:
                     return self._decode(encoded_value)
             else:
-                value = self[index]
-                self._delete(index)
+                value = self[cast(int, index)]
+                self._delete(cast(int, index))
                 return value
 
     # From collections.abc.MutableSequence:
-    def remove(self, value):
+    def remove(self, value: JSONTypes) -> None:
         with self._watch():
             for index, element in enumerate(self):
                 if element == value:

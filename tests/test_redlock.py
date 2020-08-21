@@ -14,7 +14,7 @@ from pottery import ContextTimer
 from pottery import Redlock
 from pottery import ReleaseUnlockedLock
 from pottery import TooManyExtensions
-from tests.base import TestCase
+from tests.base import TestCase  # type: ignore
 
 
 class RedlockTests(TestCase):

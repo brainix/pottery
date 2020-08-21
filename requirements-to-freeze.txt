@@ -13,8 +13,9 @@ redis>=3.4.1
 mmh3
 
 coverage
-isort
+mypy
 flake8
+isort
 
 twine
 

@@ -9,8 +9,19 @@
 import collections
 import contextlib
 import itertools
+from typing import Callable
+from typing import Iterable
+from typing import Union
+from typing import cast
 
+from redis.client import Pipeline
+
+from .base import JSONTypes
 from .dict import RedisDict
+
+
+InitIter = Iterable[JSONTypes]
+InitArg = Union[InitIter, collections.Counter]
 
 
 class RedisCounter(RedisDict, collections.Counter):
@@ -18,129 +29,150 @@ class RedisCounter(RedisDict, collections.Counter):
 
     # Method overrides:
 
-    def _populate(self, iterable=tuple(), *, sign=+1, **kwargs):
+    def _populate(self,  # type: ignore
+                  arg: InitArg = tuple(),
+                  *,
+                  sign: int = +1,
+                  **kwargs: int,
+                  ) -> None:
         to_set = {}
         try:
-            for key, value in iterable.items():
+            for key, value in cast(collections.Counter, arg).items():
                 to_set[key] = sign * value
         except AttributeError:
-            for key in iterable:
+            for key in arg:
                 to_set[key] = to_set.get(key, self[key]) + sign
         for key, value in kwargs.items():
             original = self[key] if to_set.get(key, 0) == 0 else to_set[key]
             to_set[key] = original + sign * value
         to_set = {key: self[key] + value for key, value in to_set.items()}
-        to_set = {
+        encoded_to_set = {
             self._encode(k): self._encode(v) for k, v in to_set.items()
         }
-        if to_set:
-            self.redis.multi()
-            self.redis.hset(self.key, mapping=to_set)
+        if encoded_to_set:
+            cast(Pipeline, self.redis).multi()
+            self.redis.hset(self.key, mapping=encoded_to_set)  # type: ignore
 
-    def update(self, iterable=tuple(), **kwargs):
+    def update(self, arg: InitArg = tuple(), **kwargs: int) -> None:  # type: ignore
         'Like dict.update() but add counts instead of replacing them.  O(n)'
-        with self._watch(iterable):
-            self._populate(iterable, sign=+1, **kwargs)
+        with self._watch(arg):
+            self._populate(arg, sign=+1, **kwargs)
 
-    def subtract(self, iterable=tuple(), **kwargs):
+    def subtract(self, arg: InitArg = tuple(), **kwargs: int) -> None:  # type: ignore
         'Like dict.update() but subtracts counts instead of replacing them.  O(n)'
-        with self._watch(iterable):
-            self._populate(iterable, sign=-1, **kwargs)
+        with self._watch(arg):
+            self._populate(arg, sign=-1, **kwargs)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: JSONTypes) -> int:
         'c.__getitem__(key) <==> c.get(key, 0).  O(1)'
         try:
-            value = super().__getitem__(key)
+            value = cast(int, super().__getitem__(key))
         except KeyError:
-            value = super().__missing__(key)
+            value = super().__missing__(key)  # type: ignore
         return value
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: JSONTypes) -> None:
         'c.__delitem__(key) <==> del c[key].  O(1)'
         with contextlib.suppress(KeyError):
             super().__delitem__(key)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         'Return the string representation of a RedisCounter.  O(n)'
         items = self.most_common()
-        items = ("'{}': {}".format(key, value) for key, value in items)
-        items = ', '.join(items)
-        return self.__class__.__name__ + '{' + items + '}'
+        pairs = ("'{}': {}".format(key, value) for key, value in items)
+        repr_ = ', '.join(pairs)
+        return self.__class__.__name__ + '{' + repr_ + '}'
 
-    def _math_op(self, other, *, method):
+    def _math_op(self,
+                 other: collections.Counter,
+                 *,
+                 method: Callable[[collections.Counter, collections.Counter], collections.Counter],
+                 ) -> collections.Counter:
         with self._watch(other):
             counter = collections.Counter(self.elements())
             return method(counter, other)
 
-    def __add__(self, other):
+    def __add__(self, other: collections.Counter) -> collections.Counter:
         "Return the addition our counts to other's counts, but keep only counts > 0.  O(n)"
         return self._math_op(other, method=collections.Counter.__add__)
 
-    def __sub__(self, other):
+    def __sub__(self, other: collections.Counter) -> collections.Counter:
         "Return the subtraction other's counts from our counts, but keep only counts > 0.  O(n)"
         return self._math_op(other, method=collections.Counter.__sub__)
 
-    def __or__(self, other):
+    def __or__(self, other: collections.Counter) -> collections.Counter:
         "Return the max of our counts vs. other's counts (union), but keep only counts > 0.  O(n)"
         return self._math_op(other, method=collections.Counter.__or__)
 
-    def __and__(self, other):
+    def __and__(self, other: collections.Counter) -> collections.Counter:
         "Return the min of our counts vs. other's counts (intersection) but keep only counts > 0.  O(n)"
         return self._math_op(other, method=collections.Counter.__and__)
 
-    def _unary_op(self, *, test_func, modifier_func):
-        counter = collections.Counter()
+    def _unary_op(self,
+                  *,
+                  test_func: Callable[[int], bool],
+                  modifier_func: Callable[[int], int],
+                  ) -> collections.Counter:
+        counter: collections.Counter = collections.Counter()
         for key, value in self.items():
             if test_func(value):
                 counter[key] = modifier_func(value)
         return counter
 
-    def __pos__(self):
+    def __pos__(self) -> collections.Counter:
         'Return our counts > 0.  O(n)'
         return self._unary_op(
             test_func=lambda x: x > 0,
             modifier_func=lambda x: x,
         )
 
-    def __neg__(self):
+    def __neg__(self) -> collections.Counter:
         'Return the absolute value of our counts < 0.  O(n)'
         return self._unary_op(
             test_func=lambda x: x < 0,
             modifier_func=lambda x: -x,
         )
 
-    def _imath_op(self, other, *, sign=+1):
+    def _imath_op(self,
+                  other: collections.Counter,
+                  *,
+                  sign: int = +1,
+                  ) -> 'RedisCounter':
         with self._watch(other):
             to_set = {k: self[k] + sign * v for k, v in other.items()}
             to_del = {k for k, v in to_set.items() if v <= 0}
             to_del.update(
                 k for k, v in self.items() if k not in to_set and v <= 0
             )
-            to_set = {
+            encoded_to_set = {
                 self._encode(k): self._encode(v) for k, v in to_set.items() if v
             }
-            to_del = {self._encode(k) for k in to_del}
-            if to_set or to_del:
-                self.redis.multi()
-                if to_set:
-                    self.redis.hset(self.key, mapping=to_set)
-                if to_del:
-                    self.redis.hdel(self.key, *to_del)
+            encoded_to_del = {self._encode(k) for k in to_del}
+            if encoded_to_set or encoded_to_del:
+                cast(Pipeline, self.redis).multi()
+                if encoded_to_set:
+                    self.redis.hset(self.key, mapping=encoded_to_set)  # type: ignore
+                if encoded_to_del:
+                    self.redis.hdel(self.key, *encoded_to_del)
         return self
 
-    def __iadd__(self, other):
+    def __iadd__(self, other: collections.Counter) -> collections.Counter:
         'Same as __add__(), but in-place.  O(n)'
         return self._imath_op(other, sign=+1)
 
-    def __isub__(self, other):
+    def __isub__(self, other: collections.Counter) -> collections.Counter:
         'Same as __sub__(), but in-place.  O(n)'
         return self._imath_op(other, sign=-1)
 
-    def _iset_op(self, other, *, method_name):
+    def _iset_op(self,
+                 other: collections.Counter,
+                 *,
+                 method: Callable[[int, int], bool],
+                 ) -> 'RedisCounter':
         with self._watch(other):
             to_set, to_del = {}, set()
             for k in itertools.chain(self, other):
-                if getattr(self[k], method_name)(other[k]):
+                if method(self[k], other[k]):
                     to_set[k] = self[k]
                 else:
                     to_set[k] = other[k]
@@ -148,22 +180,22 @@ class RedisCounter(RedisDict, collections.Counter):
                     del to_set[k]
                     to_del.add(k)
             if to_set or to_del:
-                self.redis.multi()
+                cast(Pipeline, self.redis).multi()
                 if to_set:
-                    to_set = {
+                    encoded_to_set = {
                         self._encode(k): self._encode(v)
                         for k, v in to_set.items()
                     }
-                    self.redis.hset(self.key, mapping=to_set)
+                    self.redis.hset(self.key, mapping=encoded_to_set)  # type: ignore
                 if to_del:
-                    to_del = {self._encode(k) for k in to_del}
-                    self.redis.hdel(self.key, *to_del)
+                    encoded_to_del = {self._encode(k) for k in to_del}
+                    self.redis.hdel(self.key, *encoded_to_del)
         return self
 
-    def __ior__(self, other):
+    def __ior__(self, other: collections.Counter) -> collections.Counter:
         'Same as __or__(), but in-place.  O(n)'
-        return self._iset_op(other, method_name='__gt__')
+        return self._iset_op(other, method=int.__gt__)
 
-    def __iand__(self, other):
+    def __iand__(self, other: collections.Counter) -> collections.Counter:
         'Same as __and__(), but in-place.  O(n)'
-        return self._iset_op(other, method_name='__lt__')
+        return self._iset_op(other, method=int.__lt__)

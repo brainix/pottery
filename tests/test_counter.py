@@ -9,7 +9,7 @@
 import collections
 
 from pottery import RedisCounter
-from tests.base import TestCase
+from tests.base import TestCase  # type: ignore
 
 
 class CounterTests(TestCase):

@@ -10,7 +10,7 @@ from redis import Redis
 
 from pottery import KeyExistsError
 from pottery import RedisSet
-from tests.base import TestCase
+from tests.base import TestCase  # type: ignore
 
 
 class SetTests(TestCase):
@@ -240,3 +240,7 @@ class SetTests(TestCase):
         ramanujans_friends = RedisSet(range(10))
         ramanujans_friends.difference_update(range(4), {6, 7, 8, 9})
         assert ramanujans_friends == {4, 5}
+
+    def test_membership_for_non_jsonifyable_element(self):
+        redis_set = RedisSet()
+        assert not BaseException in redis_set
