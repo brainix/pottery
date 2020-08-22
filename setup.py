@@ -38,7 +38,7 @@ setup(
     packages=find_packages(exclude=('contrib', 'docs', 'tests*')),
     install_requires=('redis>=3.4.1', 'mmh3'),
     extras_require={},
-    package_data={},
+    package_data={'pottery': ('py.typed',)},
     data_files=tuple(),
     entry_points={},
 )
