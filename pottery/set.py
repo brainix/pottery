@@ -161,5 +161,5 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         self._update(*iterables, redis_method='srem')
 
     # Where does this method come from?
-    def symmetric_difference_update(self, other: Iterable[JSONTypes]):  # pragma: no cover
+    def symmetric_difference_update(self, other: Iterable[JSONTypes]) -> NoReturn:  # pragma: no cover
         raise NotImplementedError

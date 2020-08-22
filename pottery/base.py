@@ -113,7 +113,7 @@ class _Common:
         return key
 
 
-JSONTypes = Union[None, bool, int, float, str, List, Dict[str, Any]]
+JSONTypes = Union[None, bool, int, float, str, List[Any], Dict[str, Any]]
 
 
 class _Encodable:
