@@ -13,6 +13,7 @@ from typing import Any
 from typing import Callable
 from typing import ClassVar
 from typing import FrozenSet
+from typing import Hashable
 from typing import NamedTuple
 from typing import Optional
 from typing import Tuple
@@ -41,7 +42,7 @@ class CacheInfo(NamedTuple):
     currsize: int = 0
 
 
-def _arg_hash(*args: Any, **kwargs: Any) -> int:
+def _arg_hash(*args: Hashable, **kwargs: Hashable) -> int:
     return hash((args, frozenset(kwargs.items())))
 
 
@@ -115,7 +116,7 @@ def redis_cache(*,
         hits, misses = 0, 0
 
         @functools.wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> JSONTypes:
+        def wrapper(*args: Hashable, **kwargs: Hashable) -> JSONTypes:
             nonlocal hits, misses
             hash_ = _arg_hash(*args, **kwargs)
             try:
@@ -130,7 +131,7 @@ def redis_cache(*,
             return return_value
 
         @functools.wraps(func)
-        def bypass(*args: Any, **kwargs: Any) -> JSONTypes:
+        def bypass(*args: Hashable, **kwargs: Hashable) -> JSONTypes:
             hash_ = _arg_hash(*args, **kwargs)
             return_value = func(*args, **kwargs)
             cache[hash_] = return_value
