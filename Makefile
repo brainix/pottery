@@ -50,7 +50,7 @@ ifeq ($(tests),)
 		coverage3 run -m unittest discover --start-directory tests --verbose && \
 		coverage3 report && \
 		echo Running static type checks && \
-		mypy && \
+		mypy --no-incremental && \
 		echo Running Flake8 on $($@_SOURCE_FILES) && \
 		flake8 $($@_SOURCE_FILES) && \
 		echo Running isort on $($@_SOURCE_FILES) && \
