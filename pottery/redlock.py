@@ -342,7 +342,7 @@ class Redlock(Primitive):
             else:
                 return 0
 
-    def extend(self) -> bool:
+    def extend(self) -> None:
         '''Extend our hold on the lock (if we currently hold it).
 
         Usage:
@@ -356,7 +356,6 @@ class Redlock(Primitive):
             >>> 8 * 1000 < printer_lock.locked() < 9 * 1000
             True
             >>> printer_lock.extend()
-            True
             >>> 9 * 1000 < printer_lock.locked() < 10 * 1000
             True
             >>> printer_lock.release()
@@ -373,9 +372,7 @@ class Redlock(Primitive):
                         num_masters_extended += future.result()
             quorum = num_masters_extended >= len(self.masters) // 2 + 1
             self._extension_num += quorum
-            if quorum:
-                return True
-            else:
+            if not quorum:
                 raise ExtendUnlockedLock(self.masters, self.key)
 
     def release(self) -> None:
