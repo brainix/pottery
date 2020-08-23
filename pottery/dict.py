@@ -88,7 +88,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
 
     def __len__(self) -> int:
         'Return the number of items in a RedisDict.  O(1)'
-        return cast(int, self.redis.hlen(self.key))
+        return self.redis.hlen(self.key)
 
     # Methods required for Raj's sanity:
 
@@ -109,6 +109,6 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
     def __contains__(self, key: Any) -> bool:
         'd.__contains__(key) <==> key in d.  O(1)'
         try:
-            return bool(self.redis.hexists(self.key, self._encode(key)))
+            return self.redis.hexists(self.key, self._encode(key))
         except TypeError:
             return False

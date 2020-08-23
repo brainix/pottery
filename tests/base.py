@@ -9,6 +9,7 @@
 import doctest
 import sys
 import unittest
+from typing import ClassVar
 from typing import NoReturn
 
 from pottery.base import Base
@@ -16,7 +17,7 @@ from pottery.base import _default_redis
 
 
 class TestCase(unittest.TestCase):
-    _TEST_KEY_PREFIX = 'pottery-test:'
+    _TEST_KEY_PREFIX: ClassVar[str] = 'pottery-test:'
 
     def setUp(self) -> None:
         super().setUp()

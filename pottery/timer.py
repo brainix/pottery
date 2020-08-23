@@ -45,8 +45,8 @@ class ContextTimer:
     '''
 
     def __init__(self) -> None:
-        self._started = 0
-        self._stopped = 0
+        self._started = 0.0
+        self._stopped = 0.0
 
     def __enter__(self) -> 'ContextTimer':
         self.start()
@@ -65,24 +65,22 @@ class ContextTimer:
         elif self._started:
             raise RuntimeError('timer has already been started')
         else:
-            self._started = self._now()
+            self._started = timeit.default_timer()
 
     def stop(self) -> None:
         if self._stopped:
             raise RuntimeError('timer has already been stopped')
         elif self._started:
-            self._stopped = self._now()
+            self._stopped = timeit.default_timer()
         else:
             raise RuntimeError("timer hasn't yet been started")
 
     def elapsed(self) -> int:
         if self._started:
-            return (self._stopped or self._now()) - self._started
+            elapsed = (self._stopped or timeit.default_timer()) - self._started
+            return round(elapsed * 1000)
         else:
             raise RuntimeError("timer hasn't yet been started")
-
-    def _now(self) -> int:
-        return round(timeit.default_timer() * 1000)
 
 
 if __name__ == '__main__':  # pragma: no cover
