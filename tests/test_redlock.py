@@ -11,6 +11,7 @@ import contextlib
 import time
 
 from pottery import ContextTimer
+from pottery import ExtendUnlockedLock
 from pottery import Redlock
 from pottery import ReleaseUnlockedLock
 from pottery import TooManyExtensions
@@ -85,7 +86,8 @@ class RedlockTests(TestCase):
 
     def test_extend(self):
         assert not self.redis.exists(self.redlock.key)
-        assert not self.redlock.extend()
+        with self.assertRaises(ExtendUnlockedLock):
+            self.redlock.extend()
         assert self.redlock.acquire()
         for extension_num in range(3):
             with self.subTest(extension_num=extension_num):

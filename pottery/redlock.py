@@ -39,6 +39,7 @@ from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
 
 from .base import Primitive
+from .exceptions import ExtendUnlockedLock
 from .exceptions import ReleaseUnlockedLock
 from .exceptions import TooManyExtensions
 from .timer import ContextTimer
@@ -372,7 +373,10 @@ class Redlock(Primitive):
                         num_masters_extended += future.result()
             quorum = num_masters_extended >= len(self.masters) // 2 + 1
             self._extension_num += quorum
-            return quorum
+            if quorum:
+                return True
+            else:
+                raise ExtendUnlockedLock(self.masters, self.key)
 
     def release(self) -> None:
         '''Unlock the lock.

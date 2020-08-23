@@ -31,6 +31,7 @@ from .exceptions import RandomKeyError  # isort:skip
 from .exceptions import PrimitiveError  # isort:skip
 from .exceptions import QuorumNotAchieved  # isort:skip
 from .exceptions import TooManyExtensions  # isort:skip
+from .exceptions import ExtendUnlockedLock  # isort:skip
 from .exceptions import ReleaseUnlockedLock  # isort:skip
 
 from .bloom import BloomFilter  # isort:skip
@@ -55,6 +56,7 @@ __all__ = [
     'PrimitiveError',
     'QuorumNotAchieved',
     'TooManyExtensions',
+    'ExtendUnlockedLock',
     'ReleaseUnlockedLock',
 
     'BloomFilter',
