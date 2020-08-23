@@ -9,7 +9,6 @@
 
 import logging
 from typing import Any
-from typing import cast
 
 from typing_extensions import Final
 
@@ -26,7 +25,7 @@ from redis import ConnectionPool  # isort:skip
 
 def __eq__(self: ConnectionPool, other: Any) -> bool:
     try:
-        return cast(bool, self.connection_kwargs == other.connection_kwargs)
+        return self.connection_kwargs == other.connection_kwargs
     except AttributeError:  # pragma: no cover
         return False
 
