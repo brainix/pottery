@@ -91,7 +91,7 @@ class RedlockTests(TestCase):
         assert self.redlock.acquire()
         for extension_num in range(3):
             with self.subTest(extension_num=extension_num):
-                assert self.redlock.extend()
+                self.redlock.extend()
         with self.assertRaises(TooManyExtensions):
             self.redlock.extend()
 
