@@ -129,16 +129,18 @@ class RedisList(Base, collections.abc.MutableSequence):
     @_raise_on_error
     def __delitem__(self, index: Union[slice, int]) -> None:  # type: ignore
         'l.__delitem__(index) <==> del l[index].  O(n)'
-        # This is monumentally stupid.  Python's list API requires us to
-        # delete an element by *index.*  Of course, Redis doesn't support
-        # that, because it's Redis.  Instead, Redis supports deleting an
-        # element by *value.*  So our ridiculous hack is to set l[index] to
-        # None, then to delete the value None.  More info:
-        # http://redis.io/commands/lrem
         with self._watch():
             self._delete(index)
 
     def _delete(self, index: Union[slice, int]) -> None:
+        # This is monumentally stupid.  Python's list API requires us to delete
+        # an element by *index.*  Of course, Redis doesn't support that,
+        # because it's Redis.  Instead, Redis supports deleting an element by
+        # *value.*  So our ridiculous hack is to set l[index] to 0, then to
+        # delete the value 0.
+        #
+        # More info:
+        #   http://redis.io/commands/lrem
         indices, num = self._slice_to_indices(index), 0
         cast(Pipeline, self.redis).multi()
         for index in indices:
@@ -175,9 +177,8 @@ class RedisList(Base, collections.abc.MutableSequence):
             pivot = self._encode(self[index])
             cast(Pipeline, self.redis).multi()
             self.redis.lset(self.key, index, 0)
-            for encoded_value in (encoded_value, pivot):
-                self.redis.linsert(self.key, 'BEFORE', 0, encoded_value)
-            self.redis.lrem(self.key, 1, 0)
+            self.redis.linsert(self.key, 'BEFORE', 0, encoded_value)
+            self.redis.lset(self.key, index+1, pivot)
         else:
             cast(Pipeline, self.redis).multi()
             self.redis.rpush(self.key, encoded_value)

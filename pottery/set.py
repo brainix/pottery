@@ -139,6 +139,9 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
                 *iterables: Iterable[JSONTypes],
                 redis_method: str,
                 ) -> None:
+        # We have to iterate over iterables multiple times, so cast it to a
+        # tuple.  This allows the caller to pass in a generator for iterables,
+        # and we can still iterate over it multiple times.
         iterables = tuple(iterables)
         with self._watch(*iterables):
             encoded_values = set()

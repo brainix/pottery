@@ -177,13 +177,14 @@ class CachedOrderedDict(collections.OrderedDict):
     Properties 1 and 2 are satisfied by Python's OrderedDict.  However,
     CachedOrderedDict extends Python's OrderedDict to also satisfy property 3.
     '''
+
     _SENTINEL: ClassVar[object] = object()
     _NUM_TRIES: ClassVar[int] = 3
 
     def __init__(self,
                  *,
+                 key: str = None,
                  redis: Optional[Redis] = None,
-                 key: Optional[str] = None,
                  keys: Tuple[JSONTypes, ...] = tuple(),
                  num_tries: int = _NUM_TRIES,
                  ) -> None:
