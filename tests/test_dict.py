@@ -7,6 +7,7 @@
 
 
 import collections
+import json
 
 from pottery import KeyExistsError
 from pottery import RedisDict
@@ -227,3 +228,7 @@ class DictTests(TestCase):
     def test_membership_for_non_jsonifyable_element(self):
         redis_dict = RedisDict()
         assert not BaseException in redis_dict
+
+    def test_json_dumps(self):
+        a = RedisDict(one=1, two=2, three=3)
+        assert json.dumps(a) == '{"one": 1, "two": 2, "three": 3}'

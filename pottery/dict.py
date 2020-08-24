@@ -112,3 +112,6 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
             return self.redis.hexists(self.key, self._encode(key))
         except TypeError:
             return False
+
+    def to_dict(self):
+        return dict(self)
