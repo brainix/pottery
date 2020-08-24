@@ -55,6 +55,10 @@ class RedisList(Base, collections.abc.MutableSequence):
         indices = range(start, stop, step)
         return indices
 
+    # Preserve the Open-Closed Principle with name mangling.
+    # https://youtu.be/miGolgp9xq8?t=2086
+    __slice_to_indices = _slice_to_indices
+
     def __init__(self,
                  iterable: Iterable[JSONTypes] = tuple(),
                  *,
@@ -90,7 +94,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                 # start and stop from Redis, then discard the ones between step
                 # in Python.  More info:
                 # http://redis.io/commands/lrange
-                indices = self._slice_to_indices(index)
+                indices = self.__slice_to_indices(index)
                 cast(Pipeline, self.redis).multi()
                 self.redis.lrange(self.key, indices[0], indices[-1])
                 encoded = cast(Pipeline, self.redis).execute()[0]
@@ -112,7 +116,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         with self._watch():
             if isinstance(index, slice):
                 encoded_values = [self._encode(value) for value in value]
-                indices = self._slice_to_indices(index)
+                indices = self.__slice_to_indices(index)
                 self.redis.multi()
                 for index, encoded_value in zip(indices, encoded_values):
                     self.redis.lset(self.key, index, encoded_value)
@@ -141,7 +145,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         #
         # More info:
         #   http://redis.io/commands/lrem
-        indices, num = self._slice_to_indices(index), 0
+        indices, num = self.__slice_to_indices(index), 0
         cast(Pipeline, self.redis).multi()
         for index in indices:
             self.redis.lset(self.key, index, 0)

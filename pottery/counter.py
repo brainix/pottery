@@ -92,21 +92,25 @@ class RedisCounter(RedisDict, collections.Counter):
             counter = collections.Counter(self.elements())
             return method(counter, other)
 
+    # Preserve the Open-Closed Principle with name mangling.
+    # https://youtu.be/miGolgp9xq8?t=2086
+    __math_op = _math_op
+
     def __add__(self, other: collections.Counter) -> collections.Counter:
         "Return the addition our counts to other's counts, but keep only counts > 0.  O(n)"
-        return self._math_op(other, method=collections.Counter.__add__)
+        return self.__math_op(other, method=collections.Counter.__add__)
 
     def __sub__(self, other: collections.Counter) -> collections.Counter:
         "Return the subtraction other's counts from our counts, but keep only counts > 0.  O(n)"
-        return self._math_op(other, method=collections.Counter.__sub__)
+        return self.__math_op(other, method=collections.Counter.__sub__)
 
     def __or__(self, other: collections.Counter) -> collections.Counter:
         "Return the max of our counts vs. other's counts (union), but keep only counts > 0.  O(n)"
-        return self._math_op(other, method=collections.Counter.__or__)
+        return self.__math_op(other, method=collections.Counter.__or__)
 
     def __and__(self, other: collections.Counter) -> collections.Counter:
         "Return the min of our counts vs. other's counts (intersection) but keep only counts > 0.  O(n)"
-        return self._math_op(other, method=collections.Counter.__and__)
+        return self.__math_op(other, method=collections.Counter.__and__)
 
     def _unary_op(self,
                   *,
@@ -119,16 +123,20 @@ class RedisCounter(RedisDict, collections.Counter):
                 counter[key] = modifier_func(value)
         return counter
 
+    # Preserve the Open-Closed Principle with name mangling.
+    # https://youtu.be/miGolgp9xq8?t=2086
+    __unary_op = _unary_op
+
     def __pos__(self) -> collections.Counter:
         'Return our counts > 0.  O(n)'
-        return self._unary_op(
+        return self.__unary_op(
             test_func=lambda x: x > 0,
             modifier_func=lambda x: x,
         )
 
     def __neg__(self) -> collections.Counter:
         'Return the absolute value of our counts < 0.  O(n)'
-        return self._unary_op(
+        return self.__unary_op(
             test_func=lambda x: x < 0,
             modifier_func=lambda x: -x,
         )
@@ -156,13 +164,17 @@ class RedisCounter(RedisDict, collections.Counter):
                     self.redis.hdel(self.key, *encoded_to_del)
         return self
 
+    # Preserve the Open-Closed Principle with name mangling.
+    # https://youtu.be/miGolgp9xq8?t=2086
+    __imath_op = _imath_op
+
     def __iadd__(self, other: collections.Counter) -> collections.Counter:
         'Same as __add__(), but in-place.  O(n)'
-        return self._imath_op(other, sign=+1)
+        return self.__imath_op(other, sign=+1)
 
     def __isub__(self, other: collections.Counter) -> collections.Counter:
         'Same as __sub__(), but in-place.  O(n)'
-        return self._imath_op(other, sign=-1)
+        return self.__imath_op(other, sign=-1)
 
     def _iset_op(self,
                  other: collections.Counter,
@@ -192,10 +204,14 @@ class RedisCounter(RedisDict, collections.Counter):
                     self.redis.hdel(self.key, *encoded_to_del)
         return self
 
+    # Preserve the Open-Closed Principle with name mangling.
+    # https://youtu.be/miGolgp9xq8?t=2086
+    __iset_op = _iset_op
+
     def __ior__(self, other: collections.Counter) -> collections.Counter:
         'Same as __or__(), but in-place.  O(n)'
-        return self._iset_op(other, method=int.__gt__)
+        return self.__iset_op(other, method=int.__gt__)
 
     def __iand__(self, other: collections.Counter) -> collections.Counter:
         'Same as __and__(), but in-place.  O(n)'
-        return self._iset_op(other, method=int.__lt__)
+        return self.__iset_op(other, method=int.__lt__)

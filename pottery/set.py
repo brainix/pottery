@@ -151,9 +151,13 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
                 cast(Pipeline, self.redis).multi()
                 getattr(self.redis, redis_method)(self.key, *encoded_values)
 
+    # Preserve the Open-Closed Principle with name mangling.
+    # https://youtu.be/miGolgp9xq8?t=2086
+    __update = _update
+
     # Where does this method come from?
     def update(self, *iterables: Iterable[JSONTypes]) -> None:
-        self._update(*iterables, redis_method='sadd')
+        self.__update(*iterables, redis_method='sadd')
 
     # Where does this method come from?
     def intersection_update(self, *args: Iterable[JSONTypes]) -> NoReturn:  # pragma: no cover
@@ -161,7 +165,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     # Where does this method come from?
     def difference_update(self, *iterables: Iterable[JSONTypes]) -> None:
-        self._update(*iterables, redis_method='srem')
+        self.__update(*iterables, redis_method='srem')
 
     # Where does this method come from?
     def symmetric_difference_update(self, other: Iterable[JSONTypes]) -> NoReturn:  # pragma: no cover
