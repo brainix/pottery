@@ -6,6 +6,8 @@
 # --------------------------------------------------------------------------- #
 
 
+import json
+
 from pottery import KeyExistsError
 from pottery import RedisList
 from tests.base import TestCase  # type: ignore
@@ -195,3 +197,13 @@ class ListTests(TestCase):
         ))
         with self.assertRaises(ValueError):
             metasyntactic.remove('raj')
+
+    def test_json_dumps(self):
+        metasyntactic = RedisList((
+            'foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply',
+            'waldo', 'fred', 'plugh', 'xyzzy', 'thud',
+        ))
+        assert json.dumps(metasyntactic) == (
+            '["foo", "bar", "baz", "qux", "quux", "corge", "grault", "garply", '
+            '"waldo", "fred", "plugh", "xyzzy", "thud"]'
+        )

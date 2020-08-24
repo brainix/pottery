@@ -9,6 +9,9 @@
 
 import logging
 from typing import Any
+from typing import Dict
+from typing import List
+from typing import Union
 
 from typing_extensions import Final
 
@@ -34,4 +37,27 @@ ConnectionPool.__eq__ = __eq__  # type: ignore
 _logger.info(
     'Monkey patched ConnectionPool.__eq__() to compare clients by connection '
     'params'
+)
+
+
+# Monkey patch the JSON encoder to be able to JSONify any instance of any class
+# that defines a to_dict(), to_list(), or to_str() method (since the encoder
+# already knows how to JSONify dicts, lists, and strings).
+
+def _default(self: Any, obj: Any) -> Union[Dict[str, Any], List[Any], str]:
+    func_names = {'to_dict', 'to_list', 'to_str'}
+    funcs = {getattr(obj.__class__, name, None) for name in func_names}
+    funcs.discard(None)
+    assert len(funcs) <= 1
+    func = funcs.pop() if any(funcs) else _default.default  # type: ignore
+    return func(obj)
+
+import json  # isort:skip
+_default.default = json.JSONEncoder.default  # type: ignore
+json.JSONEncoder.default = _default  # type: ignore
+
+_logger.info(
+    'Monkey patched json.JSONEncoder.default() to be able to JSONify any '
+    'instance of any class that defines a to_dict(), to_list(), or to_str() '
+    'method'
 )

@@ -281,3 +281,6 @@ class RedisList(Base, collections.abc.MutableSequence):
                         class_=self.__class__.__name__,
                     ),
                 )
+
+    def to_list(self):
+        return list(self)
