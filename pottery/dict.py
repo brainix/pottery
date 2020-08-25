@@ -62,6 +62,8 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
             cast(Pipeline, self.redis).multi()
             self.redis.hset(self.key, mapping=to_set)  # type: ignore
 
+    __populate = _populate
+
     # Methods required by collections.abc.MutableMapping:
 
     def __getitem__(self, key: JSONTypes) -> JSONTypes:
@@ -104,7 +106,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
     # From collections.abc.MutableMapping:
     def update(self, arg: InitArg = tuple(), **kwargs: JSONTypes) -> None:  # type: ignore
         with self._watch(arg):
-            self._populate(arg, **kwargs)
+            self.__populate(arg, **kwargs)
 
     # From collections.abc.Mapping:
     def __contains__(self, key: Any) -> bool:
