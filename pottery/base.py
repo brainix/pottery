@@ -114,6 +114,7 @@ class _Common:
 
 
 JSONTypes = Union[None, bool, int, float, str, List[Any], Dict[str, Any]]
+RedisValues = Union[bytes, str, float, int]
 
 
 class _Encodable:

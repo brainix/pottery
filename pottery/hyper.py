@@ -17,6 +17,7 @@ from redis.client import Pipeline
 
 from .base import Base
 from .base import JSONTypes
+from .base import RedisValues
 
 
 class HyperLogLog(Base):
@@ -30,7 +31,7 @@ class HyperLogLog(Base):
     '''
 
     def __init__(self,
-                 iterable: Iterable[JSONTypes] = frozenset(),
+                 iterable: Iterable[RedisValues] = frozenset(),
                  *,
                  redis: Optional[Redis] = None,
                  key: Optional[str] = None,
@@ -43,14 +44,14 @@ class HyperLogLog(Base):
         super().__init__(redis=redis, key=key)
         self.update(iterable)
 
-    def add(self, value: JSONTypes) -> None:
+    def add(self, value: RedisValues) -> None:
         'Add an element to a HyperLogLog.  O(1)'
         self.update({value})
 
-    def update(self, *objs: Union['HyperLogLog', Iterable[JSONTypes]]) -> None:
+    def update(self, *objs: Union['HyperLogLog', Iterable[RedisValues]]) -> None:
         objs = (self,) + tuple(objs)
         other_hll_keys: List[str] = []
-        encoded_values: List[JSONTypes] = []
+        encoded_values: List[str] = []
         with self._watch(objs[1:]):
             for obj in objs:
                 if isinstance(obj, self.__class__):
@@ -63,7 +64,7 @@ class HyperLogLog(Base):
             self.redis.pfadd(self.key, *encoded_values)
 
     def union(self,
-              *objs: Iterable[JSONTypes],
+              *objs: Iterable[RedisValues],
               redis: Optional[Redis] = None,
               key: Optional[str] = None,
               ) -> 'HyperLogLog':
