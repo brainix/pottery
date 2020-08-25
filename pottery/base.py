@@ -245,7 +245,7 @@ class Iterable_(metaclass=abc.ABCMeta):
     @abc.abstractmethod  # pragma: no cover
     def _scan(self,
               *, cursor: int = 0,
-              ) -> Tuple[int, Union[Iterable[JSONTypes], Mapping[bytes, bytes]]]:
+              ) -> Tuple[int, Union[List[bytes], Mapping[bytes, bytes]]]:
         ...
 
     def __iter__(self) -> Generator[JSONTypes, None, None]:
