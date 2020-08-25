@@ -10,6 +10,7 @@ import collections.abc
 import contextlib
 import itertools
 from typing import Any
+from typing import Dict
 from typing import Iterable
 from typing import Mapping
 from typing import Optional
@@ -113,5 +114,5 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
         except TypeError:
             return False
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, JSONTypes]:
         return dict(self)

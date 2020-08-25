@@ -282,5 +282,5 @@ class RedisList(Base, collections.abc.MutableSequence):
                     ),
                 )
 
-    def to_list(self):
+    def to_list(self) -> List[JSONTypes]:
         return list(self)
