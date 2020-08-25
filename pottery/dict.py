@@ -84,7 +84,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
     def _scan(self,
               *,
               cursor: int = 0,
-              ) -> Tuple[int, Mapping[JSONTypes, JSONTypes]]:
+              ) -> Tuple[int, Dict[bytes, bytes]]:
         return self.redis.hscan(self.key, cursor=cursor)
 
     def __len__(self) -> int:
