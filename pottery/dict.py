@@ -10,6 +10,7 @@ import collections.abc
 import contextlib
 import itertools
 from typing import Any
+from typing import Dict
 from typing import Iterable
 from typing import Mapping
 from typing import Optional
@@ -61,6 +62,8 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
             cast(Pipeline, self.redis).multi()
             self.redis.hset(self.key, mapping=to_set)  # type: ignore
 
+    __populate = _populate
+
     # Methods required by collections.abc.MutableMapping:
 
     def __getitem__(self, key: JSONTypes) -> JSONTypes:
@@ -83,7 +86,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
     def _scan(self,
               *,
               cursor: int = 0,
-              ) -> Tuple[int, Mapping[JSONTypes, JSONTypes]]:
+              ) -> Tuple[int, Dict[bytes, bytes]]:
         return self.redis.hscan(self.key, cursor=cursor)
 
     def __len__(self) -> int:
@@ -103,7 +106,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
     # From collections.abc.MutableMapping:
     def update(self, arg: InitArg = tuple(), **kwargs: JSONTypes) -> None:  # type: ignore
         with self._watch(arg):
-            self._populate(arg, **kwargs)
+            self.__populate(arg, **kwargs)
 
     # From collections.abc.Mapping:
     def __contains__(self, key: Any) -> bool:
@@ -113,5 +116,5 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
         except TypeError:
             return False
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, JSONTypes]:
         return dict(self)

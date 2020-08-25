@@ -266,7 +266,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             else:
                 value = self[cast(int, index)]
                 self._delete(cast(int, index))
-                return value
+                return cast(JSONTypes, value)
 
     # From collections.abc.MutableSequence:
     def remove(self, value: JSONTypes) -> None:
@@ -282,5 +282,5 @@ class RedisList(Base, collections.abc.MutableSequence):
                     ),
                 )
 
-    def to_list(self):
+    def to_list(self) -> List[JSONTypes]:
         return list(self)

@@ -183,7 +183,7 @@ class CachedOrderedDict(collections.OrderedDict):
 
     def __init__(self,
                  *,
-                 key: str = None,
+                 key: Optional[str] = None,
                  redis: Optional[Redis] = None,
                  keys: Tuple[JSONTypes, ...] = tuple(),
                  num_tries: int = _NUM_TRIES,

@@ -10,6 +10,7 @@ import collections.abc
 import itertools
 from typing import Any
 from typing import Iterable
+from typing import List
 from typing import NoReturn
 from typing import Optional
 from typing import Tuple
@@ -57,7 +58,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         except TypeError:
             return False
 
-    def _scan(self, *, cursor: int = 0) -> Tuple[int, Iterable[JSONTypes]]:
+    def _scan(self, *, cursor: int = 0) -> Tuple[int, List[bytes]]:
         return self.redis.sscan(self.key, cursor=cursor)
 
     def __len__(self) -> int:
