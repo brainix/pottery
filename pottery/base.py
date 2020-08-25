@@ -253,7 +253,7 @@ class Iterable_(metaclass=abc.ABCMeta):
         cursor = 0
         while True:
             cursor, iterable = self._scan(cursor=cursor)
-            yield from (self._decode(cast(bytes, value)) for value in iterable)
+            yield from (self._decode(value) for value in iterable)
             if cursor == 0:
                 break
 
