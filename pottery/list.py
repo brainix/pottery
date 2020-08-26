@@ -134,7 +134,7 @@ class RedisList(Base, collections.abc.MutableSequence):
     def __delitem__(self, index: Union[slice, int]) -> None:  # type: ignore
         'l.__delitem__(index) <==> del l[index].  O(n)'
         with self._watch():
-            self._delete(index)
+            self.__delete(index)
 
     def _delete(self, index: Union[slice, int]) -> None:
         # This is monumentally stupid.  Python's list API requires us to delete
@@ -153,6 +153,10 @@ class RedisList(Base, collections.abc.MutableSequence):
         if num:  # pragma: no cover
             self.redis.lrem(self.key, num, 0)
 
+    # Preserve the Open-Closed Principle with name mangling.
+    # https://youtu.be/miGolgp9xq8?t=2086
+    __delete = _delete
+
     def __len__(self) -> int:
         'Return the number of items in a RedisList.  O(1)'
         return self.redis.llen(self.key)
@@ -160,7 +164,7 @@ class RedisList(Base, collections.abc.MutableSequence):
     def insert(self, index: int, value: JSONTypes) -> None:
         'Insert an element into a RedisList before the given index.  O(n)'
         with self._watch():
-            self._insert(index, value)
+            self.__insert(index, value)
 
     def _insert(self, index: int, value: JSONTypes) -> None:
         encoded_value = self._encode(value)
@@ -186,6 +190,10 @@ class RedisList(Base, collections.abc.MutableSequence):
         else:
             cast(Pipeline, self.redis).multi()
             self.redis.rpush(self.key, encoded_value)
+
+    # Preserve the Open-Closed Principle with name mangling.
+    # https://youtu.be/miGolgp9xq8?t=2086
+    __insert = _insert
 
     # Methods required for Raj's sanity:
 
@@ -265,7 +273,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                     return self._decode(encoded_value)
             else:
                 value = self[cast(int, index)]
-                self._delete(cast(int, index))
+                self.__delete(cast(int, index))
                 return cast(JSONTypes, value)
 
     # From collections.abc.MutableSequence:
@@ -273,7 +281,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         with self._watch():
             for index, element in enumerate(self):
                 if element == value:
-                    self._delete(index)
+                    self.__delete(index)
                     break
             else:
                 raise ValueError(

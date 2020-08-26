@@ -76,15 +76,15 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
 
     def append(self, value: JSONTypes) -> None:
         'Add an element to the right side of the RedisDeque.  O(1)'
-        self._extend((value,), right=True)
+        self.__extend((value,), right=True)
 
     def appendleft(self, value: JSONTypes) -> None:
         'Add an element to the left side of the RedisDeque.  O(1)'
-        self._extend((value,), right=False)
+        self.__extend((value,), right=False)
 
     def extend(self, values: Iterable[JSONTypes]) -> None:
         'Extend a RedisList by appending elements from the iterable.  O(1)'
-        self._extend(values, right=True)
+        self.__extend(values, right=True)
 
     def extendleft(self, values: Iterable[JSONTypes]) -> None:
         '''Extend a RedisList by prepending elements from the iterable.  O(1)
@@ -96,7 +96,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
             >>> d
             RedisDeque(['c', 'b', 'a'])
         '''
-        self._extend(values, right=False)
+        self.__extend(values, right=False)
 
     def _extend(self,
                 values: Iterable[JSONTypes],
@@ -115,6 +115,10 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
                 else:
                     trim_indices = 0, self.maxlen-1
                 self.redis.ltrim(self.key, *trim_indices)
+
+    # Preserve the Open-Closed Principle with name mangling.
+    # https://youtu.be/miGolgp9xq8?t=2086
+    __extend = _extend
 
     def pop(self) -> JSONTypes:  # type: ignore
         return super().pop()
