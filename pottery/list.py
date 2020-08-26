@@ -244,7 +244,7 @@ class RedisList(Base, collections.abc.MutableSequence):
     # From collections.abc.MutableSequence:
     def append(self, value: JSONTypes) -> None:
         'Add an element to the right side of the RedisList.  O(1)'
-        self.extend((value,))
+        self.__extend((value,))
 
     # From collections.abc.MutableSequence:
     def extend(self, values: Iterable[JSONTypes]) -> None:
@@ -253,6 +253,10 @@ class RedisList(Base, collections.abc.MutableSequence):
             encoded_values = (self._encode(value) for value in values)
             cast(Pipeline, self.redis).multi()
             self.redis.rpush(self.key, *encoded_values)
+
+    # Preserve the Open-Closed Principle with name mangling.
+    # https://youtu.be/miGolgp9xq8?t=2086
+    __extend = extend
 
     # From collections.abc.MutableSequence:
     def pop(self, index: Optional[int] = None) -> JSONTypes:
