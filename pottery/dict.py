@@ -62,6 +62,8 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
             cast(Pipeline, self.redis).multi()
             self.redis.hset(self.key, mapping=to_set)  # type: ignore
 
+    # Preserve the Open-Closed Principle with name mangling.
+    # https://youtu.be/miGolgp9xq8?t=2086
     __populate = _populate
 
     # Methods required by collections.abc.MutableMapping:
