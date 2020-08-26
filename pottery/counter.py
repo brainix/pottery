@@ -53,15 +53,19 @@ class RedisCounter(RedisDict, collections.Counter):
             cast(Pipeline, self.redis).multi()
             self.redis.hset(self.key, mapping=encoded_to_set)  # type: ignore
 
+    # Preserve the Open-Closed Principle with name mangling.
+    # https://youtu.be/miGolgp9xq8?t=2086
+    __populate = _populate
+
     def update(self, arg: InitArg = tuple(), **kwargs: int) -> None:  # type: ignore
         'Like dict.update() but add counts instead of replacing them.  O(n)'
         with self._watch(arg):
-            self._populate(arg, sign=+1, **kwargs)
+            self.__populate(arg, sign=+1, **kwargs)
 
     def subtract(self, arg: InitArg = tuple(), **kwargs: int) -> None:  # type: ignore
         'Like dict.update() but subtracts counts instead of replacing them.  O(n)'
         with self._watch(arg):
-            self._populate(arg, sign=-1, **kwargs)
+            self.__populate(arg, sign=-1, **kwargs)
 
     def __getitem__(self, key: JSONTypes) -> int:
         'c.__getitem__(key) <==> c.get(key, 0).  O(1)'
