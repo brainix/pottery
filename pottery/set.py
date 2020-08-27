@@ -136,10 +136,10 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     def symmetric_difference(self, other: Iterable[Any]) -> NoReturn:  # pragma: no cover
         raise NotImplementedError
 
-    def _update(self,
-                *iterables: Iterable[JSONTypes],
-                redis_method: str,
-                ) -> None:
+    def __update(self,
+                 *iterables: Iterable[JSONTypes],
+                 redis_method: str,
+                 ) -> None:
         # We have to iterate over iterables multiple times, so cast it to a
         # tuple.  This allows the caller to pass in a generator for iterables,
         # and we can still iterate over it multiple times.
@@ -151,10 +151,6 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             if encoded_values:
                 cast(Pipeline, self.redis).multi()
                 getattr(self.redis, redis_method)(self.key, *encoded_values)
-
-    # Preserve the Open-Closed Principle with name mangling.
-    # https://youtu.be/miGolgp9xq8?t=2086
-    __update = _update
 
     # Where does this method come from?
     def update(self, *iterables: Iterable[JSONTypes]) -> None:

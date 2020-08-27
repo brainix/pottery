@@ -23,6 +23,7 @@ from typing import cast
 from redis import Redis
 from redis.exceptions import WatchError
 from typing_extensions import Final
+from typing_extensions import final
 
 from .base import JSONTypes
 from .base import _default_redis
@@ -160,6 +161,7 @@ def redis_cache(*,
     return decorator
 
 
+@final
 class CachedOrderedDict(collections.OrderedDict):
     '''Redis-backed container that extends Python's OrderedDicts.
 

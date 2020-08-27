@@ -64,7 +64,8 @@ class HyperLogLog(Base):
             self.redis.pfadd(self.key, *encoded_values)
 
     # Preserve the Open-Closed Principle with name mangling.
-    # https://youtu.be/miGolgp9xq8?t=2086
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
     __update = update
 
     def union(self,

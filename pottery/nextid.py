@@ -23,11 +23,13 @@ from redis import Redis
 from redis.client import Script
 from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
+from typing_extensions import final
 
 from .base import Primitive
 from .exceptions import QuorumNotAchieved
 
 
+@final
 class NextId(Primitive):
     '''Distributed Redis-powered monotonically increasing ID generator.
 

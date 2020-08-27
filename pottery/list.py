@@ -43,7 +43,7 @@ def _raise_on_error(func: F) -> Callable[[F], F]:
 class RedisList(Base, collections.abc.MutableSequence):
     'Redis-backed container compatible with Python lists.'
 
-    def _slice_to_indices(self, slice_or_index: Union[slice, int]) -> range:
+    def __slice_to_indices(self, slice_or_index: Union[slice, int]) -> range:
         try:
             start = cast(slice, slice_or_index).start or 0
             stop = cast(slice, slice_or_index).stop or len(self)
@@ -54,10 +54,6 @@ class RedisList(Base, collections.abc.MutableSequence):
             step = 1
         indices = range(start, stop, step)
         return indices
-
-    # Preserve the Open-Closed Principle with name mangling.
-    # https://youtu.be/miGolgp9xq8?t=2086
-    __slice_to_indices = _slice_to_indices
 
     def __init__(self,
                  iterable: Iterable[JSONTypes] = tuple(),
@@ -136,7 +132,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         with self._watch():
             self.__delete(index)
 
-    def _delete(self, index: Union[slice, int]) -> None:
+    def __delete(self, index: Union[slice, int]) -> None:
         # This is monumentally stupid.  Python's list API requires us to delete
         # an element by *index.*  Of course, Redis doesn't support that,
         # because it's Redis.  Instead, Redis supports deleting an element by
@@ -152,10 +148,6 @@ class RedisList(Base, collections.abc.MutableSequence):
             num += 1
         if num:  # pragma: no cover
             self.redis.lrem(self.key, num, 0)
-
-    # Preserve the Open-Closed Principle with name mangling.
-    # https://youtu.be/miGolgp9xq8?t=2086
-    __delete = _delete
 
     def __len__(self) -> int:
         'Return the number of items in a RedisList.  O(1)'
@@ -192,7 +184,8 @@ class RedisList(Base, collections.abc.MutableSequence):
             self.redis.rpush(self.key, encoded_value)
 
     # Preserve the Open-Closed Principle with name mangling.
-    # https://youtu.be/miGolgp9xq8?t=2086
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
     __insert = _insert
 
     # Methods required for Raj's sanity:
@@ -255,7 +248,8 @@ class RedisList(Base, collections.abc.MutableSequence):
             self.redis.rpush(self.key, *encoded_values)
 
     # Preserve the Open-Closed Principle with name mangling.
-    # https://youtu.be/miGolgp9xq8?t=2086
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
     __extend = extend
 
     # From collections.abc.MutableSequence:
