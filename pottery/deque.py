@@ -98,11 +98,11 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
         '''
         self.__extend(values, right=False)
 
-    def _extend(self,
-                values: Iterable[JSONTypes],
-                *,
-                right: bool = True,
-                ) -> None:
+    def __extend(self,
+                 values: Iterable[JSONTypes],
+                 *,
+                 right: bool = True,
+                 ) -> None:
         with self._watch(values):
             encoded_values = [self._encode(value) for value in values]
             len_ = len(self) + len(encoded_values)
@@ -115,10 +115,6 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
                 else:
                     trim_indices = 0, self.maxlen-1
                 self.redis.ltrim(self.key, *trim_indices)
-
-    # Preserve the Open-Closed Principle with name mangling.
-    # https://youtu.be/miGolgp9xq8?t=2086
-    __extend = _extend
 
     def pop(self) -> JSONTypes:  # type: ignore
         return super().pop()

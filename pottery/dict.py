@@ -63,7 +63,8 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
             self.redis.hset(self.key, mapping=to_set)  # type: ignore
 
     # Preserve the Open-Closed Principle with name mangling.
-    # https://youtu.be/miGolgp9xq8?t=2086
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
     __populate = _populate
 
     # Methods required by collections.abc.MutableMapping:
