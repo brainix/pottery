@@ -37,6 +37,7 @@ from redis import Redis
 from redis.client import Script
 from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
+from typing_extensions import final
 
 from .base import Primitive
 from .exceptions import ExtendUnlockedLock
@@ -45,6 +46,7 @@ from .exceptions import TooManyExtensions
 from .timer import ContextTimer
 
 
+@final
 class Redlock(Primitive):
     '''Distributed Redis-powered lock.
 
