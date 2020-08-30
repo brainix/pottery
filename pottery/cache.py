@@ -7,7 +7,9 @@
 
 
 import collections
+import contextlib
 import functools
+import itertools
 import logging
 from typing import Any
 from typing import Callable
@@ -28,6 +30,9 @@ from typing_extensions import final
 from .base import JSONTypes
 from .base import _default_redis
 from .base import random_key
+from .dict import InitArg
+from .dict import InitIter
+from .dict import InitMap
 from .dict import RedisDict
 
 
@@ -254,3 +259,16 @@ class CachedOrderedDict(collections.OrderedDict):
                 return self._retry(callable, try_num=try_num+1)
             else:
                 raise
+
+    def update(self, arg: InitArg = tuple(), **kwargs: JSONTypes) -> None:  # type: ignore
+        to_cache, to_set = {}, {}
+        with contextlib.suppress(AttributeError):
+            arg = cast(InitMap, arg).items()
+        for key, value in itertools.chain(cast(InitIter, arg), kwargs.items()):
+            if value is not self._SENTINEL:
+                to_cache[key] = value
+                self._misses.discard(key)
+            to_set[key] = value
+        self._cache.update(to_cache)
+        for key, value in to_set.items():
+            super().__setitem__(key, value)
