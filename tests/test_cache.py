@@ -443,6 +443,51 @@ class CachedOrderedDictTests(TestCase):
         }
         assert self.cache.misses() == {'miss3'}
 
+        self.cache.update({'miss3': CachedOrderedDict._SENTINEL})
+        assert self.cache == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', 'value1'),
+            ('hit2', 'value2'),
+            ('miss2', 'value2'),
+            ('hit3', 'value3'),
+            ('miss3', CachedOrderedDict._SENTINEL),
+            ('hit4', 'value4'),
+            ('hit5', 'value5'),
+        ))
+        assert self.cache._cache == {
+            'hit1': 'value1',
+            'hit2': 'value2',
+            'hit3': 'value3',
+            'miss1': 'value1',
+            'miss2': 'value2',
+            'hit4': 'value4',
+            'hit5': 'value5',
+        }
+        assert self.cache.misses() == {'miss3'}
+
+        self.cache.update(miss3='value3')
+        assert self.cache == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', 'value1'),
+            ('hit2', 'value2'),
+            ('miss2', 'value2'),
+            ('hit3', 'value3'),
+            ('miss3', 'value3'),
+            ('hit4', 'value4'),
+            ('hit5', 'value5'),
+        ))
+        assert self.cache._cache == {
+            'hit1': 'value1',
+            'hit2': 'value2',
+            'hit3': 'value3',
+            'miss1': 'value1',
+            'miss2': 'value2',
+            'hit4': 'value4',
+            'hit5': 'value5',
+            'miss3': 'value3',
+        }
+        assert self.cache.misses() == set()
+
     def test_non_string_keys(self):
         assert self.cache == collections.OrderedDict((
             ('hit1', 'value1'),
