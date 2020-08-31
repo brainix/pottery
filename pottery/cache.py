@@ -261,14 +261,12 @@ class CachedOrderedDict(collections.OrderedDict):
                 raise
 
     def update(self, arg: InitArg = tuple(), **kwargs: JSONTypes) -> None:  # type: ignore
-        to_cache, to_set = {}, {}
+        to_cache = {}
         with contextlib.suppress(AttributeError):
             arg = cast(InitMap, arg).items()
         for key, value in itertools.chain(cast(InitIter, arg), kwargs.items()):
             if value is not self._SENTINEL:
                 to_cache[key] = value
                 self._misses.discard(key)
-            to_set[key] = value
-        self._cache.update(to_cache)
-        for key, value in to_set.items():
             super().__setitem__(key, value)
+        self._cache.update(to_cache)
