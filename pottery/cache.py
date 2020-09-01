@@ -222,6 +222,7 @@ class CachedOrderedDict(collections.OrderedDict):
         return frozenset(self._misses)
 
     def __setitem__(self, key: JSONTypes, value: JSONTypes) -> None:
+        'Set self[key] to value.'
         if value is not self._SENTINEL:
             self._cache[key] = value
             self._misses.discard(key)
@@ -231,6 +232,10 @@ class CachedOrderedDict(collections.OrderedDict):
                    key: JSONTypes,
                    default: JSONTypes = None,
                    ) -> JSONTypes:
+        '''Insert key with a value of default if key is not in the dictionary.
+
+        Return the value for key if key is in the dictionary, else default.
+        '''
         retriable_setdefault = functools.partial(
             self._retriable_setdefault,
             key,
@@ -261,6 +266,16 @@ class CachedOrderedDict(collections.OrderedDict):
                 raise
 
     def update(self, arg: InitArg = tuple(), **kwargs: JSONTypes) -> None:  # type: ignore
+        '''D.update([E, ]**F) -> None.  Update D from dict/iterable E and F.
+        If E is present and has an .items() method, then does:  for k in E: D[k] = E[k]
+        If E is present and lacks an .items() method, then does:  for k, v in E: D[k] = v
+        In either case, this is followed by: for k in F:  D[k] = F[k]
+
+        The base class, OrderedDict, has an .update() method that works just
+        fine.  The trouble is that it executes multiple calls to .__setitem__()
+        therefore multiple round trips to Redis.  This overridden .update()
+        makes a single bulk call to Redis.
+        '''
         to_cache = {}
         with contextlib.suppress(AttributeError):
             arg = cast(InitMap, arg).items()
