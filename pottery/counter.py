@@ -18,13 +18,14 @@ from typing import Union
 from typing import cast
 
 from redis.client import Pipeline
+from typing_extensions import Counter
 
 from .base import JSONTypes
 from .dict import RedisDict
 
 
 InitIter = Iterable[JSONTypes]
-InitArg = Union[InitIter, collections.Counter]
+InitArg = Union[InitIter, Counter]
 
 
 class RedisCounter(RedisDict, collections.Counter):
@@ -40,7 +41,7 @@ class RedisCounter(RedisDict, collections.Counter):
                   ) -> None:
         to_set = {}
         try:
-            for key, value in cast(collections.Counter, arg).items():
+            for key, value in cast(Counter[JSONTypes], arg).items():
                 to_set[key] = sign * value
         except AttributeError:
             for key in arg:
@@ -91,8 +92,8 @@ class RedisCounter(RedisDict, collections.Counter):
         repr_ = ', '.join(pairs)
         return self.__class__.__name__ + '{' + repr_ + '}'
 
-    def _make_counter(self) -> collections.Counter:
-        counter: collections.Counter = collections.Counter()
+    def _make_counter(self) -> Counter[JSONTypes]:
+        counter: Counter[JSONTypes] = collections.Counter()
         cursor = 0
         while True:
             cursor, encoded_dict = self._scan(cursor=cursor)
@@ -111,27 +112,27 @@ class RedisCounter(RedisDict, collections.Counter):
     __make_counter = _make_counter
 
     def __math_op(self,
-                  other: collections.Counter,
+                  other: Counter[JSONTypes],
                   *,
-                  method: Callable[[collections.Counter, collections.Counter], collections.Counter],
-                  ) -> collections.Counter:
+                  method: Callable[[Counter[JSONTypes], Counter[JSONTypes]], Counter[JSONTypes]],
+                  ) -> Counter[JSONTypes]:
         with self._watch(other):
             counter = self.__make_counter()
             return method(counter, other)
 
-    def __add__(self, other: collections.Counter) -> collections.Counter:
+    def __add__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
         "Return the addition our counts to other's counts, but keep only counts > 0.  O(n)"
         return self.__math_op(other, method=collections.Counter.__add__)
 
-    def __sub__(self, other: collections.Counter) -> collections.Counter:
+    def __sub__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
         "Return the subtraction other's counts from our counts, but keep only counts > 0.  O(n)"
         return self.__math_op(other, method=collections.Counter.__sub__)
 
-    def __or__(self, other: collections.Counter) -> collections.Counter:
+    def __or__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
         "Return the max of our counts vs. other's counts (union), but keep only counts > 0.  O(n)"
         return self.__math_op(other, method=collections.Counter.__or__)
 
-    def __and__(self, other: collections.Counter) -> collections.Counter:
+    def __and__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
         "Return the min of our counts vs. other's counts (intersection) but keep only counts > 0.  O(n)"
         return self.__math_op(other, method=collections.Counter.__and__)
 
@@ -139,21 +140,21 @@ class RedisCounter(RedisDict, collections.Counter):
                    *,
                    test_func: Callable[[int], bool],
                    modifier_func: Callable[[int], int],
-                   ) -> collections.Counter:
-        counter: collections.Counter = collections.Counter()
+                   ) -> Counter[JSONTypes]:
+        counter: Counter[JSONTypes] = collections.Counter()
         for key, value in self.__make_counter().items():
             if test_func(value):
                 counter[key] = modifier_func(value)
         return counter
 
-    def __pos__(self) -> collections.Counter:
+    def __pos__(self) -> Counter[JSONTypes]:
         'Return our counts > 0.  O(n)'
         return self.__unary_op(
             test_func=lambda x: x > 0,
             modifier_func=lambda x: x,
         )
 
-    def __neg__(self) -> collections.Counter:
+    def __neg__(self) -> Counter[JSONTypes]:
         'Return the absolute value of our counts < 0.  O(n)'
         return self.__unary_op(
             test_func=lambda x: x < 0,
@@ -161,7 +162,7 @@ class RedisCounter(RedisDict, collections.Counter):
         )
 
     def __imath_op(self,
-                   other: collections.Counter,
+                   other: Counter[JSONTypes],
                    *,
                    sign: int = +1,
                    ) -> 'RedisCounter':
@@ -187,16 +188,16 @@ class RedisCounter(RedisDict, collections.Counter):
                     self.redis.hdel(self.key, *encoded_to_del)
         return self
 
-    def __iadd__(self, other: collections.Counter) -> collections.Counter:
+    def __iadd__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
         'Same as __add__(), but in-place.  O(n)'
         return self.__imath_op(other, sign=+1)
 
-    def __isub__(self, other: collections.Counter) -> collections.Counter:
+    def __isub__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
         'Same as __sub__(), but in-place.  O(n)'
         return self.__imath_op(other, sign=-1)
 
     def __iset_op(self,
-                  other: collections.Counter,
+                  other: Counter[JSONTypes],
                   *,
                   method: Callable[[int, int], bool],
                   ) -> 'RedisCounter':
@@ -228,11 +229,11 @@ class RedisCounter(RedisDict, collections.Counter):
                     self.redis.hdel(self.key, *encoded_to_del)
         return self
 
-    def __ior__(self, other: collections.Counter) -> collections.Counter:
+    def __ior__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
         'Same as __or__(), but in-place.  O(n)'
         return self.__iset_op(other, method=int.__gt__)
 
-    def __iand__(self, other: collections.Counter) -> collections.Counter:
+    def __iand__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
         'Same as __and__(), but in-place.  O(n)'
         return self.__iset_op(other, method=int.__lt__)
 
