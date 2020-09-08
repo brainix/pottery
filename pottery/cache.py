@@ -16,9 +16,9 @@ from typing import Callable
 from typing import ClassVar
 from typing import FrozenSet
 from typing import Hashable
+from typing import Iterable
 from typing import NamedTuple
 from typing import Optional
-from typing import Tuple
 from typing import TypeVar
 from typing import cast
 
@@ -192,7 +192,7 @@ class CachedOrderedDict(collections.OrderedDict):
                  *,
                  key: Optional[str] = None,
                  redis: Optional[Redis] = None,
-                 keys: Tuple[JSONTypes, ...] = tuple(),
+                 keys: Iterable[JSONTypes] = tuple(),
                  num_tries: int = _NUM_TRIES,
                  ) -> None:
         self._num_tries = num_tries
