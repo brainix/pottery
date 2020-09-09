@@ -25,7 +25,6 @@ from typing import cast
 from redis import Redis
 from redis.exceptions import WatchError
 from typing_extensions import Final
-from typing_extensions import final
 
 from .base import JSONTypes
 from .base import _default_redis
@@ -166,7 +165,6 @@ def redis_cache(*,
     return decorator
 
 
-@final
 class CachedOrderedDict(collections.OrderedDict):
     '''Redis-backed container that extends Python's OrderedDicts.
 
@@ -196,9 +194,8 @@ class CachedOrderedDict(collections.OrderedDict):
                  num_tries: int = _NUM_TRIES,
                  ) -> None:
         self._num_tries = num_tries
-        redis = _default_redis if redis is None else redis
         init_cache = functools.partial(RedisDict, redis=redis, key=key)
-        self._cache = self._retry(init_cache)
+        self._cache = self.__retry(init_cache)
         self._misses = set()
 
         # We have to iterate over keys multiple times, so cast it to a tuple.
@@ -207,7 +204,10 @@ class CachedOrderedDict(collections.OrderedDict):
         items, keys = [], tuple(keys)
         if keys:
             encoded_keys = (self._cache._encode(key_) for key_ in keys)
-            encoded_values = redis.hmget(self._cache.key, *encoded_keys)
+            encoded_values = self._cache.redis.hmget(
+                self._cache.key,
+                *encoded_keys,
+            )
             for key_, encoded_value in zip(keys, encoded_values):
                 if encoded_value is None:
                     value = self._SENTINEL
@@ -237,31 +237,34 @@ class CachedOrderedDict(collections.OrderedDict):
         Return the value for key if key is in the dictionary, else default.
         '''
         retriable_setdefault = functools.partial(
-            self._retriable_setdefault,
+            self.__retriable_setdefault,
             key,
             default=default,
         )
-        self._retry(retriable_setdefault)
+        self.__retry(retriable_setdefault)
         self._misses.discard(key)
         if key not in self or self[key] is self._SENTINEL:
             self[key] = default
         return cast(JSONTypes, self[key])
 
-    def _retriable_setdefault(self,
-                              key: JSONTypes,
-                              default: JSONTypes = None,
-                              ) -> None:
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    def __retriable_setdefault(self,
+                               key: JSONTypes,
+                               default: JSONTypes = None,
+                               ) -> None:
         with self._cache._watch():
             if key not in self._cache:
                 self._cache.redis.multi()
                 self._cache[key] = default
 
-    def _retry(self, callable: Callable[[], Any], try_num: int = 0) -> Any:
+    def __retry(self, callable: Callable[[], Any], try_num: int = 0) -> Any:
         try:
             return callable()
         except WatchError:  # pragma: no cover
             if try_num < self._num_tries - 1:
-                return self._retry(callable, try_num=try_num+1)
+                return self.__retry(callable, try_num=try_num+1)
             else:
                 raise
 
