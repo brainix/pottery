@@ -37,7 +37,6 @@ from redis import Redis
 from redis.client import Script
 from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
-from typing_extensions import final
 
 from .base import Primitive
 from .exceptions import ExtendUnlockedLock
@@ -46,7 +45,6 @@ from .exceptions import TooManyExtensions
 from .timer import ContextTimer
 
 
-@final
 class Redlock(Primitive):
     '''Distributed Redis-powered lock.
 
@@ -144,11 +142,14 @@ class Redlock(Primitive):
 
         self._value = b''
         self._extension_num = 0
-        self._acquired_script = self._register_acquired_script()
-        self._extend_script = self._register_extend_script()
-        self._release_script = self._register_release_script()
+        self._acquired_script = self.__register_acquired_script()
+        self._extend_script = self.__register_extend_script()
+        self._release_script = self.__register_release_script()
 
-    def _register_acquired_script(self) -> Script:
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    def __register_acquired_script(self) -> Script:
         master = next(iter(self.masters))
         acquired_script = master.register_script('''
             if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -160,7 +161,7 @@ class Redlock(Primitive):
         ''')
         return acquired_script
 
-    def _register_extend_script(self) -> Script:
+    def __register_extend_script(self) -> Script:
         master = next(iter(self.masters))
         extend_script = master.register_script('''
             if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -171,7 +172,7 @@ class Redlock(Primitive):
         ''')
         return extend_script
 
-    def _register_release_script(self) -> Script:
+    def __register_release_script(self) -> Script:
         master = next(iter(self.masters))
         release_script = master.register_script('''
             if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -182,7 +183,7 @@ class Redlock(Primitive):
         ''')
         return release_script
 
-    def _acquire_master(self, master: Redis) -> bool:
+    def __acquire_master(self, master: Redis) -> bool:
         acquired = master.set(
             self.key,
             self._value,
@@ -191,7 +192,7 @@ class Redlock(Primitive):
         )
         return bool(acquired)
 
-    def _acquired_master(self, master: Redis) -> int:
+    def __acquired_master(self, master: Redis) -> int:
         if self._value:
             ttl = self._acquired_script(
                 keys=(self.key,),
@@ -202,7 +203,7 @@ class Redlock(Primitive):
             ttl = 0
         return ttl
 
-    def _extend_master(self, master: Redis) -> bool:
+    def __extend_master(self, master: Redis) -> bool:
         extended = self._extend_script(
             keys=(self.key,),
             args=(self._value, self.auto_release_time),
@@ -210,7 +211,7 @@ class Redlock(Primitive):
         )
         return bool(extended)
 
-    def _release_master(self, master: Redis) -> bool:
+    def __release_master(self, master: Redis) -> bool:
         released = self._release_script(
             keys=(self.key,),
             args=(self._value,),
@@ -218,28 +219,28 @@ class Redlock(Primitive):
         )
         return bool(released)
 
-    def _drift(self) -> float:
+    def __drift(self) -> float:
         return self.auto_release_time * self.CLOCK_DRIFT_FACTOR + 2
 
-    def _acquire_masters(self) -> bool:
+    def __acquire_masters(self) -> bool:
         self._value = os.urandom(self.num_random_bytes)
         self._extension_num = 0
         futures, num_masters_acquired = set(), 0
         with ContextTimer() as timer, \
              concurrent.futures.ThreadPoolExecutor() as executor:
             for master in self.masters:
-                futures.add(executor.submit(self._acquire_master, master))
+                futures.add(executor.submit(self.__acquire_master, master))
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     num_masters_acquired += future.result()
             quorum = num_masters_acquired >= len(self.masters) // 2 + 1
-            elapsed = timer.elapsed() - self._drift()
+            elapsed = timer.elapsed() - self.__drift()
             validity_time = self.auto_release_time - elapsed
         if quorum and max(validity_time, 0):
             return True
         else:
             with contextlib.suppress(ReleaseUnlockedLock):
-                self.release()
+                self.__release()
             return False
 
     def acquire(self, *, blocking: bool = True, timeout: int = -1) -> bool:
@@ -289,15 +290,17 @@ class Redlock(Primitive):
         if blocking:
             with ContextTimer() as timer:
                 while timeout == -1 or timer.elapsed() / 1000 < timeout:
-                    if self._acquire_masters():
+                    if self.__acquire_masters():
                         return True
                     else:
                         time.sleep(random.uniform(0, self.RETRY_DELAY/1000))
             return False
         elif timeout == -1:
-            return self._acquire_masters()
+            return self.__acquire_masters()
         else:
             raise ValueError("can't specify a timeout for a non-blocking call")
+
+    __acquire = acquire
 
     def locked(self) -> int:
         '''How much longer we'll hold the lock (unless we extend or release it).
@@ -329,7 +332,7 @@ class Redlock(Primitive):
         with ContextTimer() as timer, \
              concurrent.futures.ThreadPoolExecutor() as executor:
             for master in self.masters:
-                futures.add(executor.submit(self._acquired_master, master))
+                futures.add(executor.submit(self.__acquired_master, master))
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     ttl = future.result()
@@ -339,10 +342,12 @@ class Redlock(Primitive):
             if quorum:
                 ttls = sorted(ttls, reverse=True)
                 validity_time = ttls[len(self.masters) // 2]
-                validity_time -= round(timer.elapsed() + self._drift())
+                validity_time -= round(timer.elapsed() + self.__drift())
                 return max(validity_time, 0)
             else:
                 return 0
+
+    __locked = locked
 
     def extend(self) -> None:
         '''Extend our hold on the lock (if we currently hold it).
@@ -368,7 +373,7 @@ class Redlock(Primitive):
             futures, num_masters_extended = set(), 0
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 for master in self.masters:
-                    futures.add(executor.submit(self._extend_master, master))
+                    futures.add(executor.submit(self.__extend_master, master))
                 for future in concurrent.futures.as_completed(futures):
                     with contextlib.suppress(TimeoutError, ConnectionError):
                         num_masters_extended += future.result()
@@ -396,13 +401,15 @@ class Redlock(Primitive):
         futures, num_masters_released = set(), 0
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for master in self.masters:
-                futures.add(executor.submit(self._release_master, master))
+                futures.add(executor.submit(self.__release_master, master))
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(TimeoutError, ConnectionError):
                     num_masters_released += future.result()
         quorum = num_masters_released >= len(self.masters) // 2 + 1
         if not quorum:
             raise ReleaseUnlockedLock(self.masters, self.key)
+
+    __release = release
 
     def __enter__(self) -> 'Redlock':
         '''You can use a Redlock as a context manager.
@@ -425,7 +432,7 @@ class Redlock(Primitive):
             >>> states
             [True, False]
         '''
-        self.acquire()
+        self.__acquire()
         return self
 
     def __exit__(self,
@@ -453,14 +460,14 @@ class Redlock(Primitive):
             >>> states
             [True, False]
         '''
-        self.release()
+        self.__release()
 
     def __repr__(self) -> str:
         return '<{} key={} value={!r} timeout={}>'.format(
             self.__class__.__name__,
             self.key,
             self._value,
-            self.locked(),
+            self.__locked(),
         )
 
 
