@@ -110,7 +110,7 @@ class BloomFilter(Base):
         super().__init__(redis=redis, key=key)
         self.num_values = num_values
         self.false_positives = false_positives
-        self.update(iterable)
+        self.__update(iterable)
 
     def size(self) -> int:
         '''The required number of bits (m) given n and p.
@@ -134,6 +134,11 @@ class BloomFilter(Base):
             self._size = math.ceil(self._size)
             return self.size()
 
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    __size = size
+
     def num_hashes(self) -> int:
         '''The number of hash functions (k) given m and n, minimizing p.
 
@@ -149,9 +154,14 @@ class BloomFilter(Base):
         try:
             return self._num_hashes  # type: ignore
         except AttributeError:
-            self._num_hashes = self.size() / self.num_values * math.log(2)
+            self._num_hashes = self.__size() / self.num_values * math.log(2)
             self._num_hashes = math.ceil(self._num_hashes)
             return self.num_hashes()
+
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    __num_hashes = num_hashes
 
     def _bit_offsets(self, value: JSONTypes) -> Generator[int, None, None]:
         '''The bit offsets to set/check in this Bloom filter for a given value.
@@ -185,8 +195,13 @@ class BloomFilter(Base):
         was *probably* inserted into our Bloom filter.
         '''
         encoded_value = self._encode(value)
-        for seed in range(self.num_hashes()):
-            yield mmh3.hash(encoded_value, seed=seed) % self.size()
+        for seed in range(self.__num_hashes()):
+            yield mmh3.hash(encoded_value, seed=seed) % self.__size()
+
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    __bit_offsets = _bit_offsets
 
     def update(self, *iterables: Iterable[JSONTypes]) -> None:
         '''Populate a Bloom filter with the elements in iterables.  O(n * k)
@@ -199,10 +214,15 @@ class BloomFilter(Base):
         bit_offsets: Set[int] = set()
         with self._watch(iterables):
             for value in itertools.chain(*iterables):
-                bit_offsets.update(self._bit_offsets(value))
+                bit_offsets.update(self.__bit_offsets(value))
             cast(Pipeline, self.redis).multi()
             for bit_offset in bit_offsets:
                 self.redis.setbit(self.key, bit_offset, 1)
+
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    __update = update
 
     def __contains__(self, value: JSONTypes) -> bool:
         '''bf.__contains__(element) <==> element in bf.  O(k)
@@ -211,7 +231,7 @@ class BloomFilter(Base):
         input string to compute bit offests into the underlying string
         representing this Bloom filter.
         '''
-        bit_offsets = set(self._bit_offsets(value))
+        bit_offsets = set(self.__bit_offsets(value))
 
         with self._watch():
             cast(Pipeline, self.redis).multi()
@@ -227,7 +247,7 @@ class BloomFilter(Base):
         input string to compute bit offests into the underlying string
         representing this Bloom filter.
         '''
-        self.update({value})
+        self.__update({value})
 
     def _num_bits_set(self) -> int:
         '''The number of bits set to 1 in this Bloom filter.  O(m)
@@ -236,6 +256,11 @@ class BloomFilter(Base):
         Bloom filter.
         '''
         return self.redis.bitcount(self.key)
+
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    __num_bits_set = _num_bits_set
 
     def __len__(self) -> int:
         '''Return the approximate the number of elements in a BloomFilter.  O(m)
@@ -251,9 +276,9 @@ class BloomFilter(Base):
             https://en.wikipedia.org/wiki/Bloom_filter#Approximating_the_number_of_items_in_a_Bloom_filter
         '''
         len_ = (
-            -self.size()
-            / self.num_hashes()
-            * math.log(1 - self._num_bits_set() / self.size())
+            -self.__size()
+            / self.__num_hashes()
+            * math.log(1 - self.__num_bits_set() / self.__size())
         )
         return math.floor(len_)
 
