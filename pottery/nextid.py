@@ -23,13 +23,11 @@ from redis import Redis
 from redis.client import Script
 from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
-from typing_extensions import final
 
 from .base import Primitive
 from .exceptions import QuorumNotAchieved
 
 
-@final
 class NextId(Primitive):
     '''Distributed Redis-powered monotonically increasing ID generator.
 
@@ -76,10 +74,13 @@ class NextId(Primitive):
                  ) -> None:
         super().__init__(key=key, masters=masters)
         self.num_tries = num_tries
-        self._set_id_script = self._register_set_id_script()
-        self._init_masters()
+        self._set_id_script = self.__register_set_id_script()
+        self.__init_masters()
 
-    def _register_set_id_script(self) -> Script:
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    def __register_set_id_script(self) -> Script:
         master = next(iter(self.masters))
         set_id_script = master.register_script('''
             local curr = tonumber(redis.call('get', KEYS[1]))
@@ -93,7 +94,7 @@ class NextId(Primitive):
         ''')
         return set_id_script
 
-    def _init_masters(self) -> None:
+    def __init_masters(self) -> None:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for master in self.masters:
                 executor.submit(master.setnx, self.key, 0)
@@ -104,8 +105,8 @@ class NextId(Primitive):
     def __next__(self) -> int:
         for _ in range(self.num_tries):
             with contextlib.suppress(QuorumNotAchieved):
-                next_id = self._current_id + 1
-                self._current_id = next_id
+                next_id = self.__current_id + 1
+                self.__current_id = next_id
                 return next_id
         else:
             raise QuorumNotAchieved(self.masters, self.key)
@@ -114,11 +115,11 @@ class NextId(Primitive):
         return '<{} key={} value={}>'.format(
             self.__class__.__name__,
             self.key,
-            self._current_id,
+            self.__current_id,
         )
 
     @property
-    def _current_id(self) -> int:
+    def __current_id(self) -> int:
         futures, current_id, num_masters_gotten = set(), 0, 0
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for master in self.masters:
@@ -132,8 +133,8 @@ class NextId(Primitive):
         else:
             return current_id
 
-    @_current_id.setter
-    def _current_id(self, value: int) -> None:
+    @__current_id.setter
+    def __current_id(self, value: int) -> None:
         futures, num_masters_set = set(), 0
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for master in self.masters:
