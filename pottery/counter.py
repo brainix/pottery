@@ -106,9 +106,6 @@ class RedisCounter(RedisDict, collections.Counter):
                 break
         return counter
 
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
     __make_counter = _make_counter
 
     def __math_op(self,

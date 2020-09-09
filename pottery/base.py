@@ -188,9 +188,6 @@ class Pipelined(metaclass=abc.ABCMeta):
     def key(self) -> str:
         'Redis key.'
 
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
     @contextlib.contextmanager
     def __pipeline(self) -> Generator[Pipeline, None, None]:
         pipeline = self.redis.pipeline()
@@ -200,9 +197,6 @@ class Pipelined(metaclass=abc.ABCMeta):
         pipeline.ping()
         pipeline.execute()
 
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
     @contextlib.contextmanager
     def __watch_keys(self,
                      *keys: Iterable[str],
@@ -217,9 +211,6 @@ class Pipelined(metaclass=abc.ABCMeta):
         finally:
             self.redis = original_redis  # type: ignore
 
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
     def __context_managers(self,
                            *others: Any,
                            ) -> Generator[ContextManager[Pipeline], None, None]:

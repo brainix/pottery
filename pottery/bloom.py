@@ -158,9 +158,6 @@ class BloomFilter(Base):
             self._num_hashes = math.ceil(self._num_hashes)
             return self.num_hashes()
 
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
     __num_hashes = num_hashes
 
     def _bit_offsets(self, value: JSONTypes) -> Generator[int, None, None]:
@@ -198,9 +195,6 @@ class BloomFilter(Base):
         for seed in range(self.__num_hashes()):
             yield mmh3.hash(encoded_value, seed=seed) % self.__size()
 
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
     __bit_offsets = _bit_offsets
 
     def update(self, *iterables: Iterable[JSONTypes]) -> None:
@@ -219,9 +213,6 @@ class BloomFilter(Base):
             for bit_offset in bit_offsets:
                 self.redis.setbit(self.key, bit_offset, 1)
 
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
     __update = update
 
     def __contains__(self, value: JSONTypes) -> bool:
@@ -257,9 +248,6 @@ class BloomFilter(Base):
         '''
         return self.redis.bitcount(self.key)
 
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
     __num_bits_set = _num_bits_set
 
     def __len__(self) -> int:

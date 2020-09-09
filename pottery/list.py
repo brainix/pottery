@@ -247,9 +247,6 @@ class RedisList(Base, collections.abc.MutableSequence):
             cast(Pipeline, self.redis).multi()
             self.redis.rpush(self.key, *encoded_values)
 
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
     __extend = extend
 
     # From collections.abc.MutableSequence:
