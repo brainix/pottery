@@ -75,8 +75,8 @@ class _Common:
                  key: Optional[str] = None,
                  **kwargs: Any,
                  ) -> None:
-        self.redis = _default_redis if redis is None else redis
-        self.key = key or self._random_key()
+        self.redis = cast(Redis, redis)
+        self.key = cast(str, key)
 
     def __del__(self) -> None:
         if self.key.startswith(self._RANDOM_KEY_PREFIX):
@@ -97,11 +97,11 @@ class _Common:
 
     @property
     def key(self) -> str:
-        return self._key
+        return self._key  # type: ignore
 
     @key.setter
     def key(self, value: str) -> None:
-        self._key = value or self._random_key()
+        self._key = value or self.__random_key()
 
     def _random_key(self) -> str:
         key = random_key(redis=self.redis, prefix=self._RANDOM_KEY_PREFIX)
@@ -111,6 +111,11 @@ class _Common:
             key,
         )
         return key
+
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    __random_key = _random_key
 
 
 JSONTypes = Union[None, bool, int, float, str, List[Any], Dict[str, Any]]
@@ -184,7 +189,7 @@ class Pipelined(metaclass=abc.ABCMeta):
         'Redis key.'
 
     @contextlib.contextmanager
-    def _pipeline(self) -> Generator[Pipeline, None, None]:
+    def __pipeline(self) -> Generator[Pipeline, None, None]:
         pipeline = self.redis.pipeline()
         yield pipeline
         with contextlib.suppress(RedisError):
@@ -193,36 +198,36 @@ class Pipelined(metaclass=abc.ABCMeta):
         pipeline.execute()
 
     @contextlib.contextmanager
-    def _watch_keys(self,
-                    *keys: Iterable[str],
-                    ) -> Generator[Pipeline, None, None]:
+    def __watch_keys(self,
+                     *keys: Iterable[str],
+                     ) -> Generator[Pipeline, None, None]:
         original_redis = self.redis
         keys = keys or (self.key,)
         try:
-            with self._pipeline() as pipeline:
+            with self.__pipeline() as pipeline:
                 self.redis = pipeline  # type: ignore
                 pipeline.watch(*keys)
                 yield pipeline
         finally:
             self.redis = original_redis  # type: ignore
 
-    def _context_managers(self,
-                          *others: Any,
-                          ) -> Generator[ContextManager[Pipeline], None, None]:
+    def __context_managers(self,
+                           *others: Any,
+                           ) -> Generator[ContextManager[Pipeline], None, None]:
         redises = collections.defaultdict(list)
         for container in itertools.chain((self,), others):
             if isinstance(container, Base):
                 redises[container.redis].append(container)
         for containers in redises.values():
             keys = (container.key for container in containers)
-            yield containers[0]._watch_keys(*keys)
+            yield containers[0].__watch_keys(*keys)
 
     @contextlib.contextmanager
     def _watch(self,
                *others: Any,
                ) -> Generator[None, None, None]:
         with contextlib.ExitStack() as stack:
-            for context_manager in self._context_managers(*others):
+            for context_manager in self.__context_managers(*others):
                 stack.enter_context(context_manager)
             yield
 
