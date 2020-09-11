@@ -130,8 +130,8 @@ class _Encodable:
 
     @staticmethod
     def _decode(value: bytes) -> JSONTypes:
-        decoded = json.loads(value.decode('utf-8'))
-        return cast(JSONTypes, decoded)
+        decoded: JSONTypes = json.loads(value.decode('utf-8'))
+        return decoded
 
 
 class _Comparable(metaclass=abc.ABCMeta):
