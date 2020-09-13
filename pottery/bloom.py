@@ -6,100 +6,42 @@
 # --------------------------------------------------------------------------- #
 
 
+import abc
 import itertools
 import math
+from typing import Any
 from typing import Generator
 from typing import Iterable
-from typing import Optional
 from typing import Set
 from typing import cast
 
 import mmh3
-from redis import Redis
 from redis.client import Pipeline
 
 from .base import Base
 from .base import JSONTypes
+from .base import _Encodable
 
 
-class BloomFilter(Base):
-    '''Redis-backed Bloom filter with an API similar to Python sets.
+class BloomFilterABC(_Encodable, metaclass=abc.ABCMeta):
+    @abc.abstractmethod  # pragma: no cover
+    def update(self, *iterables: Iterable[JSONTypes]) -> None:
+        ...
 
-    Bloom filters are a powerful data structure that help you to answer the
-    question, "Have I seen this element before?" but not the question, "What
-    are all of the elements that I've seen before?"  So think of Bloom filters
-    as Python sets that you can add elements to and use to test element
-    membership, but that you can't iterate through or get elements back out of.
+    @abc.abstractmethod  # pragma: no cover
+    def __contains__(self, value: JSONTypes) -> bool:
+        ...
 
-    Bloom filters are probabilistic, which means that they can sometimes
-    generate false positives (as in, they may report that you've seen a
-    particular element before even though you haven't).  But they will never
-    generate false negatives (so every time that they report that you haven't
-    seen a particular element before, you really must never have seen it).  You
-    can tune your acceptable false positive probability, though at the expense
-    of the storage size and the element insertion/lookup time of your Bloom
-    filter.
-
-    Wikipedia article:
-        https://en.wikipedia.org/wiki/Bloom_filter
-
-    Reference implementation:
-        http://www.maxburstein.com/blog/creating-a-simple-bloom-filter/
-
-    Instantiate a Bloom filter and clean up Redis before the doctest:
-
-        >>> dilberts = BloomFilter(
-        ...     num_values=100,
-        ...     false_positives=0.01,
-        ...     key='dilberts',
-        ... )
-        >>> dilberts.clear()
-
-    Here, num_values represents the number of elements that you expect to
-    insert into your BloomFilter, and false_positives represents your
-    acceptable false positive probability.  Using these two parameters,
-    BloomFilter automatically computes its own storage size and number of times
-    to run its hash functions on element insertion/lookup such that it can
-    guarantee a false positive rate at or below what you can tolerate, given
-    that you're going to insert your specified number of elements.
-
-    Insert an element into the Bloom filter:
-
-        >>> dilberts.add('rajiv')
-
-    Test for membership in the Bloom filter:
-
-        >>> 'rajiv' in dilberts
-        True
-        >>> 'raj' in dilberts
-        False
-        >>> 'dan' in dilberts
-        False
-
-    See how many elements we've inserted into the Bloom filter:
-
-        >>> len(dilberts)
-        1
-
-    Note that BloomFilter.__len__() is an approximation, so please don't rely
-    on it for anything important like financial systems or cat gif websites.
-
-    Insert multiple elements into the Bloom filter:
-
-        >>> dilberts.update({'raj', 'dan'})
-
-    Remove all of the elements from the Bloom filter:
-
-        >>> dilberts.clear()
-    '''
+    @abc.abstractmethod  # pragma: no cover
+    def _num_bits_set(self) -> int:
+        ...
 
     def __init__(self,
                  iterable: Iterable[JSONTypes] = frozenset(),
-                 *,
+                 *args: Any,
                  num_values: int,
                  false_positives: float,
-                 redis: Optional[Redis] = None,
-                 key: Optional[str] = None,
+                 **kwargs: Any,
                  ) -> None:
         '''Initialize a BloomFilter.  O(n * k)
 
@@ -107,7 +49,7 @@ class BloomFilter(Base):
         into this Bloom filter, and k is the number of times to run our hash
         functions on each element.
         '''
-        super().__init__(redis=redis, key=key)
+        super().__init__(*args, **kwargs)  # type: ignore
         self.num_values = num_values
         self.false_positives = false_positives
         self.update(iterable)
@@ -188,6 +130,107 @@ class BloomFilter(Base):
         for seed in range(self.num_hashes()):
             yield mmh3.hash(encoded_value, seed=seed) % self.size()
 
+    def add(self, value: JSONTypes) -> None:
+        '''Add an element to a BloomFilter.  O(k)
+
+        Here, k is the number of times to run our hash functions on a given
+        input string to compute bit offests into the underlying string
+        representing this Bloom filter.
+        '''
+        self.update({value})
+
+    def __len__(self) -> int:
+        '''Return the approximate the number of elements in a BloomFilter.  O(m)
+
+        Here, m is the size in bits of the underlying string representing this
+        Bloom filter.
+
+        Please note that this method returns an approximation, not an exact
+        value.  So please don't rely on it for anything important like
+        financial systems or cat gif websites.
+
+        More about the formula that this method implements:
+            https://en.wikipedia.org/wiki/Bloom_filter#Approximating_the_number_of_items_in_a_Bloom_filter
+        '''
+        len_ = (
+            -self.size()
+            / self.num_hashes()
+            * math.log(1 - self._num_bits_set() / self.size())
+        )
+        return math.floor(len_)
+
+
+class BloomFilter(BloomFilterABC, Base):
+    '''Redis-backed Bloom filter with an API similar to Python sets.
+
+    Bloom filters are a powerful data structure that help you to answer the
+    question, "Have I seen this element before?" but not the question, "What
+    are all of the elements that I've seen before?"  So think of Bloom filters
+    as Python sets that you can add elements to and use to test element
+    membership, but that you can't iterate through or get elements back out of.
+
+    Bloom filters are probabilistic, which means that they can sometimes
+    generate false positives (as in, they may report that you've seen a
+    particular element before even though you haven't).  But they will never
+    generate false negatives (so every time that they report that you haven't
+    seen a particular element before, you really must never have seen it).  You
+    can tune your acceptable false positive probability, though at the expense
+    of the storage size and the element insertion/lookup time of your Bloom
+    filter.
+
+    Wikipedia article:
+        https://en.wikipedia.org/wiki/Bloom_filter
+
+    Reference implementation:
+        http://www.maxburstein.com/blog/creating-a-simple-bloom-filter/
+
+    Instantiate a Bloom filter and clean up Redis before the doctest:
+
+        >>> dilberts = BloomFilter(
+        ...     num_values=100,
+        ...     false_positives=0.01,
+        ...     key='dilberts',
+        ... )
+        >>> dilberts.clear()
+
+    Here, num_values represents the number of elements that you expect to
+    insert into your BloomFilter, and false_positives represents your
+    acceptable false positive probability.  Using these two parameters,
+    BloomFilter automatically computes its own storage size and number of times
+    to run its hash functions on element insertion/lookup such that it can
+    guarantee a false positive rate at or below what you can tolerate, given
+    that you're going to insert your specified number of elements.
+
+    Insert an element into the Bloom filter:
+
+        >>> dilberts.add('rajiv')
+
+    Test for membership in the Bloom filter:
+
+        >>> 'rajiv' in dilberts
+        True
+        >>> 'raj' in dilberts
+        False
+        >>> 'dan' in dilberts
+        False
+
+    See how many elements we've inserted into the Bloom filter:
+
+        >>> len(dilberts)
+        1
+
+    Note that BloomFilter.__len__() is an approximation, so please don't rely
+    on it for anything important like financial systems or cat gif websites.
+
+    Insert multiple elements into the Bloom filter:
+
+        >>> dilberts.update({'raj', 'dan'})
+
+    Remove all of the elements from the Bloom filter:
+
+        >>> dilberts.clear()
+    '''
+
     def update(self, *iterables: Iterable[JSONTypes]) -> None:
         '''Populate a Bloom filter with the elements in iterables.  O(n * k)
 
@@ -220,15 +263,6 @@ class BloomFilter(Base):
             bits = cast(Pipeline, self.redis).execute()
         return all(bits)
 
-    def add(self, value: JSONTypes) -> None:
-        '''Add an element to a BloomFilter.  O(k)
-
-        Here, k is the number of times to run our hash functions on a given
-        input string to compute bit offests into the underlying string
-        representing this Bloom filter.
-        '''
-        self.update({value})
-
     def _num_bits_set(self) -> int:
         '''The number of bits set to 1 in this Bloom filter.  O(m)
 
@@ -236,26 +270,6 @@ class BloomFilter(Base):
         Bloom filter.
         '''
         return self.redis.bitcount(self.key)
-
-    def __len__(self) -> int:
-        '''Return the approximate the number of elements in a BloomFilter.  O(m)
-
-        Here, m is the size in bits of the underlying string representing this
-        Bloom filter.
-
-        Please note that this method returns an approximation, not an exact
-        value.  So please don't rely on it for anything important like
-        financial systems or cat gif websites.
-
-        More about the formula that this method implements:
-            https://en.wikipedia.org/wiki/Bloom_filter#Approximating_the_number_of_items_in_a_Bloom_filter
-        '''
-        len_ = (
-            -self.size()
-            / self.num_hashes()
-            * math.log(1 - self._num_bits_set() / self.size())
-        )
-        return math.floor(len_)
 
     def __repr__(self) -> str:
         'Return the string representation of a BloomFilter.  O(1)'
