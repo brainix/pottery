@@ -7,12 +7,15 @@
 
 
 import abc
+import functools
 import itertools
 import math
 from typing import Any
+from typing import Callable
 from typing import Generator
 from typing import Iterable
 from typing import Set
+from typing import TypeVar
 from typing import cast
 
 import mmh3
@@ -21,6 +24,25 @@ from redis.client import Pipeline
 from .base import Base
 from .base import JSONTypes
 from .base import _Encodable
+
+
+# A function that receives *args and **kwargs, and returns anything.  Useful
+# for annotating decorators.
+F = TypeVar('F', bound=Callable[..., Any])
+
+
+def _store_on_self(*, attr: str) -> Callable[[F], F]:
+    def decorator(func: F) -> F:
+        @functools.wraps(func)
+        def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+            try:
+                value = getattr(self, attr)
+            except AttributeError:
+                value = func(self, *args, **kwargs)
+                setattr(self, attr, value)
+            return value
+        return cast(F, wrapper)
+    return decorator
 
 
 class BloomFilterABC(_Encodable, metaclass=abc.ABCMeta):
@@ -54,6 +76,7 @@ class BloomFilterABC(_Encodable, metaclass=abc.ABCMeta):
         self.false_positives = false_positives
         self.update(iterable)
 
+    @_store_on_self(attr='_size')
     def size(self) -> int:
         '''The required number of bits (m) given n and p.
 
@@ -65,17 +88,15 @@ class BloomFilterABC(_Encodable, metaclass=abc.ABCMeta):
         More about the formula that this method implements:
             https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions
         '''
-        try:
-            return self._size  # type: ignore
-        except AttributeError:
-            self._size = (
-                -self.num_values
-                * math.log(self.false_positives)
-                / math.log(2)**2
-            )
-            self._size = math.ceil(self._size)
-            return self.size()
+        size = (
+            -self.num_values
+            * math.log(self.false_positives)
+            / math.log(2)**2
+        )
+        size = math.ceil(size)
+        return size
 
+    @_store_on_self(attr='_num_hashes')
     def num_hashes(self) -> int:
         '''The number of hash functions (k) given m and n, minimizing p.
 
@@ -88,12 +109,9 @@ class BloomFilterABC(_Encodable, metaclass=abc.ABCMeta):
         More about the formula that this method implements:
             https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions
         '''
-        try:
-            return self._num_hashes  # type: ignore
-        except AttributeError:
-            self._num_hashes = self.size() / self.num_values * math.log(2)
-            self._num_hashes = math.ceil(self._num_hashes)
-            return self.num_hashes()
+        num_hashes = self.size() / self.num_values * math.log(2)
+        num_hashes = math.ceil(num_hashes)
+        return num_hashes
 
     def _bit_offsets(self, value: JSONTypes) -> Generator[int, None, None]:
         '''The bit offsets to set/check in this Bloom filter for a given value.
