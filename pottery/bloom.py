@@ -141,7 +141,7 @@ class BloomFilterABC(_Encodable, metaclass=abc.ABCMeta):
         8, 471, and 711 are all set to 1.  If even one of those bits is set to
         0, then the value 'rajiv' must never have been inserted into our Bloom
         filter.  But if all of those bits are set to 1, then the value 'rajiv'
-        was *probably* inserted into our Bloom filter.
+        has *probably* been inserted into our Bloom filter.
         '''
         encoded_value = self._encode(value)
         for seed in range(self.num_hashes()):
