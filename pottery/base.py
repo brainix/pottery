@@ -177,7 +177,7 @@ class _Clearable(metaclass=abc.ABCMeta):
         self.redis.delete(self.key)
 
 
-class Pipelined(metaclass=abc.ABCMeta):
+class _Pipelined(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
     def redis(self) -> Redis:
@@ -201,15 +201,10 @@ class Pipelined(metaclass=abc.ABCMeta):
     def __watch_keys(self,
                      *keys: Iterable[str],
                      ) -> Generator[Pipeline, None, None]:
-        original_redis = self.redis
         keys = keys or (self.key,)
-        try:
-            with self.__pipeline() as pipeline:
-                self.redis = pipeline  # type: ignore
-                pipeline.watch(*keys)
-                yield pipeline
-        finally:
-            self.redis = original_redis  # type: ignore
+        with self.__pipeline() as pipeline:
+            pipeline.watch(*keys)
+            yield pipeline
 
     def __context_managers(self,
                            *others: Any,
@@ -225,14 +220,16 @@ class Pipelined(metaclass=abc.ABCMeta):
     @contextlib.contextmanager
     def _watch(self,
                *others: Any,
-               ) -> Generator[None, None, None]:
+               ) -> Generator[Pipeline, None, None]:
         with contextlib.ExitStack() as stack:
-            for context_manager in self.__context_managers(*others):
-                stack.enter_context(context_manager)
-            yield
+            for num, context_manager in enumerate(self.__context_managers(*others)):
+                tmp = stack.enter_context(context_manager)
+                if num == 0:
+                    pipeline = tmp
+            yield pipeline
 
 
-class Base(_Common, _Encodable, _Comparable, _Clearable, Pipelined):
+class Base(_Common, _Encodable, _Comparable, _Clearable, _Pipelined):
     ...
 
 

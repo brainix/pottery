@@ -14,7 +14,6 @@ from typing import List
 from typing import NoReturn
 from typing import Optional
 from typing import Tuple
-from typing import cast
 
 from redis import Redis
 from redis.client import Pipeline
@@ -37,17 +36,20 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         'Initialize a RedisSet.  O(n)'
         super().__init__(iterable, redis=redis, key=key)
         if iterable:
-            with self._watch(iterable):
-                self._populate(iterable)
+            with self._watch(iterable) as pipeline:
+                if pipeline.exists(self.key):
+                    raise KeyExistsError(self.redis, self.key)
+                else:
+                    self._populate(pipeline, iterable)
 
-    def _populate(self, iterable: Iterable[JSONTypes] = tuple()) -> None:
+    def _populate(self,
+                  pipeline: Pipeline,
+                  iterable: Iterable[JSONTypes] = tuple(),
+                  ) -> None:
         encoded_values = {self._encode(value) for value in iterable}
         if encoded_values:  # pragma: no cover
-            if self.redis.exists(self.key):
-                raise KeyExistsError(self.redis, self.key)
-            else:
-                cast(Pipeline, self.redis).multi()
-                self.redis.sadd(self.key, *encoded_values)
+            pipeline.multi()
+            pipeline.sadd(self.key, *encoded_values)
 
     # Methods required by collections.abc.MutableSet:
 
@@ -100,15 +102,13 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     # From collections.abc.Set:
     def isdisjoint(self, other: Iterable[Any]) -> bool:
         'Return True if two sets have a null intersection.  O(n)'
-        with self._watch(other):
-            if (
-                isinstance(other, self.__class__)
-                and self.redis.connection_pool == other.redis.connection_pool  # NoQA: W503
-            ):
-                cast(Pipeline, self.redis).multi()
-                self.redis.sinter(self.key, other.key)
-                disjoint = not cast(Pipeline, self.redis).execute()[0]
-            else:
+        if (
+            isinstance(other, self.__class__)
+            and self.redis.connection_pool == other.redis.connection_pool  # NoQA: W503
+        ):
+            disjoint = not self.redis.sinter(self.key, other.key)
+        else:
+            with self._watch(other):
                 disjoint = super().isdisjoint(other)
         return disjoint
 
@@ -140,17 +140,13 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
                  *iterables: Iterable[JSONTypes],
                  redis_method: str,
                  ) -> None:
-        # We have to iterate over iterables multiple times, so cast it to a
-        # tuple.  This allows the caller to pass in a generator for iterables,
-        # and we can still iterate over it multiple times.
-        iterables = tuple(iterables)
-        with self._watch(*iterables):
+        with self._watch(*iterables) as pipeline:
             encoded_values = set()
             for value in itertools.chain(*iterables):
                 encoded_values.add(self._encode(value))
             if encoded_values:
-                cast(Pipeline, self.redis).multi()
-                getattr(self.redis, redis_method)(self.key, *encoded_values)
+                pipeline.multi()
+                getattr(pipeline, redis_method)(self.key, *encoded_values)
 
     # Where does this method come from?
     def update(self, *iterables: Iterable[JSONTypes]) -> None:

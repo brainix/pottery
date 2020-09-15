@@ -46,21 +46,25 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
         'Initialize a RedisDict.  O(n)'
         super().__init__(redis=redis, key=key, **kwargs)
         if arg or kwargs:
-            with self._watch(arg):
-                if self.redis.exists(self.key):
+            with self._watch(arg) as pipeline:
+                if pipeline.exists(self.key):
                     raise KeyExistsError(self.redis, self.key)
                 else:
-                    self._populate(arg, **kwargs)
+                    self._populate(pipeline, arg, **kwargs)
 
-    def _populate(self, arg: InitArg = tuple(), **kwargs: JSONTypes) -> None:
+    def _populate(self,
+                  pipeline: Pipeline,
+                  arg: InitArg = tuple(),
+                  **kwargs: JSONTypes,
+                  ) -> None:
         to_set = {}
         with contextlib.suppress(AttributeError):
             arg = cast(InitMap, arg).items()
         for key, value in itertools.chain(cast(InitIter, arg), kwargs.items()):
             to_set[self._encode(key)] = self._encode(value)
         if to_set:
-            cast(Pipeline, self.redis).multi()
-            self.redis.hset(self.key, mapping=to_set)  # type: ignore
+            pipeline.multi()
+            pipeline.hset(self.key, mapping=to_set)  # type: ignore
 
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
@@ -108,8 +112,8 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
 
     # From collections.abc.MutableMapping:
     def update(self, arg: InitArg = tuple(), **kwargs: JSONTypes) -> None:  # type: ignore
-        with self._watch(arg):
-            self.__populate(arg, **kwargs)
+        with self._watch(arg) as pipeline:
+            self.__populate(pipeline, arg, **kwargs)
 
     # From collections.abc.Mapping:
     def __contains__(self, key: Any) -> bool:
