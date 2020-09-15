@@ -273,7 +273,6 @@ class BloomFilter(BloomFilterABC, Base):
         representing this Bloom filter.
         '''
         bit_offsets = set(self._bit_offsets(value))
-
         with self._watch():
             cast(Pipeline, self.redis).multi()
             for bit_offset in bit_offsets:
