@@ -201,7 +201,6 @@ class _Pipelined(metaclass=abc.ABCMeta):
     def __watch_keys(self,
                      *keys: Iterable[str],
                      ) -> Generator[Pipeline, None, None]:
-        keys = keys or (self.key,)
         with self.__pipeline() as pipeline:
             pipeline.watch(*keys)
             yield pipeline
@@ -211,22 +210,24 @@ class _Pipelined(metaclass=abc.ABCMeta):
                            ) -> Generator[ContextManager[Pipeline], None, None]:
         redises = collections.defaultdict(list)
         for container in itertools.chain((self,), others):
-            if isinstance(container, Base):
-                redises[container.redis].append(container)
+            if isinstance(container, _Pipelined):
+                connection_kwargs = frozenset(container.redis.connection_pool.connection_kwargs.items())
+                redises[connection_kwargs].append(container)
         for containers in redises.values():
             keys = (container.key for container in containers)
-            yield containers[0].__watch_keys(*keys)
+            pipeline = containers[0].__watch_keys(*keys)
+            yield pipeline
 
     @contextlib.contextmanager
     def _watch(self,
                *others: Any,
                ) -> Generator[Pipeline, None, None]:
+        pipelines = []
         with contextlib.ExitStack() as stack:
-            for num, context_manager in enumerate(self.__context_managers(*others)):
-                tmp = stack.enter_context(context_manager)
-                if num == 0:
-                    pipeline = tmp
-            yield pipeline
+            for context_manager in self.__context_managers(*others):
+                pipeline = stack.enter_context(context_manager)
+                pipelines.append(pipeline)
+            yield pipelines[0]
 
 
 class Base(_Common, _Encodable, _Comparable, _Clearable, _Pipelined):
