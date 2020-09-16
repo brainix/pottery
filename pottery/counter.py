@@ -34,6 +34,7 @@ class RedisCounter(RedisDict, collections.Counter):
     # Method overrides:
 
     def _populate(self,  # type: ignore
+                  pipeline: Pipeline,
                   arg: InitArg = tuple(),
                   *,
                   sign: int = +1,
@@ -54,8 +55,8 @@ class RedisCounter(RedisDict, collections.Counter):
             self._encode(k): self._encode(v) for k, v in to_set.items()
         }
         if encoded_to_set:
-            cast(Pipeline, self.redis).multi()
-            self.redis.hset(self.key, mapping=encoded_to_set)  # type: ignore
+            pipeline.multi()
+            pipeline.hset(self.key, mapping=encoded_to_set)  # type: ignore
 
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
@@ -64,13 +65,13 @@ class RedisCounter(RedisDict, collections.Counter):
 
     def update(self, arg: InitArg = tuple(), **kwargs: int) -> None:  # type: ignore
         'Like dict.update() but add counts instead of replacing them.  O(n)'
-        with self._watch(arg):
-            self.__populate(arg, sign=+1, **kwargs)
+        with self._watch(arg) as pipeline:
+            self.__populate(pipeline, arg, sign=+1, **kwargs)
 
     def subtract(self, arg: InitArg = tuple(), **kwargs: int) -> None:  # type: ignore
         'Like dict.update() but subtracts counts instead of replacing them.  O(n)'
-        with self._watch(arg):
-            self.__populate(arg, sign=-1, **kwargs)
+        with self._watch(arg) as pipeline:
+            self.__populate(pipeline, arg, sign=-1, **kwargs)
 
     def __getitem__(self, key: JSONTypes) -> int:
         'c.__getitem__(key) <==> c.get(key, 0).  O(1)'
@@ -138,11 +139,12 @@ class RedisCounter(RedisDict, collections.Counter):
                    test_func: Callable[[int], bool],
                    modifier_func: Callable[[int], int],
                    ) -> Counter[JSONTypes]:
-        counter: Counter[JSONTypes] = collections.Counter()
-        for key, value in self.__make_counter().items():
-            if test_func(value):
-                counter[key] = modifier_func(value)
-        return counter
+        with self._watch():
+            counter: Counter[JSONTypes] = collections.Counter()
+            for key, value in self.__make_counter().items():
+                if test_func(value):
+                    counter[key] = modifier_func(value)
+            return counter
 
     def __pos__(self) -> Counter[JSONTypes]:
         'Return our counts > 0.  O(n)'
@@ -163,7 +165,7 @@ class RedisCounter(RedisDict, collections.Counter):
                    *,
                    sign: int = +1,
                    ) -> 'RedisCounter':
-        with self._watch(other):
+        with self._watch(other) as pipeline:
             try:
                 other_items = cast('RedisCounter', other)._make_counter().items()
             except AttributeError:
@@ -178,12 +180,12 @@ class RedisCounter(RedisDict, collections.Counter):
             }
             encoded_to_del = {self._encode(k) for k in to_del}
             if encoded_to_set or encoded_to_del:
-                cast(Pipeline, self.redis).multi()
+                pipeline.multi()
                 if encoded_to_set:
-                    self.redis.hset(self.key, mapping=encoded_to_set)  # type: ignore
+                    pipeline.hset(self.key, mapping=encoded_to_set)  # type: ignore
                 if encoded_to_del:
-                    self.redis.hdel(self.key, *encoded_to_del)
-        return self
+                    pipeline.hdel(self.key, *encoded_to_del)
+            return self
 
     def __iadd__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
         'Same as __add__(), but in-place.  O(n)'
@@ -198,7 +200,7 @@ class RedisCounter(RedisDict, collections.Counter):
                   *,
                   method: Callable[[int, int], bool],
                   ) -> 'RedisCounter':
-        with self._watch(other):
+        with self._watch(other) as pipeline:
             self_counter = self.__make_counter()
             try:
                 other_counter = cast('RedisCounter', other)._make_counter()
@@ -214,17 +216,17 @@ class RedisCounter(RedisDict, collections.Counter):
                     del to_set[k]
                     to_del.add(k)
             if to_set or to_del:
-                cast(Pipeline, self.redis).multi()
+                pipeline.multi()
                 if to_set:
                     encoded_to_set = {
                         self._encode(k): self._encode(v)
                         for k, v in to_set.items()
                     }
-                    self.redis.hset(self.key, mapping=encoded_to_set)  # type: ignore
+                    pipeline.hset(self.key, mapping=encoded_to_set)  # type: ignore
                 if to_del:
                     encoded_to_del = {self._encode(k) for k in to_del}
-                    self.redis.hdel(self.key, *encoded_to_del)
-        return self
+                    pipeline.hdel(self.key, *encoded_to_del)
+            return self
 
     def __ior__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
         'Same as __or__(), but in-place.  O(n)'

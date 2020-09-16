@@ -32,7 +32,7 @@ class DictTests(TestCase):
             RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
         except KeyExistsError as wtf:
             assert repr(wtf) == (
-                "KeyExistsError(redis=Pipeline<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>, "
+                "KeyExistsError(redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>, "
                 "key='pottery:tel')"
             )
         else:  # pragma: no cover
@@ -45,7 +45,7 @@ class DictTests(TestCase):
             RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
         except KeyExistsError as wtf:
             assert str(wtf) == (
-                "redis=Pipeline<ConnectionPool<Connection<host=localhost,port=6379,db=0>>> "
+                "redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>> "
                 "key='pottery:tel'"
             )
         else:  # pragma: no cover

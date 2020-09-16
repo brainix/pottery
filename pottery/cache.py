@@ -254,10 +254,15 @@ class CachedOrderedDict(collections.OrderedDict):
                                key: JSONTypes,
                                default: JSONTypes = None,
                                ) -> None:
-        with self._cache._watch():
+        with self._cache._watch() as pipeline:
             if key not in self._cache:
-                self._cache.redis.multi()
-                self._cache[key] = default
+                pipeline.multi()
+                # The following line is equivalent to: self._cache[key] = default
+                pipeline.hset(
+                    self._cache.key,
+                    self._cache._encode(key),
+                    self._cache._encode(default),
+                )
 
     def __retry(self, callable: Callable[[], Any], try_num: int = 0) -> Any:
         try:

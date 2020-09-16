@@ -9,7 +9,6 @@
 import collections
 from typing import Iterable
 from typing import Optional
-from typing import cast
 
 from redis import Redis
 from redis.client import Pipeline
@@ -42,13 +41,16 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
                 ),
             )
 
-    def _populate(self, iterable: Iterable[JSONTypes] = tuple()) -> None:
+    def _populate(self,
+                  pipeline: Pipeline,
+                  iterable: Iterable[JSONTypes] = tuple(),
+                  ) -> None:
         if self.maxlen is not None:
             if self.maxlen:
                 iterable = tuple(iterable)[-self.maxlen:]
             else:  # pragma: no cover
                 iterable = tuple()
-        super()._populate(iterable)
+        super()._populate(pipeline, iterable)
 
     @property
     def maxlen(self) -> Optional[int]:
@@ -64,15 +66,14 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
 
     def insert(self, index: int, value: JSONTypes) -> None:
         'Insert an element into a RedisDeque before the given index.  O(n)'
-        with self._watch():
-            if self.maxlen is not None and len(self) >= self.maxlen:
-                raise IndexError(
-                    '{} already at its maximum size'.format(
-                        self.__class__.__name__,
-                    ),
-                )
-            else:
-                return super()._insert(index, value)
+        if self.maxlen is not None and len(self) >= self.maxlen:
+            raise IndexError(
+                '{} already at its maximum size'.format(
+                    self.__class__.__name__,
+                ),
+            )
+        else:
+            return super()._insert(index, value)
 
     def append(self, value: JSONTypes) -> None:
         'Add an element to the right side of the RedisDeque.  O(1)'
@@ -103,18 +104,18 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
                  *,
                  right: bool = True,
                  ) -> None:
-        with self._watch(values):
+        with self._watch(values) as pipeline:
             encoded_values = [self._encode(value) for value in values]
             len_ = len(self) + len(encoded_values)
-            cast(Pipeline, self.redis).multi()
+            pipeline.multi()
             push_method = 'rpush' if right else 'lpush'
-            getattr(self.redis, push_method)(self.key, *encoded_values)
+            getattr(pipeline, push_method)(self.key, *encoded_values)
             if self.maxlen is not None and len_ >= self.maxlen:
                 if right:
                     trim_indices = len_-self.maxlen, len_
                 else:
                     trim_indices = 0, self.maxlen-1
-                self.redis.ltrim(self.key, *trim_indices)
+                pipeline.ltrim(self.key, *trim_indices)
 
     def pop(self) -> JSONTypes:  # type: ignore
         return super().pop()
@@ -128,15 +129,15 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
         If n is negative, rotates left.
         '''
         if n:
-            with self._watch():
+            with self._watch() as pipeline:
                 push_method = 'lpush' if n > 0 else 'rpush'
                 values = self[-n:] if n > 0 else self[:-n]
                 encoded_values = (self._encode(element) for element in values)
                 trim_indices = (0, len(self)-n) if n > 0 else (-n, len(self))
 
-                cast(Pipeline, self.redis).multi()
-                getattr(self.redis, push_method)(self.key, *encoded_values)
-                self.redis.ltrim(self.key, *trim_indices)
+                pipeline.multi()
+                getattr(pipeline, push_method)(self.key, *encoded_values)
+                pipeline.ltrim(self.key, *trim_indices)
 
     # Methods required for Raj's sanity:
 

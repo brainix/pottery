@@ -16,7 +16,6 @@ class PotteryError(Exception):
     'Base exception class for Pottery containers.'
 
     def __init__(self, redis: Redis, key: Optional[str]) -> None:
-        super().__init__()
         self._redis = redis
         self._key = key
 
@@ -50,7 +49,6 @@ class PrimitiveError(Exception):
     'Base exception class for distributed primitives.'
 
     def __init__(self, masters: Iterable[Redis], key: str) -> None:
-        super().__init__()
         self._masters = masters
         self._key = key
 

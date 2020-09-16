@@ -19,7 +19,6 @@ from typing import TypeVar
 from typing import cast
 
 import mmh3
-from redis.client import Pipeline
 
 from .base import Base
 from .base import JSONTypes
@@ -142,7 +141,7 @@ class BloomFilterABC(_Encodable, metaclass=abc.ABCMeta):
         8, 471, and 711 are all set to 1.  If even one of those bits is set to
         0, then the value 'rajiv' must never have been inserted into our Bloom
         filter.  But if all of those bits are set to 1, then the value 'rajiv'
-        was *probably* inserted into our Bloom filter.
+        has *probably* been inserted into our Bloom filter.
         '''
         encoded_value = self._encode(value)
         for seed in range(self.num_hashes()):
@@ -256,14 +255,13 @@ class BloomFilter(BloomFilterABC, Base):
         into this Bloom filter, and k is the number of times to run our hash
         functions on each element.
         '''
-        iterables = tuple(iterables)
         bit_offsets: Set[int] = set()
-        with self._watch(iterables):
+        with self._watch(*iterables) as pipeline:
             for value in itertools.chain(*iterables):
                 bit_offsets.update(self._bit_offsets(value))
-            cast(Pipeline, self.redis).multi()
+            pipeline.multi()
             for bit_offset in bit_offsets:
-                self.redis.setbit(self.key, bit_offset, 1)
+                pipeline.setbit(self.key, bit_offset, 1)
 
     def __contains__(self, value: JSONTypes) -> bool:
         '''bf.__contains__(element) <==> element in bf.  O(k)
@@ -273,11 +271,11 @@ class BloomFilter(BloomFilterABC, Base):
         representing this Bloom filter.
         '''
         bit_offsets = set(self._bit_offsets(value))
-        with self._watch():
-            cast(Pipeline, self.redis).multi()
+        with self._watch() as pipeline:
+            pipeline.multi()
             for bit_offset in bit_offsets:
-                self.redis.getbit(self.key, bit_offset)
-            bits = cast(Pipeline, self.redis).execute()
+                pipeline.getbit(self.key, bit_offset)
+            bits = pipeline.execute()
         return all(bits)
 
     def _num_bits_set(self) -> int:

@@ -70,10 +70,9 @@ class _Common:
     _RANDOM_KEY_PREFIX: ClassVar[str] = 'pottery:'
 
     def __init__(self,
-                 *args: Any,
+                 *,
                  redis: Optional[Redis] = None,
                  key: Optional[str] = None,
-                 **kwargs: Any,
                  ) -> None:
         self.redis = cast(Redis, redis)
         self.key = cast(str, key)
@@ -177,7 +176,7 @@ class _Clearable(metaclass=abc.ABCMeta):
         self.redis.delete(self.key)
 
 
-class Pipelined(metaclass=abc.ABCMeta):
+class _Pipelined(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
     def redis(self) -> Redis:
@@ -201,38 +200,36 @@ class Pipelined(metaclass=abc.ABCMeta):
     def __watch_keys(self,
                      *keys: Iterable[str],
                      ) -> Generator[Pipeline, None, None]:
-        original_redis = self.redis
-        keys = keys or (self.key,)
-        try:
-            with self.__pipeline() as pipeline:
-                self.redis = pipeline  # type: ignore
-                pipeline.watch(*keys)
-                yield pipeline
-        finally:
-            self.redis = original_redis  # type: ignore
+        with self.__pipeline() as pipeline:
+            pipeline.watch(*keys)
+            yield pipeline
 
     def __context_managers(self,
                            *others: Any,
                            ) -> Generator[ContextManager[Pipeline], None, None]:
         redises = collections.defaultdict(list)
         for container in itertools.chain((self,), others):
-            if isinstance(container, Base):
-                redises[container.redis].append(container)
+            if isinstance(container, _Pipelined):
+                connection_kwargs = frozenset(container.redis.connection_pool.connection_kwargs.items())
+                redises[connection_kwargs].append(container)
         for containers in redises.values():
             keys = (container.key for container in containers)
-            yield containers[0].__watch_keys(*keys)
+            pipeline = containers[0].__watch_keys(*keys)
+            yield pipeline
 
     @contextlib.contextmanager
     def _watch(self,
                *others: Any,
-               ) -> Generator[None, None, None]:
+               ) -> Generator[Pipeline, None, None]:
+        pipelines = []
         with contextlib.ExitStack() as stack:
             for context_manager in self.__context_managers(*others):
-                stack.enter_context(context_manager)
-            yield
+                pipeline = stack.enter_context(context_manager)
+                pipelines.append(pipeline)
+            yield pipelines[0]
 
 
-class Base(_Common, _Encodable, _Comparable, _Clearable, Pipelined):
+class Base(_Common, _Encodable, _Comparable, _Clearable, _Pipelined):
     ...
 
 
@@ -267,7 +264,8 @@ class Primitive(metaclass=abc.ABCMeta):
     _DEFAULT_MASTERS: ClassVar[FrozenSet[Redis]] = frozenset({_default_redis})
 
     def __init__(self,
-                 *, key: str,
+                 *,
+                 key: str,
                  masters: Iterable[Redis] = frozenset(),
                  ) -> None:
         self.key = key

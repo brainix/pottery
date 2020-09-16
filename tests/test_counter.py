@@ -9,7 +9,8 @@
 import collections
 
 from pottery import RedisCounter
-from tests.base import TestCase  # type: ignore
+from pottery.base import _Common
+from tests.base import TestCase
 
 
 class CounterTests(TestCase):
@@ -203,3 +204,20 @@ class CounterTests(TestCase):
         c &= d
         assert isinstance(c, RedisCounter)
         assert c == collections.Counter()
+
+    def test_method_resolution_order(self):
+        # We need for _Common to come ahead of collections.Counter in the
+        # inheritance chain.  Because when we instantiate a RedisCounter, we
+        # need to hit _Common's .__init__() first, which *doesn't* delegate to
+        # super().__init__(), which *prevents* collections.Counter's
+        # .__init__() from getting hit; and this is the correct behavior.
+        #
+        # RedisCounter inherits from collections.Counter for method reuse; not
+        # to initialize a collections.Counter and store key/value pairs in
+        # memory.
+        #
+        # Inspired by Raymond Hettinger's excellent Python's super() considered
+        # super!
+        #   https://rhettinger.wordpress.com/2011/05/26/super-considered-super/
+        position = RedisCounter.mro().index
+        assert position(_Common) < position(collections.Counter)
