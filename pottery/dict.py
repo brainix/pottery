@@ -44,7 +44,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
                  **kwargs: JSONTypes,
                  ) -> None:
         'Initialize a RedisDict.  O(n)'
-        super().__init__(redis=redis, key=key, **kwargs)
+        super().__init__(redis=redis, key=key)
         if arg or kwargs:
             with self._watch(arg) as pipeline:
                 if pipeline.exists(self.key):

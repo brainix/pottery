@@ -34,7 +34,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
                  key: Optional[str] = None,
                  ) -> None:
         'Initialize a RedisSet.  O(n)'
-        super().__init__(iterable, redis=redis, key=key)
+        super().__init__(redis=redis, key=key)
         if iterable:
             with self._watch(iterable) as pipeline:
                 if pipeline.exists(self.key):

@@ -62,7 +62,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                  key: Optional[str] = None,
                  ) -> None:
         'Initialize a RedisList.  O(n)'
-        super().__init__(iterable, redis=redis, key=key)
+        super().__init__(redis=redis, key=key)
         if iterable:
             with self._watch(iterable) as pipeline:
                 if pipeline.exists(self.key):

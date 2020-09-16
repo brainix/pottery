@@ -70,10 +70,9 @@ class _Common:
     _RANDOM_KEY_PREFIX: ClassVar[str] = 'pottery:'
 
     def __init__(self,
-                 *args: Any,
+                 *,
                  redis: Optional[Redis] = None,
                  key: Optional[str] = None,
-                 **kwargs: Any,
                  ) -> None:
         self.redis = cast(Redis, redis)
         self.key = cast(str, key)
@@ -265,7 +264,8 @@ class Primitive(metaclass=abc.ABCMeta):
     _DEFAULT_MASTERS: ClassVar[FrozenSet[Redis]] = frozenset({_default_redis})
 
     def __init__(self,
-                 *, key: str,
+                 *,
+                 key: str,
                  masters: Iterable[Redis] = frozenset(),
                  ) -> None:
         self.key = key
