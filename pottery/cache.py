@@ -20,6 +20,7 @@ from typing import Iterable
 from typing import NamedTuple
 from typing import Optional
 from typing import TypeVar
+from typing import Union
 from typing import cast
 
 from redis import Redis
@@ -221,7 +222,7 @@ class CachedOrderedDict(collections.OrderedDict):
     def misses(self) -> FrozenSet[JSONTypes]:
         return frozenset(self._misses)
 
-    def __setitem__(self, key: JSONTypes, value: JSONTypes) -> None:
+    def __setitem__(self, key: JSONTypes, value: Union[JSONTypes, object]) -> None:
         'Set self[key] to value.'
         if value is not self._SENTINEL:
             self._cache[key] = value
@@ -244,8 +245,10 @@ class CachedOrderedDict(collections.OrderedDict):
         self.__retry(retriable_setdefault)
         self._misses.discard(key)
         if key not in self or self[key] is self._SENTINEL:
-            self[key] = default
-        return cast(JSONTypes, self[key])
+            value = self[key] = default
+        else:
+            value = self[key]
+        return value
 
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086

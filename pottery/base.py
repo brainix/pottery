@@ -198,7 +198,7 @@ class _Pipelined(metaclass=abc.ABCMeta):
 
     @contextlib.contextmanager
     def __watch_keys(self,
-                     *keys: Iterable[str],
+                     *keys: str,
                      ) -> Generator[Pipeline, None, None]:
         with self.__pipeline() as pipeline:
             pipeline.watch(*keys)
