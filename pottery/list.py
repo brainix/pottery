@@ -62,77 +62,77 @@ class RedisList(Base, collections.abc.MutableSequence):
                  key: Optional[str] = None,
                  ) -> None:
         'Initialize a RedisList.  O(n)'
-        super().__init__(iterable, redis=redis, key=key)
+        super().__init__(redis=redis, key=key)
         if iterable:
-            with self._watch(iterable):
-                self._populate(iterable)
+            with self._watch(iterable) as pipeline:
+                if pipeline.exists(self.key):
+                    raise KeyExistsError(pipeline, self.key)
+                else:
+                    self._populate(pipeline, iterable)
 
-    def _populate(self, iterable: Iterable[JSONTypes] = tuple()) -> None:
+    def _populate(self,
+                  pipeline: Pipeline,
+                  iterable: Iterable[JSONTypes] = tuple(),
+                  ) -> None:
         encoded_values = [self._encode(value) for value in iterable]
         if encoded_values:  # pragma: no cover
-            if self.redis.exists(self.key):
-                raise KeyExistsError(self.redis, self.key)
-            else:
-                cast(Pipeline, self.redis).multi()
-                self.redis.rpush(self.key, *encoded_values)
+            pipeline.multi()
+            pipeline.rpush(self.key, *encoded_values)
 
     # Methods required by collections.abc.MutableSequence:
 
     def __getitem__(self, index: Union[slice, int]) -> Any:
         'l.__getitem__(index) <==> l[index].  O(n)'
-        with self._watch():
-            if isinstance(index, slice):
-                # This is monumentally stupid.  Python's list API requires us
-                # to get elements by slice (defined as a start index, a stop
-                # index, and a step).  Of course, Redis allows us to only get
-                # elements by start and stop (no step), because it's Redis.  So
-                # our ridiculous hack is to get all of the elements between
-                # start and stop from Redis, then discard the ones between step
-                # in Python.  More info:
-                # http://redis.io/commands/lrange
+        if isinstance(index, slice):
+            # This is monumentally stupid.  Python's list API requires us
+            # to get elements by slice (defined as a start index, a stop
+            # index, and a step).  Of course, Redis allows us to only get
+            # elements by start and stop (no step), because it's Redis.  So
+            # our ridiculous hack is to get all of the elements between
+            # start and stop from Redis, then discard the ones between step
+            # in Python.  More info:
+            # http://redis.io/commands/lrange
+            with self._watch() as pipeline:
                 indices = self.__slice_to_indices(index)
-                cast(Pipeline, self.redis).multi()
-                self.redis.lrange(self.key, indices[0], indices[-1])
-                encoded = cast(Pipeline, self.redis).execute()[0]
+                pipeline.multi()
+                pipeline.lrange(self.key, indices[0], indices[-1])
+                encoded = pipeline.execute()[0]
                 encoded = encoded[::index.step]
                 value: Union[List[JSONTypes], JSONTypes] = [self._decode(value) for value in encoded]
+        else:
+            encoded = self.redis.lindex(self.key, index)
+            if encoded is None:
+                raise IndexError('list index out of range')
             else:
-                cast(Pipeline, self.redis).multi()
-                self.redis.lindex(self.key, index)
-                encoded = cast(Pipeline, self.redis).execute()[0]
-                if encoded is None:
-                    raise IndexError('list index out of range')
-                else:
-                    value = self._decode(encoded)
-            return value
+                value = self._decode(encoded)
+        return value
 
     @_raise_on_error
     def __setitem__(self, index: int, value: JSONTypes) -> None:  # type: ignore
         'l.__setitem__(index, value) <==> l[index] = value.  O(n)'
-        with self._watch():
-            if isinstance(index, slice):
+        if isinstance(index, slice):
+            with self._watch() as pipeline:
                 encoded_values = [self._encode(value) for value in value]
                 indices = self.__slice_to_indices(index)
-                self.redis.multi()
+                pipeline.multi()
                 for index, encoded_value in zip(indices, encoded_values):
-                    self.redis.lset(self.key, index, encoded_value)
+                    pipeline.lset(self.key, index, encoded_value)
                 indices, num = indices[len(encoded_values):], 0
                 for index in indices:
-                    self.redis.lset(self.key, index, 0)
+                    pipeline.lset(self.key, index, 0)
                     num += 1
                 if num:
-                    self.redis.lrem(self.key, num, 0)
-            else:
-                cast(Pipeline, self.redis).multi()
-                self.redis.lset(self.key, index, self._encode(value))
+                    pipeline.lrem(self.key, num, 0)
+        else:
+            self.redis.lset(self.key, index, self._encode(value))
 
     @_raise_on_error
     def __delitem__(self, index: Union[slice, int]) -> None:  # type: ignore
         'l.__delitem__(index) <==> del l[index].  O(n)'
-        with self._watch():
-            self.__delete(index)
+        with self._watch() as pipeline:
+            self.__delete(pipeline, index)
 
-    def __delete(self, index: Union[slice, int]) -> None:
+    def __delete(self, pipeline: Pipeline, index: Union[slice, int]) -> None:
         # This is monumentally stupid.  Python's list API requires us to delete
         # an element by *index.*  Of course, Redis doesn't support that,
         # because it's Redis.  Instead, Redis supports deleting an element by
@@ -142,12 +142,12 @@ class RedisList(Base, collections.abc.MutableSequence):
         # More info:
         #   http://redis.io/commands/lrem
         indices, num = self.__slice_to_indices(index), 0
-        cast(Pipeline, self.redis).multi()
+        pipeline.multi()
         for index in indices:
-            self.redis.lset(self.key, index, 0)
+            pipeline.lset(self.key, index, 0)
             num += 1
         if num:  # pragma: no cover
-            self.redis.lrem(self.key, num, 0)
+            pipeline.lrem(self.key, num, 0)
 
     def __len__(self) -> int:
         'Return the number of items in a RedisList.  O(1)'
@@ -155,13 +155,11 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def insert(self, index: int, value: JSONTypes) -> None:
         'Insert an element into a RedisList before the given index.  O(n)'
-        with self._watch():
-            self.__insert(index, value)
+        self.__insert(index, value)
 
     def _insert(self, index: int, value: JSONTypes) -> None:
         encoded_value = self._encode(value)
         if index <= 0:
-            cast(Pipeline, self.redis).multi()
             self.redis.lpush(self.key, encoded_value)
         elif index < len(self):
             # This is monumentally stupid.  Python's list API requires us to
@@ -174,13 +172,13 @@ class RedisList(Base, collections.abc.MutableSequence):
             #
             # More info:
             #   http://redis.io/commands/linsert
-            pivot = self._encode(self[index])
-            cast(Pipeline, self.redis).multi()
-            self.redis.lset(self.key, index, 0)
-            self.redis.linsert(self.key, 'BEFORE', 0, encoded_value)
-            self.redis.lset(self.key, index+1, pivot)
+            with self._watch() as pipeline:
+                pivot = self._encode(self[index])
+                pipeline.multi()
+                pipeline.lset(self.key, index, 0)
+                pipeline.linsert(self.key, 'BEFORE', 0, encoded_value)
+                pipeline.lset(self.key, index+1, pivot)
         else:
-            cast(Pipeline, self.redis).multi()
             self.redis.rpush(self.key, encoded_value)
 
     # Preserve the Open-Closed Principle with name mangling.
@@ -203,22 +201,22 @@ class RedisList(Base, collections.abc.MutableSequence):
             # with the same key.  No need to compare element by element.
             return True
         else:
-            with self._watch(other):
-                try:
-                    if len(self) != len(other):
-                        # self and other are different lengths.
-                        return False
-                    elif isinstance(other, collections.abc.Sequence):
-                        # self and other are the same length, and other is an
-                        # ordered collection too.  Compare self's and other's
-                        # elements, pair by pair.
-                        return all(x == y for x, y in zip(self, other))
-                    else:
-                        # self and other are the same length, but other is an
-                        # unordered collection.
-                        return False
-                except TypeError:
+            try:
+                if len(self) != len(other):
+                    # self and other are different lengths.
                     return False
+                elif isinstance(other, collections.abc.Sequence):
+                    # self and other are the same length, and other is an
+                    # ordered collection too.  Compare self's and other's
+                    # elements, pair by pair.
+                    with self._watch(other):
+                        return all(x == y for x, y in zip(self, other))
+                else:
+                    # self and other are the same length, but other is an
+                    # unordered collection.
+                    return False
+            except TypeError:
+                return False
 
     def __add__(self, other: List[JSONTypes]) -> 'RedisList':
         'Append the items in other to a RedisList.  O(n)'
@@ -229,7 +227,8 @@ class RedisList(Base, collections.abc.MutableSequence):
     def __repr__(self) -> str:
         'Return the string representation of a RedisList.  O(n)'
         encoded = self.redis.lrange(self.key, 0, -1)
-        values = [self._decode(value) for value in encoded]
+        with self._watch():
+            values = [self._decode(value) for value in encoded]
         return self.__class__.__name__ + str(values)
 
     # Method overrides:
@@ -242,27 +241,22 @@ class RedisList(Base, collections.abc.MutableSequence):
     # From collections.abc.MutableSequence:
     def extend(self, values: Iterable[JSONTypes]) -> None:
         'Extend a RedisList by appending elements from the iterable.  O(1)'
-        with self._watch(values):
-            encoded_values = (self._encode(value) for value in values)
-            cast(Pipeline, self.redis).multi()
-            self.redis.rpush(self.key, *encoded_values)
+        encoded_values = (self._encode(value) for value in values)
+        self.redis.rpush(self.key, *encoded_values)
 
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
     __extend = extend
 
     # From collections.abc.MutableSequence:
     def pop(self, index: Optional[int] = None) -> JSONTypes:
-        with self._watch():
+        with self._watch() as pipeline:
             len_ = len(self)
             if index and index >= len_:
                 raise IndexError('pop index out of range')
             elif index in {0, None, len_-1, -1}:
                 pop_method = 'lpop' if index == 0 else 'rpop'
-                cast(Pipeline, self.redis).multi()
-                getattr(self.redis, pop_method)(self.key)
-                encoded_value = cast(Pipeline, self.redis).execute()[0]
+                pipeline.multi()
+                getattr(pipeline, pop_method)(self.key)
+                encoded_value = pipeline.execute()[0]
                 if encoded_value is None:
                     raise IndexError(
                         'pop from an empty {}'.format(self.__class__.__name__),
@@ -270,16 +264,16 @@ class RedisList(Base, collections.abc.MutableSequence):
                 else:
                     return self._decode(encoded_value)
             else:
-                value = self[cast(int, index)]
-                self.__delete(cast(int, index))
-                return cast(JSONTypes, value)
+                value: JSONTypes = self[cast(int, index)]
+                self.__delete(pipeline, cast(int, index))
+                return value
 
     # From collections.abc.MutableSequence:
     def remove(self, value: JSONTypes) -> None:
-        with self._watch():
+        with self._watch() as pipeline:
             for index, element in enumerate(self):
                 if element == value:
-                    self.__delete(index)
+                    self.__delete(pipeline, index)
                     break
             else:
                 raise ValueError(

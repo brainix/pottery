@@ -7,27 +7,31 @@
 
 
 import collections
+import contextlib
 import functools
+import itertools
 import logging
 from typing import Any
 from typing import Callable
 from typing import ClassVar
 from typing import FrozenSet
 from typing import Hashable
+from typing import Iterable
 from typing import NamedTuple
 from typing import Optional
-from typing import Tuple
 from typing import TypeVar
 from typing import cast
 
 from redis import Redis
 from redis.exceptions import WatchError
 from typing_extensions import Final
-from typing_extensions import final
 
 from .base import JSONTypes
 from .base import _default_redis
 from .base import random_key
+from .dict import InitArg
+from .dict import InitIter
+from .dict import InitMap
 from .dict import RedisDict
 
 
@@ -161,7 +165,6 @@ def redis_cache(*,
     return decorator
 
 
-@final
 class CachedOrderedDict(collections.OrderedDict):
     '''Redis-backed container that extends Python's OrderedDicts.
 
@@ -187,13 +190,12 @@ class CachedOrderedDict(collections.OrderedDict):
                  *,
                  key: Optional[str] = None,
                  redis: Optional[Redis] = None,
-                 keys: Tuple[JSONTypes, ...] = tuple(),
+                 keys: Iterable[JSONTypes] = tuple(),
                  num_tries: int = _NUM_TRIES,
                  ) -> None:
         self._num_tries = num_tries
-        redis = _default_redis if redis is None else redis
         init_cache = functools.partial(RedisDict, redis=redis, key=key)
-        self._cache = self._retry(init_cache)
+        self._cache = self.__retry(init_cache)
         self._misses = set()
 
         # We have to iterate over keys multiple times, so cast it to a tuple.
@@ -202,7 +204,10 @@ class CachedOrderedDict(collections.OrderedDict):
         items, keys = [], tuple(keys)
         if keys:
             encoded_keys = (self._cache._encode(key_) for key_ in keys)
-            encoded_values = redis.hmget(self._cache.key, *encoded_keys)
+            encoded_values = self._cache.redis.hmget(
+                self._cache.key,
+                *encoded_keys,
+            )
             for key_, encoded_value in zip(keys, encoded_values):
                 if encoded_value is None:
                     value = self._SENTINEL
@@ -217,6 +222,7 @@ class CachedOrderedDict(collections.OrderedDict):
         return frozenset(self._misses)
 
     def __setitem__(self, key: JSONTypes, value: JSONTypes) -> None:
+        'Set self[key] to value.'
         if value is not self._SENTINEL:
             self._cache[key] = value
             self._misses.discard(key)
@@ -226,31 +232,64 @@ class CachedOrderedDict(collections.OrderedDict):
                    key: JSONTypes,
                    default: JSONTypes = None,
                    ) -> JSONTypes:
+        '''Insert key with a value of default if key is not in the dictionary.
+
+        Return the value for key if key is in the dictionary, else default.
+        '''
         retriable_setdefault = functools.partial(
-            self._retriable_setdefault,
+            self.__retriable_setdefault,
             key,
             default=default,
         )
-        self._retry(retriable_setdefault)
+        self.__retry(retriable_setdefault)
         self._misses.discard(key)
         if key not in self or self[key] is self._SENTINEL:
             self[key] = default
         return cast(JSONTypes, self[key])
 
-    def _retriable_setdefault(self,
-                              key: JSONTypes,
-                              default: JSONTypes = None,
-                              ) -> None:
-        with self._cache._watch():
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    def __retriable_setdefault(self,
+                               key: JSONTypes,
+                               default: JSONTypes = None,
+                               ) -> None:
+        with self._cache._watch() as pipeline:
             if key not in self._cache:
-                self._cache.redis.multi()
-                self._cache[key] = default
+                pipeline.multi()
+                # The following line is equivalent to: self._cache[key] = default
+                pipeline.hset(
+                    self._cache.key,
+                    self._cache._encode(key),
+                    self._cache._encode(default),
+                )
 
-    def _retry(self, callable: Callable[[], Any], try_num: int = 0) -> Any:
+    def __retry(self, callable: Callable[[], Any], try_num: int = 0) -> Any:
         try:
             return callable()
         except WatchError:  # pragma: no cover
             if try_num < self._num_tries - 1:
-                return self._retry(callable, try_num=try_num+1)
+                return self.__retry(callable, try_num=try_num+1)
             else:
                 raise
+
+    def update(self, arg: InitArg = tuple(), **kwargs: JSONTypes) -> None:  # type: ignore
+        '''D.update([E, ]**F) -> None.  Update D from dict/iterable E and F.
+        If E is present and has an .items() method, then does:  for k in E: D[k] = E[k]
+        If E is present and lacks an .items() method, then does:  for k, v in E: D[k] = v
+        In either case, this is followed by: for k in F:  D[k] = F[k]
+
+        The base class, OrderedDict, has an .update() method that works just
+        fine.  The trouble is that it executes multiple calls to .__setitem__()
+        therefore multiple round trips to Redis.  This overridden .update()
+        makes a single bulk call to Redis.
+        '''
+        to_cache = {}
+        with contextlib.suppress(AttributeError):
+            arg = cast(InitMap, arg).items()
+        for key, value in itertools.chain(cast(InitIter, arg), kwargs.items()):
+            if value is not self._SENTINEL:
+                to_cache[key] = value
+                self._misses.discard(key)
+            super().__setitem__(key, value)
+        self._cache.update(to_cache)

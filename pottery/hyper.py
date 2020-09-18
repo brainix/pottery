@@ -13,7 +13,6 @@ from typing import Union
 from typing import cast
 
 from redis import Redis
-from redis.client import Pipeline
 
 from .base import Base
 from .base import JSONTypes
@@ -42,31 +41,28 @@ class HyperLogLog(Base):
         into this HyperLogLog.
         '''
         super().__init__(redis=redis, key=key)
-        self.__update(iterable)
+        self.update(iterable)
 
     def add(self, value: RedisValues) -> None:
         'Add an element to a HyperLogLog.  O(1)'
-        self.__update({value})
+        self.update({value})
 
-    def update(self, *objs: Union['HyperLogLog', Iterable[RedisValues]]) -> None:
+    def update(self,
+               *objs: Union['HyperLogLog', Iterable[RedisValues]],
+               ) -> None:
         objs = (self,) + tuple(objs)
         other_hll_keys: List[str] = []
         encoded_values: List[str] = []
-        with self._watch(objs[1:]):
+        with self._watch(objs[1:]) as pipeline:
             for obj in objs:
                 if isinstance(obj, self.__class__):
                     other_hll_keys.append(obj.key)
                 else:
                     for value in cast(Iterable[JSONTypes], obj):
                         encoded_values.append(self._encode(value))
-            cast(Pipeline, self.redis).multi()
-            self.redis.pfmerge(self.key, *other_hll_keys)
-            self.redis.pfadd(self.key, *encoded_values)
-
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
-    __update = update
+            pipeline.multi()
+            pipeline.pfmerge(self.key, *other_hll_keys)
+            pipeline.pfadd(self.key, *encoded_values)
 
     def union(self,
               *objs: Iterable[RedisValues],

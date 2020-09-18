@@ -7,11 +7,6 @@ already know how to use Pottery.
 
 [![Build Status](https://travis-ci.org/brainix/pottery.svg?branch=master)](https://travis-ci.org/brainix/pottery)
 
-If you enjoy Pottery, then please consider adding a :thumbsup: to [this
-comment](https://github.com/vinta/awesome-python/pull/1088#issue-198200204) so
-that Pottery gets added to the [Awesome
-Python](https://github.com/vinta/awesome-python#awesome-python-) list!
-
 ## Installation
 
     $ pip3 install pottery
