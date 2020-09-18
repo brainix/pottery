@@ -16,6 +16,7 @@ import logging
 import os
 import random
 import string
+from types import TracebackType
 from typing import Any
 from typing import ClassVar
 from typing import ContextManager
@@ -27,6 +28,7 @@ from typing import List
 from typing import Mapping
 from typing import Optional
 from typing import Tuple
+from typing import Type
 from typing import Union
 from typing import cast
 
@@ -176,6 +178,26 @@ class _Clearable(metaclass=abc.ABCMeta):
         self.redis.delete(self.key)
 
 
+class _ContextPipeline:
+    def __init__(self, redis: Redis) -> None:
+        self.redis = redis
+
+    def __enter__(self) -> Pipeline:
+        self.pipeline = self.redis.pipeline()
+        return self.pipeline
+
+    def __exit__(self,
+                 exc_type: Optional[Type[BaseException]],
+                 exc_value: Optional[BaseException],
+                 traceback: Optional[TracebackType],
+                 ) -> None:
+        if exc_type is None:
+            with contextlib.suppress(RedisError):
+                self.pipeline.multi()
+                self.pipeline.ping()
+            self.pipeline.execute()
+
+
 class _Pipelined(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
@@ -188,19 +210,10 @@ class _Pipelined(metaclass=abc.ABCMeta):
         'Redis key.'
 
     @contextlib.contextmanager
-    def __pipeline(self) -> Generator[Pipeline, None, None]:
-        pipeline = self.redis.pipeline()
-        yield pipeline
-        with contextlib.suppress(RedisError):
-            pipeline.multi()
-            pipeline.ping()
-        pipeline.execute()
-
-    @contextlib.contextmanager
     def __watch_keys(self,
                      *keys: str,
                      ) -> Generator[Pipeline, None, None]:
-        with self.__pipeline() as pipeline:
+        with _ContextPipeline(self.redis) as pipeline:
             pipeline.watch(*keys)
             yield pipeline
 
