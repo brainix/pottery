@@ -193,7 +193,7 @@ class _Pipelined(metaclass=abc.ABCMeta):
         yield pipeline
         with contextlib.suppress(RedisError):
             pipeline.multi()
-        pipeline.ping()
+            pipeline.ping()
         pipeline.execute()
 
     @contextlib.contextmanager
