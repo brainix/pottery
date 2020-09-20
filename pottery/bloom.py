@@ -22,7 +22,6 @@ import mmh3
 
 from .base import Base
 from .base import JSONTypes
-from .base import _Encodable
 
 
 # A function that receives *args and **kwargs, and returns anything.  Useful
@@ -44,7 +43,14 @@ def _store_on_self(*, attr: str) -> Callable[[F], F]:
     return decorator
 
 
-class BloomFilterABC(_Encodable, metaclass=abc.ABCMeta):
+class BloomFilterABC(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def _bit_offsets(self,
+                     encoded_value: JSONTypes,
+                     ) -> Generator[int, None, None]:
+        for seed in range(self.num_hashes()):
+            yield mmh3.hash(encoded_value, seed=seed) % self.size()
+
     @abc.abstractmethod  # pragma: no cover
     def update(self, *iterables: Iterable[JSONTypes]) -> None:
         ...
@@ -111,41 +117,6 @@ class BloomFilterABC(_Encodable, metaclass=abc.ABCMeta):
         num_hashes = self.size() / self.num_values * math.log(2)
         num_hashes = math.ceil(num_hashes)
         return num_hashes
-
-    def _bit_offsets(self, value: JSONTypes) -> Generator[int, None, None]:
-        '''The bit offsets to set/check in this Bloom filter for a given value.
-
-        Instantiate a Bloom filter:
-
-            >>> dilberts = BloomFilter(
-            ...     num_values=100,
-            ...     false_positives=0.01,
-            ...     key='dilberts',
-            ... )
-
-        Now let's look at a few examples:
-
-            >>> tuple(dilberts._bit_offsets('rajiv'))
-            (183, 319, 787, 585, 8, 471, 711)
-            >>> tuple(dilberts._bit_offsets('raj'))
-            (482, 875, 725, 667, 109, 714, 595)
-            >>> tuple(dilberts._bit_offsets('dan'))
-            (687, 925, 954, 707, 615, 914, 620)
-
-        Thus, if we want to insert the value 'rajiv' into our Bloom filter,
-        then we must set bits 183, 319, 787, 585, 8, 471, and 711 all to 1.  If
-        any/all of them are already 1, no problems.
-
-        Similarly, if we want to check to see if the value 'rajiv' is in our
-        Bloom filter, then we must check to see if the bits 183, 319, 787, 585,
-        8, 471, and 711 are all set to 1.  If even one of those bits is set to
-        0, then the value 'rajiv' must never have been inserted into our Bloom
-        filter.  But if all of those bits are set to 1, then the value 'rajiv'
-        has *probably* been inserted into our Bloom filter.
-        '''
-        encoded_value = self._encode(value)
-        for seed in range(self.num_hashes()):
-            yield mmh3.hash(encoded_value, seed=seed) % self.size()
 
     def add(self, value: JSONTypes) -> None:
         '''Add an element to a BloomFilter.  O(k)
@@ -247,6 +218,40 @@ class BloomFilter(BloomFilterABC, Base):
 
         >>> dilberts.clear()
     '''
+
+    def _bit_offsets(self, value: JSONTypes) -> Generator[int, None, None]:
+        '''The bit offsets to set/check in this Bloom filter for a given value.
+
+        Instantiate a Bloom filter:
+
+            >>> dilberts = BloomFilter(
+            ...     num_values=100,
+            ...     false_positives=0.01,
+            ...     key='dilberts',
+            ... )
+
+        Now let's look at a few examples:
+
+            >>> tuple(dilberts._bit_offsets('rajiv'))
+            (183, 319, 787, 585, 8, 471, 711)
+            >>> tuple(dilberts._bit_offsets('raj'))
+            (482, 875, 725, 667, 109, 714, 595)
+            >>> tuple(dilberts._bit_offsets('dan'))
+            (687, 925, 954, 707, 615, 914, 620)
+
+        Thus, if we want to insert the value 'rajiv' into our Bloom filter,
+        then we must set bits 183, 319, 787, 585, 8, 471, and 711 all to 1.  If
+        any/all of them are already 1, no problems.
+
+        Similarly, if we want to check to see if the value 'rajiv' is in our
+        Bloom filter, then we must check to see if the bits 183, 319, 787, 585,
+        8, 471, and 711 are all set to 1.  If even one of those bits is set to
+        0, then the value 'rajiv' must never have been inserted into our Bloom
+        filter.  But if all of those bits are set to 1, then the value 'rajiv'
+        has *probably* been inserted into our Bloom filter.
+        '''
+        encoded_value = self._encode(value)
+        return super()._bit_offsets(encoded_value)
 
     def update(self, *iterables: Iterable[JSONTypes]) -> None:
         '''Populate a Bloom filter with the elements in iterables.  O(n * k)
