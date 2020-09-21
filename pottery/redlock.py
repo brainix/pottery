@@ -194,7 +194,7 @@ class Redlock(Primitive):
 
     def __acquired_master(self, master: Redis) -> int:
         if self._value:
-            ttl = self._acquired_script(
+            ttl: int = self._acquired_script(
                 keys=(self.key,),
                 args=(self._value,),
                 client=master,

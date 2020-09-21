@@ -28,9 +28,10 @@ from redis import ConnectionPool  # isort:skip
 
 def __eq__(self: ConnectionPool, other: Any) -> bool:
     try:
-        return self.connection_kwargs == other.connection_kwargs
+        value: bool = self.connection_kwargs == other.connection_kwargs
     except AttributeError:  # pragma: no cover
-        return False
+        value = False
+    return value
 
 ConnectionPool.__eq__ = __eq__  # type: ignore
 
@@ -50,7 +51,8 @@ def _default(self: Any, obj: Any) -> Union[Dict[str, Any], List[Any], str]:
     funcs.discard(None)
     assert len(funcs) <= 1
     func = funcs.pop() if any(funcs) else _default.default  # type: ignore
-    return func(obj)
+    return_value: Union[Dict[str, Any], List[Any], str] = func(obj)
+    return return_value
 
 import json  # isort:skip
 _default.default = json.JSONEncoder.default  # type: ignore
