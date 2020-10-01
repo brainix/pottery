@@ -136,6 +136,9 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     def symmetric_difference(self, other: Iterable[Any]) -> NoReturn:  # pragma: no cover
         raise NotImplementedError
 
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
     def __update(self,
                  *iterables: Iterable[JSONTypes],
                  redis_method: str,
