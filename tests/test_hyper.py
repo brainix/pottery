@@ -11,7 +11,7 @@ from tests.base import TestCase  # type: ignore
 
 
 class HyperLogLogTests(TestCase):
-    _KEY = '{}hll'.format(TestCase._TEST_KEY_PREFIX)
+    _KEY = f'{TestCase._TEST_KEY_PREFIX}hll'
 
     def test_init_without_iterable(self):
         hll = HyperLogLog()
@@ -71,4 +71,4 @@ class HyperLogLogTests(TestCase):
     def test_repr(self):
         'Test HyperLogLog.__repr__()'
         hll = HyperLogLog({'foo', 'bar', 'zap', 'a'}, key=self._KEY)
-        assert repr(hll) == '<HyperLogLog key={} len=4>'.format(self._KEY)
+        assert repr(hll) == f'<HyperLogLog key={self._KEY} len=4>'
