@@ -293,7 +293,7 @@ class BloomFilter(BloomFilterABC, Base):
 
     def __repr__(self) -> str:
         'Return the string representation of a BloomFilter.  O(1)'
-        return '<{} key={}>'.format(self.__class__.__name__, self.key)
+        return f'<{self.__class__.__name__} key={self.key}>'
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -22,7 +22,7 @@ class DoctestTests(TestCase):  # pragma: no cover
         source_files = (f for f in os.listdir(source_dir) if f.endswith('.py'))
         for source_file in source_files:
             module_name = os.path.splitext(source_file)[0]
-            module = importlib.import_module('pottery.{}'.format(module_name))
+            module = importlib.import_module(f'pottery.{module_name}')
             yield module
 
     @unittest.skipUnless('CI' in os.environ, 'run (slow) doctests on only CI')

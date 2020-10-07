@@ -19,7 +19,7 @@ class ListTests(TestCase):
         https://docs.python.org/3/tutorial/datastructures.html#more-on-lists
     '''
 
-    _KEY = '{}squares'.format(TestCase._TEST_KEY_PREFIX)
+    _KEY = f'{TestCase._TEST_KEY_PREFIX}squares'
 
     def test_indexerror(self):
         list_ = RedisList()
@@ -144,8 +144,8 @@ class ListTests(TestCase):
         assert not squares1 != squares2
 
     def test_eq_same_redis_instance_different_keys(self):
-        key1 = '{}squares1'.format(TestCase._TEST_KEY_PREFIX)
-        key2 = '{}squares2'.format(TestCase._TEST_KEY_PREFIX)
+        key1 = f'{TestCase._TEST_KEY_PREFIX}squares1'
+        key2 = f'{TestCase._TEST_KEY_PREFIX}squares2'
         squares1 = RedisList((1, 4, 9, 16, 25), key=key1)
         squares2 = RedisList((1, 4, 9, 16, 25), key=key2)
         assert squares1 == squares2

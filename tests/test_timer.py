@@ -21,7 +21,7 @@ class ContextTimerTests(TestCase):
 
     def _confirm_elapsed(self, expected):
         got = round(self.timer.elapsed() / self.ACCURACY) * self.ACCURACY
-        assert got == expected, '{} != {}'.format(got, expected)
+        assert got == expected, f'{got} != {expected}'
 
     def test_start_stop_and_elapsed(self):
         # timer hasn't been started

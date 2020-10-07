@@ -22,7 +22,7 @@ __author__ = 'Rajiv Bakulesh Shah'
 __author_email__ = 'brainix@gmail.com'
 __license__ = 'Apache 2.0'
 __keywords__ = 'Redis client persistent storage'
-__copyright__ = 'Copyright © 2015-2020, {}, original author.'.format(__author__)
+__copyright__ = f'Copyright © 2015-2020, {__author__}, original author.'
 
 
 from .exceptions import PotteryError  # isort:skip

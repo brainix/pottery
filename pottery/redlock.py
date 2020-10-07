@@ -463,11 +463,9 @@ class Redlock(Primitive):
         self.__release()
 
     def __repr__(self) -> str:
-        return '<{} key={} value={!r} timeout={}>'.format(
-            self.__class__.__name__,
-            self.key,
-            self._value,
-            self.__locked(),
+        return (
+            f'<{self.__class__.__name__} key={self.key} '
+            f'value={str(self._value)} timeout={self.__locked()}>'
         )
 
 

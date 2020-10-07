@@ -112,10 +112,9 @@ class NextId(Primitive):
             raise QuorumNotAchieved(self.masters, self.key)
 
     def __repr__(self) -> str:
-        return '<{} key={} value={}>'.format(
-            self.__class__.__name__,
-            self.key,
-            self.__current_id,
+        return (
+            f'<{self.__class__.__name__} key={self.key} '
+            f'value={self.__current_id}>'
         )
 
     @property

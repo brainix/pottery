@@ -20,14 +20,12 @@ class PotteryError(Exception):
         self._key = key
 
     def __repr__(self) -> str:
-        return "{}(redis={}, key='{}')".format(
-            self.__class__.__name__,
-            self._redis,
-            self._key,
+        return (
+            f"{self.__class__.__name__}(redis={self._redis}, key='{self._key}')"
         )
 
     def __str__(self) -> str:
-        return "redis={} key='{}'".format(self._redis, self._key)
+        return f"redis={self._redis} key='{self._key}'"
 
 class KeyExistsError(PotteryError):
     'Initializing a container on a Redis key that already exists.'
@@ -39,10 +37,10 @@ class RandomKeyError(PotteryError, RuntimeError):
         super().__init__(redis, None)
 
     def __repr__(self) -> str:
-        return "{}(redis={})".format(self.__class__.__name__, self._redis)
+        return f"{self.__class__.__name__}(redis={self._redis})"
 
     def __str__(self) -> str:
-        return 'redis={}'.format(self._redis)
+        return f'redis={self._redis}'
 
 
 class PrimitiveError(Exception):
@@ -53,14 +51,13 @@ class PrimitiveError(Exception):
         self._key = key
 
     def __repr__(self) -> str:
-        return "{}(masters={}, key='{}')".format(
-            self.__class__.__name__,
-            list(self._masters),
-            self._key,
+        return (
+            f"{self.__class__.__name__}(masters={list(self._masters)}, "
+            f"key='{self._key}')"
         )
 
     def __str__(self) -> str:
-        return "masters={}, key='{}'".format(list(self._masters), self._key)
+        return f"masters={list(self._masters)}, key='{self._key}'"
 
 class QuorumNotAchieved(PrimitiveError, RuntimeError):
     ...

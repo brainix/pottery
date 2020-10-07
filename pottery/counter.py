@@ -89,7 +89,7 @@ class RedisCounter(RedisDict, collections.Counter):
     def __repr__(self) -> str:
         'Return the string representation of a RedisCounter.  O(n)'
         items = self.most_common()
-        pairs = ("'{}': {}".format(key, value) for key, value in items)
+        pairs = (f"'{key}': {value}" for key, value in items)
         repr_ = ', '.join(pairs)
         return self.__class__.__name__ + '{' + repr_ + '}'
 

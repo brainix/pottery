@@ -15,7 +15,7 @@ from tests.base import TestCase  # type: ignore
 
 
 class BloomFilterTests(TestCase):
-    _KEY = '{}dilberts'.format(TestCase._TEST_KEY_PREFIX)
+    _KEY = f'{TestCase._TEST_KEY_PREFIX}dilberts'
 
     def test_init_without_iterable(self):
         'Test BloomFilter.__init__() without an iterable for initialization'
@@ -167,13 +167,13 @@ class BloomFilterTests(TestCase):
             false_positives=0.01,
             key=self._KEY,
         )
-        assert repr(dilberts) == '<BloomFilter key={}>'.format(self._KEY)
+        assert repr(dilberts) == f'<BloomFilter key={self._KEY}>'
 
 
 class RecentlyConsumedTests(TestCase):
     "Simulate reddit's recently consumed problem to test our Bloom filter."
 
-    _KEY = '{}recently-consumed'.format(TestCase._TEST_KEY_PREFIX)
+    _KEY = f'{TestCase._TEST_KEY_PREFIX}recently-consumed'
 
     def setUp(self):
         super().setUp()
@@ -240,5 +240,5 @@ class RecentlyConsumedTests(TestCase):
         actual /= len(self.unseen_links)
         actual = self.round(actual, sig_digits=1)
 
-        message = 'acceptable: {}; actual: {}'.format(acceptable, actual)
+        message = f'acceptable: {acceptable}; actual: {actual}'
         assert actual <= acceptable, message

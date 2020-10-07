@@ -84,8 +84,4 @@ class HyperLogLog(Base):
 
     def __repr__(self) -> str:
         'Return the string representation of a HyperLogLog.  O(1)'
-        return '<{} key={} len={}>'.format(
-            self.__class__.__name__,
-            self.key,
-            len(self),
-        )
+        return f'<{self.__class__.__name__} key={self.key} len={len(self)}>'

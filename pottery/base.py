@@ -295,4 +295,4 @@ class Primitive(metaclass=abc.ABCMeta):
 
     @key.setter
     def key(self, value: str) -> None:
-        self._key = '{}:{}'.format(self.KEY_PREFIX, value)
+        self._key = f'{self.KEY_PREFIX}:{value}'
