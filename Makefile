@@ -6,7 +6,7 @@
 # --------------------------------------------------------------------------- #
 
 
-init upgrade: formulae := {openssl,readline,xz,pyenv,redis}
+init upgrade: formulae := {openssl,readline,xz,redis}
 
 version ?= 3.9.0
 venv ?= venv
@@ -21,8 +21,10 @@ init:
 	brew analytics off
 	brew analytics regenerate-uuid
 	-brew install $(formulae)
+	-git clone https://github.com/pyenv/pyenv.git ~/.pyenv
 
 python:
+	cd ~/.pyenv/plugins/python-build/../.. && git pull
 	CFLAGS="-I$(shell brew --prefix openssl)/include -I$(shell brew --prefix readline)/include -g -O2" \
 		LDFLAGS="-L$(shell brew --prefix openssl)/lib -L$(shell brew --prefix readline)/lib" \
 		pyenv install --skip-existing $(version)
