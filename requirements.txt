@@ -6,7 +6,7 @@ coverage==5.3
 docutils==0.16
 flake8==3.8.4
 idna==2.10
-isort==5.6.2
+isort==5.6.3
 keyring==21.3.0
 mccabe==0.6.1
 mmh3==2.5.1
