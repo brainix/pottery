@@ -31,7 +31,7 @@ setup(
     author_email=pottery.__author_email__,
     license=pottery.__license__,
     classifiers=[
-        'Development Status :: 1 - Planning',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'Topic :: Database :: Front-Ends',
