@@ -6,23 +6,32 @@
 # --------------------------------------------------------------------------- #
 
 
+import os
+
 from setuptools import find_packages
 from setuptools import setup
 
 import pottery
 
 
+package_dir = os.path.dirname(__file__)
+readme = os.path.join(package_dir, 'README.md')
+with open(readme, encoding='utf-8') as f:
+    long_description = f.read()
+
+
 setup(
     name=pottery.__name__,
     version=pottery.__version__,
     description=pottery.__description__,
-    long_description=pottery.__long_description__,
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     url=pottery.__url__,
     author=pottery.__author__,
     author_email=pottery.__author_email__,
     license=pottery.__license__,
     classifiers=[
-        'Development Status :: 1 - Planning',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'Topic :: Database :: Front-Ends',
