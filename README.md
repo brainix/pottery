@@ -6,8 +6,11 @@ way to access Redis.  If you know how to use Python dicts, then you already
 know how to use Pottery.
 
 [![Build Status](https://travis-ci.org/brainix/pottery.svg?branch=master)](https://travis-ci.org/brainix/pottery)
-
 [![Coverage Status](https://coveralls.io/repos/github/brainix/pottery/badge.svg?branch=master)](https://coveralls.io/github/brainix/pottery?branch=master)
+
+[![Downloads](https://pepy.tech/badge/pottery)](https://pepy.tech/project/pottery)
+[![Downloads](https://pepy.tech/badge/pottery/month)](https://pepy.tech/project/pottery)
+[![Downloads](https://pepy.tech/badge/pottery/week)](https://pepy.tech/project/pottery)
 
 ## Installation
 
