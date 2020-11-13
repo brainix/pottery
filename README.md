@@ -1,11 +1,17 @@
 # Pottery: Redis for Humans
 
-[Redis](http://redis.io/) is awesome, :grinning: but [Redis
-commands](http://redis.io/commands) are not always fun. :rage:  Pottery is a
-Pythonic way to access Redis.  If you know how to use Python dicts, then you
-already know how to use Pottery.
+[Redis](http://redis.io/) is awesome, but [Redis
+commands](http://redis.io/commands) are not always fun.  Pottery is a Pythonic
+way to access Redis.  If you know how to use Python dicts, then you already
+know how to use Pottery.
 
-[![Build Status](https://travis-ci.org/brainix/pottery.svg?branch=master)](https://travis-ci.org/brainix/pottery) [![Coverage Status](https://coveralls.io/repos/github/brainix/pottery/badge.svg?branch=master)](https://coveralls.io/github/brainix/pottery?branch=master)
+[![Build Status](https://travis-ci.org/brainix/pottery.svg?branch=master)](https://travis-ci.org/brainix/pottery)
+[![Coverage Status](https://coveralls.io/repos/github/brainix/pottery/badge.svg?branch=master)](https://coveralls.io/github/brainix/pottery?branch=master)
+[![PyPI version](https://badge.fury.io/py/pottery.svg)](https://badge.fury.io/py/pottery)
+
+[![Downloads](https://pepy.tech/badge/pottery)](https://pepy.tech/project/pottery)
+[![Downloads](https://pepy.tech/badge/pottery/month)](https://pepy.tech/project/pottery)
+[![Downloads](https://pepy.tech/badge/pottery/week)](https://pepy.tech/project/pottery)
 
 ## Installation
 
@@ -13,14 +19,14 @@ already know how to use Pottery.
 
 ## Usage
 
-First, set up your Redis client: :alien:
+First, set up your Redis client:
 
 ```python
 >>> from redis import Redis
 >>> redis = Redis.from_url('redis://localhost:6379/')
 ```
 
-That was the hardest part. :grimacing:
+That was the hardest part.
 
 
 
