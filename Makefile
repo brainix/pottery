@@ -6,11 +6,14 @@
 # --------------------------------------------------------------------------- #
 
 
-init upgrade: formulae := {openssl,readline,xz,redis}
-
-version ?= 3.9.0
 venv ?= venv
 
+init upgrade: formulae := {openssl,readline,xz,redis}
+
+python requirements: version ?= 3.9.0
+
+
+.PHONY: release clean
 
 install: init python
 
@@ -28,11 +31,22 @@ python:
 	CFLAGS="-I$(shell brew --prefix openssl)/include -I$(shell brew --prefix readline)/include -g -O2" \
 		LDFLAGS="-L$(shell brew --prefix openssl)/lib -L$(shell brew --prefix readline)/lib" \
 		pyenv install --skip-existing $(version)
+	pyenv rehash
 	rm -rf $(venv)
 	~/.pyenv/versions/$(version)/bin/python3 -m venv $(venv)
 	source $(venv)/bin/activate && \
 		pip3 install --upgrade --no-cache-dir pip wheel && \
 		pip3 install --requirement requirements.txt
+
+requirements:
+	rm -rf $(venv)
+	~/.pyenv/versions/$(version)/bin/python3 -m venv $(venv)
+	source $(venv)/bin/activate && \
+		pip3 install --upgrade --no-cache-dir pip wheel && \
+		pip3 install --requirement requirements-to-freeze.txt --upgrade --no-cache-dir && \
+		pip3 freeze > requirements.txt
+	git status
+	git diff
 
 upgrade:
 	brew update
@@ -40,7 +54,7 @@ upgrade:
 	brew cleanup
 	source $(venv)/bin/activate && \
 		pip3 install --upgrade --no-cache-dir pip wheel && \
-		pip3 install --requirement requirements-to-freeze.txt --upgrade --no-cache-dir && \
+		pip3 install --requirement requirements.txt --upgrade --no-cache-dir && \
 		pip3 freeze > requirements.txt
 	git status
 	git diff

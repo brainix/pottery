@@ -35,6 +35,7 @@ setup(
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'Topic :: Database :: Front-Ends',
+        'Topic :: System :: Distributed Computing',
         'Topic :: Utilities',
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3.6',
