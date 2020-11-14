@@ -27,6 +27,9 @@ class HyperLogLog(Base):
 
     antirez's blog post:
         http://antirez.com/news/75
+
+    Riak blog post:
+        https://riak.com/posts/technical/what-in-the-hell-is-hyperloglog/index.html?p=13169.html
     '''
 
     def __init__(self,
