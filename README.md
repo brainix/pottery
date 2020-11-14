@@ -270,6 +270,57 @@ HyperLogLogs as Python sets that you can add elements to and get the length of,
 but that you can&rsquo;t use to test element membership, iterate through, or
 get elements back out of.
 
+HyperLogLogs are probabilistic, which means that they&rsquo;re accurate within
+a margin of error up to 2%.  However, they can reasonably accurately estimate
+the cardinality (size) of vast datasets (like the number of unique Google
+searches issued in a day) with a tiny amount of storage (1.5 KB).
+
+Create a `HyperLogLog`:
+
+```python
+>>> from pottery import HyperLogLog
+>>> google_searches = HyperLogLog(redis=redis, key='google-searches')
+```
+
+Insert an element into the `HyperLogLog`:
+
+```python
+>>> google_searches.add('sonic the hedgehog video game')
+```
+
+See how many elements we&rsquo;ve inserted into the `HyperLogLog`:
+
+```python
+>>> len(google_searches)
+1
+```
+
+Insert multiple elements into the `HyperLogLog`:
+
+```python
+>>> google_searches.update({
+...     'google in 1998',
+...     'minesweeper',
+...     'joey tribbiani',
+...     'wizard of oz',
+...     'rgb to hex',
+...     'pac-man',
+...     'breathing exercise',
+...     'do a barrel roll',
+...     'snake',
+... })
+>>> len(google_searches)
+10
+```
+
+Remove all of the elements from the `HyperLogLog`:
+
+```python
+>>> google_searches.clear()
+>>> len(google_searches)
+0
+```
+
 
 
 ### Bloom filters
@@ -334,8 +385,8 @@ See how many elements we&rsquo;ve inserted into the `BloomFilter`:
 1
 ```
 
-Note that `BloomFilter.__len__()` is an approximation, so please don&rsquo;t
-rely on it for anything important like financial systems or cat gif websites.
+Note that `BloomFilter.__len__()` is an approximation, not an exact value,
+though it&rsquo;s quite accurate.
 
 Insert multiple elements into the `BloomFilter`:
 
@@ -347,6 +398,8 @@ Remove all of the elements from the `BloomFilter`:
 
 ```python
 >>> dilberts.clear()
+>>> len(dilberts)
+0
 ```
 
 

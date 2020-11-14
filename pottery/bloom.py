@@ -134,8 +134,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
         Bloom filter.
 
         Please note that this method returns an approximation, not an exact
-        value.  So please don't rely on it for anything important like
-        financial systems or cat gif websites.
+        value, though it's quite accurate.
 
         More about the formula that this method implements:
             https://en.wikipedia.org/wiki/Bloom_filter#Approximating_the_number_of_items_in_a_Bloom_filter
@@ -207,8 +206,8 @@ class BloomFilter(BloomFilterABC, Base):
         >>> len(dilberts)
         1
 
-    Note that BloomFilter.__len__() is an approximation, so please don't rely
-    on it for anything important like financial systems or cat gif websites.
+    Note that BloomFilter.__len__() is an approximation, not an exact value,
+    though it's quite accurate.
 
     Insert multiple elements into the Bloom filter:
 
