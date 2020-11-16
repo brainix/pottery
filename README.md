@@ -157,7 +157,7 @@ across threads, processes, and even machines, without a single point of
 failure.  [Rationale and algorithm
 description.](http://redis.io/topics/distlock)
 
-`Redlock` implements Python's excellent
+`Redlock` implements Python&rsquo;s excellent
 [`threading.Lock`](https://docs.python.org/3/library/threading.html#lock-objects)
 API as closely as is feasible.  In other words, you can use `Redlock` the same
 way that you use `threading.Lock`.
@@ -206,8 +206,8 @@ True
 False
 ```
 
-If 10 seconds isn't enough to complete executing your critical section, then
-you can specify your own timeout:
+If 10 seconds isn&rsquo;t enough to complete executing your critical section,
+then you can specify your own timeout:
 
 ```python
 >>> lock = Redlock(key='printer', auto_release_time=15*1000)
@@ -222,6 +222,85 @@ True
 >>> time.sleep(5)
 >>> bool(lock.locked())
 False
+```
+
+
+
+### redis_cache()
+
+`redis_cache()` is a simple function return value cache, sometimes called
+[&ldquo;memoize&rdquo;](https://en.wikipedia.org/wiki/Memoization).
+`redis_cache()` implements Python&rsquo;s excellent
+[`functools.lru_cache()`](https://docs.python.org/3/library/functools.html#functools.lru_cache)
+API as closely as is feasible.  In other words, you can use `redis_cache()` the
+same way that you use `functools.lru_cache()`.
+
+*Limitations:*
+
+1. Arguments to the function must be hashable
+2. Return values from the function must be JSON serializable
+
+Decorate a function:
+
+```python
+>>> import time
+>>> from pottery import redis_cache
+>>> @redis_cache(redis=redis, key='expensive-function-cache')
+... def expensive_function(n):
+...     time.sleep(1)  # Simulate an expensive computation or database lookup.
+...     return n
+...
+>>>
+```
+
+Notice the two keyword arguments to `redis_cache()`: The first is your Redis
+client.  The second is the Redis key name for your function&rsquo;s return
+value cache.
+
+Call your function and observe the cache hit/miss rates:
+
+```python
+>>> expensive_function(5)
+5
+>>> expensive_function.cache_info()
+CacheInfo(hits=0, misses=1, maxsize=None, currsize=1)
+>>> expensive_function(5)
+5
+>>> expensive_function.cache_info()
+CacheInfo(hits=1, misses=1, maxsize=None, currsize=1)
+>>> expensive_function(6)
+6
+>>> expensive_function.cache_info()
+CacheInfo(hits=1, misses=2, maxsize=None, currsize=1)
+```
+
+Notice that the first call to `expensive_function()` takes 1 second and results
+in a cache miss; but the second call returns almost immediately and results in
+a cache hit.  This is because after the first call, `redis_cache()` cached the
+return value for the call when `n == 5`.
+
+You can access your original undecorated underlying `expensive_function()` as
+`expensive_function.__wrapped__`.  This is useful for introspection, for
+bypassing the cache, or for rewrapping the original function with a different
+cache.
+
+You can force a cache reset for a particular combination of `args`/`kwargs`
+with `expensive_function.__bypass__`.  A call to
+`expensive_function.__bypass__(*args, **kwargs)` bypasses the cache lookup,
+calls the original underlying function, then caches the results for future
+calls to `expensive_function(*args, **kwargs)`.  Note that a call to
+`expensive_function.__bypass__(*args, **kwargs)` results in neither a cache hit
+nor a cache miss.
+
+Finally, clear/invalidate your function&rsquo;s entire return value cache with
+`expensive_function.cache_clear()`:
+
+```python
+>>> expensive_function.cache_info()
+CacheInfo(hits=1, misses=2, maxsize=None, currsize=1)
+>>> expensive_function.cache_clear()
+>>> expensive_function.cache_info()
+CacheInfo(hits=0, misses=0, maxsize=None, currsize=0)
 ```
 
 
