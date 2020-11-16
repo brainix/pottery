@@ -36,14 +36,6 @@ That was the hardest part.
 
 ### Dicts
 
-Clean up for the doctest (ignore me):
-
-```python
->>> {redis.delete('raj'), 0, 1}
-{0, 1}
->>>
-```
-
 Create a `RedisDict`:
 
 ```python
@@ -71,14 +63,6 @@ True
 
 
 ### Sets
-
-Clean up for the doctest (ignore me):
-
-```python
->>> {redis.delete('edible'), 0, 1}
-{0, 1}
->>>
-```
 
 Create a `RedisSet`:
 
@@ -111,14 +95,6 @@ False
 
 
 ### Lists
-
-Clean up for the doctest (ignore me):
-
-```python
->>> {redis.delete('lyrics'), 0, 1}
-{0, 1}
->>>
-```
 
 Create a `RedisList`:
 
@@ -155,14 +131,6 @@ RedisList['everything', 'in', 'its', 'right', 'place']
 `NextId` safely and reliably produces increasing IDs across threads, processes,
 and even machines, without a single point of failure.  [Rationale and algorithm
 description.](http://antirez.com/news/102)
-
-Clean up for the doctest (ignore me):
-
-```python
->>> {redis.delete('nextid:user-ids'), 0, 1}
-{0, 1}
->>>
-```
 
 Instantiate an ID generator:
 
@@ -206,14 +174,6 @@ description.](http://redis.io/topics/distlock)
 [`threading.Lock`](https://docs.python.org/3/library/threading.html#lock-objects)
 API as closely as is feasible.  In other words, you can use `Redlock` the same
 way that you use `threading.Lock`.
-
-Clean up for the doctest (ignore me):
-
-```python
->>> {redis.delete('printer'), 0, 1}
-{0, 1}
->>>
-```
 
 Instantiate a `Redlock`:
 
@@ -303,14 +263,6 @@ same way that you use `functools.lru_cache()`.
 In general, you should only use `redis_cache()` when you want to reuse
 previously computed values.  Accordingly, it doesn&rsquo;t make sense to cache
 functions with side-effects or impure functions such as `time()` or `random()`.
-
-Clean up for the doctest (ignore me):
-
-```python
->>> {redis.delete('expensive-function-cache'), 0, 1}
-{0, 1}
->>>
-```
 
 Decorate a function:
 
@@ -433,14 +385,6 @@ a margin of error up to 2%.  However, they can reasonably accurately estimate
 the cardinality (size) of vast datasets (like the number of unique Google
 searches issued in a day) with a tiny amount of storage (1.5 KB).
 
-Clean up for the doctest (ignore me):
-
-```python
->>> {redis.delete('google-searches'), 0, 1}
-{0, 1}
->>>
-```
-
 Create a `HyperLogLog`:
 
 ```python
@@ -511,14 +455,6 @@ false negatives (so every time that they report that you haven&rsquo;t seen a
 particular element before, you really must never have seen it).  You can tune
 your acceptable false positive probability, though at the expense of the
 storage size and the element insertion/lookup time of your Bloom filter.
-
-Clean up for the doctest (ignore me):
-
-```python
->>> {redis.delete('dilberts'), 0, 1}
-{0, 1}
->>>
-```
 
 Create a `BloomFilter`:
 
