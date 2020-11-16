@@ -5,7 +5,7 @@ commands](http://redis.io/commands) are not always fun.  Pottery is a Pythonic
 way to access Redis.  If you know how to use Python dicts, then you already
 know how to use Pottery.
 
-[![Build Status](https://travis-ci.org/brainix/pottery.svg?branch=master)](https://travis-ci.org/brainix/pottery)
+[![Build Status](https://travis-ci.com/brainix/pottery.svg?branch=master)](https://travis-ci.com/brainix/pottery)
 [![Coverage Status](https://coveralls.io/repos/github/brainix/pottery/badge.svg?branch=master)](https://coveralls.io/github/brainix/pottery?branch=master)
 ![Libraries.io dependency status for GitHub repo](https://img.shields.io/librariesio/github/brainix/pottery)
 [![PyPI version](https://badge.fury.io/py/pottery.svg)](https://badge.fury.io/py/pottery)
