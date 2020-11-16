@@ -240,6 +240,10 @@ same way that you use `functools.lru_cache()`.
 1. Arguments to the function must be hashable
 2. Return values from the function must be JSON serializable
 
+In general, you should only use `redis_cache()` when you want to reuse
+previously computed values.  Accordingly, it doesn&rsquo;t make sense to cache
+functions with side-effects or impure functions such as `time()` or `random()`.
+
 Decorate a function:
 
 ```python
