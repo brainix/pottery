@@ -98,9 +98,7 @@ you can use your `RedisSet` the same way that you use any other Python set:
 RedisSet{'eggs'}
 >>> len(edible)
 1
->>> edible.add('beans')
->>> edible.add('tofu')
->>> edible.add('avocado')
+>>> edible.update({'beans', 'tofu', 'avocado'})
 >>> sorted(edible)
 ['avocado', 'beans', 'eggs', 'tofu']
 >>> len(edible)
