@@ -27,6 +27,7 @@ First, set up your Redis client:
 ```python
 >>> from redis import Redis
 >>> redis = Redis.from_url('redis://localhost:6379/')
+>>>
 ```
 
 That was the hardest part.
@@ -35,11 +36,20 @@ That was the hardest part.
 
 ### Dicts
 
+Clean up for the doctest (ignore me):
+
+```python
+>>> {redis.delete('raj'), 0, 1}
+{0, 1}
+>>>
+```
+
 Create a `RedisDict`:
 
 ```python
 >>> from pottery import RedisDict
 >>> raj = RedisDict(redis=redis, key='raj')
+>>>
 ```
 
 Notice the two keyword arguments to `RedisDict()`:  The first is your Redis
@@ -55,17 +65,27 @@ RedisDict{'hobby': 'music', 'vegetarian': True}
 2
 >>> raj['vegetarian']
 True
+>>>
 ```
 
 
 
 ### Sets
 
+Clean up for the doctest (ignore me):
+
+```python
+>>> {redis.delete('edible'), 0, 1}
+{0, 1}
+>>>
+```
+
 Create a `RedisSet`:
 
 ```python
 >>> from pottery import RedisSet
 >>> edible = RedisSet(redis=redis, key='edible')
+>>>
 ```
 
 Again, notice the two keyword arguments to `RedisSet()`:  The first is your
@@ -74,24 +94,40 @@ you can use your `RedisSet` the same way that you use any other Python set:
 
 ```python
 >>> edible.add('eggs')
->>> edible.extend({'beans', 'tofu', 'avocado'})
 >>> edible
-RedisSet{'tofu', 'avocado', 'eggs', 'beans'}
+RedisSet{'eggs'}
+>>> len(edible)
+1
+>>> edible.add('beans')
+>>> edible.add('tofu')
+>>> edible.add('avocado')
+>>> sorted(edible)
+['avocado', 'beans', 'eggs', 'tofu']
 >>> len(edible)
 4
 >>> 'bacon' in edible
 False
+>>>
 ```
 
 
 
 ### Lists
 
+Clean up for the doctest (ignore me):
+
+```python
+>>> {redis.delete('lyrics'), 0, 1}
+{0, 1}
+>>>
+```
+
 Create a `RedisList`:
 
 ```python
 >>> from pottery import RedisList
 >>> lyrics = RedisList(redis=redis, key='lyrics')
+>>>
 ```
 
 Again, notice the two keyword arguments to `RedisList()`:  The first is your
@@ -111,6 +147,7 @@ RedisList['everything', 'in', 'its', 'right', '...']
 >>> lyrics[4] = 'place'
 >>> lyrics
 RedisList['everything', 'in', 'its', 'right', 'place']
+>>>
 ```
 
 
@@ -121,11 +158,20 @@ RedisList['everything', 'in', 'its', 'right', 'place']
 and even machines, without a single point of failure.  [Rationale and algorithm
 description.](http://antirez.com/news/102)
 
+Clean up for the doctest (ignore me):
+
+```python
+>>> {redis.delete('nextid:user-ids'), 0, 1}
+{0, 1}
+>>>
+```
+
 Instantiate an ID generator:
 
 ```python
 >>> from pottery import NextId
 >>> user_ids = NextId(key='user-ids', masters={redis})
+>>>
 ```
 
 The `key` argument represents the sequence (so that you can have different
@@ -141,6 +187,7 @@ ID, call `next()` on the ID generator:
 2
 >>> next(user_ids)
 3
+>>>
 ```
 
 Two caveats:
@@ -162,11 +209,20 @@ description.](http://redis.io/topics/distlock)
 API as closely as is feasible.  In other words, you can use `Redlock` the same
 way that you use `threading.Lock`.
 
+Clean up for the doctest (ignore me):
+
+```python
+>>> {redis.delete('printer'), 0, 1}
+{0, 1}
+>>>
+```
+
 Instantiate a `Redlock`:
 
 ```python
 >>> from pottery import Redlock
 >>> lock = Redlock(key='printer', masters={redis})
+>>>
 ```
 
 The `key` argument represents the resource, and the `masters` argument
@@ -176,8 +232,10 @@ your resource:
 
 ```python
 >>> lock.acquire()
+True
 >>> # Critical section - print stuff here.
 >>> lock.release()
+>>>
 ```
 
 Or you can protect access to your resource inside a context manager:
@@ -185,6 +243,8 @@ Or you can protect access to your resource inside a context manager:
 ```python
 >>> with lock:
 ...     # Critical section - print stuff here.
+...     pass
+>>>
 ```
 
 `Redlock`s time out (by default, after 10 seconds).  You should take care to
@@ -204,6 +264,7 @@ True
 >>> time.sleep(10)
 >>> bool(lock.locked())
 False
+>>>
 ```
 
 If 10 seconds isn&rsquo;t enough to complete executing your critical section,
@@ -222,6 +283,7 @@ True
 >>> time.sleep(5)
 >>> bool(lock.locked())
 False
+>>>
 ```
 
 
@@ -243,6 +305,14 @@ same way that you use `functools.lru_cache()`.
 In general, you should only use `redis_cache()` when you want to reuse
 previously computed values.  Accordingly, it doesn&rsquo;t make sense to cache
 functions with side-effects or impure functions such as `time()` or `random()`.
+
+Clean up for the doctest (ignore me):
+
+```python
+>>> {redis.delete('expensive-function-cache'), 0, 1}
+{0, 1}
+>>>
+```
 
 Decorate a function:
 
@@ -275,7 +345,8 @@ CacheInfo(hits=1, misses=1, maxsize=None, currsize=1)
 >>> expensive_function(6)
 6
 >>> expensive_function.cache_info()
-CacheInfo(hits=1, misses=2, maxsize=None, currsize=1)
+CacheInfo(hits=1, misses=2, maxsize=None, currsize=2)
+>>>
 ```
 
 Notice that the first call to `expensive_function()` takes 1 second and results
@@ -301,10 +372,11 @@ Finally, clear/invalidate your function&rsquo;s entire return value cache with
 
 ```python
 >>> expensive_function.cache_info()
-CacheInfo(hits=1, misses=2, maxsize=None, currsize=1)
+CacheInfo(hits=1, misses=2, maxsize=None, currsize=2)
 >>> expensive_function.cache_clear()
 >>> expensive_function.cache_info()
 CacheInfo(hits=0, misses=0, maxsize=None, currsize=0)
+>>>
 ```
 
 
@@ -329,6 +401,7 @@ True
 >>> time.sleep(0.1)
 >>> 100 <= timer.elapsed() < 200
 True
+>>>
 ```
 
 &hellip;or as a context manager:
@@ -342,6 +415,7 @@ True
 >>> tests.append(100 <= timer.elapsed() < 200)
 >>> tests
 [True, True]
+>>>
 ```
 
 
@@ -361,17 +435,27 @@ a margin of error up to 2%.  However, they can reasonably accurately estimate
 the cardinality (size) of vast datasets (like the number of unique Google
 searches issued in a day) with a tiny amount of storage (1.5 KB).
 
+Clean up for the doctest (ignore me):
+
+```python
+>>> {redis.delete('google-searches'), 0, 1}
+{0, 1}
+>>>
+```
+
 Create a `HyperLogLog`:
 
 ```python
 >>> from pottery import HyperLogLog
 >>> google_searches = HyperLogLog(redis=redis, key='google-searches')
+>>>
 ```
 
 Insert an element into the `HyperLogLog`:
 
 ```python
 >>> google_searches.add('sonic the hedgehog video game')
+>>>
 ```
 
 See how many elements we&rsquo;ve inserted into the `HyperLogLog`:
@@ -379,6 +463,7 @@ See how many elements we&rsquo;ve inserted into the `HyperLogLog`:
 ```python
 >>> len(google_searches)
 1
+>>>
 ```
 
 Insert multiple elements into the `HyperLogLog`:
@@ -397,6 +482,7 @@ Insert multiple elements into the `HyperLogLog`:
 ... })
 >>> len(google_searches)
 10
+>>>
 ```
 
 Remove all of the elements from the `HyperLogLog`:
@@ -405,6 +491,7 @@ Remove all of the elements from the `HyperLogLog`:
 >>> google_searches.clear()
 >>> len(google_searches)
 0
+>>>
 ```
 
 
@@ -427,6 +514,14 @@ particular element before, you really must never have seen it).  You can tune
 your acceptable false positive probability, though at the expense of the
 storage size and the element insertion/lookup time of your Bloom filter.
 
+Clean up for the doctest (ignore me):
+
+```python
+>>> {redis.delete('dilberts'), 0, 1}
+{0, 1}
+>>>
+```
+
 Create a `BloomFilter`:
 
 ```python
@@ -437,6 +532,7 @@ Create a `BloomFilter`:
 ...     redis=redis,
 ...     key='dilberts',
 ... )
+>>>
 ```
 
 Here, `num_values` represents the number of elements that you expect to insert
@@ -451,6 +547,7 @@ Insert an element into the `BloomFilter`:
 
 ```python
 >>> dilberts.add('rajiv')
+>>>
 ```
 
 Test for membership in the `BloomFilter`:
@@ -462,6 +559,7 @@ True
 False
 >>> 'dan' in dilberts
 False
+>>>
 ```
 
 See how many elements we&rsquo;ve inserted into the `BloomFilter`:
@@ -469,6 +567,7 @@ See how many elements we&rsquo;ve inserted into the `BloomFilter`:
 ```python
 >>> len(dilberts)
 1
+>>>
 ```
 
 Note that `BloomFilter.__len__()` is an approximation, not an exact value,
@@ -478,6 +577,7 @@ Insert multiple elements into the `BloomFilter`:
 
 ```python
 >>> dilberts.update({'raj', 'dan'})
+>>>
 ```
 
 Remove all of the elements from the `BloomFilter`:
@@ -486,6 +586,7 @@ Remove all of the elements from the `BloomFilter`:
 >>> dilberts.clear()
 >>> len(dilberts)
 0
+>>>
 ```
 
 
