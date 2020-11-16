@@ -76,6 +76,12 @@ else
 		python3 -m unittest --verbose $(tests)
 endif
 
+readme:
+	source $(venv)/bin/activate && \
+		python3 -c "from redis import Redis; redis = Redis(); print('Number of Redis keys deleted:', redis.delete('dilberts', 'edible', 'expensive-function-cache', 'google-searches', 'lyrics', 'nextid:user-ids', 'printer', 'raj'))"; \
+		python3 -m doctest README.md; \
+		python3 -c "from redis import Redis; redis = Redis(); print('Number of Redis keys deleted:', redis.delete('dilberts', 'edible', 'expensive-function-cache', 'google-searches', 'lyrics', 'nextid:user-ids', 'printer', 'raj'))"
+
 release:
 	rm -f dist/*
 	source $(venv)/bin/activate && \
