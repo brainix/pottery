@@ -106,7 +106,7 @@ class _Common:
 
     def _random_key(self) -> str:
         key = random_key(redis=self.redis, prefix=self._RANDOM_KEY_PREFIX)
-        _logger.info(
+        _logger.warning(
             "Self-assigning tmp key <%s key='%s'>",
             self.__class__.__name__,
             key,

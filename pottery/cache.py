@@ -113,7 +113,7 @@ def redis_cache(*,
         nonlocal redis, key
         if key is None:  # pragma: no cover
             key = random_key(redis=cast(Redis, redis))
-            _logger.info(
+            _logger.warning(
                 "Self-assigning key redis_cache(key='%s') for function %s",
                 key,
                 func.__qualname__,

@@ -7,6 +7,7 @@
 
 
 import doctest
+import logging
 import sys
 import unittest
 from typing import ClassVar
@@ -18,6 +19,11 @@ from pottery.base import _default_redis
 
 class TestCase(unittest.TestCase):
     _TEST_KEY_PREFIX: ClassVar[str] = 'pottery-test:'
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        logger = logging.getLogger('pottery')
+        logger.setLevel(logging.ERROR)
 
     def setUp(self) -> None:
         super().setUp()
