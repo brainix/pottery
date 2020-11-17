@@ -8,7 +8,7 @@
 
 venv ?= venv
 
-init upgrade: formulae := {openssl,readline,xz,redis}
+init: formulae := {openssl,readline,xz,redis}
 
 python requirements: version ?= 3.9.0
 
@@ -44,17 +44,6 @@ requirements:
 	source $(venv)/bin/activate && \
 		pip3 install --upgrade --no-cache-dir pip wheel && \
 		pip3 install --requirement requirements-to-freeze.txt --upgrade --no-cache-dir && \
-		pip3 freeze > requirements.txt
-	git status
-	git diff
-
-upgrade:
-	brew update
-	-brew upgrade $(formulae)
-	brew cleanup
-	source $(venv)/bin/activate && \
-		pip3 install --upgrade --no-cache-dir pip wheel && \
-		pip3 install --requirement requirements.txt --upgrade --no-cache-dir && \
 		pip3 freeze > requirements.txt
 	git status
 	git diff
