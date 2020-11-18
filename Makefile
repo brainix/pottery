@@ -10,7 +10,7 @@ venv ?= venv
 
 init: formulae := {openssl,readline,xz,redis}
 
-python requirements: version ?= 3.9.0
+python upgrade: version ?= 3.9.0
 
 
 .PHONY: release clean
@@ -38,9 +38,11 @@ python:
 		pip3 install --upgrade --no-cache-dir pip wheel && \
 		pip3 install --requirement requirements.txt
 
-requirements:
+upgrade:
+ifneq ($(recursive),)
 	rm -rf $(venv)
 	~/.pyenv/versions/$(version)/bin/python3 -m venv $(venv)
+endif
 	source $(venv)/bin/activate && \
 		pip3 install --upgrade --no-cache-dir pip wheel && \
 		pip3 install --requirement requirements-to-freeze.txt --upgrade --no-cache-dir && \
