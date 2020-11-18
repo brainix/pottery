@@ -6,16 +6,33 @@
 # --------------------------------------------------------------------------- #
 
 
+# Determine this Makefile's path.  Be sure to place the following line before
+# include directives, if any.
+THIS_FILE := $(lastword $(MAKEFILE_LIST))
+
+
 venv ?= venv
 
 init: formulae := {openssl,readline,xz,redis}
 
 python upgrade: version ?= 3.9.0
+upgrade: requirements ?= requirements-to-freeze.txt
+
+clean-redis: keys_to_delete = \
+	dilberts \
+	edible \
+	expensive-function-cache \
+	google-searches \
+	lyrics \
+	nextid:user-ids \
+	printer \
+	raj
 
 
 .PHONY: release clean
 
 install: init python
+
 
 init:
 	-xcode-select --install
@@ -32,11 +49,7 @@ python:
 		LDFLAGS="-L$(shell brew --prefix openssl)/lib -L$(shell brew --prefix readline)/lib" \
 		pyenv install --skip-existing $(version)
 	pyenv rehash
-	rm -rf $(venv)
-	~/.pyenv/versions/$(version)/bin/python3 -m venv $(venv)
-	source $(venv)/bin/activate && \
-		pip3 install --upgrade --no-cache-dir pip wheel && \
-		pip3 install --requirement requirements.txt
+	@$(MAKE) --makefile=$(THIS_FILE) upgrade recursive=true requirements=requirements.txt
 
 upgrade:
 ifneq ($(recursive),)
@@ -45,10 +58,11 @@ ifneq ($(recursive),)
 endif
 	source $(venv)/bin/activate && \
 		pip3 install --upgrade --no-cache-dir pip wheel && \
-		pip3 install --requirement requirements-to-freeze.txt --upgrade --no-cache-dir && \
+		pip3 install --requirement $(requirements) --upgrade --no-cache-dir && \
 		pip3 freeze > requirements.txt
 	git status
 	git diff
+
 
 test:
 ifeq ($(tests),)
@@ -68,10 +82,15 @@ else
 endif
 
 readme:
+	@$(MAKE) --makefile=$(THIS_FILE) clean-redis
 	source $(venv)/bin/activate && \
-		python3 -c "from redis import Redis; redis = Redis(); print('Number of Redis keys deleted:', redis.delete('dilberts', 'edible', 'expensive-function-cache', 'google-searches', 'lyrics', 'nextid:user-ids', 'printer', 'raj'))"; \
-		python3 -m doctest README.md; \
-		python3 -c "from redis import Redis; redis = Redis(); print('Number of Redis keys deleted:', redis.delete('dilberts', 'edible', 'expensive-function-cache', 'google-searches', 'lyrics', 'nextid:user-ids', 'printer', 'raj'))"
+		python3 -m doctest README.md
+	@$(MAKE) --makefile=$(THIS_FILE) clean-redis
+
+clean-redis:
+	@source $(venv)/bin/activate && \
+		python3 -c "from redis import Redis; redis = Redis(); redis.delete($(foreach key,$(keys_to_delete),'$(key)',))"
+
 
 release:
 	rm -f dist/*
