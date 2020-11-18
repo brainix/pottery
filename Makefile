@@ -81,7 +81,7 @@ else
 		python3 -m unittest --verbose $(tests)
 endif
 
-readme:
+test-readme:
 	@$(MAKE) --makefile=$(THIS_FILE) clean-redis
 	source $(venv)/bin/activate && \
 		python3 -m doctest README.md
