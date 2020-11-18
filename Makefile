@@ -29,7 +29,7 @@ clean-redis: keys_to_delete = \
 	raj
 
 
-.PHONY: release clean
+.PHONY: install init python upgrade test test-readme clean-redis release clean
 
 install: init python
 
