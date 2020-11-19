@@ -26,7 +26,8 @@ clean-redis: keys_to_delete = \
 	lyrics \
 	nextid:user-ids \
 	printer \
-	raj
+	raj \
+	search-results
 
 
 .PHONY: install init python upgrade test test-readme clean-redis release clean
@@ -38,8 +39,8 @@ init:
 	-xcode-select --install
 	command -v brew >/dev/null 2>&1 || \
 		ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-	brew analytics off
 	brew analytics regenerate-uuid
+	brew analytics off
 	-brew install $(formulae)
 	-git clone https://github.com/pyenv/pyenv.git ~/.pyenv
 
@@ -100,4 +101,4 @@ release:
 		twine upload dist/*
 
 clean:
-	rm -rf {$(venv),.coverage,dist/*}
+	rm -rf {$(venv),.coverage,.mypy_cache,dist/*}

@@ -257,8 +257,8 @@ same way that you use `functools.lru_cache()`.
 
 *Limitations:*
 
-1. Arguments to the function must be hashable
-2. Return values from the function must be JSON serializable
+1. Arguments to the function must be hashable.
+2. Return values from the function must be JSON serializable.
 
 In general, you should only use `redis_cache()` when you want to reuse
 previously computed values.  Accordingly, it doesn&rsquo;t make sense to cache
@@ -331,6 +331,108 @@ CacheInfo(hits=0, misses=0, maxsize=None, currsize=0)
 
 
 
+### CachedOrderedDict
+
+The best way that I can explain `CachedOrderedDict` is through an example
+use-case.  Imagine that your search engine returns document IDs, which then you
+have to hydrate into full documents via the database to return to the client.
+The data structure used to represent such search results must have the
+following properties:
+
+1. It must preserve the order of the document IDs returned by the search engine.
+2. It must map document IDs to hydrated documents.
+3. It must cache previously hydrated documents.
+
+Properties 1 and 2 are satisfied by Python&rsquo;s
+[`collections.OrderedDict`](https://docs.python.org/3/library/collections.html#collections.OrderedDict).
+However, `CachedOrderedDict` extends Python&rsquo;s `OrderedDict` to also
+satisfy property 3.
+
+The most common usage pattern for `CachedOrderedDict` is as follows:
+
+1. Instantiate `CachedOrderedDict` with the IDs that you must look up or
+   compute passed in as the `keys` argument to the initializer.
+2. Compute and store the cache misses for future lookups.
+3. Return some representation of your `CachedOrderedDict` to the client.
+
+Instantiate a `CachedOrderedDict`:
+
+```python
+>>> from pottery import CachedOrderedDict
+>>> search_results_1 = CachedOrderedDict(
+...     redis=redis,
+...     key='search-results',
+...     keys=(1, 2, 3, 4, 5),
+... )
+>>>
+```
+
+The `redis` argument to the initializer is your Redis client, and the `key`
+argument is the Redis key for the Redis Hash backing your cache.  The `keys`
+argument represents an ordered iterable of keys to be looked up and
+automatically populated in your `CachedOrderedDict` (on cache hits), or that
+you&rsquo;ll have to compute and populate for future lookups (on cache misses).
+Regardless of whether keys are cache hits or misses, `CachedOrderedDict`
+preserves the order of `keys` (like a list), maps those keys to values (like a
+dict), and maintains an underlying cache for future key lookups.
+
+In the beginning, the cache is empty, so let&rsquo;s populate it:
+
+```python
+>>> sorted(search_results_1.misses())
+[1, 2, 3, 4, 5]
+>>> search_results_1[1] = 'one'
+>>> search_results_1[2] = 'two'
+>>> search_results_1[3] = 'three'
+>>> search_results_1[4] = 'four'
+>>> search_results_1[5] = 'five'
+>>> sorted(search_results_1.misses())
+[]
+>>>
+```
+
+Note that `CachedOrderedDict` preserves the order of `keys`:
+
+```python
+>>> for key, value in search_results_1.items():
+...     print(f'{key}: {value}')
+1: one
+2: two
+3: three
+4: four
+5: five
+>>>
+```
+
+Now, let&rsquo;s look at a combination of cache hits and misses:
+
+```python
+>>> search_results_2 = CachedOrderedDict(
+...     redis=redis,
+...     key='search-results',
+...     keys=(2, 4, 6, 8, 10),
+... )
+>>> sorted(search_results_2.misses())
+[6, 8, 10]
+>>> search_results_2[2]
+'two'
+>>> search_results_2[6] = 'six'
+>>> search_results_2[8] = 'eight'
+>>> search_results_2[10] = 'ten'
+>>> sorted(search_results_2.misses())
+[]
+>>> for key, value in search_results_2.items():
+...     print(f'{key}: {value}')
+2: two
+4: four
+6: six
+8: eight
+10: ten
+>>>
+```
+
+
+
 ### ContextTimer
 
 `ContextTimer` helps you easily and accurately measure elapsed time.  Note that
@@ -373,10 +475,10 @@ True
 ### HyperLogLogs
 
 HyperLogLogs are an interesting data structure that allow you to answer the
-question, *&ldquo;How many distinct elements have I seen?&rdquo;* but not the
+question, *&ldquo;How many distinct elements have I seen?&rdquo;*; but not the
 questions, *&ldquo;Have I seen this element before?&rdquo;* or *&ldquo;What are
 all of the elements that I&rsquo;ve seen before?&rdquo;*  So think of
-HyperLogLogs as Python sets that you can add elements to and get the length of,
+HyperLogLogs as Python sets that you can add elements to and get the length of;
 but that you can&rsquo;t use to test element membership, iterate through, or
 get elements back out of.
 
@@ -442,10 +544,10 @@ Remove all of the elements from the `HyperLogLog`:
 
 Bloom filters are a powerful data structure that help you to answer the
 questions, *&ldquo;Have I seen this element before?&rdquo;* and *&ldquo;How
-many distinct elements have I seen?&rdquo;* but not the question, *&ldquo;What
+many distinct elements have I seen?&rdquo;*; but not the question, *&ldquo;What
 are all of the elements that I&rsquo;ve seen before?&rdquo;*  So think of Bloom
 filters as Python sets that you can add elements to, use to test element
-membership, and get the length of, but that you can&rsquo;t iterate through or
+membership, and get the length of; but that you can&rsquo;t iterate through or
 get elements back out of.
 
 Bloom filters are probabilistic, which means that they can sometimes generate
