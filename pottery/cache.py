@@ -180,8 +180,9 @@ class CachedOrderedDict(collections.OrderedDict):
         2. It must map document IDs to hydrated documents
         3. It must cache previously hydrated documents
 
-    Properties 1 and 2 are satisfied by Python's OrderedDict.  However,
-    CachedOrderedDict extends Python's OrderedDict to also satisfy property 3.
+    Properties 1 and 2 are satisfied by Python's collections.OrderedDict.
+    However, CachedOrderedDict extends Python's OrderedDict to also satisfy
+    property 3.
     '''
 
     _SENTINEL: ClassVar[object] = object()
@@ -189,8 +190,8 @@ class CachedOrderedDict(collections.OrderedDict):
 
     def __init__(self,
                  *,
-                 key: Optional[str] = None,
                  redis: Optional[Redis] = None,
+                 key: Optional[str] = None,
                  keys: Iterable[JSONTypes] = tuple(),
                  num_tries: int = _NUM_TRIES,
                  ) -> None:
