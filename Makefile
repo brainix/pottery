@@ -13,21 +13,22 @@ THIS_FILE := $(lastword $(MAKEFILE_LIST))
 
 venv ?= venv
 
-init: formulae := {openssl,readline,xz,redis}
-
+init upgrade: formulae := {openssl,readline,xz,redis}
 python upgrade: version ?= 3.9.0
 upgrade: requirements ?= requirements-to-freeze.txt
 
 clean-redis: keys_to_delete = \
+	basket \
 	dilberts \
-	edible \
 	expensive-function-cache \
 	google-searches \
-	lyrics \
+	letters \
+	my-counter \
 	nextid:user-ids \
 	printer \
-	raj \
-	search-results
+	search-results \
+	squares \
+	tel
 
 
 .PHONY: install init python upgrade test test-readme clean-redis release clean
@@ -53,6 +54,10 @@ python:
 	@$(MAKE) --makefile=$(THIS_FILE) upgrade recursive=true requirements=requirements.txt
 
 upgrade:
+	-brew update
+	-brew upgrade $(formulae)
+	brew cleanup
+	-heroku update
 ifneq ($(recursive),)
 	rm -rf $(venv)
 	~/.pyenv/versions/$(version)/bin/python3 -m venv $(venv)
@@ -84,9 +89,9 @@ endif
 
 test-readme:
 	@$(MAKE) --makefile=$(THIS_FILE) clean-redis
-	source $(venv)/bin/activate && \
-		python3 -m doctest README.md
+	$(shell source $(venv)/bin/activate && python3 -m doctest README.md)
 	@$(MAKE) --makefile=$(THIS_FILE) clean-redis
+	@exit $(.SHELLSTATUS)
 
 clean-redis:
 	@source $(venv)/bin/activate && \
