@@ -30,99 +30,172 @@ First, set up your Redis client:
 >>>
 ```
 
-That was the hardest part.
-
 
 
 ### Dicts
 
-Create a `RedisDict`:
+`RedisDict` is a Redis-backed container compatible with Python&rsquo;s
+[`dict`](https://docs.python.org/3/tutorial/datastructures.html#dictionaries).
+
+Here is a small example using a `RedisDict`:
 
 ```python
 >>> from pottery import RedisDict
->>> raj = RedisDict(redis=redis, key='raj')
->>>
-```
-
-Notice the two keyword arguments to `RedisDict()`:  The first is your Redis
-client.  The second is the Redis key name for your dict.  Other than that, you
-can use your `RedisDict` the same way that you use any other Python dict:
-
-```python
->>> raj['hobby'] = 'music'
->>> raj['vegetarian'] = True
->>> raj
-RedisDict{'hobby': 'music', 'vegetarian': True}
->>> len(raj)
-2
->>> raj['vegetarian']
+>>> tel = RedisDict({'jack': 4098, 'sape': 4139}, redis=redis, key='tel')
+>>> tel['guido'] = 4127
+>>> tel
+RedisDict{'jack': 4098, 'sape': 4139, 'guido': 4127}
+>>> tel['jack']
+4098
+>>> del tel['sape']
+>>> tel['irv'] = 4127
+>>> tel
+RedisDict{'jack': 4098, 'guido': 4127, 'irv': 4127}
+>>> list(tel)
+['jack', 'guido', 'irv']
+>>> sorted(tel)
+['guido', 'irv', 'jack']
+>>> 'guido' in tel
 True
+>>> 'jack' not in tel
+False
 >>>
 ```
+
+Notice the first two keyword arguments to `RedisDict()`:  The first is your
+Redis client.  The second is the Redis key name for your dict.  Other than
+that, you can use your `RedisDict` the same way that you use any other Python
+`dict`.
+
+*Limitations:*
+
+1. Keys and values must be JSON serializable.
 
 
 
 ### Sets
 
-Create a `RedisSet`:
+`RedisSet` is a Redis-backed container compatible with Python&rsquo;s
+[`set`](https://docs.python.org/3/tutorial/datastructures.html#sets).
+
+Here is a brief demonstration:
 
 ```python
 >>> from pottery import RedisSet
->>> edible = RedisSet(redis=redis, key='edible')
->>>
-```
-
-Again, notice the two keyword arguments to `RedisSet()`:  The first is your
-Redis client.  The second is the Redis key name for your set.  Other than that,
-you can use your `RedisSet` the same way that you use any other Python set:
-
-```python
->>> edible.add('eggs')
->>> edible
-RedisSet{'eggs'}
->>> len(edible)
-1
->>> edible.update({'beans', 'tofu', 'avocado'})
->>> sorted(edible)
-['avocado', 'beans', 'eggs', 'tofu']
->>> len(edible)
-4
->>> 'bacon' in edible
+>>> basket = RedisSet({'apple', 'orange', 'apple', 'pear', 'orange', 'banana'}, redis=redis, key='basket')
+>>> sorted(basket)
+['apple', 'banana', 'orange', 'pear']
+>>> 'orange' in basket
+True
+>>> 'crabgrass' in basket
 False
+
+>>> a = RedisSet('abracadabra', redis=redis, key='letters')
+>>> b = set('alacazam')
+>>> sorted(a)
+['a', 'b', 'c', 'd', 'r']
+>>> sorted(a - b)
+['b', 'd', 'r']
+>>> sorted(a | b)
+['a', 'b', 'c', 'd', 'l', 'm', 'r', 'z']
+>>> sorted(a & b)
+['a', 'c']
+>>> sorted(a ^ b)
+['b', 'd', 'l', 'm', 'r', 'z']
 >>>
 ```
+
+Notice the two keyword arguments to `RedisSet()`:  The first is your Redis
+client.  The second is the Redis key name for your set.  Other than that, you
+can use your `RedisSet` the same way that you use any other Python `set`.
+
+*Limitations:*
+
+1. Elements must be JSON serializable.
 
 
 
 ### Lists
 
-Create a `RedisList`:
+`RedisList` is a Redis-backed container compatible with Python&rsquo;s
+[`list`](https://docs.python.org/3/tutorial/introduction.html#lists).
 
 ```python
 >>> from pottery import RedisList
->>> lyrics = RedisList(redis=redis, key='lyrics')
+>>> squares = RedisList([1, 4, 9, 16, 25], redis=redis, key='squares')
+>>> squares
+RedisList[1, 4, 9, 16, 25]
+>>> squares[0]
+1
+>>> squares[-1]
+25
+>>> squares[-3:]
+[9, 16, 25]
+>>> squares[:]
+[1, 4, 9, 16, 25]
+>>> squares + [36, 49, 64, 81, 100]
+RedisList[1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
 >>>
 ```
 
-Again, notice the two keyword arguments to `RedisList()`:  The first is your
-Redis client.  The second is the Redis key name for your list.  Other than
-that, you can use your `RedisList` the same way that you use any other Python
-list:
+Notice the two keyword arguments to `RedisList()`:  The first is your Redis
+client.  The second is the Redis key name for your list.  Other than that, you
+can use your `RedisList` the same way that you use any other Python `list`.
+
+*Limitations:*
+
+1. Values must be JSON serializable.
+
+
+
+### Counters
+
+`RedisCounter` is a Redis-backed container compatible with Python&rsquo;s
+[`collections.Counter`](https://docs.python.org/3/library/collections.html#collections.Counter).
 
 ```python
->>> lyrics.append('everything')
->>> lyrics.extend(['in', 'its', 'right', '...'])
->>> lyrics
-RedisList['everything', 'in', 'its', 'right', '...']
->>> len(lyrics)
-5
->>> lyrics[0]
-'everything'
->>> lyrics[4] = 'place'
->>> lyrics
-RedisList['everything', 'in', 'its', 'right', 'place']
+>>> from pottery import RedisCounter
+>>> c = RedisCounter(redis=redis, key='my-counter')
+>>> c = RedisCounter('gallahad', redis=redis, key='my-counter')
+>>> c.clear()
+>>> c = RedisCounter({'red': 4, 'blue': 2}, redis=redis, key='my-counter')
+>>> c.clear()
+>>> c = RedisCounter(redis=redis, key='my-counter', cats=4, dogs=8)
+>>> c.clear()
+
+>>> c = RedisCounter(['eggs', 'ham'], redis=redis, key='my-counter')
+>>> c['bacon']
+0
+>>> c['sausage'] = 0
+>>> del c['sausage']
+>>> c.clear()
+
+>>> c = RedisCounter(redis=redis, key='my-counter', a=4, b=2, c=0, d=-2)
+>>> sorted(c.elements())
+['a', 'a', 'a', 'a', 'b', 'b']
+>>> c.clear()
+
+>>> RedisCounter('abracadabra', redis=redis, key='my-counter').most_common(3)
+[('a', 5), ('b', 2), ('r', 2)]
+>>> c.clear()
+
+>>> c = RedisCounter(redis=redis, key='my-counter', a=4, b=2, c=0, d=-2)
+>>> from collections import Counter
+>>> d = Counter(a=1, b=2, c=3, d=4)
+>>> c.subtract(d)
+>>> c
+RedisCounter{'a': 3, 'b': 0, 'c': -3, 'd': -6}
 >>>
 ```
+
+Notice the first two keyword arguments to `RedisCounter()`:  The first is your
+Redis client.  The second is the Redis key name for your counter.  Other than
+that, you can use your `RedisCounter` the same way that you use any other
+Python `Counter`.
+
+*Limitations:*
+
+1. Keys must be JSON serializable.
 
 
 
@@ -431,6 +504,10 @@ Now, let&rsquo;s look at a combination of cache hits and misses:
 >>>
 ```
 
+*Limitations:*
+
+1. Keys and values must be JSON serializable.
+
 
 
 ### ContextTimer
@@ -538,6 +615,10 @@ Remove all of the elements from the `HyperLogLog`:
 >>>
 ```
 
+*Limitations:*
+
+1. Elements must be JSON serializable.
+
 
 
 ### Bloom filters
@@ -624,6 +705,10 @@ Remove all of the elements from the `BloomFilter`:
 0
 >>>
 ```
+
+*Limitations:*
+
+1. Elements must be JSON serializable.
 
 
 
