@@ -66,7 +66,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
     def __init__(self,
                  iterable: Iterable[JSONTypes] = frozenset(),
                  *args: Any,
-                 num_values: int,
+                 num_elements: int,
                  false_positives: float,
                  **kwargs: Any,
                  ) -> None:
@@ -77,7 +77,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
         functions on each element.
         '''
         super().__init__(*args, **kwargs)  # type: ignore
-        self.num_values = num_values
+        self.num_elements = num_elements
         self.false_positives = false_positives
         self.update(iterable)
 
@@ -94,7 +94,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
             https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions
         '''
         size = (
-            -self.num_values
+            -self.num_elements
             * math.log(self.false_positives)
             / math.log(2)**2
         )
@@ -114,7 +114,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
         More about the formula that this method implements:
             https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions
         '''
-        num_hashes = self.size() / self.num_values * math.log(2)
+        num_hashes = self.size() / self.num_elements * math.log(2)
         num_hashes = math.ceil(num_hashes)
         return num_hashes
 
@@ -174,13 +174,13 @@ class BloomFilter(BloomFilterABC, Base):
     Instantiate a Bloom filter and clean up Redis before the doctest:
 
         >>> dilberts = BloomFilter(
-        ...     num_values=100,
+        ...     num_elements=100,
         ...     false_positives=0.01,
         ...     key='dilberts',
         ... )
         >>> dilberts.clear()
 
-    Here, num_values represents the number of elements that you expect to
+    Here, num_elements represents the number of elements that you expect to
     insert into your BloomFilter, and false_positives represents your
     acceptable false positive probability.  Using these two parameters,
     BloomFilter automatically computes its own storage size and number of times
@@ -224,7 +224,7 @@ class BloomFilter(BloomFilterABC, Base):
         Instantiate a Bloom filter:
 
             >>> dilberts = BloomFilter(
-            ...     num_values=100,
+            ...     num_elements=100,
             ...     false_positives=0.01,
             ...     key='dilberts',
             ... )

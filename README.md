@@ -599,7 +599,7 @@ Create a `BloomFilter`:
 ```python
 >>> from pottery import BloomFilter
 >>> dilberts = BloomFilter(
-...     num_values=100,
+...     num_elements=100,
 ...     false_positives=0.01,
 ...     redis=redis,
 ...     key='dilberts',
@@ -607,13 +607,13 @@ Create a `BloomFilter`:
 >>>
 ```
 
-Here, `num_values` represents the number of elements that you expect to insert
-into your `BloomFilter`, and `false_positives` represents your acceptable false
-positive probability.  Using these two parameters, `BloomFilter` automatically
-computes its own storage size and number of times to run its hash functions on
-element insertion/lookup such that it can guarantee a false positive rate at or
-below what you can tolerate, given that you&rsquo;re going to insert your
-specified number of elements.
+Here, `num_elements` represents the number of elements that you expect to
+insert into your `BloomFilter`, and `false_positives` represents your
+acceptable false positive probability.  Using these two parameters,
+`BloomFilter` automatically computes its own storage size and number of times
+to run its hash functions on element insertion/lookup such that it can
+guarantee a false positive rate at or below what you can tolerate, given that
+you&rsquo;re going to insert your specified number of elements.
 
 Insert an element into the `BloomFilter`:
 
