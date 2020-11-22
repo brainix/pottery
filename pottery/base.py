@@ -82,8 +82,8 @@ class _Common:
     def __del__(self) -> None:
         if self.key.startswith(self._RANDOM_KEY_PREFIX):
             self.redis.delete(self.key)
-            _logger.info(
-                "Deleted tmp <%s key='%s'> (went out of scope)",
+            _logger.warning(
+                "Deleted tmp <%s key='%s'> (instance is about to be destroyed)",
                 self.__class__.__name__,
                 self.key,
             )

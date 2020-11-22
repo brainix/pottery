@@ -8,6 +8,7 @@
 
 
 import contextlib
+import gc
 import time
 
 from pottery import ContextTimer
@@ -30,7 +31,7 @@ class RedlockTests(TestCase):
         )
 
     def tearDown(self):
-        with contextlib.suppress(ReleaseUnlockedLock):
+        with contextlib.suppress(AttributeError, ReleaseUnlockedLock):
             self.redlock.release()
         super().tearDown()
 
@@ -172,6 +173,14 @@ class RedlockTests(TestCase):
             assert self.redis.exists(self.redlock.key)
             self.redlock.release()
             assert not self.redis.exists(self.redlock.key)
+
+    def test_unlocks_on_del(self):
+        key = self.redlock.key
+        assert self.redlock.acquire()
+        assert self.redis.exists(key)
+        del self.redlock
+        gc.collect()
+        assert not self.redis.exists(key)
 
     def test_repr(self):
         assert repr(self.redlock) == \
