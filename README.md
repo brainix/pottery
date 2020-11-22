@@ -90,7 +90,7 @@ True
 >>> 'crabgrass' in basket
 False
 
->>> a = RedisSet('abracadabra', redis=redis, key='letters')
+>>> a = RedisSet('abracadabra', redis=redis, key='magic')
 >>> b = set('alacazam')
 >>> sorted(a)
 ['a', 'b', 'c', 'd', 'r']
@@ -199,40 +199,69 @@ Python `Counter`.
 
 
 
-### NextId
+### Deques
 
-`NextId` safely and reliably produces increasing IDs across threads, processes,
-and even machines, without a single point of failure.  [Rationale and algorithm
-description.](http://antirez.com/news/102)
+`RedisDeque` is a Redis-backed container compatible with Python&rsquo;s
+[`collections.deque`](https://docs.python.org/3/library/collections.html#collections.deque).
 
-Instantiate an ID generator:
+Example:
 
 ```python
->>> from pottery import NextId
->>> user_ids = NextId(key='user-ids', masters={redis})
+>>> from pottery import RedisDeque
+>>> d = RedisDeque('ghi', redis=redis, key='letters')
+>>> for elem in d:
+...     print(elem.upper())
+G
+H
+I
+
+>>> d.append('j')
+>>> d.appendleft('f')
+>>> d
+RedisDeque(['f', 'g', 'h', 'i', 'j'])
+
+>>> d.pop()
+'j'
+>>> d.popleft()
+'f'
+>>> list(d)
+['g', 'h', 'i']
+>>> d[0]
+'g'
+>>> d[-1]
+'i'
+
+>>> list(reversed(d))
+['i', 'h', 'g']
+>>> 'h' in d
+True
+>>> d.extend('jkl')
+>>> d
+RedisDeque(['g', 'h', 'i', 'j', 'k', 'l'])
+>>> d.rotate(1)
+>>> d
+RedisDeque(['l', 'g', 'h', 'i', 'j', 'k'])
+>>> d.rotate(-1)
+>>> d
+RedisDeque(['g', 'h', 'i', 'j', 'k', 'l'])
+
+>>> RedisDeque(reversed(d), redis=redis)
+RedisDeque(['l', 'k', 'j', 'i', 'h', 'g'])
+>>> d.clear()
+
+>>> d.extendleft('abc')
+>>> d
+RedisDeque(['c', 'b', 'a'])
 >>>
 ```
 
-The `key` argument represents the sequence (so that you can have different
-sequences for user IDs, comment IDs, etc.), and the `masters` argument
-specifies your Redis masters across which to distribute ID generation (in
-production, you should have 5 Redis masters).  Now, whenever you need a user
-ID, call `next()` on the ID generator:
+Notice the two keyword arguments to `RedisDeque()`:  The first is your Redis
+client.  The second is the Redis key name for your deque.  Other than that, you
+can use your `RedisDeque` the same way that you use any other Python `deque`.
 
-```python
->>> next(user_ids)
-1
->>> next(user_ids)
-2
->>> next(user_ids)
-3
->>>
-```
+*Limitations:*
 
-Two caveats:
-
-1. If many clients are generating IDs concurrently, then there may be &ldquo;holes&rdquo; in the sequence of IDs (e.g.: 1, 2, 6, 10, 11, 21, &hellip;).
-2. This algorithm scales to about 5,000 IDs per second (with 5 Redis masters).  If you need IDs faster than that, then you may want to consider other techniques.
+1. Values must be JSON serializable.
 
 
 
@@ -316,6 +345,43 @@ True
 False
 >>>
 ```
+
+
+
+### NextId
+
+`NextId` safely and reliably produces increasing IDs across threads, processes,
+and even machines, without a single point of failure.  [Rationale and algorithm
+description.](http://antirez.com/news/102)
+
+Instantiate an ID generator:
+
+```python
+>>> from pottery import NextId
+>>> user_ids = NextId(key='user-ids', masters={redis})
+>>>
+```
+
+The `key` argument represents the sequence (so that you can have different
+sequences for user IDs, comment IDs, etc.), and the `masters` argument
+specifies your Redis masters across which to distribute ID generation (in
+production, you should have 5 Redis masters).  Now, whenever you need a user
+ID, call `next()` on the ID generator:
+
+```python
+>>> next(user_ids)
+1
+>>> next(user_ids)
+2
+>>> next(user_ids)
+3
+>>>
+```
+
+Two caveats:
+
+1. If many clients are generating IDs concurrently, then there may be &ldquo;holes&rdquo; in the sequence of IDs (e.g.: 1, 2, 6, 10, 11, 21, &hellip;).
+2. This algorithm scales to about 5,000 IDs per second (with 5 Redis masters).  If you need IDs faster than that, then you may want to consider other techniques.
 
 
 
@@ -510,117 +576,6 @@ Now, let&rsquo;s look at a combination of cache hits and misses:
 
 
 
-### ContextTimer
-
-`ContextTimer` helps you easily and accurately measure elapsed time.  Note that
-`ContextTimer` measures wall (real-world) time, not CPU time; and that
-`elapsed()` returns time in milliseconds.
-
-You can use `ContextTimer` stand-alone&hellip;
-
-```python
->>> import time
->>> from pottery import ContextTimer
->>> timer = ContextTimer()
->>> timer.start()
->>> time.sleep(0.1)
->>> 100 <= timer.elapsed() < 200
-True
->>> timer.stop()
->>> time.sleep(0.1)
->>> 100 <= timer.elapsed() < 200
-True
->>>
-```
-
-&hellip;or as a context manager:
-
-```python
->>> tests = []
->>> with ContextTimer() as timer:
-...     time.sleep(0.1)
-...     tests.append(100 <= timer.elapsed() < 200)
->>> time.sleep(0.1)
->>> tests.append(100 <= timer.elapsed() < 200)
->>> tests
-[True, True]
->>>
-```
-
-
-
-### HyperLogLogs
-
-HyperLogLogs are an interesting data structure that allow you to answer the
-question, *&ldquo;How many distinct elements have I seen?&rdquo;*; but not the
-questions, *&ldquo;Have I seen this element before?&rdquo;* or *&ldquo;What are
-all of the elements that I&rsquo;ve seen before?&rdquo;*  So think of
-HyperLogLogs as Python sets that you can add elements to and get the length of;
-but that you can&rsquo;t use to test element membership, iterate through, or
-get elements back out of.
-
-HyperLogLogs are probabilistic, which means that they&rsquo;re accurate within
-a margin of error up to 2%.  However, they can reasonably accurately estimate
-the cardinality (size) of vast datasets (like the number of unique Google
-searches issued in a day) with a tiny amount of storage (1.5 KB).
-
-Create a `HyperLogLog`:
-
-```python
->>> from pottery import HyperLogLog
->>> google_searches = HyperLogLog(redis=redis, key='google-searches')
->>>
-```
-
-Insert an element into the `HyperLogLog`:
-
-```python
->>> google_searches.add('sonic the hedgehog video game')
->>>
-```
-
-See how many elements we&rsquo;ve inserted into the `HyperLogLog`:
-
-```python
->>> len(google_searches)
-1
->>>
-```
-
-Insert multiple elements into the `HyperLogLog`:
-
-```python
->>> google_searches.update({
-...     'google in 1998',
-...     'minesweeper',
-...     'joey tribbiani',
-...     'wizard of oz',
-...     'rgb to hex',
-...     'pac-man',
-...     'breathing exercise',
-...     'do a barrel roll',
-...     'snake',
-... })
->>> len(google_searches)
-10
->>>
-```
-
-Remove all of the elements from the `HyperLogLog`:
-
-```python
->>> google_searches.clear()
->>> len(google_searches)
-0
->>>
-```
-
-*Limitations:*
-
-1. Elements must be JSON serializable.
-
-
-
 ### Bloom filters
 
 Bloom filters are a powerful data structure that help you to answer the
@@ -709,6 +664,117 @@ Remove all of the elements from the `BloomFilter`:
 *Limitations:*
 
 1. Elements must be JSON serializable.
+
+
+
+### HyperLogLogs
+
+HyperLogLogs are an interesting data structure that allow you to answer the
+question, *&ldquo;How many distinct elements have I seen?&rdquo;*; but not the
+questions, *&ldquo;Have I seen this element before?&rdquo;* or *&ldquo;What are
+all of the elements that I&rsquo;ve seen before?&rdquo;*  So think of
+HyperLogLogs as Python sets that you can add elements to and get the length of;
+but that you can&rsquo;t use to test element membership, iterate through, or
+get elements back out of.
+
+HyperLogLogs are probabilistic, which means that they&rsquo;re accurate within
+a margin of error up to 2%.  However, they can reasonably accurately estimate
+the cardinality (size) of vast datasets (like the number of unique Google
+searches issued in a day) with a tiny amount of storage (1.5 KB).
+
+Create a `HyperLogLog`:
+
+```python
+>>> from pottery import HyperLogLog
+>>> google_searches = HyperLogLog(redis=redis, key='google-searches')
+>>>
+```
+
+Insert an element into the `HyperLogLog`:
+
+```python
+>>> google_searches.add('sonic the hedgehog video game')
+>>>
+```
+
+See how many elements we&rsquo;ve inserted into the `HyperLogLog`:
+
+```python
+>>> len(google_searches)
+1
+>>>
+```
+
+Insert multiple elements into the `HyperLogLog`:
+
+```python
+>>> google_searches.update({
+...     'google in 1998',
+...     'minesweeper',
+...     'joey tribbiani',
+...     'wizard of oz',
+...     'rgb to hex',
+...     'pac-man',
+...     'breathing exercise',
+...     'do a barrel roll',
+...     'snake',
+... })
+>>> len(google_searches)
+10
+>>>
+```
+
+Remove all of the elements from the `HyperLogLog`:
+
+```python
+>>> google_searches.clear()
+>>> len(google_searches)
+0
+>>>
+```
+
+*Limitations:*
+
+1. Elements must be JSON serializable.
+
+
+
+### ContextTimer
+
+`ContextTimer` helps you easily and accurately measure elapsed time.  Note that
+`ContextTimer` measures wall (real-world) time, not CPU time; and that
+`elapsed()` returns time in milliseconds.
+
+You can use `ContextTimer` stand-alone&hellip;
+
+```python
+>>> import time
+>>> from pottery import ContextTimer
+>>> timer = ContextTimer()
+>>> timer.start()
+>>> time.sleep(0.1)
+>>> 100 <= timer.elapsed() < 200
+True
+>>> timer.stop()
+>>> time.sleep(0.1)
+>>> 100 <= timer.elapsed() < 200
+True
+>>>
+```
+
+&hellip;or as a context manager:
+
+```python
+>>> tests = []
+>>> with ContextTimer() as timer:
+...     time.sleep(0.1)
+...     tests.append(100 <= timer.elapsed() < 200)
+>>> time.sleep(0.1)
+>>> tests.append(100 <= timer.elapsed() < 200)
+>>> tests
+[True, True]
+>>>
+```
 
 
 
