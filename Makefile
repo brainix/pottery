@@ -23,6 +23,7 @@ clean-redis: keys_to_delete = \
 	expensive-function-cache \
 	google-searches \
 	letters \
+	magic \
 	my-counter \
 	nextid:user-ids \
 	printer \

@@ -90,7 +90,7 @@ True
 >>> 'crabgrass' in basket
 False
 
->>> a = RedisSet('abracadabra', redis=redis, key='letters')
+>>> a = RedisSet('abracadabra', redis=redis, key='magic')
 >>> b = set('alacazam')
 >>> sorted(a)
 ['a', 'b', 'c', 'd', 'r']
@@ -196,6 +196,72 @@ Python `Counter`.
 *Limitations:*
 
 1. Keys must be JSON serializable.
+
+
+
+### Deques
+
+`RedisDeque` is a Redis-backed container compatible with Python&rsquo;s
+[`collections.deque`](https://docs.python.org/3/library/collections.html#collections.deque).
+
+Example:
+
+```python
+>>> from pottery import RedisDeque
+>>> d = RedisDeque('ghi', redis=redis, key='letters')
+>>> for elem in d:
+...     print(elem.upper())
+G
+H
+I
+
+>>> d.append('j')
+>>> d.appendleft('f')
+>>> d
+RedisDeque(['f', 'g', 'h', 'i', 'j'])
+
+>>> d.pop()
+'j'
+>>> d.popleft()
+'f'
+>>> list(d)
+['g', 'h', 'i']
+>>> d[0]
+'g'
+>>> d[-1]
+'i'
+
+>>> list(reversed(d))
+['i', 'h', 'g']
+>>> 'h' in d
+True
+>>> d.extend('jkl')
+>>> d
+RedisDeque(['g', 'h', 'i', 'j', 'k', 'l'])
+>>> d.rotate(1)
+>>> d
+RedisDeque(['l', 'g', 'h', 'i', 'j', 'k'])
+>>> d.rotate(-1)
+>>> d
+RedisDeque(['g', 'h', 'i', 'j', 'k', 'l'])
+
+>>> RedisDeque(reversed(d), redis=redis)
+RedisDeque(['l', 'k', 'j', 'i', 'h', 'g'])
+>>> d.clear()
+
+>>> d.extendleft('abc')
+>>> d
+RedisDeque(['c', 'b', 'a'])
+>>>
+```
+
+Notice the two keyword arguments to `RedisDeque()`:  The first is your Redis
+client.  The second is the Redis key name for your deque.  Other than that, you
+can use your `RedisDeque` the same way that you use any other Python `deque`.
+
+*Limitations:*
+
+1. Values must be JSON serializable.
 
 
 
