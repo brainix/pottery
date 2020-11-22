@@ -23,7 +23,7 @@ class TestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         logger = logging.getLogger('pottery')
-        logger.setLevel(logging.ERROR)
+        logger.setLevel(logging.CRITICAL)
 
     def setUp(self) -> None:
         super().setUp()
