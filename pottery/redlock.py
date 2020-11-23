@@ -24,7 +24,6 @@ Lua scripting:
 
 import concurrent.futures
 import contextlib
-import logging
 import os
 import random
 import time
@@ -38,16 +37,12 @@ from redis import Redis
 from redis.client import Script
 from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
-from typing_extensions import Final
 
 from .base import Primitive
 from .exceptions import ExtendUnlockedLock
 from .exceptions import ReleaseUnlockedLock
 from .exceptions import TooManyExtensions
 from .timer import ContextTimer
-
-
-_logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
 class Redlock(Primitive):
@@ -466,14 +461,6 @@ class Redlock(Primitive):
             [True, False]
         '''
         self.__release()
-
-    def __del__(self) -> None:
-        with contextlib.suppress(ReleaseUnlockedLock):
-            self.__release()
-            _logger.error(
-                'Unlocked %s (instance is about to be destroyed)',
-                self,
-            )
 
     def __repr__(self) -> str:
         return (
