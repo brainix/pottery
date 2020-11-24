@@ -67,7 +67,7 @@ Redis client.  The second is the Redis key name for your dict.  Other than
 that, you can use your `RedisDict` the same way that you use any other Python
 `dict`.
 
-*Limitations:*
+_Limitations:_
 
 1. Keys and values must be JSON serializable.
 
@@ -109,7 +109,7 @@ Notice the two keyword arguments to `RedisSet()`:  The first is your Redis
 client.  The second is the Redis key name for your set.  Other than that, you
 can use your `RedisSet` the same way that you use any other Python `set`.
 
-*Limitations:*
+_Limitations:_
 
 1. Elements must be JSON serializable.
 
@@ -142,9 +142,9 @@ Notice the two keyword arguments to `RedisList()`:  The first is your Redis
 client.  The second is the Redis key name for your list.  Other than that, you
 can use your `RedisList` the same way that you use any other Python `list`.
 
-*Limitations:*
+_Limitations:_
 
-1. Values must be JSON serializable.
+1. Elements must be JSON serializable.
 
 
 
@@ -193,7 +193,7 @@ Redis client.  The second is the Redis key name for your counter.  Other than
 that, you can use your `RedisCounter` the same way that you use any other
 Python `Counter`.
 
-*Limitations:*
+_Limitations:_
 
 1. Keys must be JSON serializable.
 
@@ -259,9 +259,9 @@ Notice the two keyword arguments to `RedisDeque()`:  The first is your Redis
 client.  The second is the Redis key name for your deque.  Other than that, you
 can use your `RedisDeque` the same way that you use any other Python `deque`.
 
-*Limitations:*
+_Limitations:_
 
-1. Values must be JSON serializable.
+1. Elements must be JSON serializable.
 
 
 
@@ -380,7 +380,9 @@ ID, call `next()` on the ID generator:
 
 Two caveats:
 
-1. If many clients are generating IDs concurrently, then there may be &ldquo;holes&rdquo; in the sequence of IDs (e.g.: 1, 2, 6, 10, 11, 21, &hellip;).
+1. If many clients are generating IDs concurrently, then there may be
+   &ldquo;holes&rdquo; in the sequence of IDs (e.g.: 1, 2, 6, 10, 11, 21,
+   &hellip;).
 2. This algorithm scales to about 5,000 IDs per second (with 5 Redis masters).  If you need IDs faster than that, then you may want to consider other techniques.
 
 
@@ -394,7 +396,7 @@ Two caveats:
 API as closely as is feasible.  In other words, you can use `redis_cache()` the
 same way that you use `functools.lru_cache()`.
 
-*Limitations:*
+_Limitations:_
 
 1. Arguments to the function must be hashable.
 2. Return values from the function must be JSON serializable.
@@ -490,7 +492,7 @@ satisfy property 3.
 The most common usage pattern for `CachedOrderedDict` is as follows:
 
 1. Instantiate `CachedOrderedDict` with the IDs that you must look up or
-   compute passed in as the `keys` argument to the initializer.
+   compute passed in as the `dict_keys` argument to the initializer.
 2. Compute and store the cache misses for future lookups.
 3. Return some representation of your `CachedOrderedDict` to the client.
 
@@ -499,21 +501,22 @@ Instantiate a `CachedOrderedDict`:
 ```python
 >>> from pottery import CachedOrderedDict
 >>> search_results_1 = CachedOrderedDict(
-...     redis=redis,
-...     key='search-results',
-...     keys=(1, 2, 3, 4, 5),
+...     redis_client=redis,
+...     redis_key='search-results',
+...     dict_keys=(1, 2, 3, 4, 5),
 ... )
 >>>
 ```
 
-The `redis` argument to the initializer is your Redis client, and the `key`
-argument is the Redis key for the Redis Hash backing your cache.  The `keys`
-argument represents an ordered iterable of keys to be looked up and
-automatically populated in your `CachedOrderedDict` (on cache hits), or that
-you&rsquo;ll have to compute and populate for future lookups (on cache misses).
-Regardless of whether keys are cache hits or misses, `CachedOrderedDict`
-preserves the order of `keys` (like a list), maps those keys to values (like a
-dict), and maintains an underlying cache for future key lookups.
+The `redis_client` argument to the initializer is your Redis client, and the
+`redis_key` argument is the Redis key for the Redis Hash backing your cache.
+The `dict_keys` argument represents an ordered iterable of keys to be looked up
+and automatically populated in your `CachedOrderedDict` (on cache hits), or
+that you&rsquo;ll have to compute and populate for future lookups (on cache
+misses).  Regardless of whether keys are cache hits or misses,
+`CachedOrderedDict` preserves the order of `dict_keys` (like a list), maps
+those keys to values (like a dict), and maintains an underlying cache for
+future key lookups.
 
 In the beginning, the cache is empty, so let&rsquo;s populate it:
 
@@ -530,7 +533,7 @@ In the beginning, the cache is empty, so let&rsquo;s populate it:
 >>>
 ```
 
-Note that `CachedOrderedDict` preserves the order of `keys`:
+Note that `CachedOrderedDict` preserves the order of `dict_keys`:
 
 ```python
 >>> for key, value in search_results_1.items():
@@ -547,9 +550,9 @@ Now, let&rsquo;s look at a combination of cache hits and misses:
 
 ```python
 >>> search_results_2 = CachedOrderedDict(
-...     redis=redis,
-...     key='search-results',
-...     keys=(2, 4, 6, 8, 10),
+...     redis_client=redis,
+...     redis_key='search-results',
+...     dict_keys=(2, 4, 6, 8, 10),
 ... )
 >>> sorted(search_results_2.misses())
 [6, 8, 10]
@@ -570,7 +573,7 @@ Now, let&rsquo;s look at a combination of cache hits and misses:
 >>>
 ```
 
-*Limitations:*
+_Limitations:_
 
 1. Keys and values must be JSON serializable.
 
@@ -579,9 +582,9 @@ Now, let&rsquo;s look at a combination of cache hits and misses:
 ### Bloom filters
 
 Bloom filters are a powerful data structure that help you to answer the
-questions, *&ldquo;Have I seen this element before?&rdquo;* and *&ldquo;How
-many distinct elements have I seen?&rdquo;*; but not the question, *&ldquo;What
-are all of the elements that I&rsquo;ve seen before?&rdquo;*  So think of Bloom
+questions, _&ldquo;Have I seen this element before?&rdquo;_ and _&ldquo;How
+many distinct elements have I seen?&rdquo;_; but not the question, _&ldquo;What
+are all of the elements that I&rsquo;ve seen before?&rdquo;_  So think of Bloom
 filters as Python sets that you can add elements to, use to test element
 membership, and get the length of; but that you can&rsquo;t iterate through or
 get elements back out of.
@@ -670,9 +673,9 @@ Remove all of the elements from the `BloomFilter`:
 ### HyperLogLogs
 
 HyperLogLogs are an interesting data structure that allow you to answer the
-question, *&ldquo;How many distinct elements have I seen?&rdquo;*; but not the
-questions, *&ldquo;Have I seen this element before?&rdquo;* or *&ldquo;What are
-all of the elements that I&rsquo;ve seen before?&rdquo;*  So think of
+question, _&ldquo;How many distinct elements have I seen?&rdquo;_; but not the
+questions, _&ldquo;Have I seen this element before?&rdquo;_ or _&ldquo;What are
+all of the elements that I&rsquo;ve seen before?&rdquo;_  So think of
 HyperLogLogs as Python sets that you can add elements to and get the length of;
 but that you can&rsquo;t use to test element membership, iterate through, or
 get elements back out of.
@@ -733,7 +736,7 @@ Remove all of the elements from the `HyperLogLog`:
 >>>
 ```
 
-*Limitations:*
+_Limitations:_
 
 1. Elements must be JSON serializable.
 

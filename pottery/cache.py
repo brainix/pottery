@@ -190,48 +190,57 @@ class CachedOrderedDict(collections.OrderedDict):
 
     def __init__(self,
                  *,
-                 redis: Optional[Redis] = None,
-                 key: Optional[str] = None,
-                 keys: Iterable[JSONTypes] = tuple(),
+                 redis_client: Optional[Redis] = None,
+                 redis_key: Optional[str] = None,
+                 dict_keys: Iterable[JSONTypes] = tuple(),
                  num_tries: int = _NUM_TRIES,
                  ) -> None:
         self._num_tries = num_tries
-        init_cache = functools.partial(RedisDict, redis=redis, key=key)
+        init_cache = functools.partial(
+            RedisDict,
+            redis=redis_client,
+            key=redis_key,
+        )
         self._cache = self.__retry(init_cache)
         self._misses = set()
 
-        # We have to iterate over keys multiple times, so cast it to a tuple.
-        # This allows the caller to pass in a generator for keys, and we can
-        # still iterate over it multiple times.
-        items, keys = [], tuple(keys)
-        if keys:
-            encoded_keys = (self._cache._encode(key_) for key_ in keys)
+        # We have to iterate over dict_keys multiple times, so cast it to a
+        # tuple.  This allows the caller to pass in a generator for dict_keys,
+        # and we can still iterate over it multiple times.
+        items, dict_keys = [], tuple(dict_keys)
+        if dict_keys:
+            encoded_keys = (
+                self._cache._encode(dict_key) for dict_key in dict_keys
+            )
             encoded_values = self._cache.redis.hmget(
                 self._cache.key,
                 *encoded_keys,
             )
-            for key_, encoded_value in zip(keys, encoded_values):
+            for dict_key, encoded_value in zip(dict_keys, encoded_values):
                 if encoded_value is None:
                     value = self._SENTINEL
-                    self._misses.add(key_)
+                    self._misses.add(dict_key)
                 else:
                     value = self._cache._decode(encoded_value)
-                item = (key_, value)
+                item = (dict_key, value)
                 items.append(item)
         return super().__init__(items)
 
     def misses(self) -> FrozenSet[JSONTypes]:
         return frozenset(self._misses)
 
-    def __setitem__(self, key: JSONTypes, value: Union[JSONTypes, object]) -> None:
-        'Set self[key] to value.'
+    def __setitem__(self,
+                    dict_key: JSONTypes,
+                    value: Union[JSONTypes, object]
+                    ) -> None:
+        'Set self[dict_key] to value.'
         if value is not self._SENTINEL:
-            self._cache[key] = value
-            self._misses.discard(key)
-        return super().__setitem__(key, value)
+            self._cache[dict_key] = value
+            self._misses.discard(dict_key)
+        return super().__setitem__(dict_key, value)
 
     def setdefault(self,
-                   key: JSONTypes,
+                   dict_key: JSONTypes,
                    default: JSONTypes = None,
                    ) -> JSONTypes:
         '''Insert key with a value of default if key is not in the dictionary.
@@ -240,31 +249,31 @@ class CachedOrderedDict(collections.OrderedDict):
         '''
         retriable_setdefault = functools.partial(
             self.__retriable_setdefault,
-            key,
+            dict_key,
             default=default,
         )
         self.__retry(retriable_setdefault)
-        self._misses.discard(key)
-        if key not in self or self[key] is self._SENTINEL:
-            value = self[key] = default
+        self._misses.discard(dict_key)
+        if dict_key not in self or self[dict_key] is self._SENTINEL:
+            value = self[dict_key] = default
         else:
-            value = self[key]
+            value = self[dict_key]
         return value
 
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
     #   https://stackoverflow.com/a/38534939
     def __retriable_setdefault(self,
-                               key: JSONTypes,
+                               dict_key: JSONTypes,
                                default: JSONTypes = None,
                                ) -> None:
         with self._cache._watch() as pipeline:
-            if key not in self._cache:
+            if dict_key not in self._cache:
                 pipeline.multi()
-                # The following line is equivalent to: self._cache[key] = default
+                # The following line is equivalent to: self._cache[dict_key] = default
                 pipeline.hset(
                     self._cache.key,
-                    self._cache._encode(key),
+                    self._cache._encode(dict_key),
                     self._cache._encode(default),
                 )
 
@@ -291,9 +300,9 @@ class CachedOrderedDict(collections.OrderedDict):
         to_cache = {}
         with contextlib.suppress(AttributeError):
             arg = cast(InitMap, arg).items()
-        for key, value in itertools.chain(cast(InitIter, arg), kwargs.items()):
+        for dict_key, value in itertools.chain(cast(InitIter, arg), kwargs.items()):
             if value is not self._SENTINEL:
-                to_cache[key] = value
-                self._misses.discard(key)
-            super().__setitem__(key, value)
+                to_cache[dict_key] = value
+                self._misses.discard(dict_key)
+            super().__setitem__(dict_key, value)
         self._cache.update(to_cache)
