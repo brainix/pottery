@@ -285,9 +285,9 @@ class CachedOrderedDictTests(TestCase):
 
         # Populate the cache with three hits:
         cache = CachedOrderedDict(
-            redis=self.redis,
-            key=self._KEY,
-            keys=('hit1', 'hit2', 'hit3'),
+            redis_client=self.redis,
+            redis_key=self._KEY,
+            dict_keys=('hit1', 'hit2', 'hit3'),
         )
         cache['hit1'] = 'value1'
         cache['hit2'] = 'value2'
@@ -295,9 +295,9 @@ class CachedOrderedDictTests(TestCase):
 
         # Instantiate the cache again with the three hits and three misses:
         self.cache = CachedOrderedDict(
-            redis=self.redis,
-            key=self._KEY,
-            keys=('hit1', 'miss1', 'hit2', 'miss2', 'hit3', 'miss3'),
+            redis_client=self.redis,
+            redis_key=self._KEY,
+            dict_keys=('hit1', 'miss1', 'hit2', 'miss2', 'hit3', 'miss3'),
         )
 
     def test_setitem(self):
@@ -548,6 +548,6 @@ class CachedOrderedDictTests(TestCase):
         ))
 
     def test_no_keys(self):
-        cache = CachedOrderedDict(redis=self.redis)
+        cache = CachedOrderedDict(redis_client=self.redis)
         assert cache == {}
         assert cache.misses() == set()
