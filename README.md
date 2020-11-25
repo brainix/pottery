@@ -7,6 +7,7 @@ know how to use Pottery.
 
 [![Build Status](https://travis-ci.com/brainix/pottery.svg?branch=master)](https://travis-ci.com/brainix/pottery)
 [![Coverage Status](https://coveralls.io/repos/github/brainix/pottery/badge.svg?branch=master)](https://coveralls.io/github/brainix/pottery?branch=master)
+![CodeQL](https://github.com/brainix/pottery/workflows/CodeQL/badge.svg)
 ![Libraries.io dependency status for GitHub repo](https://img.shields.io/librariesio/github/brainix/pottery)
 [![PyPI version](https://badge.fury.io/py/pottery.svg)](https://badge.fury.io/py/pottery)
 
