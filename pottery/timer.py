@@ -44,12 +44,14 @@ class ContextTimer:
         [True, True]
     '''
 
+    __slots__ = ('_started', '_stopped')
+
     def __init__(self) -> None:
         self._started = 0.0
         self._stopped = 0.0
 
     def __enter__(self) -> 'ContextTimer':
-        self.start()
+        self.__start()
         return self
 
     def __exit__(self,
@@ -57,7 +59,7 @@ class ContextTimer:
                  exc_value: Optional[BaseException],
                  traceback: Optional[TracebackType],
                  ) -> None:
-        self.stop()
+        self.__stop()
 
     def start(self) -> None:
         if self._stopped:
@@ -67,6 +69,11 @@ class ContextTimer:
         else:
             self._started = timeit.default_timer()
 
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    __start = start
+
     def stop(self) -> None:
         if self._stopped:
             raise RuntimeError('timer has already been stopped')
@@ -74,6 +81,8 @@ class ContextTimer:
             self._stopped = timeit.default_timer()
         else:
             raise RuntimeError("timer hasn't yet been started")
+
+    __stop = stop
 
     def elapsed(self) -> int:
         if self._started:
