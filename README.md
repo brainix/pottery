@@ -282,7 +282,7 @@ Instantiate a `Redlock`:
 
 ```python
 >>> from pottery import Redlock
->>> lock = Redlock(key='printer', masters={redis})
+>>> printer_lock = Redlock(key='printer', masters={redis})
 >>>
 ```
 
@@ -292,17 +292,17 @@ production, you should have 5 Redis masters).  Now you can protect access to
 your resource:
 
 ```python
->>> lock.acquire()
+>>> printer_lock.acquire()
 True
 >>> # Critical section - print stuff here.
->>> lock.release()
+>>> printer_lock.release()
 >>>
 ```
 
 Or you can protect access to your resource inside a context manager:
 
 ```python
->>> with lock:
+>>> with printer_lock:
 ...     # Critical section - print stuff here.
 ...     pass
 >>>
@@ -317,13 +317,13 @@ section before it releases its lock).
 
 ```python
 >>> import time
->>> lock.acquire()
+>>> printer_lock.acquire()
 True
->>> bool(lock.locked())
+>>> bool(printer_lock.locked())
 True
 >>> # Critical section - print stuff here.
 >>> time.sleep(10)
->>> bool(lock.locked())
+>>> bool(printer_lock.locked())
 False
 >>>
 ```
@@ -332,17 +332,17 @@ If 10 seconds isn&rsquo;t enough to complete executing your critical section,
 then you can specify your own timeout:
 
 ```python
->>> lock = Redlock(key='printer', auto_release_time=15*1000)
->>> lock.acquire()
+>>> printer_lock = Redlock(key='printer', auto_release_time=15*1000)
+>>> printer_lock.acquire()
 True
->>> bool(lock.locked())
+>>> bool(printer_lock.locked())
 True
 >>> # Critical section - print stuff here.
 >>> time.sleep(10)
->>> bool(lock.locked())
+>>> bool(printer_lock.locked())
 True
 >>> time.sleep(5)
->>> bool(lock.locked())
+>>> bool(printer_lock.locked())
 False
 >>>
 ```
