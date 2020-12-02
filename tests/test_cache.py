@@ -7,6 +7,7 @@
 
 
 import collections
+import concurrent.futures
 import random
 import time
 from unittest import mock
@@ -569,13 +570,25 @@ class CachedOrderedDictTests(TestCase):
         assert cache.misses() == set()
 
     def test_expiration(self):
+        futures = []
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            for test_method in {
+                self._test_expiration,
+                self._test_no_expiration,
+            }:
+                future = executor.submit(test_method)
+                futures.append(future)
+        for future in futures:
+            future.result()
+
+    def _test_expiration(self):
         assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT
         time.sleep(1)
         assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT - 1
         self.cache_expiration['hit4'] = 'value4'
         assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT
 
-    def test_no_expiration(self):
+    def _test_no_expiration(self):
         assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1
         time.sleep(1)
         assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1
