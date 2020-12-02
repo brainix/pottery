@@ -10,7 +10,24 @@ import unittest.mock
 
 from pottery import RandomKeyError
 from pottery import RedisDict
+from pottery.base import random_key
 from tests.base import TestCase  # type: ignore
+
+
+class RandomKeyTests(TestCase):
+    def test_random_key_raises_typeerror_for_invalid_num_tries(self):
+        with self.assertRaises(TypeError):
+            random_key(redis=self.redis, num_tries=3.0)
+
+    def test_random_key_raises_valueerror_for_invalid_num_tries(self):
+        with self.assertRaises(ValueError):
+            random_key(redis=self.redis, num_tries=-1)
+
+    def test_random_key_raises_randomkeyerror_when_no_tries_left(self):
+        with self.assertRaises(RandomKeyError), \
+             unittest.mock.patch.object(self.redis, 'exists') as exists:
+            exists.return_value = True
+            random_key(redis=self.redis)
 
 
 class _BaseTestCase(TestCase):
