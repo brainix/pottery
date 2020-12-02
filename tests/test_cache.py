@@ -278,30 +278,42 @@ class CacheDecoratorTests(TestCase):
 
 
 class CachedOrderedDictTests(TestCase):
-    _KEY = f'{TestCase._TEST_KEY_PREFIX}cached-ordereddict'
+    _KEY_EXPIRATION = f'{TestCase._TEST_KEY_PREFIX}cached-ordereddict-expiration'
+    _KEY_NO_EXPIRATION = f'{TestCase._TEST_KEY_PREFIX}cached-ordereddict-no-expiration'
 
     def setUp(self):
         super().setUp()
 
         # Populate the cache with three hits:
-        cache = CachedOrderedDict(
-            redis_client=self.redis,
-            redis_key=self._KEY,
-            dict_keys=('hit1', 'hit2', 'hit3'),
-        )
-        cache['hit1'] = 'value1'
-        cache['hit2'] = 'value2'
-        cache['hit3'] = 'value3'
+        for redis_key, timeout in {
+            (self._KEY_EXPIRATION, _DEFAULT_TIMEOUT),
+            (self._KEY_NO_EXPIRATION, None),
+        }:
+            cache = CachedOrderedDict(
+                redis_client=self.redis,
+                redis_key=redis_key,
+                dict_keys=('hit1', 'hit2', 'hit3'),
+                timeout=timeout,
+            )
+            cache['hit1'] = 'value1'
+            cache['hit2'] = 'value2'
+            cache['hit3'] = 'value3'
 
         # Instantiate the cache again with the three hits and three misses:
-        self.cache = CachedOrderedDict(
+        self.cache_expiration = CachedOrderedDict(
             redis_client=self.redis,
-            redis_key=self._KEY,
+            redis_key=self._KEY_EXPIRATION,
             dict_keys=('hit1', 'miss1', 'hit2', 'miss2', 'hit3', 'miss3'),
+        )
+        self.cache_no_expiration = CachedOrderedDict(
+            redis_client=self.redis,
+            redis_key=self._KEY_NO_EXPIRATION,
+            dict_keys=('hit1', 'miss1', 'hit2', 'miss2', 'hit3', 'miss3'),
+            timeout=None,
         )
 
     def test_setitem(self):
-        assert self.cache == collections.OrderedDict((
+        assert self.cache_expiration == collections.OrderedDict((
             ('hit1', 'value1'),
             ('miss1', CachedOrderedDict._SENTINEL),
             ('hit2', 'value2'),
@@ -309,15 +321,15 @@ class CachedOrderedDictTests(TestCase):
             ('hit3', 'value3'),
             ('miss3', CachedOrderedDict._SENTINEL),
         ))
-        assert self.cache._cache == {
+        assert self.cache_expiration._cache == {
             'hit1': 'value1',
             'hit2': 'value2',
             'hit3': 'value3',
         }
-        assert self.cache.misses() == {'miss1', 'miss2', 'miss3'}
+        assert self.cache_expiration.misses() == {'miss1', 'miss2', 'miss3'}
 
-        self.cache['hit4'] = 'value4'
-        assert self.cache == collections.OrderedDict((
+        self.cache_expiration['hit4'] = 'value4'
+        assert self.cache_expiration == collections.OrderedDict((
             ('hit1', 'value1'),
             ('miss1', CachedOrderedDict._SENTINEL),
             ('hit2', 'value2'),
@@ -326,16 +338,16 @@ class CachedOrderedDictTests(TestCase):
             ('miss3', CachedOrderedDict._SENTINEL),
             ('hit4', 'value4'),
         ))
-        assert self.cache._cache == {
+        assert self.cache_expiration._cache == {
             'hit1': 'value1',
             'hit2': 'value2',
             'hit3': 'value3',
             'hit4': 'value4',
         }
-        assert self.cache.misses() == {'miss1', 'miss2', 'miss3'}
+        assert self.cache_expiration.misses() == {'miss1', 'miss2', 'miss3'}
 
-        self.cache['miss1'] = 'value1'
-        assert self.cache == collections.OrderedDict((
+        self.cache_expiration['miss1'] = 'value1'
+        assert self.cache_expiration == collections.OrderedDict((
             ('hit1', 'value1'),
             ('miss1', 'value1'),
             ('hit2', 'value2'),
@@ -344,21 +356,21 @@ class CachedOrderedDictTests(TestCase):
             ('miss3', CachedOrderedDict._SENTINEL),
             ('hit4', 'value4'),
         ))
-        assert self.cache._cache == {
+        assert self.cache_expiration._cache == {
             'hit1': 'value1',
             'hit2': 'value2',
             'hit3': 'value3',
             'hit4': 'value4',
             'miss1': 'value1',
         }
-        assert self.cache.misses() == {'miss2', 'miss3'}
+        assert self.cache_expiration.misses() == {'miss2', 'miss3'}
 
     def test_setdefault(self):
         'Ensure setdefault() sets the key iff the key does not exist.'
         for default in ('rajiv', 'raj'):
             with self.subTest(default=default):
-                self.cache.setdefault('first', default=default)
-                assert self.cache == collections.OrderedDict((
+                self.cache_expiration.setdefault('first', default=default)
+                assert self.cache_expiration == collections.OrderedDict((
                     ('hit1', 'value1'),
                     ('miss1', CachedOrderedDict._SENTINEL),
                     ('hit2', 'value2'),
@@ -367,16 +379,20 @@ class CachedOrderedDictTests(TestCase):
                     ('miss3', CachedOrderedDict._SENTINEL),
                     ('first', 'rajiv'),
                 ))
-                assert self.cache._cache == {
+                assert self.cache_expiration._cache == {
                     'hit1': 'value1',
                     'hit2': 'value2',
                     'hit3': 'value3',
                     'first': 'rajiv',
                 }
-                assert self.cache.misses() == {'miss1', 'miss2', 'miss3'}
+                assert self.cache_expiration.misses() == {
+                    'miss1',
+                    'miss2',
+                    'miss3',
+                }
 
-        self.cache.setdefault('miss1', default='value1')
-        assert self.cache == collections.OrderedDict((
+        self.cache_expiration.setdefault('miss1', default='value1')
+        assert self.cache_expiration == collections.OrderedDict((
             ('hit1', 'value1'),
             ('miss1', 'value1'),
             ('hit2', 'value2'),
@@ -385,18 +401,18 @@ class CachedOrderedDictTests(TestCase):
             ('miss3', CachedOrderedDict._SENTINEL),
             ('first', 'rajiv'),
         ))
-        assert self.cache._cache == {
+        assert self.cache_expiration._cache == {
             'hit1': 'value1',
             'hit2': 'value2',
             'hit3': 'value3',
             'first': 'rajiv',
             'miss1': 'value1',
         }
-        assert self.cache.misses() == {'miss2', 'miss3'}
+        assert self.cache_expiration.misses() == {'miss2', 'miss3'}
 
     def test_update(self):
-        self.cache.update()
-        assert self.cache == collections.OrderedDict((
+        self.cache_expiration.update()
+        assert self.cache_expiration == collections.OrderedDict((
             ('hit1', 'value1'),
             ('miss1', CachedOrderedDict._SENTINEL),
             ('hit2', 'value2'),
@@ -404,20 +420,20 @@ class CachedOrderedDictTests(TestCase):
             ('hit3', 'value3'),
             ('miss3', CachedOrderedDict._SENTINEL),
         ))
-        assert self.cache._cache == {
+        assert self.cache_expiration._cache == {
             'hit1': 'value1',
             'hit2': 'value2',
             'hit3': 'value3',
         }
-        assert self.cache.misses() == {'miss1', 'miss2', 'miss3'}
+        assert self.cache_expiration.misses() == {'miss1', 'miss2', 'miss3'}
 
-        self.cache.update((
+        self.cache_expiration.update((
             ('miss1', 'value1'),
             ('miss2', 'value2'),
             ('hit4', 'value4'),
             ('hit5', 'value5'),
         ))
-        assert self.cache == collections.OrderedDict((
+        assert self.cache_expiration == collections.OrderedDict((
             ('hit1', 'value1'),
             ('miss1', 'value1'),
             ('hit2', 'value2'),
@@ -427,7 +443,7 @@ class CachedOrderedDictTests(TestCase):
             ('hit4', 'value4'),
             ('hit5', 'value5'),
         ))
-        assert self.cache._cache == {
+        assert self.cache_expiration._cache == {
             'hit1': 'value1',
             'hit2': 'value2',
             'hit3': 'value3',
@@ -436,10 +452,10 @@ class CachedOrderedDictTests(TestCase):
             'hit4': 'value4',
             'hit5': 'value5',
         }
-        assert self.cache.misses() == {'miss3'}
+        assert self.cache_expiration.misses() == {'miss3'}
 
-        self.cache.update({'miss3': CachedOrderedDict._SENTINEL})
-        assert self.cache == collections.OrderedDict((
+        self.cache_expiration.update({'miss3': CachedOrderedDict._SENTINEL})
+        assert self.cache_expiration == collections.OrderedDict((
             ('hit1', 'value1'),
             ('miss1', 'value1'),
             ('hit2', 'value2'),
@@ -449,7 +465,7 @@ class CachedOrderedDictTests(TestCase):
             ('hit4', 'value4'),
             ('hit5', 'value5'),
         ))
-        assert self.cache._cache == {
+        assert self.cache_expiration._cache == {
             'hit1': 'value1',
             'hit2': 'value2',
             'hit3': 'value3',
@@ -458,10 +474,10 @@ class CachedOrderedDictTests(TestCase):
             'hit4': 'value4',
             'hit5': 'value5',
         }
-        assert self.cache.misses() == {'miss3'}
+        assert self.cache_expiration.misses() == {'miss3'}
 
-        self.cache.update(miss3='value3')
-        assert self.cache == collections.OrderedDict((
+        self.cache_expiration.update(miss3='value3')
+        assert self.cache_expiration == collections.OrderedDict((
             ('hit1', 'value1'),
             ('miss1', 'value1'),
             ('hit2', 'value2'),
@@ -471,7 +487,7 @@ class CachedOrderedDictTests(TestCase):
             ('hit4', 'value4'),
             ('hit5', 'value5'),
         ))
-        assert self.cache._cache == {
+        assert self.cache_expiration._cache == {
             'hit1': 'value1',
             'hit2': 'value2',
             'hit3': 'value3',
@@ -481,10 +497,10 @@ class CachedOrderedDictTests(TestCase):
             'hit5': 'value5',
             'miss3': 'value3',
         }
-        assert self.cache.misses() == set()
+        assert self.cache_expiration.misses() == set()
 
     def test_non_string_keys(self):
-        assert self.cache == collections.OrderedDict((
+        assert self.cache_expiration == collections.OrderedDict((
             ('hit1', 'value1'),
             ('miss1', CachedOrderedDict._SENTINEL),
             ('hit2', 'value2'),
@@ -493,8 +509,8 @@ class CachedOrderedDictTests(TestCase):
             ('miss3', CachedOrderedDict._SENTINEL),
         ))
 
-        self.cache[None] = None
-        assert self.cache == collections.OrderedDict((
+        self.cache_expiration[None] = None
+        assert self.cache_expiration == collections.OrderedDict((
             ('hit1', 'value1'),
             ('miss1', CachedOrderedDict._SENTINEL),
             ('hit2', 'value2'),
@@ -504,9 +520,9 @@ class CachedOrderedDictTests(TestCase):
             (None, None),
         ))
 
-        self.cache[False] = False
-        self.cache[True] = True
-        assert self.cache == collections.OrderedDict((
+        self.cache_expiration[False] = False
+        self.cache_expiration[True] = True
+        assert self.cache_expiration == collections.OrderedDict((
             ('hit1', 'value1'),
             ('miss1', CachedOrderedDict._SENTINEL),
             ('hit2', 'value2'),
@@ -518,8 +534,8 @@ class CachedOrderedDictTests(TestCase):
             (True, True),
         ))
 
-        self.cache[0] = 0
-        assert self.cache == collections.OrderedDict((
+        self.cache_expiration[0] = 0
+        assert self.cache_expiration == collections.OrderedDict((
             ('hit1', 'value1'),
             ('miss1', CachedOrderedDict._SENTINEL),
             ('hit2', 'value2'),
@@ -532,8 +548,8 @@ class CachedOrderedDictTests(TestCase):
             (0, 0),
         ))
 
-        self.cache[0.0] = 0.0
-        assert self.cache == collections.OrderedDict((
+        self.cache_expiration[0.0] = 0.0
+        assert self.cache_expiration == collections.OrderedDict((
             ('hit1', 'value1'),
             ('miss1', CachedOrderedDict._SENTINEL),
             ('hit2', 'value2'),
@@ -551,3 +567,17 @@ class CachedOrderedDictTests(TestCase):
         cache = CachedOrderedDict(redis_client=self.redis)
         assert cache == {}
         assert cache.misses() == set()
+
+    def test_expiration(self):
+        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT
+        time.sleep(1)
+        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT - 1
+        self.cache_expiration['hit4'] = 'value4'
+        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT
+
+    def test_no_expiration(self):
+        assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1
+        time.sleep(1)
+        assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1
+        self.cache_no_expiration['hit4'] = 'value4'
+        assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1

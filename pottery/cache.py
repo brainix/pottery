@@ -166,6 +166,16 @@ def redis_cache(*,
     return decorator
 
 
+def _set_expiration(func: F) -> F:
+    @functools.wraps(func)
+    def wrapper(self, *args: Any, **kwargs: Any) -> Any:
+        value = func(self, *args, **kwargs)
+        if self._timeout:
+            self._cache.redis.expire(self._cache.key, self._timeout)
+        return value
+    return cast(F, wrapper)
+
+
 class CachedOrderedDict(collections.OrderedDict):
     '''Redis-backed container that extends Python's OrderedDicts.
 
@@ -188,14 +198,17 @@ class CachedOrderedDict(collections.OrderedDict):
     _SENTINEL: ClassVar[object] = object()
     _NUM_TRIES: ClassVar[int] = 3
 
+    @_set_expiration
     def __init__(self,
                  *,
                  redis_client: Optional[Redis] = None,
                  redis_key: Optional[str] = None,
                  dict_keys: Iterable[JSONTypes] = tuple(),
                  num_tries: int = _NUM_TRIES,
+                 timeout: Optional[int] = _DEFAULT_TIMEOUT,
                  ) -> None:
         self._num_tries = num_tries
+        self._timeout = timeout
         init_cache = functools.partial(
             RedisDict,
             redis=redis_client,
@@ -229,6 +242,7 @@ class CachedOrderedDict(collections.OrderedDict):
     def misses(self) -> FrozenSet[JSONTypes]:
         return frozenset(self._misses)
 
+    @_set_expiration
     def __setitem__(self,
                     dict_key: JSONTypes,
                     value: Union[JSONTypes, object]
@@ -239,6 +253,7 @@ class CachedOrderedDict(collections.OrderedDict):
             self._misses.discard(dict_key)
         return super().__setitem__(dict_key, value)
 
+    @_set_expiration
     def setdefault(self,
                    dict_key: JSONTypes,
                    default: JSONTypes = None,
@@ -286,6 +301,7 @@ class CachedOrderedDict(collections.OrderedDict):
             else:
                 raise
 
+    @_set_expiration
     def update(self, arg: InitArg = tuple(), **kwargs: JSONTypes) -> None:  # type: ignore
         '''D.update([E, ]**F) -> None.  Update D from dict/iterable E and F.
         If E is present and has an .items() method, then does:  for k in E: D[k] = E[k]
