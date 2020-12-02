@@ -50,10 +50,15 @@ def random_key(*,
                redis: Redis,
                prefix: str = 'pottery:',
                length: int = 16,
-               tries: int = 3,
+               num_tries: int = 3,
                ) -> str:
-    if tries <= 0:
+    if not isinstance(num_tries, int):
+        raise TypeError('num_tries must be an int >= 0')
+    elif num_tries < 0:
+        raise ValueError('num_tries must be an int >= 0')
+    elif num_tries <= 0:
         raise RandomKeyError(redis)
+
     all_chars = string.digits + string.ascii_letters
     random_char = functools.partial(random.choice, all_chars)
     suffix = ''.join(cast(str, random_char()) for n in range(length))
@@ -63,7 +68,7 @@ def random_key(*,
             redis=redis,
             prefix=prefix,
             length=length,
-            tries=tries-1,
+            num_tries=num_tries-1,
         )
     return key
 
