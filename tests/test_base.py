@@ -6,6 +6,7 @@
 # --------------------------------------------------------------------------- #
 
 
+import gc
 import unittest.mock
 
 from pottery import RandomKeyError
@@ -47,6 +48,16 @@ class _BaseTestCase(TestCase):
 
 
 class CommonTests(_BaseTestCase):
+    def test_out_of_scope(self):
+        def scope():
+            raj = RedisDict(hobby='music', vegetarian=True)
+            assert self.redis.exists(raj.key)
+            return raj.key
+
+        key = scope()
+        gc.collect()
+        assert not self.redis.exists(key)
+
     def test_del(self):
         with unittest.mock.patch.object(self.redis, 'delete') as delete:
             del self.raj
