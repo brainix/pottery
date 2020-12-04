@@ -24,8 +24,6 @@ from typing import cast
 
 from redis import Redis
 from redis.client import Script
-from redis.exceptions import ConnectionError
-from redis.exceptions import TimeoutError
 from typing_extensions import Final
 
 from .base import Primitive
@@ -77,7 +75,8 @@ class NextId(Primitive):
     _set_id_script: ClassVar[Optional[Script]] = None
 
     def __init__(self,
-                 *, key: str = KEY,
+                 *,
+                 key: str = KEY,
                  num_tries: int = NUM_TRIES,
                  masters: Iterable[Redis] = frozenset(),
                  ) -> None:
@@ -132,18 +131,20 @@ class NextId(Primitive):
 
     @property
     def __current_id(self) -> int:
-        futures, current_id, num_masters_gotten = set(), 0, 0
+        futures, current_ids = set(), []
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for master in self.masters:
                 futures.add(executor.submit(master.get, self.key))
             for future in concurrent.futures.as_completed(futures):
-                with contextlib.suppress(TimeoutError, ConnectionError):
-                    current_id = max(current_id, int(future.result()))
-                    num_masters_gotten += 1
+                try:
+                    current_ids.append(int(future.result()))
+                except Exception as error:
+                    _logger.error(error, exc_info=True)
+        num_masters_gotten = len(current_ids)
         if num_masters_gotten < len(self.masters) // 2 + 1:
             raise QuorumNotAchieved(self.masters, self.key)
         else:
-            return current_id
+            return max(current_ids)
 
     @__current_id.setter
     def __current_id(self, value: int) -> None:
@@ -158,8 +159,10 @@ class NextId(Primitive):
                 )
                 futures.add(future)
             for future in concurrent.futures.as_completed(futures):
-                with contextlib.suppress(TimeoutError, ConnectionError):
+                try:
                     num_masters_set += future.result() == value
+                except Exception as error:
+                    _logger.error(error, exc_info=True)
         if num_masters_set < len(self.masters) // 2 + 1:
             raise QuorumNotAchieved(self.masters, self.key)
 

@@ -37,8 +37,6 @@ from typing import cast
 
 from redis import Redis
 from redis.client import Script
-from redis.exceptions import ConnectionError
-from redis.exceptions import TimeoutError
 from typing_extensions import Final
 
 from .base import Primitive
@@ -254,8 +252,10 @@ class Redlock(Primitive):
             for master in self.masters:
                 futures.add(executor.submit(self.__acquire_master, master))
             for future in concurrent.futures.as_completed(futures):
-                with contextlib.suppress(TimeoutError, ConnectionError):
+                try:
                     num_masters_acquired += future.result()
+                except Exception as error:  # pragma: no cover
+                    _logger.error(error, exc_info=True)
             quorum = num_masters_acquired >= len(self.masters) // 2 + 1
             elapsed = timer.elapsed() - self.__drift()
             validity_time = self.auto_release_time - elapsed
@@ -351,16 +351,17 @@ class Redlock(Primitive):
             >>> printer_lock_1.release()
 
         '''
-        futures, num_masters_acquired, ttls = set(), 0, []
+        futures, ttls = set(), []
         with ContextTimer() as timer, \
              concurrent.futures.ThreadPoolExecutor() as executor:
             for master in self.masters:
                 futures.add(executor.submit(self.__acquired_master, master))
             for future in concurrent.futures.as_completed(futures):
-                with contextlib.suppress(TimeoutError, ConnectionError):
-                    ttl = future.result()
-                    num_masters_acquired += ttl > 0
-                    ttls.append(ttl)
+                try:
+                    ttls.append(future.result())
+                except Exception as error:  # pragma: no cover
+                    _logger.error(error, exc_info=True)
+            num_masters_acquired = sum(1 for ttl in ttls if ttl > 0)
             quorum = num_masters_acquired >= len(self.masters) // 2 + 1
             if quorum:
                 ttls = sorted(ttls, reverse=True)
@@ -398,8 +399,10 @@ class Redlock(Primitive):
                 for master in self.masters:
                     futures.add(executor.submit(self.__extend_master, master))
                 for future in concurrent.futures.as_completed(futures):
-                    with contextlib.suppress(TimeoutError, ConnectionError):
+                    try:
                         num_masters_extended += future.result()
+                    except Exception as error:  # pragma: no cover
+                        _logger.error(error, exc_info=True)
             quorum = num_masters_extended >= len(self.masters) // 2 + 1
             self._extension_num += quorum
             if not quorum:
@@ -426,8 +429,10 @@ class Redlock(Primitive):
             for master in self.masters:
                 futures.add(executor.submit(self.__release_master, master))
             for future in concurrent.futures.as_completed(futures):
-                with contextlib.suppress(TimeoutError, ConnectionError):
+                try:
                     num_masters_released += future.result()
+                except Exception as error:  # pragma: no cover
+                    _logger.error(error, exc_info=True)
         quorum = num_masters_released >= len(self.masters) // 2 + 1
         if not quorum:
             raise ReleaseUnlockedLock(self.masters, self.key)
