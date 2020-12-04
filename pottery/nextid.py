@@ -16,16 +16,23 @@ Lua scripting:
 
 import concurrent.futures
 import contextlib
+import logging
 from typing import ClassVar
 from typing import Iterable
+from typing import Optional
+from typing import cast
 
 from redis import Redis
 from redis.client import Script
 from redis.exceptions import ConnectionError
 from redis.exceptions import TimeoutError
+from typing_extensions import Final
 
 from .base import Primitive
 from .exceptions import QuorumNotAchieved
+
+
+_logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
 class NextId(Primitive):
@@ -67,32 +74,38 @@ class NextId(Primitive):
     KEY: ClassVar[str] = 'current'
     NUM_TRIES: ClassVar[int] = 3
 
+    _set_id_script: ClassVar[Optional[Script]] = None
+
     def __init__(self,
                  *, key: str = KEY,
                  num_tries: int = NUM_TRIES,
                  masters: Iterable[Redis] = frozenset(),
                  ) -> None:
         super().__init__(key=key, masters=masters)
+        self.__register_set_id_script()
         self.num_tries = num_tries
-        self._set_id_script = self.__register_set_id_script()
         self.__init_masters()
 
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
     #   https://stackoverflow.com/a/38534939
-    def __register_set_id_script(self) -> Script:
-        master = next(iter(self.masters))
-        set_id_script = master.register_script('''
-            local curr = tonumber(redis.call('get', KEYS[1]))
-            local next = tonumber(ARGV[1])
-            if curr < next then
-                redis.call('set', KEYS[1], next)
-                return next
-            else
-                return nil
-            end
-        ''')
-        return set_id_script
+    def __register_set_id_script(self) -> None:
+        if self._set_id_script is None:
+            _logger.info(
+                'Registering %s._set_id_script',
+                self.__class__.__name__,
+            )
+            master = next(iter(self.masters))
+            self.__class__._set_id_script = master.register_script('''
+                local curr = tonumber(redis.call('get', KEYS[1]))
+                local next = tonumber(ARGV[1])
+                if curr < next then
+                    redis.call('set', KEYS[1], next)
+                    return next
+                else
+                    return nil
+                end
+            ''')
 
     def __init_masters(self) -> None:
         with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -138,7 +151,7 @@ class NextId(Primitive):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for master in self.masters:
                 future = executor.submit(
-                    self._set_id_script,
+                    cast(Script, self._set_id_script),
                     keys=(self.key,),
                     args=(value,),
                     client=master,
