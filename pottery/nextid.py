@@ -140,7 +140,8 @@ class NextId(Primitive):
                     current_ids.append(int(future.result()))
                 except Exception as error:
                     _logger.error(error, exc_info=True)
-        if len(current_ids) < len(self.masters) // 2 + 1:
+        num_masters_gotten = len(current_ids)
+        if num_masters_gotten < len(self.masters) // 2 + 1:
             raise QuorumNotAchieved(self.masters, self.key)
         else:
             return max(current_ids)
