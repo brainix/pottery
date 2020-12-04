@@ -36,6 +36,7 @@ from typing import Type
 from typing import cast
 
 from redis import Redis
+from redis import RedisError
 from redis.client import Script
 from typing_extensions import Final
 
@@ -254,7 +255,7 @@ class Redlock(Primitive):
             for future in concurrent.futures.as_completed(futures):
                 try:
                     num_masters_acquired += future.result()
-                except Exception as error:  # pragma: no cover
+                except RedisError as error:  # pragma: no cover
                     _logger.error(error, exc_info=True)
             quorum = num_masters_acquired >= len(self.masters) // 2 + 1
             elapsed = timer.elapsed() - self.__drift()
@@ -359,7 +360,7 @@ class Redlock(Primitive):
             for future in concurrent.futures.as_completed(futures):
                 try:
                     ttls.append(future.result())
-                except Exception as error:  # pragma: no cover
+                except RedisError as error:  # pragma: no cover
                     _logger.error(error, exc_info=True)
             num_masters_acquired = sum(1 for ttl in ttls if ttl > 0)
             quorum = num_masters_acquired >= len(self.masters) // 2 + 1
@@ -401,7 +402,7 @@ class Redlock(Primitive):
                 for future in concurrent.futures.as_completed(futures):
                     try:
                         num_masters_extended += future.result()
-                    except Exception as error:  # pragma: no cover
+                    except RedisError as error:  # pragma: no cover
                         _logger.error(error, exc_info=True)
             quorum = num_masters_extended >= len(self.masters) // 2 + 1
             self._extension_num += quorum
@@ -431,7 +432,7 @@ class Redlock(Primitive):
             for future in concurrent.futures.as_completed(futures):
                 try:
                     num_masters_released += future.result()
-                except Exception as error:  # pragma: no cover
+                except RedisError as error:  # pragma: no cover
                     _logger.error(error, exc_info=True)
         quorum = num_masters_released >= len(self.masters) // 2 + 1
         if not quorum:

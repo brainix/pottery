@@ -23,6 +23,7 @@ from typing import Optional
 from typing import cast
 
 from redis import Redis
+from redis import RedisError
 from redis.client import Script
 from typing_extensions import Final
 
@@ -138,7 +139,7 @@ class NextId(Primitive):
             for future in concurrent.futures.as_completed(futures):
                 try:
                     current_ids.append(int(future.result()))
-                except Exception as error:
+                except RedisError as error:
                     _logger.error(error, exc_info=True)
         num_masters_gotten = len(current_ids)
         if num_masters_gotten < len(self.masters) // 2 + 1:
@@ -161,7 +162,7 @@ class NextId(Primitive):
             for future in concurrent.futures.as_completed(futures):
                 try:
                     num_masters_set += future.result() == value
-                except Exception as error:
+                except RedisError as error:
                     _logger.error(error, exc_info=True)
         if num_masters_set < len(self.masters) // 2 + 1:
             raise QuorumNotAchieved(self.masters, self.key)
