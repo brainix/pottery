@@ -78,8 +78,8 @@ class NextId(Primitive):
     def __init__(self,
                  *,
                  key: str = KEY,
-                 num_tries: int = NUM_TRIES,
                  masters: Iterable[Redis] = frozenset(),
+                 num_tries: int = NUM_TRIES,
                  ) -> None:
         super().__init__(key=key, masters=masters)
         self.__register_set_id_script()
@@ -149,22 +149,27 @@ class NextId(Primitive):
 
     @__current_id.setter
     def __current_id(self, value: int) -> None:
-        futures, num_masters_set = set(), 0
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            for master in self.masters:
-                future = executor.submit(
-                    cast(Script, self._set_id_script),
-                    keys=(self.key,),
-                    args=(value,),
-                    client=master,
-                )
-                futures.add(future)
-            for future in concurrent.futures.as_completed(futures):
-                try:
-                    num_masters_set += future.result() == value
-                except RedisError as error:
-                    _logger.error(error, exc_info=True)
-        if num_masters_set < len(self.masters) // 2 + 1:
+        executor = concurrent.futures.ThreadPoolExecutor()
+        futures, num_masters_set, quorum = set(), 0, False
+        for master in self.masters:
+            future = executor.submit(
+                cast(Script, self._set_id_script),
+                keys=(self.key,),
+                args=(value,),
+                client=master,
+            )
+            futures.add(future)
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                num_masters_set += future.result() == value
+            except RedisError as error:
+                _logger.error(error, exc_info=True)
+            else:
+                quorum = num_masters_set >= len(self.masters) // 2 + 1
+                if quorum:  # pragma: no cover
+                    break
+        executor.shutdown(wait=False)
+        if not quorum:
             raise QuorumNotAchieved(self.masters, self.key)
 
 
