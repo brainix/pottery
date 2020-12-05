@@ -29,6 +29,7 @@ from typing_extensions import Final
 
 from .base import Primitive
 from .exceptions import QuorumNotAchieved
+from .executor import BailOutExecutor
 
 
 _logger: Final[logging.Logger] = logging.getLogger('pottery')
@@ -132,15 +133,18 @@ class NextId(Primitive):
 
     @property
     def __current_id(self) -> int:
-        futures, current_ids = set(), []
         with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = set()
             for master in self.masters:
                 futures.add(executor.submit(master.get, self.key))
+
+            current_ids = []
             for future in concurrent.futures.as_completed(futures):
                 try:
                     current_ids.append(int(future.result()))
                 except RedisError as error:
                     _logger.error(error, exc_info=True)
+
         num_masters_gotten = len(current_ids)
         if num_masters_gotten < len(self.masters) // 2 + 1:
             raise QuorumNotAchieved(self.masters, self.key)
@@ -149,26 +153,30 @@ class NextId(Primitive):
 
     @__current_id.setter
     def __current_id(self, value: int) -> None:
-        executor = concurrent.futures.ThreadPoolExecutor()
-        futures, num_masters_set, quorum = set(), 0, False
-        for master in self.masters:
-            future = executor.submit(
-                cast(Script, self._set_id_script),
-                keys=(self.key,),
-                args=(value,),
-                client=master,
-            )
-            futures.add(future)
-        for future in concurrent.futures.as_completed(futures):
-            try:
-                num_masters_set += future.result() == value
-            except RedisError as error:
-                _logger.error(error, exc_info=True)
-            else:
-                quorum = num_masters_set >= len(self.masters) // 2 + 1
-                if quorum:  # pragma: no cover
-                    break
-        executor.shutdown(wait=False)
+        quorum = False
+
+        with BailOutExecutor() as executor:
+            futures = set()
+            for master in self.masters:
+                future = executor.submit(
+                    cast(Script, self._set_id_script),
+                    keys=(self.key,),
+                    args=(value,),
+                    client=master,
+                )
+                futures.add(future)
+
+            num_masters_set = 0
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    num_masters_set += future.result() == value
+                except RedisError as error:
+                    _logger.error(error, exc_info=True)
+                else:
+                    quorum = num_masters_set >= len(self.masters) // 2 + 1
+                    if quorum:  # pragma: no cover
+                        break
+
         if not quorum:
             raise QuorumNotAchieved(self.masters, self.key)
 
