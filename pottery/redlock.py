@@ -44,6 +44,7 @@ from .base import Primitive
 from .exceptions import ExtendUnlockedLock
 from .exceptions import ReleaseUnlockedLock
 from .exceptions import TooManyExtensions
+from .executor import BailOutExecutor
 from .timer import ContextTimer
 
 
@@ -247,19 +248,26 @@ class Redlock(Primitive):
     def __acquire_masters(self) -> bool:
         self._value = os.urandom(self.num_random_bytes)
         self._extension_num = 0
-        futures, num_masters_acquired = set(), 0
-        with ContextTimer() as timer, \
-             concurrent.futures.ThreadPoolExecutor() as executor:
+        quorum, validity_time = False, 0.0
+
+        with ContextTimer() as timer, BailOutExecutor() as executor:
+            futures = set()
             for master in self.masters:
                 futures.add(executor.submit(self.__acquire_master, master))
+
+            num_masters_acquired = 0
             for future in concurrent.futures.as_completed(futures):
                 try:
                     num_masters_acquired += future.result()
                 except RedisError as error:  # pragma: no cover
                     _logger.error(error, exc_info=True)
-            quorum = num_masters_acquired >= len(self.masters) // 2 + 1
-            elapsed = timer.elapsed() - self.__drift()
-            validity_time = self.auto_release_time - elapsed
+                else:
+                    quorum = num_masters_acquired >= len(self.masters) // 2 + 1
+                    if quorum:
+                        elapsed = timer.elapsed() - self.__drift()
+                        validity_time = self.auto_release_time - elapsed
+                        break
+
         if quorum and max(validity_time, 0):
             return True
         else:
@@ -352,16 +360,19 @@ class Redlock(Primitive):
             >>> printer_lock_1.release()
 
         '''
-        futures, ttls = set(), []
         with ContextTimer() as timer, \
              concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = set()
             for master in self.masters:
                 futures.add(executor.submit(self.__acquired_master, master))
+
+            ttls = []
             for future in concurrent.futures.as_completed(futures):
                 try:
                     ttls.append(future.result())
                 except RedisError as error:  # pragma: no cover
                     _logger.error(error, exc_info=True)
+
             num_masters_acquired = sum(1 for ttl in ttls if ttl > 0)
             quorum = num_masters_acquired >= len(self.masters) // 2 + 1
             if quorum:
@@ -395,16 +406,24 @@ class Redlock(Primitive):
         if self._extension_num >= self.num_extensions:
             raise TooManyExtensions(self.masters, self.key)
         else:
-            futures, num_masters_extended = set(), 0
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            quorum = False
+
+            with BailOutExecutor() as executor:
+                futures = set()
                 for master in self.masters:
                     futures.add(executor.submit(self.__extend_master, master))
+
+                num_masters_extended = 0
                 for future in concurrent.futures.as_completed(futures):
                     try:
                         num_masters_extended += future.result()
                     except RedisError as error:  # pragma: no cover
                         _logger.error(error, exc_info=True)
-            quorum = num_masters_extended >= len(self.masters) // 2 + 1
+                    else:
+                        quorum = num_masters_extended >= len(self.masters) // 2 + 1
+                        if quorum:
+                            break
+
             self._extension_num += quorum
             if not quorum:
                 raise ExtendUnlockedLock(self.masters, self.key)
@@ -425,16 +444,24 @@ class Redlock(Primitive):
             >>> bool(printer_lock.locked())
             False
         '''
-        futures, num_masters_released = set(), 0
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        quorum = False
+
+        with BailOutExecutor() as executor:
+            futures = set()
             for master in self.masters:
                 futures.add(executor.submit(self.__release_master, master))
+
+            num_masters_released = 0
             for future in concurrent.futures.as_completed(futures):
                 try:
                     num_masters_released += future.result()
                 except RedisError as error:  # pragma: no cover
                     _logger.error(error, exc_info=True)
-        quorum = num_masters_released >= len(self.masters) // 2 + 1
+                else:
+                    quorum = num_masters_released >= len(self.masters) // 2 + 1
+                    if quorum:
+                        break
+
         if not quorum:
             raise ReleaseUnlockedLock(self.masters, self.key)
 
