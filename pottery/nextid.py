@@ -133,7 +133,9 @@ class NextId(Primitive):
 
     @property
     def __current_id(self) -> int:
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        quorum = False
+
+        with BailOutExecutor() as executor:
             futures = set()
             for master in self.masters:
                 futures.add(executor.submit(master.get, self.key))
@@ -144,12 +146,16 @@ class NextId(Primitive):
                     current_ids.append(int(future.result()))
                 except RedisError as error:
                     _logger.error(error, exc_info=True)
+                else:
+                    num_masters_gotten = len(current_ids)
+                    quorum = num_masters_gotten >= len(self.masters) // 2 + 1
+                    if quorum:  # pragma: no cover
+                        break
 
-        num_masters_gotten = len(current_ids)
-        if num_masters_gotten < len(self.masters) // 2 + 1:
-            raise QuorumNotAchieved(self.masters, self.key)
-        else:
+        if quorum:
             return max(current_ids)
+        else:
+            raise QuorumNotAchieved(self.masters, self.key)
 
     @__current_id.setter
     def __current_id(self, value: int) -> None:
