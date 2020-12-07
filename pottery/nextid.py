@@ -138,15 +138,17 @@ class NextId(Primitive):
         with BailOutExecutor() as executor:
             futures = set()
             for master in self.masters:
-                futures.add(executor.submit(master.get, self.key))
+                future = executor.submit(master.get, self.key)
+                futures.add(future)
 
             current_ids = []
             for future in concurrent.futures.as_completed(futures):
                 try:
-                    current_ids.append(int(future.result()))
+                    current_id = int(future.result())
                 except RedisError as error:
                     _logger.error(error, exc_info=True)
                 else:
+                    current_ids.append(current_id)
                     num_masters_gotten = len(current_ids)
                     quorum = num_masters_gotten >= len(self.masters) // 2 + 1
                     if quorum:  # pragma: no cover

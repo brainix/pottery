@@ -253,7 +253,8 @@ class Redlock(Primitive):
         with ContextTimer() as timer, BailOutExecutor() as executor:
             futures = set()
             for master in self.masters:
-                futures.add(executor.submit(self.__acquire_master, master))
+                future = executor.submit(self.__acquire_master, master)
+                futures.add(future)
 
             num_masters_acquired = 0
             for future in concurrent.futures.as_completed(futures):
@@ -364,7 +365,8 @@ class Redlock(Primitive):
              concurrent.futures.ThreadPoolExecutor() as executor:
             futures = set()
             for master in self.masters:
-                futures.add(executor.submit(self.__acquired_master, master))
+                future = executor.submit(self.__acquired_master, master)
+                futures.add(future)
 
             ttls = []
             for future in concurrent.futures.as_completed(futures):
@@ -411,7 +413,8 @@ class Redlock(Primitive):
             with BailOutExecutor() as executor:
                 futures = set()
                 for master in self.masters:
-                    futures.add(executor.submit(self.__extend_master, master))
+                    future = executor.submit(self.__extend_master, master)
+                    futures.add(future)
 
                 num_masters_extended = 0
                 for future in concurrent.futures.as_completed(futures):
@@ -449,7 +452,8 @@ class Redlock(Primitive):
         with BailOutExecutor() as executor:
             futures = set()
             for master in self.masters:
-                futures.add(executor.submit(self.__release_master, master))
+                future = executor.submit(self.__release_master, master)
+                futures.add(future)
 
             num_masters_released = 0
             for future in concurrent.futures.as_completed(futures):
