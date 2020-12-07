@@ -57,7 +57,7 @@ class ContextTimer:
     def __exit__(self,
                  exc_type: Optional[Type[BaseException]],
                  exc_value: Optional[BaseException],
-                 traceback: Optional[TracebackType],
+                 exc_traceback: Optional[TracebackType],
                  ) -> None:
         self.__stop()
 
