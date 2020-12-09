@@ -17,7 +17,7 @@ init upgrade: formulae := {openssl,readline,xz,redis}
 python upgrade: version ?= 3.9.0
 upgrade: requirements ?= requirements-to-freeze.txt
 
-clean-redis: keys_to_delete = \
+clean-redis clean-redis-2: keys_to_delete = \
 	basket \
 	dilberts \
 	expensive-function-cache \
@@ -92,10 +92,10 @@ else
 endif
 
 .PHONY: test-readme
-test-readme: clean-redis run-doctest clean-redis
+test-readme: clean-redis run-doctest clean-redis-2
 
-.PHONY: clean-redis
-clean-redis:
+.PHONY: clean-redis clean-redis-2
+clean-redis clean-redis-2:
 	@source $(venv)/bin/activate && \
 		python3 -c "from redis import Redis; redis = Redis(); redis.delete($(foreach key,$(keys_to_delete),'$(key)',))"
 
