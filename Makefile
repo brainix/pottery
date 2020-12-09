@@ -32,11 +32,11 @@ clean-redis: keys_to_delete = \
 	tel
 
 
-.PHONY: install init python upgrade test test-readme clean-redis release clean
-
+.PHONY: install
 install: init python
 
 
+.PHONY: init
 init:
 	-xcode-select --install
 	command -v brew >/dev/null 2>&1 || \
@@ -46,6 +46,7 @@ init:
 	-brew install $(formulae)
 	-git clone https://github.com/pyenv/pyenv.git ~/.pyenv
 
+.PHONY: python
 python:
 	cd ~/.pyenv/plugins/python-build/../.. && git pull
 	CFLAGS="-I$(shell brew --prefix openssl)/include -I$(shell brew --prefix readline)/include -g -O2" \
@@ -54,6 +55,7 @@ python:
 	pyenv rehash
 	@$(MAKE) --makefile=$(THIS_FILE) upgrade recursive=true requirements=requirements.txt
 
+.PHONY: upgrade
 upgrade:
 	-brew update
 	-brew upgrade $(formulae)
@@ -71,6 +73,7 @@ endif
 	git diff
 
 
+.PHONY: test
 test:
 ifeq ($(tests),)
 	$(eval $@_SOURCE_FILES := $(shell find . -name '*.py' -not -path './build/*' -not -path './dist/*' -not -path './pottery.egg-info/*' -not -path './venv/*'))
@@ -88,17 +91,20 @@ else
 		python3 -m unittest --verbose $(tests)
 endif
 
-test-readme:
-	@$(MAKE) --makefile=$(THIS_FILE) clean-redis
-	$(shell source $(venv)/bin/activate && python3 -m doctest README.md)
-	@$(MAKE) --makefile=$(THIS_FILE) clean-redis
-	@exit $(.SHELLSTATUS)
+.PHONY: test-readme
+test-readme: clean-redis run-doctest clean-redis
 
+.PHONY: clean-redis
 clean-redis:
 	@source $(venv)/bin/activate && \
 		python3 -c "from redis import Redis; redis = Redis(); redis.delete($(foreach key,$(keys_to_delete),'$(key)',))"
 
+.PHONY: run-doctest
+run-doctest:
+	source $(venv)/bin/activate && python3 -m doctest -v README.md
 
+
+.PHONY: release
 release:
 	rm -f dist/*
 	source $(venv)/bin/activate && \
@@ -106,5 +112,6 @@ release:
 		python3 setup.py bdist_wheel && \
 		twine upload dist/*
 
+.PHONY: clean
 clean:
 	rm -rf {$(venv),.coverage,.mypy_cache,dist/*}
