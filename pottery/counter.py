@@ -100,7 +100,7 @@ class RedisCounter(RedisDict, collections.Counter):
             cursor, encoded_dict = self._scan(cursor=cursor)
             decoded_dict = {
                 self._decode(key): self._decode(value)
-                for key, value in self._scan()[1].items()
+                for key, value in encoded_dict.items()
             }
             counter.update(decoded_dict)
             if cursor == 0:  # pragma: no cover
