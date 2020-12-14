@@ -144,7 +144,11 @@ class NextId(Primitive):
                 try:
                     current_id = int(future.result())
                 except RedisError as error:
-                    _logger.error(error, exc_info=True)
+                    _logger.exception(
+                        '%s.__current_id() getter caught an %s',
+                        self.__class__.__name__,
+                        error.__class__.__name__,
+                    )
                 else:
                     current_ids.append(current_id)
 
@@ -175,7 +179,11 @@ class NextId(Primitive):
                 try:
                     num_masters_set += future.result() == value
                 except RedisError as error:
-                    _logger.error(error, exc_info=True)
+                    _logger.exception(
+                        '%s.__current_id() setter caught an %s',
+                        self.__class__.__name__,
+                        error.__class__.__name__,
+                    )
                 else:
                     quorum = num_masters_set >= len(self.masters) // 2 + 1
                     if quorum:  # pragma: no cover

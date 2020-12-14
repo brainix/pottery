@@ -261,7 +261,11 @@ class Redlock(Primitive):
                 try:
                     num_masters_acquired += future.result()
                 except RedisError as error:  # pragma: no cover
-                    _logger.error(error, exc_info=True)
+                    _logger.exception(
+                        '%s.__acquire_masters() caught an %s',
+                        self.__class__.__name__,
+                        error.__class__.__name__,
+                    )
                 else:
                     quorum = num_masters_acquired >= len(self.masters) // 2 + 1
                     if quorum:
@@ -373,7 +377,11 @@ class Redlock(Primitive):
                 try:
                     ttls.append(future.result())
                 except RedisError as error:  # pragma: no cover
-                    _logger.error(error, exc_info=True)
+                    _logger.exception(
+                        '%s.locked() caught an %s',
+                        self.__class__.__name__,
+                        error.__class__.__name__,
+                    )
 
             num_masters_acquired = sum(1 for ttl in ttls if ttl > 0)
             quorum = num_masters_acquired >= len(self.masters) // 2 + 1
@@ -421,7 +429,11 @@ class Redlock(Primitive):
                     try:
                         num_masters_extended += future.result()
                     except RedisError as error:  # pragma: no cover
-                        _logger.error(error, exc_info=True)
+                        _logger.exception(
+                            '%s.extend() caught an %s',
+                            self.__class__.__name__,
+                            error.__class__.__name__,
+                        )
                     else:
                         quorum = num_masters_extended >= len(self.masters) // 2 + 1
                         if quorum:
@@ -460,7 +472,11 @@ class Redlock(Primitive):
                 try:
                     num_masters_released += future.result()
                 except RedisError as error:  # pragma: no cover
-                    _logger.error(error, exc_info=True)
+                    _logger.exception(
+                        '%s.release() caught an %s',
+                        self.__class__.__name__,
+                        error.__class__.__name__,
+                    )
                 else:
                     quorum = num_masters_released >= len(self.masters) // 2 + 1
                     if quorum:
