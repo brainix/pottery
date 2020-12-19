@@ -14,7 +14,7 @@ THIS_FILE := $(lastword $(MAKEFILE_LIST))
 venv ?= venv
 
 init upgrade: formulae := {openssl,readline,xz,redis}
-python upgrade: version ?= 3.9.0
+python upgrade: version ?= 3.9.1
 upgrade: requirements ?= requirements-to-freeze.txt
 
 clean-redis clean-redis-2: keys_to_delete = \
@@ -114,4 +114,9 @@ release:
 
 .PHONY: clean
 clean:
-	rm -rf {$(venv),.coverage,.mypy_cache,dist/*}
+	rm -rf {$(venv),.coverage,.mypy_cache,build/*,dist/*}
+
+
+.PHONY: lines-of-code
+lines-of-code:
+	find . -name '*.py' -not -path "./venv/*" -not -path "./build/*" | xargs wc -l
