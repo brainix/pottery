@@ -24,11 +24,14 @@ Lua scripting:
 
 import concurrent.futures
 import contextlib
+import functools
 import logging
 import os
 import random
 import time
 from types import TracebackType
+from typing import Any
+from typing import Callable
 from typing import ClassVar
 from typing import Iterable
 from typing import Optional
@@ -40,12 +43,16 @@ from redis import RedisError
 from redis.client import Script
 from typing_extensions import Final
 
+from .annotations import F
 from .base import Primitive
 from .exceptions import ExtendUnlockedLock
 from .exceptions import ReleaseUnlockedLock
 from .exceptions import TooManyExtensions
 from .executor import BailOutExecutor
 from .timer import ContextTimer
+
+
+AUTO_RELEASE_TIME: Final[int] = 10 * 1000
 
 
 _logger: Final[logging.Logger] = logging.getLogger('pottery')
@@ -127,7 +134,6 @@ class Redlock(Primitive):
     '''
 
     KEY_PREFIX: ClassVar[str] = 'redlock'
-    AUTO_RELEASE_TIME: ClassVar[int] = 10 * 1000
     CLOCK_DRIFT_FACTOR: ClassVar[float] = 0.01
     RETRY_DELAY: ClassVar[int] = 200
     NUM_EXTENSIONS: ClassVar[int] = 3
@@ -543,6 +549,33 @@ class Redlock(Primitive):
             f'<{self.__class__.__name__} key={self.key} '
             f'value={str(self._value)} timeout={self.__locked()}>'
         )
+
+
+def redlock(*,
+            key: str,
+            masters: Iterable[Redis] = frozenset(),
+            auto_release_time: int = AUTO_RELEASE_TIME,
+            ) -> Callable[[F], F]:
+    def decorator(func: F) -> F:
+        @functools.wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            redlock_ = Redlock(
+                key=key,
+                masters=masters,
+                auto_release_time=auto_release_time,
+            )
+            with ContextTimer() as timer, redlock_:
+                return_value = func(*args, **kwargs)
+
+            _logger.info(
+                '%s() held %s for %d ms',
+                func.__qualname__,
+                redlock_.key,
+                timer.elapsed(),
+            )
+            return return_value
+        return cast(F, wrapper)
+    return decorator
 
 
 if __name__ == '__main__':  # pragma: no cover

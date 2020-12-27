@@ -20,7 +20,6 @@ from types import TracebackType
 from typing import Any
 from typing import ClassVar
 from typing import ContextManager
-from typing import Dict
 from typing import FrozenSet
 from typing import Generator
 from typing import Iterable
@@ -38,6 +37,8 @@ from redis.client import Pipeline
 from typing_extensions import Final
 
 from . import monkey
+from .annotations import JSONTypes
+from .annotations import RedisValues
 from .exceptions import RandomKeyError
 
 
@@ -122,10 +123,6 @@ class _Common:
     #   https://youtu.be/miGolgp9xq8?t=2086
     #   https://stackoverflow.com/a/38534939
     __random_key = _random_key
-
-
-JSONTypes = Union[None, bool, int, float, str, List[Any], Dict[str, Any]]
-RedisValues = Union[bytes, str, float, int]
 
 
 class _Encodable:
