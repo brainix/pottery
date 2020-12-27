@@ -64,9 +64,9 @@ class HyperLogLogTests(TestCase):
     def test_union(self):
         hll1 = HyperLogLog({'foo', 'bar', 'zap', 'a'}, redis=self.redis)
         hll2 = HyperLogLog({'a', 'b', 'c', 'foo'}, redis=self.redis)
-        assert len(hll1.union(hll2)) == 6
-        assert len(hll1.union({'b', 'c', 'd', 'foo'})) == 7
-        assert len(hll1.union(hll2, {'b', 'c', 'd', 'baz'})) == 8
+        assert len(hll1.union(hll2, redis=self.redis)) == 6
+        assert len(hll1.union({'b', 'c', 'd', 'foo'}, redis=self.redis)) == 7
+        assert len(hll1.union(hll2, {'b', 'c', 'd', 'baz'}, redis=self.redis)) == 8
 
     def test_repr(self):
         'Test HyperLogLog.__repr__()'
