@@ -20,8 +20,8 @@ from tests.base import TestCase  # type: ignore
 
 
 class CacheDecoratorTests(TestCase):
-    _KEY_EXPIRATION = f'{TestCase._TEST_KEY_PREFIX}expensive-method-expiration'
-    _KEY_NO_EXPIRATION = f'{TestCase._TEST_KEY_PREFIX}expensive-method-no-expiration'
+    _KEY_EXPIRATION = 'expensive-method-expiration'
+    _KEY_NO_EXPIRATION = 'expensive-method-no-expiration'
 
     def setUp(self):
         super().setUp()
@@ -283,8 +283,8 @@ class CacheDecoratorTests(TestCase):
 
 
 class CachedOrderedDictTests(TestCase):
-    _KEY_EXPIRATION = f'{TestCase._TEST_KEY_PREFIX}cached-ordereddict-expiration'
-    _KEY_NO_EXPIRATION = f'{TestCase._TEST_KEY_PREFIX}cached-ordereddict-no-expiration'
+    _KEY_EXPIRATION = 'cached-ordereddict-expiration'
+    _KEY_NO_EXPIRATION = 'cached-ordereddict-no-expiration'
 
     def setUp(self):
         super().setUp()

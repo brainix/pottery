@@ -11,7 +11,7 @@ from tests.base import TestCase  # type: ignore
 
 
 class HyperLogLogTests(TestCase):
-    _KEY = f'{TestCase._TEST_KEY_PREFIX}hll'
+    _KEY = 'hll'
 
     def test_init_without_iterable(self):
         hll = HyperLogLog(redis=self.redis)

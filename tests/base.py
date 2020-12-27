@@ -11,15 +11,12 @@ import logging
 import random
 import sys
 import unittest
-from typing import ClassVar
 from typing import NoReturn
 
 from redis import Redis
 
 
 class TestCase(unittest.TestCase):
-    _TEST_KEY_PREFIX: ClassVar[str] = 'pottery-test:'
-
     @classmethod
     def setUpClass(cls) -> None:
         logger = logging.getLogger('pottery')
