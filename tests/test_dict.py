@@ -20,16 +20,40 @@ class DictTests(TestCase):
     '''
 
     def test_keyexistserror_raised(self):
-        d = RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+        d = RedisDict(
+            redis=self.redis,
+            key='pottery:tel',
+            sape=4139,
+            guido=4127,
+            jack=4098,
+        )
         d   # Workaround for Pyflakes.  :-(
         with self.assertRaises(KeyExistsError):
-            RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+            RedisDict(
+                redis=self.redis,
+                key='pottery:tel',
+                sape=4139,
+                guido=4127,
+                jack=4098,
+            )
 
     def test_keyexistserror_repr(self):
-        d = RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+        d = RedisDict(
+            redis=self.redis,
+            key='pottery:tel',
+            sape=4139,
+            guido=4127,
+            jack=4098,
+        )
         d   # Workaround for Pyflakes.  :-(
         try:
-            RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+            RedisDict(
+                redis=self.redis,
+                key='pottery:tel',
+                sape=4139,
+                guido=4127,
+                jack=4098,
+            )
         except KeyExistsError as wtf:
             assert repr(wtf) == (
                 "KeyExistsError(redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>, "
@@ -39,10 +63,22 @@ class DictTests(TestCase):
             self.fail(msg='KeyExistsError not raised')
 
     def test_keyexistserror_str(self):
-        d = RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+        d = RedisDict(
+            redis=self.redis,
+            key='pottery:tel',
+            sape=4139,
+            guido=4127,
+            jack=4098,
+        )
         d   # Workaround for Pyflakes.  :-(
         try:
-            RedisDict(key='pottery:tel', sape=4139, guido=4127, jack=4098)
+            RedisDict(
+                redis=self.redis,
+                key='pottery:tel',
+                sape=4139,
+                guido=4127,
+                jack=4098,
+            )
         except KeyExistsError as wtf:
             assert str(wtf) == (
                 "redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>> "
@@ -52,7 +88,7 @@ class DictTests(TestCase):
             self.fail(msg='KeyExistsError not raised')
 
     def test_basic_usage(self):
-        tel = RedisDict(jack=4098, sape=4139)
+        tel = RedisDict(redis=self.redis, jack=4098, sape=4139)
         tel['guido'] = 4127
         assert tel == {'sape': 4139, 'guido': 4127, 'jack': 4098}
         assert tel['jack'] == 4098
@@ -64,28 +100,31 @@ class DictTests(TestCase):
         assert not 'jack' not in tel
 
     def test_init_with_key_value_pairs(self):
-        d = RedisDict([('sape', 4139), ('guido', 4127), ('jack', 4098)])
+        d = RedisDict(
+            [('sape', 4139), ('guido', 4127), ('jack', 4098)],
+            redis=self.redis,
+        )
         assert d == {'sape': 4139, 'jack': 4098, 'guido': 4127}
 
     def test_init_with_kwargs(self):
-        d = RedisDict(sape=4139, guido=4127, jack=4098)
+        d = RedisDict(redis=self.redis, sape=4139, guido=4127, jack=4098)
         assert d == {'sape': 4139, 'jack': 4098, 'guido': 4127}
 
     # The following tests come from these examples:
     #   https://docs.python.org/3.4/library/stdtypes.html#mapping-types-dict
 
     def test_more_construction_options(self):
-        a = RedisDict(one=1, two=2, three=3)
+        a = RedisDict(redis=self.redis, one=1, two=2, three=3)
         b = {'one': 1, 'two': 2, 'three': 3}
-        c = RedisDict(zip(['one', 'two', 'three'], [1, 2, 3]))
-        d = RedisDict([('two', 2), ('one', 1), ('three', 3)])
-        e = RedisDict({'three': 3, 'one': 1, 'two': 2})
+        c = RedisDict(zip(['one', 'two', 'three'], [1, 2, 3]), redis=self.redis)
+        d = RedisDict([('two', 2), ('one', 1), ('three', 3)], redis=self.redis)
+        e = RedisDict({'three': 3, 'one': 1, 'two': 2}, redis=self.redis)
         assert a == b == c == d == e
 
     def test_len(self):
-        a = RedisDict()
+        a = RedisDict(redis=self.redis)
         assert len(a) == 0
-        a = RedisDict(one=1, two=2, three=3)
+        a = RedisDict(redis=self.redis, one=1, two=2, three=3)
         assert len(a) == 3
         a['four'] = 4
         assert len(a) == 4
@@ -93,14 +132,14 @@ class DictTests(TestCase):
         assert len(a) == 3
 
     def test_repr(self):
-        a = RedisDict(one=1, two=2)
+        a = RedisDict(redis=self.redis, one=1, two=2)
         assert repr(a) in {
             "RedisDict{'one': 1, 'two': 2}",
             "RedisDict{'two': 2, 'one': 1}",
         }
 
     def test_update(self):
-        a = RedisDict(one=1, two=2, three=3)
+        a = RedisDict(redis=self.redis, one=1, two=2, three=3)
         a.update()
         assert a == {'one': 1, 'two': 2, 'three': 3}
 
@@ -132,7 +171,7 @@ class DictTests(TestCase):
         }
 
     def test_keyerror(self):
-        a = RedisDict(one=1, two=2, three=3)
+        a = RedisDict(redis=self.redis, one=1, two=2, three=3)
         assert a['one'] == 1
         assert a['two'] == 2
         assert a['three'] == 3
@@ -140,7 +179,7 @@ class DictTests(TestCase):
             a['four']
 
     def test_key_assignment(self):
-        a = RedisDict(one=1, two=2, three=2)
+        a = RedisDict(redis=self.redis, one=1, two=2, three=2)
         assert a['three'] == 2
         a['three'] = 3
         assert a['three'] == 3
@@ -148,7 +187,7 @@ class DictTests(TestCase):
         assert a['four'] == 4
 
     def test_key_deletion(self):
-        a = RedisDict(one=1, two=2, three=3)
+        a = RedisDict(redis=self.redis, one=1, two=2, three=3)
         assert sorted(a) == ['one', 'three', 'two']
         a['four'] = 4
         assert sorted(a) == ['four', 'one', 'three', 'two']
@@ -166,7 +205,7 @@ class DictTests(TestCase):
             del a['one']
 
     def test_key_membership(self):
-        a = RedisDict(one=1, two=2, three=3)
+        a = RedisDict(redis=self.redis, one=1, two=2, three=3)
         assert 'one' in a
         assert 'four' not in a
         assert not 'four' in a
@@ -177,7 +216,7 @@ class DictTests(TestCase):
         assert not 'four' in a
 
     def test_clear(self):
-        a = RedisDict(one=1, two=2, three=3)
+        a = RedisDict(redis=self.redis, one=1, two=2, three=3)
         assert sorted(a) == ['one', 'three', 'two']
         assert a.clear() is None
         assert sorted(a) == []
@@ -185,7 +224,7 @@ class DictTests(TestCase):
         assert sorted(a) == []
 
     def test_get(self):
-        a = RedisDict(one=1, two=2, three=3)
+        a = RedisDict(redis=self.redis, one=1, two=2, three=3)
         assert a.get('one') == 1
         assert a.get('one', 42) == 1
         assert a.get('two') == 2
@@ -202,7 +241,7 @@ class DictTests(TestCase):
         assert a.get('four', 42) == 42
 
     def test_items(self):
-        a = RedisDict(one=1, two=2, three=3)
+        a = RedisDict(redis=self.redis, one=1, two=2, three=3)
         assert isinstance(a.items(), collections.abc.ItemsView)
         assert len(a) == 3
         assert set(a.items()) == {('one', 1), ('two', 2), ('three', 3)}
@@ -210,7 +249,7 @@ class DictTests(TestCase):
         assert ('four', 4) not in a.items()
 
     def test_keys(self):
-        a = RedisDict(one=1, two=2, three=3)
+        a = RedisDict(redis=self.redis, one=1, two=2, three=3)
         assert isinstance(a.keys(), collections.abc.KeysView)
         assert len(a) == 3
         assert set(a.keys()) == {'one', 'two', 'three'}
@@ -218,7 +257,7 @@ class DictTests(TestCase):
         assert 'four' not in a.keys()
 
     def test_values(self):
-        a = RedisDict(one=1, two=2, three=3)
+        a = RedisDict(redis=self.redis, one=1, two=2, three=3)
         assert isinstance(a.values(), collections.abc.ValuesView)
         assert len(a) == 3
         assert set(a.values()) == {1, 2, 3}
@@ -226,9 +265,9 @@ class DictTests(TestCase):
         assert 4 not in a.values()
 
     def test_membership_for_non_jsonifyable_element(self):
-        redis_dict = RedisDict()
+        redis_dict = RedisDict(redis=self.redis)
         assert not BaseException in redis_dict
 
     def test_json_dumps(self):
-        a = RedisDict(one=1, two=2, three=3)
+        a = RedisDict(redis=self.redis, one=1, two=2, three=3)
         assert json.dumps(a) == '{"one": 1, "two": 2, "three": 3}'

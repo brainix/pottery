@@ -25,6 +25,22 @@ class CacheDecoratorTests(TestCase):
 
     def setUp(self):
         super().setUp()
+
+        def expensive_method(*args, **kwargs):
+            'getrandbits(16) -> x.  Generates a 16-bit random int.'
+            return random.getrandbits(16)
+
+        self.expensive_method_expiration = redis_cache(
+            redis=self.redis,
+            key=self._KEY_EXPIRATION,
+        )(expensive_method)
+
+        self.expensive_method_no_expiration = redis_cache(
+            redis=self.redis,
+            key=self._KEY_NO_EXPIRATION,
+            timeout=None,
+        )(expensive_method)
+
         self.expensive_method_expiration.cache_clear()
         self.expensive_method_no_expiration.cache_clear()
 
@@ -32,18 +48,6 @@ class CacheDecoratorTests(TestCase):
         self.expensive_method_expiration.cache_clear()
         self.expensive_method_no_expiration.cache_clear()
         super().tearDown()
-
-    @staticmethod
-    @redis_cache(key=_KEY_EXPIRATION)
-    def expensive_method_expiration(*args, **kwargs):
-        'getrandbits(16) -> x.  Generates a 16-bit random int.'
-        return random.getrandbits(16)
-
-    @staticmethod
-    @redis_cache(key=_KEY_NO_EXPIRATION, timeout=None)
-    def expensive_method_no_expiration(*args, **kwargs):
-        'getrandbits(16) -> x.  Generates a 16-bit random int.'
-        return random.getrandbits(16)
 
     def test_cache(self):
         assert self.expensive_method_expiration.cache_info() == CacheInfo(

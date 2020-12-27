@@ -19,7 +19,7 @@ class DequeTests(TestCase):
     '''
 
     def test_basic_usage(self):
-        d = RedisDeque('ghi')
+        d = RedisDeque('ghi', redis=self.redis)
         assert d == ['g', 'h', 'i']
 
         d.append('j')
@@ -41,7 +41,7 @@ class DequeTests(TestCase):
         d.rotate(-1)
         assert d == ['g', 'h', 'i', 'j', 'k', 'l']
 
-        assert RedisDeque(reversed(d)) == ['l', 'k', 'j', 'i', 'h', 'g']
+        assert RedisDeque(reversed(d), redis=self.redis) == ['l', 'k', 'j', 'i', 'h', 'g']
         d.clear()
         with self.assertRaises(IndexError):
             d.pop()
@@ -53,21 +53,21 @@ class DequeTests(TestCase):
         with unittest.mock.patch.object(Base, '__del__') as delete, \
              self.assertRaises(TypeError):
             delete.return_value = None
-            RedisDeque(maxlen='2')
+            RedisDeque(redis=self.redis, maxlen='2')
 
     def test_persistent_deque_bigger_than_maxlen(self):
-        d1 = RedisDeque('ghi')
+        d1 = RedisDeque('ghi', redis=self.redis)
         d1  # Workaround for Pyflakes.  :-(
         with self.assertRaises(IndexError):
-            RedisDeque(key=d1.key, maxlen=0)
+            RedisDeque(redis=self.redis, key=d1.key, maxlen=0)
 
     def test_maxlen_not_writable(self):
-        d = RedisDeque()
+        d = RedisDeque(redis=self.redis)
         with self.assertRaises(AttributeError):
             d.maxlen = 2
 
     def test_insert_into_full(self):
-        d = RedisDeque('gh', maxlen=3)
+        d = RedisDeque('gh', redis=self.redis, maxlen=3)
         d.insert(len(d), 'i')
         assert d == ['g', 'h', 'i']
 
@@ -75,7 +75,7 @@ class DequeTests(TestCase):
             d.insert(len(d), 'j')
 
     def test_append_trims_when_full(self):
-        d = RedisDeque('gh', maxlen=3)
+        d = RedisDeque('gh', redis=self.redis, maxlen=3)
         d.append('i')
         assert d == ['g', 'h', 'i']
         d.append('j')
@@ -84,31 +84,31 @@ class DequeTests(TestCase):
         assert d == ['g', 'h', 'i']
 
     def test_extend(self):
-        d = RedisDeque('ghi', maxlen=4)
+        d = RedisDeque('ghi', redis=self.redis, maxlen=4)
         d.extend('jkl')
         assert d == ['i', 'j', 'k', 'l']
         d.extendleft('hg')
         assert d == ['g', 'h', 'i', 'j']
 
     def test_popleft_from_empty(self):
-        d = RedisDeque()
+        d = RedisDeque(redis=self.redis)
         with self.assertRaises(IndexError):
             d.popleft()
 
     def test_rotate_zero_steps(self):
-        d = RedisDeque(('g', 'h', 'i', 'j', 'k', 'l'))
+        d = RedisDeque(('g', 'h', 'i', 'j', 'k', 'l'), redis=self.redis)
         d.rotate(0)
         assert d == ['g', 'h', 'i', 'j', 'k', 'l']
 
     def test_repr(self):
-        d = RedisDeque()
+        d = RedisDeque(redis=self.redis)
         assert repr(d) == 'RedisDeque([])'
 
-        d = RedisDeque('ghi')
+        d = RedisDeque('ghi', redis=self.redis)
         assert repr(d) == "RedisDeque(['g', 'h', 'i'])"
 
-        d = RedisDeque(maxlen=2)
+        d = RedisDeque(redis=self.redis, maxlen=2)
         assert repr(d) == 'RedisDeque([], maxlen=2)'
 
-        d = RedisDeque('ghi', maxlen=2)
+        d = RedisDeque('ghi', redis=self.redis, maxlen=2)
         assert repr(d) == "RedisDeque(['h', 'i'], maxlen=2)"
