@@ -47,7 +47,7 @@ setup(
     ],
     keywords=pottery.__keywords__,
     packages=find_packages(exclude=('contrib', 'docs', 'tests*')),
-    install_requires=('redis>=3.4.1', 'mmh3'),
+    install_requires=('redis>=3.4.1', 'mmh3', 'typing_extensions'),
     extras_require={},
     package_data={'pottery': ('py.typed',)},
     data_files=tuple(),
