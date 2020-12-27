@@ -56,7 +56,7 @@ class DictTests(TestCase):
             )
         except KeyExistsError as wtf:
             assert repr(wtf) == (
-                "KeyExistsError(redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>>, "
+                f"KeyExistsError(redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>, "
                 "key='pottery:tel')"
             )
         else:  # pragma: no cover
@@ -81,7 +81,7 @@ class DictTests(TestCase):
             )
         except KeyExistsError as wtf:
             assert str(wtf) == (
-                "redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db=0>>> "
+                f"redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>> "
                 "key='pottery:tel'"
             )
         else:  # pragma: no cover

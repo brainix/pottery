@@ -8,18 +8,15 @@
 
 import doctest
 import logging
+import random
 import sys
 import unittest
-from typing import ClassVar
 from typing import NoReturn
 
-from pottery.base import Base
-from pottery.base import _default_redis
+from redis import Redis
 
 
 class TestCase(unittest.TestCase):
-    _TEST_KEY_PREFIX: ClassVar[str] = 'pottery-test:'
-
     @classmethod
     def setUpClass(cls) -> None:
         logger = logging.getLogger('pottery')
@@ -27,17 +24,13 @@ class TestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.redis = _default_redis
+        self.redis_db = random.randint(1, 15)
+        url = f'redis://localhost:6379/{self.redis_db}'
+        self.redis = Redis.from_url(url, socket_timeout=1)
+        self.redis.flushdb()
 
     def tearDown(self) -> None:
-        keys_to_delete = []
-        for prefix in {Base._RANDOM_KEY_PREFIX, self._TEST_KEY_PREFIX}:
-            pattern = prefix + '*'
-            keys = self.redis.keys(pattern=pattern)
-            keys = (key.decode('utf-8') for key in keys)
-            keys_to_delete.extend(keys)
-        if keys_to_delete:
-            self.redis.delete(*keys_to_delete)
+        self.redis.flushdb()
         super().tearDown()
 
 
