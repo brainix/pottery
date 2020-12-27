@@ -22,18 +22,18 @@ class ListTests(TestCase):
     _KEY = f'{TestCase._TEST_KEY_PREFIX}squares'
 
     def test_indexerror(self):
-        list_ = RedisList()
+        list_ = RedisList(redis=self.redis)
         with self.assertRaises(IndexError):
             list_[0] = 'raj'
 
     def test_keyexistserror(self):
-        squares = RedisList((1, 4, 9, 16, 25), key=self._KEY)
+        squares = RedisList((1, 4, 9, 16, 25), redis=self.redis, key=self._KEY)
         squares     # Workaround for Pyflakes.  :-(
         with self.assertRaises(KeyExistsError):
-            RedisList((1, 4, 9, 16, 25), key=self._KEY)
+            RedisList((1, 4, 9, 16, 25), redis=self.redis, key=self._KEY)
 
     def test_basic_usage(self):
-        squares = RedisList((1, 4, 9, 16, 25))
+        squares = RedisList((1, 4, 9, 16, 25), redis=self.redis)
         assert squares == [1, 4, 9, 16, 25]
         assert squares[0] == 1
         assert squares[-1] == 25
@@ -43,7 +43,7 @@ class ListTests(TestCase):
             [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
 
     def test_mutability_and_append(self):
-        cubes = RedisList((1, 8, 27, 65, 125))
+        cubes = RedisList((1, 8, 27, 65, 125), redis=self.redis)
         cubes[3] = 64
         assert cubes == [1, 8, 27, 64, 125]
         cubes.append(216)
@@ -51,7 +51,10 @@ class ListTests(TestCase):
         assert cubes == [1, 8, 27, 64, 125, 216, 343]
 
     def test_slices(self):
-        letters = RedisList(('a', 'b', 'c', 'd', 'e', 'f', 'g'))
+        letters = RedisList(
+            ('a', 'b', 'c', 'd', 'e', 'f', 'g'),
+            redis=self.redis,
+        )
         assert letters == ['a', 'b', 'c', 'd', 'e', 'f', 'g']
         assert letters[2:5] == ['c', 'd', 'e']
         assert letters[2:5:2] == ['c', 'e']
@@ -67,19 +70,19 @@ class ListTests(TestCase):
         assert letters == []
 
     def test_len(self):
-        letters = RedisList(('a', 'b', 'c', 'd'))
+        letters = RedisList(('a', 'b', 'c', 'd'), redis=self.redis)
         assert len(letters) == 4
 
     def test_nesting(self):
         a = ['a', 'b', 'c']
         n = [1, 2, 3]
-        x = RedisList((a, n))
+        x = RedisList((a, n), redis=self.redis)
         assert x == [['a', 'b', 'c'], [1, 2, 3]]
         assert x[0] == ['a', 'b', 'c']
         assert x[0][1] == 'b'
 
     def test_more_on_lists(self):
-        a = RedisList((66.25, 333, 333, 1, 1234.5))
+        a = RedisList((66.25, 333, 333, 1, 1234.5), redis=self.redis)
         assert (a.count(333), a.count(66.25), a.count('x')) == (2, 1, 0)
         a.insert(2, -1)
         a.append(333)
@@ -95,7 +98,7 @@ class ListTests(TestCase):
         assert a == [-1, 1, 66.25, 333, 333]
 
     def test_using_list_as_stack(self):
-        stack = RedisList((3, 4, 5))
+        stack = RedisList((3, 4, 5), redis=self.redis)
         stack.append(6)
         stack.append(7)
         assert stack == [3, 4, 5, 6, 7]
@@ -106,7 +109,7 @@ class ListTests(TestCase):
         assert stack == [3, 4]
 
     def test_del(self):
-        a = RedisList((-1, 1, 66.25, 333, 333, 1234.5))
+        a = RedisList((-1, 1, 66.25, 333, 333, 1234.5), redis=self.redis)
         del a[0]
         assert a == [1, 66.25, 333, 333, 1234.5]
         del a[2:4]
@@ -115,19 +118,19 @@ class ListTests(TestCase):
         assert a == []
 
     def test_insert_left(self):
-        squares = RedisList((9, 16, 25))
+        squares = RedisList((9, 16, 25), redis=self.redis)
         squares.insert(-1, 4)
         assert squares == [4, 9, 16, 25]
         squares.insert(0, 1)
         assert squares == [1, 4, 9, 16, 25]
 
     def test_extend(self):
-        squares = RedisList((1, 4, 9))
+        squares = RedisList((1, 4, 9), redis=self.redis)
         squares.extend((16, 25))
         assert squares == [1, 4, 9, 16, 25]
 
     def test_sort(self):
-        squares = RedisList({1, 4, 9, 16, 25})
+        squares = RedisList({1, 4, 9, 16, 25}, redis=self.redis)
         squares.sort()
         assert squares == [1, 4, 9, 16, 25]
 
@@ -138,71 +141,71 @@ class ListTests(TestCase):
             squares.sort(key=str)
 
     def test_eq_same_redis_instance_and_key(self):
-        squares1 = RedisList((1, 4, 9, 16, 25), key=self._KEY)
-        squares2 = RedisList(key=self._KEY)
+        squares1 = RedisList((1, 4, 9, 16, 25), redis=self.redis, key=self._KEY)
+        squares2 = RedisList(redis=self.redis, key=self._KEY)
         assert squares1 == squares2
         assert not squares1 != squares2
 
     def test_eq_same_redis_instance_different_keys(self):
         key1 = f'{TestCase._TEST_KEY_PREFIX}squares1'
         key2 = f'{TestCase._TEST_KEY_PREFIX}squares2'
-        squares1 = RedisList((1, 4, 9, 16, 25), key=key1)
-        squares2 = RedisList((1, 4, 9, 16, 25), key=key2)
+        squares1 = RedisList((1, 4, 9, 16, 25), redis=self.redis, key=key1)
+        squares2 = RedisList((1, 4, 9, 16, 25), redis=self.redis, key=key2)
         assert squares1 == squares2
         assert not squares1 != squares2
 
     def test_eq_different_lengths(self):
-        squares1 = RedisList((1, 4, 9, 16, 25))
+        squares1 = RedisList((1, 4, 9, 16, 25), redis=self.redis)
         squares2 = (1, 4, 9, 16, 25, 36)
         assert not squares1 == squares2
         assert squares1 != squares2
 
     def test_eq_different_items(self):
-        squares1 = RedisList((1, 4, 9, 16, 25))
+        squares1 = RedisList((1, 4, 9, 16, 25), redis=self.redis)
         squares2 = (4, 9, 16, 25, 36)
         assert not squares1 == squares2
         assert squares1 != squares2
 
     def test_eq_unordered_collection(self):
-        squares1 = RedisList((1,))
+        squares1 = RedisList((1,), redis=self.redis)
         squares2 = {1}
         assert not squares1 == squares2
         assert squares1 != squares2
 
     def test_eq_typeerror(self):
-        squares = RedisList((1, 4, 9, 16, 25))
+        squares = RedisList((1, 4, 9, 16, 25), redis=self.redis)
         assert not squares == None
         assert squares != None
 
     def test_repr(self):
-        squares = RedisList((1, 4, 9, 16, 25))
+        squares = RedisList((1, 4, 9, 16, 25), redis=self.redis)
         assert repr(squares) == 'RedisList[1, 4, 9, 16, 25]'
 
     def test_pop_out_of_range(self):
-        squares = RedisList((1, 4, 9, 16, 25))
+        squares = RedisList((1, 4, 9, 16, 25), redis=self.redis)
         with self.assertRaises(IndexError):
             squares.pop(len(squares))
 
     def test_pop_index(self):
-        metasyntactic = RedisList((
-            'foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply',
-            'waldo', 'fred', 'plugh', 'xyzzy', 'thud',
-        ))
+        metasyntactic = RedisList(
+            ('foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply', 'waldo', 'fred', 'plugh', 'xyzzy', 'thud'),
+            redis=self.redis,
+        )
         assert metasyntactic.pop(1) == 'bar'
 
     def test_remove_nonexistent(self):
-        metasyntactic = RedisList((
-            'foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply',
-            'waldo', 'fred', 'plugh', 'xyzzy', 'thud',
-        ))
+        metasyntactic = RedisList(
+            ('foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply', 'waldo', 'fred', 'plugh', 'xyzzy', 'thud'),
+            redis=self.redis,
+        )
         with self.assertRaises(ValueError):
             metasyntactic.remove('raj')
 
     def test_json_dumps(self):
-        metasyntactic = RedisList((
-            'foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply',
-            'waldo', 'fred', 'plugh', 'xyzzy', 'thud',
-        ))
+        metasyntactic = RedisList(
+            ('foo', 'bar', 'baz', 'qux', 'quux', 'corge', 'grault', 'garply', 'waldo', 'fred', 'plugh', 'xyzzy', 'thud'),
+            redis=self.redis,
+        )
         assert json.dumps(metasyntactic) == (
             '["foo", "bar", "baz", "qux", "quux", "corge", "grault", "garply", '
             '"waldo", "fred", "plugh", "xyzzy", "thud"]'

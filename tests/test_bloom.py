@@ -19,7 +19,11 @@ class BloomFilterTests(TestCase):
 
     def test_init_without_iterable(self):
         'Test BloomFilter.__init__() without an iterable for initialization'
-        dilberts = BloomFilter(num_elements=100, false_positives=0.01)
+        dilberts = BloomFilter(
+            redis=self.redis,
+            num_elements=100,
+            false_positives=0.01,
+        )
         assert dilberts.num_elements == 100
         assert dilberts.false_positives == 0.01
         assert 'rajiv' not in dilberts
@@ -33,6 +37,7 @@ class BloomFilterTests(TestCase):
         'Test BloomFilter.__init__() with an iterable for initialization'
         dilberts = BloomFilter(
             {'rajiv', 'raj'},
+            redis=self.redis,
             num_elements=100,
             false_positives=0.01,
         )
@@ -51,25 +56,45 @@ class BloomFilterTests(TestCase):
 
     def test_size_and_num_hashes(self):
         'Test BloomFilter.size()'
-        dilberts = BloomFilter(num_elements=100, false_positives=0.1)
+        dilberts = BloomFilter(
+            redis=self.redis,
+            num_elements=100,
+            false_positives=0.1,
+        )
         assert dilberts.size() == 480
         assert dilberts.num_hashes() == 4
 
-        dilberts = BloomFilter(num_elements=1000, false_positives=0.1)
+        dilberts = BloomFilter(
+            redis=self.redis,
+            num_elements=1000,
+            false_positives=0.1,
+        )
         assert dilberts.size() == 4793
         assert dilberts.num_hashes() == 4
 
-        dilberts = BloomFilter(num_elements=100, false_positives=0.01)
+        dilberts = BloomFilter(
+            redis=self.redis,
+            num_elements=100,
+            false_positives=0.01,
+        )
         assert dilberts.size() == 959
         assert dilberts.num_hashes() == 7
 
-        dilberts = BloomFilter(num_elements=1000, false_positives=0.01)
+        dilberts = BloomFilter(
+            redis=self.redis,
+            num_elements=1000,
+            false_positives=0.01,
+        )
         assert dilberts.size() == 9586
         assert dilberts.num_hashes() == 7
 
     def test_add(self):
         'Test BloomFilter add(), __contains__(), and __len__()'
-        dilberts = BloomFilter(num_elements=100, false_positives=0.01)
+        dilberts = BloomFilter(
+            redis=self.redis,
+            num_elements=100,
+            false_positives=0.01,
+        )
         assert 'rajiv' not in dilberts
         assert 'raj' not in dilberts
         assert 'dan' not in dilberts
@@ -120,7 +145,11 @@ class BloomFilterTests(TestCase):
 
     def test_update(self):
         'Test BloomFilter update(), __contains__(), and __len__()'
-        dilberts = BloomFilter(num_elements=100, false_positives=0.01)
+        dilberts = BloomFilter(
+            redis=self.redis,
+            num_elements=100,
+            false_positives=0.01,
+        )
         assert 'rajiv' not in dilberts
         assert 'raj' not in dilberts
         assert 'dan' not in dilberts
@@ -163,9 +192,10 @@ class BloomFilterTests(TestCase):
     def test_repr(self):
         'Test BloomFilter.__repr__()'
         dilberts = BloomFilter(
+            redis=self.redis,
+            key=self._KEY,
             num_elements=100,
             false_positives=0.01,
-            key=self._KEY,
         )
         assert repr(dilberts) == f'<BloomFilter key={self._KEY}>'
 
@@ -195,9 +225,10 @@ class RecentlyConsumedTests(TestCase):
         # Initialize the recently consumed Bloom filter on the seen set.
         self.recently_consumed = BloomFilter(
             self.seen_links,
+            redis=self.redis,
+            key=self._KEY,
             num_elements=1000,
             false_positives=0.001,
-            key=self._KEY,
         )
 
     def tearDown(self):

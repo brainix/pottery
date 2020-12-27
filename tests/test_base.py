@@ -34,13 +34,24 @@ class RandomKeyTests(TestCase):
 class _BaseTestCase(TestCase):
     def setUp(self):
         super().setUp()
-        self.raj = RedisDict(key='pottery:raj', hobby='music', vegetarian=True)
+        self.raj = RedisDict(
+            redis=self.redis,
+            key='pottery:raj',
+            hobby='music',
+            vegetarian=True,
+        )
         self.nilika = RedisDict(
+            redis=self.redis,
             key='pottery:nilika',
             hobby='music',
             vegetarian=True,
         )
-        self.luvh = RedisDict(key='luvh', hobby='bullying', vegetarian=False)
+        self.luvh = RedisDict(
+            redis=self.redis,
+            key='luvh',
+            hobby='bullying',
+            vegetarian=False,
+        )
 
     def tearDown(self):
         self.redis.delete('luvh')
@@ -50,7 +61,7 @@ class _BaseTestCase(TestCase):
 class CommonTests(_BaseTestCase):
     def test_out_of_scope(self):
         def scope():
-            raj = RedisDict(hobby='music', vegetarian=True)
+            raj = RedisDict(redis=self.redis, hobby='music', vegetarian=True)
             assert self.redis.exists(raj.key)
             return raj.key
 
