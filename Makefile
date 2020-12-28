@@ -17,20 +17,6 @@ init upgrade: formulae := {openssl,readline,xz,redis}
 python upgrade: version ?= 3.9.1
 upgrade: requirements ?= requirements-to-freeze.txt
 
-clean-redis clean-redis-2: keys_to_delete = \
-	basket \
-	dilberts \
-	expensive-function-cache \
-	google-searches \
-	letters \
-	magic \
-	my-counter \
-	nextid:user-ids \
-	printer \
-	search-results \
-	squares \
-	tel
-
 
 .PHONY: install
 install: init python
@@ -97,7 +83,7 @@ test-readme: clean-redis run-doctest clean-redis-2
 .PHONY: clean-redis clean-redis-2
 clean-redis clean-redis-2:
 	@source $(venv)/bin/activate && \
-		python3 -c "from redis import Redis; redis = Redis(); redis.delete($(foreach key,$(keys_to_delete),'$(key)',))"
+		python3 -c "from redis import Redis; redis = Redis.from_url('redis://localhost:6379/1'); redis.flushdb()"
 
 .PHONY: run-doctest
 run-doctest:
