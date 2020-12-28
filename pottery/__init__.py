@@ -40,7 +40,7 @@ from .cache import redis_cache  # isort:skip
 from .hyper import HyperLogLog  # isort:skip
 from .nextid import NextId  # isort:skip
 from .redlock import Redlock  # isort:skip
-from .redlock import redlock  # isort:skip
+from .redlock import synchronize  # isort:skip
 from .timer import ContextTimer  # isort:skip
 
 from .counter import RedisCounter
@@ -66,7 +66,7 @@ __all__ = [
     'HyperLogLog',
     'NextId',
     'Redlock',
-    'redlock',
+    'synchronize',
     'ContextTimer',
 
     'RedisCounter',

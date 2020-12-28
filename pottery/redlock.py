@@ -551,26 +551,26 @@ class Redlock(Primitive):
         )
 
 
-def redlock(*,
-            key: str,
-            masters: Iterable[Redis] = frozenset(),
-            auto_release_time: int = AUTO_RELEASE_TIME,
-            ) -> Callable[[F], F]:
+def synchronize(*,
+                key: str,
+                masters: Iterable[Redis] = frozenset(),
+                auto_release_time: int = AUTO_RELEASE_TIME,
+                ) -> Callable[[F], F]:
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            redlock_ = Redlock(
+            redlock = Redlock(
                 key=key,
                 masters=masters,
                 auto_release_time=auto_release_time,
             )
-            with ContextTimer() as timer, redlock_:
+            with ContextTimer() as timer, redlock:
                 return_value = func(*args, **kwargs)
 
             _logger.info(
                 '%s() held %s for %d ms',
                 func.__qualname__,
-                redlock_.key,
+                redlock.key,
                 timer.elapsed(),
             )
             return return_value
