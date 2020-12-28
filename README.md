@@ -27,7 +27,7 @@ First, set up your Redis client:
 
 ```python
 >>> from redis import Redis
->>> redis = Redis.from_url('redis://localhost:6379/')
+>>> redis = Redis.from_url('redis://localhost:6379/1')
 >>>
 ```
 
