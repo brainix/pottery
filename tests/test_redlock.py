@@ -183,16 +183,16 @@ class RedlockTests(TestCase):
 class SynchronizeTests(TestCase):
     def test_synchronize(self):
         @synchronize(
-            key='expensive-func',
+            key='synchronized-func',
             masters={self.redis},
             auto_release_time=1500,
         )
-        def expensive_func():
+        def func():
             time.sleep(1)
             return time.time()
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [executor.submit(expensive_func) for _ in range(3)]
+            futures = [executor.submit(func) for _ in range(3)]
         results = sorted(future.result() for future in futures)
         for result1, result2 in zip(results, results[1:]):
             delta = result2 - result1
