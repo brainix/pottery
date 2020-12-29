@@ -69,7 +69,7 @@ ifeq ($(tests),)
 		echo Running static type checks && \
 		mypy --no-incremental && \
 		echo Running Flake8 on $($@_SOURCE_FILES) && \
-		flake8 $($@_SOURCE_FILES) && \
+		flake8 $($@_SOURCE_FILES) --count --max-complexity=11 --statistics && \
 		echo Running isort on $($@_SOURCE_FILES) && \
 		isort $($@_SOURCE_FILES) --check-only --diff
 else

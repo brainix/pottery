@@ -14,7 +14,6 @@ mmh3
 typing_extensions
 
 coverage
-coveralls
 mypy
 flake8
 isort

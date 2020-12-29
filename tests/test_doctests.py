@@ -25,7 +25,7 @@ class DoctestTests(TestCase):  # pragma: no cover
             module = importlib.import_module(f'pottery.{module_name}')
             yield module
 
-    @unittest.skipUnless('CI' in os.environ, 'run (slow) doctests on only CI')
+    @unittest.skip('our doctests run too slowly')
     def test_doctests(self):
         for module in self._modules():
             with self.subTest(module=module):
