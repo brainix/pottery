@@ -37,16 +37,10 @@ jobs:
         python -m pip install --upgrade pip wheel
         python -m pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Test ${{ matrix.test_number }} with unittest and Coverage.py
+    - name: Test with unittest and Coverage.py
       run: |
         coverage3 run -m unittest discover --start-directory tests --verbose
         coverage3 report
-    - name: Coveralls parallel
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.github_token }}
-        flag-name: run-${{ matrix.test_number }}
-        parallel: true
     - name: Type check with Mypy
       run: |
         mypy --no-incremental
@@ -54,13 +48,3 @@ jobs:
       run: |
         flake8 *\.py pottery/*\.py tests/*\.py --count --max-complexity=11 --statistics
         isort *\.py pottery/*\.py tests/*\.py --check-only --diff
-
-  finish:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Coveralls finished
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.github_token }}
-          parallel-finished: true
