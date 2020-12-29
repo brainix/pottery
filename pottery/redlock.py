@@ -556,6 +556,22 @@ def synchronize(*,
                 masters: Iterable[Redis] = frozenset(),
                 auto_release_time: int = AUTO_RELEASE_TIME,
                 ) -> Callable[[F], F]:
+    '''Decorator to synchronize a function's execution across threads.
+
+    synchronize() is a decorator that allows only one thread to execute a
+    function at a time.  Under the hood, synchronize() uses a Redlock.  See
+    help(Redlock) for more details.
+
+    Usage:
+
+        >>> @synchronize(key='synchronized-func', auto_release_time=1500)
+        ... def func():
+        ...     # Only one thread can execute this function at a time.
+        ...     return True
+        ...
+        >>> func()
+        True
+    '''
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:

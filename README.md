@@ -347,6 +347,25 @@ False
 
 
 
+#### synchronize()
+
+`synchronize()` is a decorator that allows only one thread to execute a
+function at a time.  Under the hood, `synchronize()` uses a Redlock, so refer
+to the Redlock documentation for more details.
+
+Here&rsquo;s how to use `synchronize()`:
+
+```python
+>>> from pottery import synchronize
+>>> @synchronize(key='synchronized-func', masters={redis}, auto_release_time=500)
+... def func():
+...   # Only one thread can execute this function at a time.
+...   return True
+...
+>>>
+```
+
+
 ### NextId
 
 `NextId` safely and reliably produces increasing IDs across threads, processes,
