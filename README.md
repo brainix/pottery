@@ -372,7 +372,7 @@ False
 
 `synchronize()` is a decorator that allows only one thread to execute a
 function at a time.  Under the hood, `synchronize()` uses a Redlock, so refer
-to the Redlock documentation for more details.
+to the [Redlock documentation](#redlock) for more details.
 
 Here&rsquo;s how to use `synchronize()`:
 
