@@ -15,9 +15,30 @@ know how to use Pottery.
 [![Downloads per month](https://pepy.tech/badge/pottery/month)](https://pepy.tech/project/pottery)
 [![Downloads per week](https://pepy.tech/badge/pottery/week)](https://pepy.tech/project/pottery)
 
+
+
+## Table of Contents
+- [Dicts](#dicts)
+- [Sets](#sets)
+- [Lists](#lists)
+- [Counters](#counters)
+- [Deques](#deques)
+- [Redlock](#redlock)
+  - [synchronize()](#synchronize)
+- [NextId](#nextid)
+- [redis_cache()](#redis_cache)
+- [CachedOrderedDict](#cachedordereddict)
+- [Bloom filters](#bloom-filters)
+- [HyperLogLogs](#hyperloglogs)
+- [ContextTimer](#contexttimer)
+
+
+
 ## Installation
 
-    $ pip3 install pottery
+```shell
+$ pip3 install pottery
+```
 
 ## Usage
 
@@ -31,7 +52,7 @@ First, set up your Redis client:
 
 
 
-### Dicts
+## Dicts
 
 `RedisDict` is a Redis-backed container compatible with Python&rsquo;s
 [`dict`](https://docs.python.org/3/tutorial/datastructures.html#dictionaries).
@@ -72,7 +93,7 @@ _Limitations:_
 
 
 
-### Sets
+## Sets
 
 `RedisSet` is a Redis-backed container compatible with Python&rsquo;s
 [`set`](https://docs.python.org/3/tutorial/datastructures.html#sets).
@@ -114,7 +135,7 @@ _Limitations:_
 
 
 
-### Lists
+## Lists
 
 `RedisList` is a Redis-backed container compatible with Python&rsquo;s
 [`list`](https://docs.python.org/3/tutorial/introduction.html#lists).
@@ -147,7 +168,7 @@ _Limitations:_
 
 
 
-### Counters
+## Counters
 
 `RedisCounter` is a Redis-backed container compatible with Python&rsquo;s
 [`collections.Counter`](https://docs.python.org/3/library/collections.html#collections.Counter).
@@ -198,7 +219,7 @@ _Limitations:_
 
 
 
-### Deques
+## Deques
 
 `RedisDeque` is a Redis-backed container compatible with Python&rsquo;s
 [`collections.deque`](https://docs.python.org/3/library/collections.html#collections.deque).
@@ -264,7 +285,7 @@ _Limitations:_
 
 
 
-### Redlock
+## Redlock
 
 `Redlock` is a safe and reliable lock to coordinate access to a resource shared
 across threads, processes, and even machines, without a single point of
@@ -347,7 +368,7 @@ False
 
 
 
-#### synchronize()
+### synchronize()
 
 `synchronize()` is a decorator that allows only one thread to execute a
 function at a time.  Under the hood, `synchronize()` uses a Redlock, so refer
@@ -366,7 +387,7 @@ Here&rsquo;s how to use `synchronize()`:
 ```
 
 
-### NextId
+## NextId
 
 `NextId` safely and reliably produces increasing IDs across threads, processes,
 and even machines, without a single point of failure.  [Rationale and algorithm
@@ -405,7 +426,7 @@ Two caveats:
 
 
 
-### redis_cache()
+## redis_cache()
 
 `redis_cache()` is a simple function return value cache, sometimes called
 [&ldquo;memoize&rdquo;](https://en.wikipedia.org/wiki/Memoization).
@@ -490,7 +511,7 @@ CacheInfo(hits=0, misses=0, maxsize=None, currsize=0)
 
 
 
-### CachedOrderedDict
+## CachedOrderedDict
 
 The best way that I can explain `CachedOrderedDict` is through an example
 use-case.  Imagine that your search engine returns document IDs, which then you
@@ -597,7 +618,7 @@ _Limitations:_
 
 
 
-### Bloom filters
+## Bloom filters
 
 Bloom filters are a powerful data structure that help you to answer the
 questions, _&ldquo;Have I seen this element before?&rdquo;_ and _&ldquo;How
@@ -688,7 +709,7 @@ Remove all of the elements from the `BloomFilter`:
 
 
 
-### HyperLogLogs
+## HyperLogLogs
 
 HyperLogLogs are an interesting data structure that allow you to answer the
 question, _&ldquo;How many distinct elements have I seen?&rdquo;_; but not the
@@ -760,7 +781,7 @@ _Limitations:_
 
 
 
-### ContextTimer
+## ContextTimer
 
 `ContextTimer` helps you easily and accurately measure elapsed time.  Note that
 `ContextTimer` measures wall (real-world) time, not CPU time; and that
@@ -801,10 +822,6 @@ True
 
 ## Contributing
 
-### Install prerequisites
-
-1. Install [Xcode](https://developer.apple.com/xcode/downloads/).
-
 ### Obtain source code
 
 1. Clone the git repo:
@@ -821,6 +838,7 @@ True
 2. In a second Terminal session:
   1. `$ cd pottery/`
   2. `$ make test`
+  3. `$ make test-readme`
 
 `make test` runs all of the unit tests as well as the coverage test.  However,
 sometimes, when debugging, it can be useful to run an individual test module,
@@ -833,3 +851,6 @@ class, or method:
   1. Run a test module with `$ make test tests=tests.test_dict`
   2. Run a test class with: `$ make test tests=tests.test_dict.DictTests`
   3. Run a test method with: `$ make test tests=tests.test_dict.DictTests.test_keyexistserror`
+
+`make test-readme` doctests the Python code examples in this README to ensure
+that they&rsquo;re correct.
