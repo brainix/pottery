@@ -825,32 +825,32 @@ True
 ### Obtain source code
 
 1. Clone the git repo:
-  1. `$ git clone git@github.com:brainix/pottery.git`
-  2. `$ cd pottery/`
+    1. `$ git clone git@github.com:brainix/pottery.git`
+    2. `$ cd pottery/`
 2. Install project-level dependencies:
-  1. `$ make install`
+    1. `$ make install`
 
 ### Run tests
 
 1. In one Terminal session:
-  1. `$ cd pottery/`
-  2. `$ redis-server`
+    1. `$ cd pottery/`
+    2. `$ redis-server`
 2. In a second Terminal session:
-  1. `$ cd pottery/`
-  2. `$ make test`
-  3. `$ make test-readme`
+    1. `$ cd pottery/`
+    2. `$ make test`
+    3. `$ make test-readme`
 
 `make test` runs all of the unit tests as well as the coverage test.  However,
 sometimes, when debugging, it can be useful to run an individual test module,
 class, or method:
 
 1. In one Terminal session:
-  1. `$ cd pottery/`
-  2. `$ redis-server`
+    1. `$ cd pottery/`
+    2. `$ redis-server`
 2. In a second Terminal session:
-  1. Run a test module with `$ make test tests=tests.test_dict`
-  2. Run a test class with: `$ make test tests=tests.test_dict.DictTests`
-  3. Run a test method with: `$ make test tests=tests.test_dict.DictTests.test_keyexistserror`
+    1. Run a test module with `$ make test tests=tests.test_dict`
+    2. Run a test class with: `$ make test tests=tests.test_dict.DictTests`
+    3. Run a test method with: `$ make test tests=tests.test_dict.DictTests.test_keyexistserror`
 
 `make test-readme` doctests the Python code examples in this README to ensure
 that they&rsquo;re correct.
