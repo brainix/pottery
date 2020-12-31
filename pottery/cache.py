@@ -55,7 +55,7 @@ def _arg_hash(*args: Hashable, **kwargs: Hashable) -> int:
 F = TypeVar('F', bound=Callable[..., JSONTypes])
 
 
-def redis_cache(*,
+def redis_cache(*,  # NoQA: C901
                 redis: Optional[Redis] = None,
                 key: Optional[str] = None,
                 timeout: Optional[int] = _DEFAULT_TIMEOUT,
