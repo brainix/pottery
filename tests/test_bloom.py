@@ -231,9 +231,6 @@ class RecentlyConsumedTests(TestCase):
             false_positives=0.001,
         )
 
-    def tearDown(self):
-        super().tearDown()
-
     @staticmethod
     def random_fullname(*, prefix='t3_', size=6):
         alphabet, id36 = string.digits + string.ascii_lowercase, ''

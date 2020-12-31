@@ -8,7 +8,6 @@
 
 
 import concurrent.futures
-import contextlib
 import time
 
 from pottery import ContextTimer
@@ -30,11 +29,6 @@ class RedlockTests(TestCase):
             key='printer',
             auto_release_time=100,
         )
-
-    def tearDown(self):
-        with contextlib.suppress(AttributeError, ReleaseUnlockedLock):
-            self.redlock.release()
-        super().tearDown()
 
     def test_acquire_and_time_out(self):
         assert not self.redis.exists(self.redlock.key)

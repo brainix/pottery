@@ -53,10 +53,6 @@ class _BaseTestCase(TestCase):
             vegetarian=False,
         )
 
-    def tearDown(self):
-        self.redis.delete('luvh')
-        super().tearDown()
-
 
 class CommonTests(_BaseTestCase):
     def test_out_of_scope(self):
