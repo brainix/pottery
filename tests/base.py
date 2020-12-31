@@ -28,10 +28,7 @@ class TestCase(unittest.TestCase):
         url = f'redis://localhost:6379/{self.redis_db}'
         self.redis = Redis.from_url(url, socket_timeout=1)
         self.redis.flushdb()
-
-    def tearDown(self) -> None:
-        self.redis.flushdb()
-        super().tearDown()
+        self.addCleanup(self.redis.flushdb)
 
 
 def run_doctests() -> NoReturn:  # pragma: no cover

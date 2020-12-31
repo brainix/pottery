@@ -44,11 +44,6 @@ class CacheDecoratorTests(TestCase):
         self.expensive_method_expiration.cache_clear()
         self.expensive_method_no_expiration.cache_clear()
 
-    def tearDown(self):
-        self.expensive_method_expiration.cache_clear()
-        self.expensive_method_no_expiration.cache_clear()
-        super().tearDown()
-
     def test_cache(self):
         assert self.expensive_method_expiration.cache_info() == CacheInfo(
             hits=0,
