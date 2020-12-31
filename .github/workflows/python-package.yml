@@ -46,5 +46,5 @@ jobs:
         mypy --no-incremental
     - name: Lint with Flake8 and isort
       run: |
-        flake8 *\.py pottery/*\.py tests/*\.py --count --max-complexity=11 --statistics
+        flake8 *\.py pottery/*\.py tests/*\.py --count --max-complexity=10 --statistics
         isort *\.py pottery/*\.py tests/*\.py --check-only --diff
