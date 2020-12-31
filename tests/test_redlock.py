@@ -186,7 +186,7 @@ class SynchronizeTests(TestCase):
             return time.time()
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [executor.submit(func) for _ in range(3)]
+            futures = {executor.submit(func) for _ in range(3)}
         results = sorted(future.result() for future in futures)
         for result1, result2 in zip(results, results[1:]):
             delta = result2 - result1
