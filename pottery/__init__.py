@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   __init__.py                                                               #
 #                                                                             #
-#   Copyright © 2015-2020, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2021, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
 # --------------------------------------------------------------------------- #
 '''Redis for Humans.
@@ -22,7 +22,7 @@ __author__ = 'Rajiv Bakulesh Shah'
 __author_email__ = 'brainix@gmail.com'
 __license__ = 'Apache 2.0'
 __keywords__ = 'Redis client persistent storage'
-__copyright__ = f'Copyright © 2015-2020, {__author__}, original author.'
+__copyright__ = f'Copyright © 2015-2021, {__author__}, original author.'
 
 
 from .exceptions import PotteryError  # isort:skip

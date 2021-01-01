@@ -24,7 +24,7 @@ know how to use Pottery.
 - [Counters](#counters)
 - [Deques](#deques)
 - [Redlock](#redlock)
-  - [synchronize()](#synchronize)
+    - [synchronize()](#synchronize)
 - [NextId](#nextid)
 - [redis_cache()](#redis_cache)
 - [CachedOrderedDict](#cachedordereddict)
