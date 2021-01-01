@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   counter.py                                                                #
 #                                                                             #
-#   Copyright © 2015-2020, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2021, Rajiv Bakulesh Shah, original author.              #
 #   All rights reserved.                                                      #
 # --------------------------------------------------------------------------- #
 
