@@ -35,8 +35,8 @@ def _raise_on_error(func: F) -> Callable[[F], F]:
     def wrap(*args: Any, **kwargs: Any) -> Any:
         try:
             return func(*args, **kwargs)
-        except ResponseError:
-            raise IndexError('list assignment index out of range')
+        except ResponseError as error:
+            raise IndexError('list assignment index out of range') from error
     return wrap
 
 
