@@ -12,6 +12,11 @@ know how to use Pottery.
 '''
 
 
+from typing import Tuple
+
+from typing_extensions import Final
+
+
 __title__ = 'pottery'
 __version__ = '1.1.0'
 __description__, __long_description__ = (
@@ -50,7 +55,7 @@ from .list import RedisList
 from .set import RedisSet
 
 
-__all__ = [
+__all__: Final[Tuple[str, ...]] = (
     'PotteryError',
     'KeyExistsError',
     'RandomKeyError',
@@ -74,4 +79,4 @@ __all__ = [
     'RedisDict',
     'RedisList',
     'RedisSet',
-]
+)
