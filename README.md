@@ -1,4 +1,4 @@
-# Pottery: Redis for Humans
+# Pottery: Redis for Humans 🌎🌍🌏
 
 [Redis](http://redis.io/) is awesome, but [Redis
 commands](http://redis.io/commands) are not always fun.  Pottery is a Pythonic
@@ -10,6 +10,7 @@ know how to use Pottery.
 [![Latest released version](https://badge.fury.io/py/pottery.svg)](https://badge.fury.io/py/pottery)
 
 ![Supported Python versions](https://img.shields.io/pypi/pyversions/pottery)
+![Number of lines of code](https://img.shields.io/tokei/lines/github/brainix/pottery)
 
 [![Total number of downloads](https://pepy.tech/badge/pottery)](https://pepy.tech/project/pottery)
 [![Downloads per month](https://pepy.tech/badge/pottery/month)](https://pepy.tech/project/pottery)
@@ -18,19 +19,19 @@ know how to use Pottery.
 
 
 ## Table of Contents
-- [Dicts](#dicts)
-- [Sets](#sets)
-- [Lists](#lists)
-- [Counters](#counters)
-- [Deques](#deques)
-- [Redlock](#redlock)
-    - [synchronize()](#synchronize)
-- [NextId](#nextid)
+- [Dicts 📖](#dicts)
+- [Sets 🛍️](#sets)
+- [Lists ⛓](#lists)
+- [Counters 🧮](#counters)
+- [Deques 🖇️](#deques)
+- [Redlock 🔒](#redlock)
+    - [synchronize() 👯‍♀️](#synchronize)
+- [NextId 🔢](#nextid)
 - [redis_cache()](#redis_cache)
 - [CachedOrderedDict](#cachedordereddict)
 - [Bloom filters](#bloom-filters)
 - [HyperLogLogs](#hyperloglogs)
-- [ContextTimer](#contexttimer)
+- [ContextTimer ⏱️](#contexttimer)
 
 
 
@@ -52,7 +53,7 @@ First, set up your Redis client:
 
 
 
-## Dicts
+## Dicts 📖
 
 `RedisDict` is a Redis-backed container compatible with Python&rsquo;s
 [`dict`](https://docs.python.org/3/tutorial/datastructures.html#dictionaries).
@@ -93,7 +94,7 @@ _Limitations:_
 
 
 
-## Sets
+## Sets 🛍️
 
 `RedisSet` is a Redis-backed container compatible with Python&rsquo;s
 [`set`](https://docs.python.org/3/tutorial/datastructures.html#sets).
@@ -135,7 +136,7 @@ _Limitations:_
 
 
 
-## Lists
+## Lists ⛓
 
 `RedisList` is a Redis-backed container compatible with Python&rsquo;s
 [`list`](https://docs.python.org/3/tutorial/introduction.html#lists).
@@ -168,7 +169,7 @@ _Limitations:_
 
 
 
-## Counters
+## Counters 🧮
 
 `RedisCounter` is a Redis-backed container compatible with Python&rsquo;s
 [`collections.Counter`](https://docs.python.org/3/library/collections.html#collections.Counter).
@@ -219,7 +220,7 @@ _Limitations:_
 
 
 
-## Deques
+## Deques 🖇️
 
 `RedisDeque` is a Redis-backed container compatible with Python&rsquo;s
 [`collections.deque`](https://docs.python.org/3/library/collections.html#collections.deque).
@@ -285,7 +286,7 @@ _Limitations:_
 
 
 
-## Redlock
+## Redlock 🔒
 
 `Redlock` is a safe and reliable lock to coordinate access to a resource shared
 across threads, processes, and even machines, without a single point of
@@ -368,7 +369,7 @@ False
 
 
 
-### synchronize()
+### synchronize() 👯‍♀️
 
 `synchronize()` is a decorator that allows only one thread to execute a
 function at a time.  Under the hood, `synchronize()` uses a Redlock, so refer
@@ -387,7 +388,7 @@ Here&rsquo;s how to use `synchronize()`:
 ```
 
 
-## NextId
+## NextId 🔢
 
 `NextId` safely and reliably produces increasing IDs across threads, processes,
 and even machines, without a single point of failure.  [Rationale and algorithm
@@ -781,7 +782,7 @@ _Limitations:_
 
 
 
-## ContextTimer
+## ContextTimer ⏱️
 
 `ContextTimer` helps you easily and accurately measure elapsed time.  Note that
 `ContextTimer` measures wall (real-world) time, not CPU time; and that
