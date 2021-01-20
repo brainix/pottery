@@ -14,7 +14,6 @@ from typing import Callable
 from typing import Iterable
 from typing import List
 from typing import Optional
-from typing import TypeVar
 from typing import Union
 from typing import cast
 
@@ -22,12 +21,10 @@ from redis import Redis
 from redis import ResponseError
 from redis.client import Pipeline
 
+from .annotations import F
 from .base import Base
 from .base import JSONTypes
 from .exceptions import KeyExistsError
-
-
-F = TypeVar('F', bound=Callable[..., Any])
 
 
 def _raise_on_error(func: F) -> Callable[[F], F]:

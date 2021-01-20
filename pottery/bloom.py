@@ -15,18 +15,13 @@ from typing import Callable
 from typing import Generator
 from typing import Iterable
 from typing import Set
-from typing import TypeVar
 from typing import cast
 
 import mmh3
 
+from .annotations import F
 from .base import Base
 from .base import JSONTypes
-
-
-# A function that receives *args and **kwargs, and returns anything.  Useful
-# for annotating decorators.
-F = TypeVar('F', bound=Callable[..., Any])
 
 
 def _store_on_self(*, attr: str) -> Callable[[F], F]:
