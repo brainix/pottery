@@ -126,7 +126,7 @@ class RedisCounter(RedisDict, collections.Counter):
         "Return the subtraction other's counts from our counts, but keep only counts > 0.  O(n)"
         return self.__math_op(other, method=collections.Counter.__sub__)
 
-    def __or__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
+    def __or__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:  # type: ignore
         "Return the max of our counts vs. other's counts (union), but keep only counts > 0.  O(n)"
         return self.__math_op(other, method=collections.Counter.__or__)
 
@@ -228,7 +228,7 @@ class RedisCounter(RedisDict, collections.Counter):
                     pipeline.hdel(self.key, *encoded_to_del)
             return self
 
-    def __ior__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
+    def __ior__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:  # type: ignore
         'Same as __or__(), but in-place.  O(n)'
         return self.__iset_op(other, method=int.__gt__)
 
