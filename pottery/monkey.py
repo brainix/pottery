@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   monkey.py                                                                 #
 #                                                                             #
-#   Copyright © 2015-2021, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2021, original authors.                                  #
 #   All rights reserved.                                                      #
 # --------------------------------------------------------------------------- #
 'Monkey patches.'
@@ -55,7 +55,7 @@ def _default(self: Any, obj: Any) -> Union[Dict[str, Any], List[Any], str]:
     return return_value
 
 import json  # isort:skip
-_default.default = json.JSONEncoder.default  # type: ignore
+_default.default = json.JSONEncoder().default  # type: ignore
 json.JSONEncoder.default = _default  # type: ignore
 
 _logger.info(
