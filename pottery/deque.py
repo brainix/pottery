@@ -126,9 +126,9 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
         if n:
             with self._watch() as pipeline:
                 push_method = 'lpush' if n > 0 else 'rpush'
-                values = self[-n:] if n > 0 else self[:-n]
+                values = reversed(self[-n:]) if n > 0 else self[:-n]
                 encoded_values = (self._encode(element) for element in values)
-                trim_indices = (0, len(self)-n) if n > 0 else (-n, len(self))
+                trim_indices = (0, len(self)-1) if n > 0 else (-n, len(self)-n-1)
 
                 pipeline.multi()
                 getattr(pipeline, push_method)(self.key, *encoded_values)

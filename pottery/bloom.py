@@ -25,6 +25,7 @@ from .base import JSONTypes
 
 
 def _store_on_self(*, attr: str) -> Callable[[F], F]:
+    "Decorator to store/cache a method's return value as an attribute on self."
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
@@ -39,6 +40,15 @@ def _store_on_self(*, attr: str) -> Callable[[F], F]:
 
 
 class BloomFilterABC(metaclass=abc.ABCMeta):
+    '''Bloom filter abstract base class.
+
+    This abstract base class:
+        1. Defines the abstract methods that the concrete implementation class
+           must define (having to do with encoding/decoding, I/O, and storage)
+        2. Implements numerical recipes on the number of elements that you want
+           to insert, and the acceptable false positive rate
+    '''
+
     @abc.abstractmethod
     def _bit_offsets(self,
                      encoded_value: JSONTypes,

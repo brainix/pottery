@@ -53,6 +53,7 @@ def random_key(*,
                length: int = 16,
                num_tries: int = 3,
                ) -> str:
+    'Find/return a random key that does not exist in the Redis instance.'
     if not isinstance(num_tries, int):
         raise TypeError('num_tries must be an int >= 0')
     elif num_tries < 0:
@@ -75,6 +76,8 @@ def random_key(*,
 
 
 class _Common:
+    'Mixin class that implements self.redis and self.key properties.'
+
     _RANDOM_KEY_PREFIX: ClassVar[str] = 'pottery:'
 
     def __init__(self,
@@ -126,6 +129,8 @@ class _Common:
 
 
 class _Encodable:
+    'Mixin class that implements JSON encoding and decoding.'
+
     @staticmethod
     def _encode(value: JSONTypes) -> str:
         encoded = json.dumps(value, sort_keys=True)
@@ -138,6 +143,8 @@ class _Encodable:
 
 
 class _Comparable(metaclass=abc.ABCMeta):
+    'Mixin class that implements equality testing for Redis-backed collections.'
+
     @property
     @abc.abstractmethod
     def redis(self) -> Redis:
@@ -165,6 +172,8 @@ class _Comparable(metaclass=abc.ABCMeta):
 
 
 class _Clearable(metaclass=abc.ABCMeta):
+    'Mixin class that implements clearing (emptying) a Redis-backed collection.'
+
     @property
     @abc.abstractmethod
     def redis(self) -> Redis:
@@ -181,6 +190,12 @@ class _Clearable(metaclass=abc.ABCMeta):
 
 
 class _ContextPipeline:
+    '''Context manager that sets up, then executes, a Redis pipeline.
+
+    Redis pipelines: https://redis.io/topics/pipelining
+    Redis transactions: https://redis.io/topics/transactions
+    '''
+
     def __init__(self, redis: Redis) -> None:
         self.redis = redis
 
@@ -245,10 +260,12 @@ class _Pipelined(metaclass=abc.ABCMeta):
 
 
 class Base(_Common, _Encodable, _Comparable, _Clearable, _Pipelined):
-    ...
+    'Base class for Redis-backed collections.'
 
 
 class Iterable_(metaclass=abc.ABCMeta):
+    'Mixin class that implements iterating over a Redis-backed collection.'
+
     @staticmethod  # pragma: no cover
     @abc.abstractmethod
     def _decode(value: bytes) -> JSONTypes:
@@ -276,6 +293,8 @@ class Iterable_(metaclass=abc.ABCMeta):
 
 
 class Primitive(metaclass=abc.ABCMeta):
+    'Base class for Redis-backed distributed primitives.'
+
     _DEFAULT_MASTERS: ClassVar[FrozenSet[Redis]] = frozenset({_default_redis})
 
     def __init__(self,
