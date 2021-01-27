@@ -1,13 +1,13 @@
-bleach==3.2.2
+bleach==3.2.3
 certifi==2020.12.5
 chardet==4.0.0
 colorama==0.4.4
-coverage==5.3.1
+coverage==5.4
 docutils==0.16
 flake8==3.8.4
 idna==2.10
 isort==5.7.0
-keyring==21.8.0
+keyring==22.0.1
 mccabe==0.6.1
 mmh3==2.5.1
 mypy==0.800
@@ -28,5 +28,5 @@ tqdm==4.56.0
 twine==3.3.0
 typed-ast==1.4.2
 typing-extensions==3.7.4.3
-urllib3==1.26.2
+urllib3==1.26.3
 webencodings==0.5.1
