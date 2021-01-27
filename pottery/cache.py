@@ -42,6 +42,11 @@ _logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
 class CacheInfo(NamedTuple):
+    '''Caching decorator information.
+
+    This CacheInfo named tuple is compatible with the one in functools:
+        https://github.com/python/cpython/blob/7a34380ad788886f5ad50d4175ceb2d5715b8cff/Lib/functools.py#L430
+    '''
     hits: int = 0
     misses: int = 0
     maxsize: Optional[int] = None

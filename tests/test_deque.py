@@ -100,6 +100,35 @@ class DequeTests(TestCase):
         d.rotate(0)
         assert d == ['g', 'h', 'i', 'j', 'k', 'l']
 
+    def test_rotate_right(self):
+        'A positive number rotates a RedisDeque right'
+        # I got this example from here:
+        #   https://pymotw.com/2/collections/deque.html#rotating
+        d = RedisDeque(range(10))
+        d.rotate(2)
+        assert d == [8, 9, 0, 1, 2, 3, 4, 5, 6, 7]
+
+    def test_rotate_left(self):
+        'A negative number rotates a RedisDeque left'
+        # I got this example from here:
+        #   https://pymotw.com/2/collections/deque.html#rotating
+        d = RedisDeque(range(10))
+        d.rotate(-2)
+        assert d == [2, 3, 4, 5, 6, 7, 8, 9, 0, 1]
+
+    def test_delete_nth(self):
+        'Recipe for deleting the nth element from a RedisDeque'
+        d = RedisDeque(('g', 'h', 'i', 'j', 'k', 'l'), redis=self.redis)
+
+        # Delete the 3rd element in the deque, or the 'j'.  I got this recipe
+        # from here:
+        #   https://docs.python.org/3.9/library/collections.html#deque-recipes
+        d.rotate(-3)
+        e = d.popleft()
+        d.rotate(3)
+        assert e == 'j'
+        assert d == ['g', 'h', 'i', 'k', 'l']
+
     def test_repr(self):
         d = RedisDeque(redis=self.redis)
         assert repr(d) == 'RedisDeque([])'
