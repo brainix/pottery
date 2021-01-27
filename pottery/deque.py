@@ -119,7 +119,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
         return super().pop(0)
 
     def rotate(self, n: int = 1) -> None:
-        '''Rotate the RedisDeque n steps to the right (default n=1).
+        '''Rotate the RedisDeque n steps to the right (default n=1).  O(n)
 
         If n is negative, rotates left.
         '''

@@ -104,7 +104,7 @@ class DequeTests(TestCase):
         'A positive number rotates a RedisDeque right'
         # I got this example from here:
         #   https://pymotw.com/2/collections/deque.html#rotating
-        d = RedisDeque(range(10))
+        d = RedisDeque(range(10), redis=self.redis)
         d.rotate(2)
         assert d == [8, 9, 0, 1, 2, 3, 4, 5, 6, 7]
 
@@ -112,7 +112,7 @@ class DequeTests(TestCase):
         'A negative number rotates a RedisDeque left'
         # I got this example from here:
         #   https://pymotw.com/2/collections/deque.html#rotating
-        d = RedisDeque(range(10))
+        d = RedisDeque(range(10), redis=self.redis)
         d.rotate(-2)
         assert d == [2, 3, 4, 5, 6, 7, 8, 9, 0, 1]
 
