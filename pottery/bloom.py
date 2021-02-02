@@ -56,17 +56,17 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
         for seed in range(self.num_hashes()):
             yield mmh3.hash(encoded_value, seed=seed) % self.size()
 
-    @abc.abstractmethod  # pragma: no cover
+    @abc.abstractmethod
     def update(self, *iterables: Iterable[JSONTypes]) -> None:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod  # pragma: no cover
+    @abc.abstractmethod
     def __contains__(self, value: JSONTypes) -> bool:
-        ...
+        raise NotImplementedError
 
-    @abc.abstractmethod  # pragma: no cover
+    @abc.abstractmethod
     def _num_bits_set(self) -> int:
-        ...
+        raise NotImplementedError
 
     def __init__(self,
                  iterable: Iterable[JSONTypes] = frozenset(),
@@ -300,7 +300,7 @@ class BloomFilter(BloomFilterABC, Base):
         return f'<{self.__class__.__name__} key={self.key}>'
 
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == '__main__':
     # Run the doctests in this module with:
     #   $ source venv/bin/activate
     #   $ python3 -m pottery.bloom
