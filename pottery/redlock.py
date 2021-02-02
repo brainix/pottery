@@ -594,7 +594,7 @@ def synchronize(*,
     return decorator
 
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == '__main__':
     # Run the doctests in this module with:
     #   $ source venv/bin/activate
     #   $ python3 -m pottery.redlock
