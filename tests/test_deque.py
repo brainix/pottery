@@ -6,6 +6,7 @@
 # --------------------------------------------------------------------------- #
 
 
+import itertools
 import unittest.mock
 
 from pottery import RedisDeque
@@ -115,6 +116,24 @@ class DequeTests(TestCase):
         d = RedisDeque(range(10), redis=self.redis)
         d.rotate(-2)
         assert d == [2, 3, 4, 5, 6, 7, 8, 9, 0, 1]
+
+    def test_moving_average(self):
+        'Test RedisDeque-based moving average'
+
+        # I got this recipe from here:
+        #   https://docs.python.org/3.9/library/collections.html#deque-recipes
+        def moving_average(iterable, n=3):
+            it = iter(iterable)
+            d = RedisDeque(itertools.islice(it, n-1), redis=self.redis)
+            d.appendleft(0)
+            s = sum(d)
+            for elem in it:
+                s += elem - d.popleft()
+                d.append(elem)
+                yield s / n
+
+        seq = list(moving_average([40, 30, 50, 46, 39, 44]))
+        assert seq == [40.0, 42.0, 45.0, 43.0]
 
     def test_delete_nth(self):
         'Recipe for deleting the nth element from a RedisDeque'
