@@ -56,6 +56,13 @@ class DequeTests(TestCase):
             delete.return_value = None
             RedisDeque(redis=self.redis, maxlen='2')
 
+    def test_init_with_maxlen(self):
+        d = RedisDeque([1, 2, 3, 4, 5, 6], redis=self.redis, maxlen=3)
+        assert d == [4, 5, 6]
+
+        d = RedisDeque([1, 2, 3, 4, 5, 6], redis=self.redis, maxlen=0)
+        assert d == []
+
     def test_persistent_deque_bigger_than_maxlen(self):
         d1 = RedisDeque('ghi', redis=self.redis)
         d1  # Workaround for Pyflakes.  :-(
