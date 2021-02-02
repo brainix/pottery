@@ -46,7 +46,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
         if self.maxlen is not None:
             if self.maxlen:
                 iterable = tuple(iterable)[-self.maxlen:]
-            else:  # pragma: no cover
+            else:
                 iterable = tuple()
         super()._populate(pipeline, iterable)
 

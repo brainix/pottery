@@ -99,6 +99,12 @@ class CounterTests(TestCase):
             "RedisCounter{'ham': 1, 'eggs': 1}",
         }
 
+    def test_make_counter(self):
+        'Test RedisCounter._make_counter()'
+        kwargs = {str(element): element for element in range(1000)}
+        c = RedisCounter(redis=self.redis, **kwargs)._make_counter()
+        assert c == collections.Counter(**kwargs)
+
     def test_add(self):
         'Test RedisCounter.__add__()'
         c = RedisCounter(redis=self.redis, a=3, b=1)

@@ -103,7 +103,7 @@ class RedisCounter(RedisDict, collections.Counter):
                 for key, value in encoded_dict.items()
             }
             counter.update(decoded_dict)
-            if cursor == 0:  # pragma: no cover
+            if cursor == 0:
                 break
         return counter
 

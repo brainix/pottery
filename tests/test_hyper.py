@@ -6,6 +6,8 @@
 # --------------------------------------------------------------------------- #
 
 
+from redis import Redis
+
 from pottery import HyperLogLog
 from tests.base import TestCase  # type: ignore
 
@@ -60,6 +62,12 @@ class HyperLogLogTests(TestCase):
         hll1 = HyperLogLog({'foo', 'bar', 'zap', 'a'}, redis=self.redis)
         hll1.update(hll2, {'b', 'c', 'd', 'baz'})
         assert len(hll1) == 8
+
+    def test_update_different_redis_instances(self):
+        hll1 = HyperLogLog({'foo', 'bar', 'zap', 'a'}, redis=self.redis)
+        hll2 = HyperLogLog({'a', 'b', 'c', 'foo'}, redis=Redis())
+        with self.assertRaises(RuntimeError):
+            hll1.update(hll2)
 
     def test_union(self):
         hll1 = HyperLogLog({'foo', 'bar', 'zap', 'a'}, redis=self.redis)

@@ -64,7 +64,7 @@ class HyperLogLog(Base):
                 if isinstance(obj, self.__class__):
                     if self.redis.connection_pool == obj.redis.connection_pool:
                         other_hll_keys.append(obj.key)
-                    else:  # pragma: no cover
+                    else:
                         raise RuntimeError(
                             f"can't update {self} with {obj} as they live on "
                             "different Redis instances/databases"
