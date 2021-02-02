@@ -32,6 +32,10 @@ class ListTests(TestCase):
         with self.assertRaises(KeyExistsError):
             RedisList((1, 4, 9, 16, 25), redis=self.redis, key=self._KEY)
 
+    def test_init_empty_list(self):
+        squares = RedisList(redis=self.redis, key=self._KEY)
+        assert squares == []
+
     def test_basic_usage(self):
         squares = RedisList((1, 4, 9, 16, 25), redis=self.redis)
         assert squares == [1, 4, 9, 16, 25]
@@ -113,6 +117,8 @@ class ListTests(TestCase):
         del a[0]
         assert a == [1, 66.25, 333, 333, 1234.5]
         del a[2:4]
+        assert a == [1, 66.25, 1234.5]
+        del a[:0]
         assert a == [1, 66.25, 1234.5]
         del a[:]
         assert a == []

@@ -43,7 +43,13 @@ class RedisList(Base, collections.abc.MutableSequence):
     def __slice_to_indices(self, slice_or_index: Union[slice, int]) -> range:
         try:
             start = cast(slice, slice_or_index).start or 0
-            stop = cast(slice, slice_or_index).stop or len(self)
+            if (
+                cast(slice, slice_or_index).start is None
+                and cast(slice, slice_or_index).stop == 0
+            ):
+                stop = 0
+            else:
+                stop = cast(slice, slice_or_index).stop or len(self)
             step = cast(slice, slice_or_index).step or 1
         except AttributeError:
             start = slice_or_index
@@ -72,7 +78,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                   iterable: Iterable[JSONTypes] = tuple(),
                   ) -> None:
         encoded_values = [self._encode(value) for value in iterable]
-        if encoded_values:  # pragma: no cover
+        if encoded_values:
             pipeline.multi()
             pipeline.rpush(self.key, *encoded_values)
 
@@ -143,7 +149,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         for index in indices:
             pipeline.lset(self.key, index, 0)
             num += 1
-        if num:  # pragma: no cover
+        if num:
             pipeline.lrem(self.key, num, 0)
 
     def __len__(self) -> int:
