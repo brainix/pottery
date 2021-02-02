@@ -9,6 +9,8 @@
 import collections
 from typing import Iterable
 from typing import Optional
+from typing import Tuple
+from typing import Union
 
 from redis import Redis
 from redis.client import Pipeline
@@ -100,16 +102,16 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
                  right: bool = True,
                  ) -> None:
         with self._watch(values) as pipeline:
+            push_method = 'rpush' if right else 'lpush'
             encoded_values = [self._encode(value) for value in values]
             len_ = len(self) + len(encoded_values)
-            pipeline.multi()
-            push_method = 'rpush' if right else 'lpush'
-            getattr(pipeline, push_method)(self.key, *encoded_values)
+            trim_indices: Union[Tuple[int, int], Tuple] = tuple()
             if self.maxlen is not None and len_ >= self.maxlen:
-                if right:
-                    trim_indices = len_-self.maxlen, len_
-                else:
-                    trim_indices = 0, self.maxlen-1
+                trim_indices = (len_-self.maxlen, len_) if right else (0, self.maxlen-1)
+
+            pipeline.multi()
+            getattr(pipeline, push_method)(self.key, *encoded_values)
+            if trim_indices:
                 pipeline.ltrim(self.key, *trim_indices)
 
     def pop(self) -> JSONTypes:  # type: ignore
