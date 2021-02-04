@@ -42,17 +42,9 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def __slice_to_indices(self, slice_or_index: Union[slice, int]) -> range:
         try:
-            start = cast(slice, slice_or_index).start or 0
-            if (
-                cast(slice, slice_or_index).start is None
-                and cast(slice, slice_or_index).stop == 0
-            ):
-                stop = 0
-            else:
-                stop = cast(slice, slice_or_index).stop or len(self)
-            step = cast(slice, slice_or_index).step or 1
+            start, stop, step = cast(slice, slice_or_index).indices(len(self))
         except AttributeError:
-            start = slice_or_index
+            start = cast(int, slice_or_index)
             stop = cast(int, slice_or_index) + 1
             step = 1
         indices = range(start, stop, step)
