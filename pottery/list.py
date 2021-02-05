@@ -86,11 +86,15 @@ class RedisList(Base, collections.abc.MutableSequence):
             # our ridiculous hack is to get all of the elements between
             # start and stop from Redis, then discard the ones between step
             # in Python.  More info:
-            # http://redis.io/commands/lrange
+            #   http://redis.io/commands/lrange
             with self._watch() as pipeline:
                 indices = self.__slice_to_indices(index)
+                if indices.step >= 0:
+                    start, stop = indices.start, indices.stop-1
+                else:
+                    start, stop = indices.stop+1, indices.start
                 pipeline.multi()
-                pipeline.lrange(self.key, indices[0], indices[-1])
+                pipeline.lrange(self.key, start, stop)
                 encoded = pipeline.execute()[0]
                 encoded = encoded[::index.step]
                 value: Union[List[JSONTypes], JSONTypes] = [self._decode(value) for value in encoded]

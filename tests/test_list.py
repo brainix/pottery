@@ -216,3 +216,8 @@ class ListTests(TestCase):
             '["foo", "bar", "baz", "qux", "quux", "corge", "grault", "garply", '
             '"waldo", "fred", "plugh", "xyzzy", "thud"]'
         )
+
+    def test_extended_slicing(self):
+        python_list = [1, 2, 3, 4, 5]
+        redis_list = RedisList(python_list, redis=self.redis)
+        assert redis_list[len(redis_list)-1:3-1:-1] == python_list[len(python_list)-1:3-1:-1]
