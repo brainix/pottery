@@ -54,7 +54,7 @@ class ListTests(TestCase):
         cubes.append(7**3)
         assert cubes == [1, 8, 27, 64, 125, 216, 343]
 
-    def test_slices(self):
+    def test_slicing(self):
         letters = RedisList(
             ('a', 'b', 'c', 'd', 'e', 'f', 'g'),
             redis=self.redis,
@@ -221,3 +221,23 @@ class ListTests(TestCase):
         python_list = [1, 2, 3, 4, 5]
         redis_list = RedisList(python_list, redis=self.redis)
         assert redis_list[len(redis_list)-1:3-1:-1] == python_list[len(python_list)-1:3-1:-1]
+
+    def test_slice_notation(self):
+        # I got these examples from:
+        #   https://railsware.com/blog/python-for-machine-learning-indexing-and-slicing-for-lists-tuples-strings-and-other-sequential-types/#Slice_Notation
+        nums = RedisList((10, 20, 30, 40, 50, 60, 70, 80, 90), redis=self.redis)
+        assert nums[2:7] == [30, 40, 50, 60, 70]
+        assert nums[0:4] == [10, 20, 30, 40]
+        assert nums[:5] == [10, 20, 30, 40, 50]
+        assert nums[-3:] == [70, 80, 90]
+        assert nums[1:-1] == [20, 30, 40, 50, 60, 70, 80]
+        assert nums[-3:8] == [70, 80]
+        assert nums[-5:-1] == [50, 60, 70, 80]
+        assert nums[:-2] == [10, 20, 30, 40, 50, 60, 70]
+        assert nums[::2] == [10, 30, 50, 70, 90]
+        assert nums[1::2] == [20, 40, 60, 80]
+        assert nums[1:-3:2] == [20, 40, 60]
+        assert nums[::-1] == [90, 80, 70, 60, 50, 40, 30, 20, 10]
+        assert nums[-2::-1] == [80, 70, 60, 50, 40, 30, 20, 10]
+        assert nums[-2:1:-1] == [80, 70, 60, 50, 40, 30]
+        assert nums[-2:1:-3] == [80, 50]
