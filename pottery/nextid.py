@@ -123,7 +123,7 @@ class NextId(Primitive):
                 self.__current_id = next_id
                 return next_id
         else:
-            raise QuorumNotAchieved(self.masters, self.key)
+            raise QuorumNotAchieved(self.key, self.masters)
 
     def __repr__(self) -> str:
         return (
@@ -157,7 +157,7 @@ class NextId(Primitive):
         if quorum:
             return max(current_ids)
         else:
-            raise QuorumNotAchieved(self.masters, self.key)
+            raise QuorumNotAchieved(self.key, self.masters)
 
     @__current_id.setter
     def __current_id(self, value: int) -> None:
@@ -190,7 +190,7 @@ class NextId(Primitive):
                         break
 
         if not quorum:
-            raise QuorumNotAchieved(self.masters, self.key)
+            raise QuorumNotAchieved(self.key, self.masters)
 
 
 if __name__ == '__main__':

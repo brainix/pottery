@@ -46,18 +46,18 @@ class RandomKeyError(PotteryError, RuntimeError):
 class PrimitiveError(Exception):
     'Base exception class for distributed primitives.'
 
-    def __init__(self, masters: Iterable[Redis], key: str) -> None:
+    def __init__(self, key: str, masters: Iterable[Redis]) -> None:
         self._masters = masters
         self._key = key
 
     def __repr__(self) -> str:
         return (
-            f"{self.__class__.__name__}(masters={list(self._masters)}, "
-            f"key='{self._key}')"
+            f"{self.__class__.__name__}(key='{self._key}', "
+            f"masters={list(self._masters)})"
         )
 
     def __str__(self) -> str:
-        return f"masters={list(self._masters)}, key='{self._key}'"
+        return f"key='{self._key}', masters={list(self._masters)}"
 
 class QuorumNotAchieved(PrimitiveError, RuntimeError):
     ...

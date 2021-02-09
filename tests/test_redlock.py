@@ -107,8 +107,8 @@ class RedlockTests(TestCase):
             self.redlock.release()
         except ReleaseUnlockedLock as wtf:
             assert repr(wtf) == (
-                f"ReleaseUnlockedLock(masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>], "
-                "key='redlock:printer')"
+                "ReleaseUnlockedLock(key='redlock:printer', "
+                f"masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>])"
             )
 
     def test_releaseunlockedlock_str(self):
@@ -116,8 +116,8 @@ class RedlockTests(TestCase):
             self.redlock.release()
         except ReleaseUnlockedLock as wtf:
             assert str(wtf) == (
-                f"masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>], "
-                "key='redlock:printer'"
+                "key='redlock:printer', "
+                f"masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>]"
             )
 
     def test_release_same_lock_twice(self):

@@ -420,7 +420,7 @@ class Redlock(Primitive):
             >>> printer_lock.release()
         '''
         if self._extension_num >= self.num_extensions:
-            raise TooManyExtensions(self.masters, self.key)
+            raise TooManyExtensions(self.key, self.masters)
         else:
             quorum = False
 
@@ -447,7 +447,7 @@ class Redlock(Primitive):
 
             self._extension_num += quorum
             if not quorum:
-                raise ExtendUnlockedLock(self.masters, self.key)
+                raise ExtendUnlockedLock(self.key, self.masters)
 
     def release(self) -> None:
         '''Unlock the lock.
@@ -489,7 +489,7 @@ class Redlock(Primitive):
                         break
 
         if not quorum:
-            raise ReleaseUnlockedLock(self.masters, self.key)
+            raise ReleaseUnlockedLock(self.key, self.masters)
 
     __release = release
 
