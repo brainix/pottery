@@ -40,9 +40,13 @@ def _raise_on_error(func: F) -> Callable[[F], F]:
 class RedisList(Base, collections.abc.MutableSequence):
     'Redis-backed container compatible with Python lists.'
 
-    def __slice_to_indices(self, slice_or_index: Union[slice, int]) -> range:
+    def __slice_to_indices(self,
+                           pipeline: Pipeline,
+                           slice_or_index: Union[slice, int],
+                           ) -> range:
+        len_ = pipeline.llen(self.key)
         try:
-            start, stop, step = cast(slice, slice_or_index).indices(len(self))
+            start, stop, step = cast(slice, slice_or_index).indices(len_)
         except AttributeError:
             start = cast(int, slice_or_index)
             stop = cast(int, slice_or_index) + 1
@@ -88,7 +92,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             # in Python.  More info:
             #   http://redis.io/commands/lrange
             with self._watch() as pipeline:
-                indices = self.__slice_to_indices(index)
+                indices = self.__slice_to_indices(pipeline, index)
                 if indices.step >= 0:
                     start, stop = indices.start, indices.stop-1
                 else:
@@ -112,7 +116,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         if isinstance(index, slice):
             with self._watch() as pipeline:
                 encoded_values = [self._encode(value) for value in value]
-                indices = self.__slice_to_indices(index)
+                indices = self.__slice_to_indices(pipeline, index)
                 pipeline.multi()
                 for index, encoded_value in zip(indices, encoded_values):
                     pipeline.lset(self.key, index, encoded_value)
@@ -140,7 +144,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         #
         # More info:
         #   http://redis.io/commands/lrem
-        indices, num = self.__slice_to_indices(index), 0
+        indices, num = self.__slice_to_indices(pipeline, index), 0
         pipeline.multi()
         for index in indices:
             pipeline.lset(self.key, index, 0)
