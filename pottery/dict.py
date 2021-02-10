@@ -49,8 +49,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
             with self._watch(arg) as pipeline:
                 if pipeline.exists(self.key):
                     raise KeyExistsError(self.redis, self.key)
-                else:
-                    self._populate(pipeline, arg, **kwargs)
+                self._populate(pipeline, arg, **kwargs)
 
     def _populate(self,
                   pipeline: Pipeline,
@@ -78,8 +77,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
         encoded_value = self.redis.hget(self.key, self._encode(key))
         if encoded_value is None:
             raise KeyError(key)
-        else:
-            return self._decode(encoded_value)
+        return self._decode(encoded_value)
 
     def __setitem__(self, key: JSONTypes, value: JSONTypes) -> None:
         'd.__setitem__(key, value) <==> d[key] = value.  O(1)'

@@ -39,8 +39,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             with self._watch(iterable) as pipeline:
                 if pipeline.exists(self.key):
                     raise KeyExistsError(self.redis, self.key)
-                else:
-                    self._populate(pipeline, iterable)
+                self._populate(pipeline, iterable)
 
     def _populate(self,
                   pipeline: Pipeline,
@@ -90,8 +89,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         encoded_value = self.redis.spop(self.key)
         if encoded_value is None:
             raise KeyError('pop from an empty set')
-        else:
-            return self._decode(encoded_value)
+        return self._decode(encoded_value)
 
     # From collections.abc.MutableSet:
     def remove(self, value: JSONTypes) -> None:

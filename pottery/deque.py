@@ -69,8 +69,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
             raise IndexError(
                 f'{self.__class__.__name__} already at its maximum size'
             )
-        else:
-            return super()._insert(index, value)
+        return super()._insert(index, value)
 
     def append(self, value: JSONTypes) -> None:
         'Add an element to the right side of the RedisDeque.  O(1)'
