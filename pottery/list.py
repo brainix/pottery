@@ -16,6 +16,7 @@ from typing import List
 from typing import Optional
 from typing import Union
 from typing import cast
+from typing import overload
 
 from redis import Redis
 from redis import ResponseError
@@ -40,17 +41,36 @@ def _raise_on_error(func: F) -> Callable[[F], F]:
 class RedisList(Base, collections.abc.MutableSequence):
     'Redis-backed container compatible with Python lists.'
 
+    @overload
     def __slice_to_indices(self,
                            pipeline: Pipeline,
+                           slice_or_index: slice,
+                           ) -> range:
+        raise NotImplementedError
+
+    @overload
+    def __slice_to_indices(self,
+                           pipeline: Optional[Pipeline],
+                           slice_or_index: int,
+                           ) -> range:
+        raise NotImplementedError
+
+    def __slice_to_indices(self,
+                           pipeline: Optional[Pipeline],
                            slice_or_index: Union[slice, int],
                            ) -> range:
-        len_ = pipeline.llen(self.key)
-        try:
+        if isinstance(slice_or_index, slice):
+            len_ = cast(Pipeline, pipeline).llen(self.key)
             start, stop, step = cast(slice, slice_or_index).indices(len_)
-        except AttributeError:
+        elif isinstance(slice_or_index, int):
             start = cast(int, slice_or_index)
             stop = cast(int, slice_or_index) + 1
             step = 1
+        else:
+            raise TypeError(
+                'list indices must be integers or slices, '
+                f'not {slice_or_index.__class__.__name__}'
+            )
         indices = range(start, stop, step)
         return indices
 
@@ -102,6 +122,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                 encoded = encoded[::index.step]
                 value: Union[List[JSONTypes], JSONTypes] = [self._decode(value) for value in encoded]
         else:
+            index = self.__slice_to_indices(None, index).start
             encoded = self.redis.lindex(self.key, index)
             if encoded is None:
                 raise IndexError('list index out of range')
@@ -125,6 +146,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                 if num:
                     pipeline.lrem(self.key, num, 0)
         else:
+            index = self.__slice_to_indices(None, index).start
             self.redis.lset(self.key, index, self._encode(value))
 
     @_raise_on_error
