@@ -421,33 +421,32 @@ class Redlock(Primitive):
         '''
         if self._extension_num >= self.num_extensions:
             raise TooManyExtensions(self.key, self.masters)
-        else:
-            quorum = False
+        quorum = False
 
-            with BailOutExecutor() as executor:
-                futures = set()
-                for master in self.masters:
-                    future = executor.submit(self.__extend_master, master)
-                    futures.add(future)
+        with BailOutExecutor() as executor:
+            futures = set()
+            for master in self.masters:
+                future = executor.submit(self.__extend_master, master)
+                futures.add(future)
 
-                num_masters_extended = 0
-                for future in concurrent.futures.as_completed(futures):
-                    try:
-                        num_masters_extended += future.result()
-                    except RedisError as error:  # pragma: no cover
-                        _logger.exception(
-                            '%s.extend() caught an %s',
-                            self.__class__.__name__,
-                            error.__class__.__name__,
-                        )
-                    else:
-                        quorum = num_masters_extended >= len(self.masters) // 2 + 1
-                        if quorum:
-                            break
+            num_masters_extended = 0
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    num_masters_extended += future.result()
+                except RedisError as error:  # pragma: no cover
+                    _logger.exception(
+                        '%s.extend() caught an %s',
+                        self.__class__.__name__,
+                        error.__class__.__name__,
+                    )
+                else:
+                    quorum = num_masters_extended >= len(self.masters) // 2 + 1
+                    if quorum:
+                        break
 
-            self._extension_num += quorum
-            if not quorum:
-                raise ExtendUnlockedLock(self.key, self.masters)
+        self._extension_num += quorum
+        if not quorum:
+            raise ExtendUnlockedLock(self.key, self.masters)
 
     def release(self) -> None:
         '''Unlock the lock.

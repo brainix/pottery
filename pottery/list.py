@@ -66,8 +66,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             with self._watch(iterable) as pipeline:
                 if pipeline.exists(self.key):
                     raise KeyExistsError(pipeline, self.key)
-                else:
-                    self._populate(pipeline, iterable)
+                self._populate(pipeline, iterable)
 
     def _populate(self,
                   pipeline: Pipeline,
@@ -106,8 +105,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             encoded = self.redis.lindex(self.key, index)
             if encoded is None:
                 raise IndexError('list index out of range')
-            else:
-                value = self._decode(encoded)
+            value = self._decode(encoded)
         return value
 
     @_raise_on_error
@@ -264,8 +262,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                     raise IndexError(
                         f'pop from an empty {self.__class__.__name__}'
                     )
-                else:
-                    return self._decode(encoded_value)
+                return self._decode(encoded_value)
             else:
                 value: JSONTypes = self[cast(int, index)]
                 self.__delete(pipeline, cast(int, index))
