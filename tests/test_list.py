@@ -217,6 +217,13 @@ class ListTests(TestCase):
             '"waldo", "fred", "plugh", "xyzzy", "thud"]'
         )
 
+    def test_invalid_slicing(self):
+        letters = RedisList(('a', 'b', 'c', 'd'), redis=self.redis)
+        for invalid_slice in {'a', 0.5}:
+            with self.subTest(invalid_slice=invalid_slice), \
+                 self.assertRaises(TypeError):
+                letters[invalid_slice]
+
     def test_extended_slicing(self):
         python_list = [1, 2, 3, 4, 5]
         redis_list = RedisList(python_list, redis=self.redis)
