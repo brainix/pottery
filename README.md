@@ -444,15 +444,15 @@ _Limitations:_
    or a key eviction policy.  This means that your function&rsquo;s return
    value cache can grow unbounded.  Only use `redis_cache()` for any of these
    cases:
-  1. Your function&rsquo;s argument space has a known small cardinality
-  2. You specify a `timeout` when calling `redis_cache()` to decorate your
-     function, to dump your _entire_ return value cache `timeout` seconds after
-     the last cache access (hit or miss)
-  3. You periodically call `.cache_clear()` to dump your _entire_ return value
-     cache
-  4. You&rsquo;re ok with your return value cache growing unbounded, and you
-     [understand the implications](https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/)
-     of this for your underlying Redis instance
+    1. Your function&rsquo;s argument space has a known small cardinality
+    2. You specify a `timeout` when calling `redis_cache()` to decorate your
+       function, to dump your _entire_ return value cache `timeout` seconds
+       after the last cache access (hit or miss)
+    3. You periodically call `.cache_clear()` to dump your _entire_ return
+       value cache
+    4. You&rsquo;re ok with your return value cache growing unbounded, and you
+       [understand the implications](https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/)
+       of this for your underlying Redis instance
 
 In general, you should only use `redis_cache()` when you want to reuse
 previously computed values.  Accordingly, it doesn&rsquo;t make sense to cache
