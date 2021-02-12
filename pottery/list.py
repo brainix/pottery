@@ -190,8 +190,8 @@ class RedisList(Base, collections.abc.MutableSequence):
             # doesn't support that, because it's Redis.  Instead, Redis
             # supports inserting an element before a given (pivot) *value.*  So
             # our ridiculous hack is to set the pivot value to 0, then to
-            # insert the desired value and the original pivot value before the
-            # value 0, then to delete the value 0.
+            # insert the desired value before the value 0, then to set the
+            # value 0 to the original pivot value.
             #
             # More info:
             #   http://redis.io/commands/linsert
