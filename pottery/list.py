@@ -196,11 +196,11 @@ class RedisList(Base, collections.abc.MutableSequence):
             # More info:
             #   http://redis.io/commands/linsert
             with self._watch() as pipeline:
-                pivot = self._encode(self[index])
+                pivot = pipeline.lindex(self.key, index)
                 pipeline.multi()
                 pipeline.lset(self.key, index, 0)
                 pipeline.linsert(self.key, 'BEFORE', 0, encoded_value)
-                pipeline.lset(self.key, index+1, pivot)
+                pipeline.lset(self.key, index+1, cast(bytes, pivot))
         else:
             self.redis.rpush(self.key, encoded_value)
 
