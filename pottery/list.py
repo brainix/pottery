@@ -272,7 +272,7 @@ class RedisList(Base, collections.abc.MutableSequence):
     # From collections.abc.MutableSequence:
     def pop(self, index: Optional[int] = None) -> JSONTypes:
         with self._watch() as pipeline:
-            len_ = len(self)
+            len_ = pipeline.llen(self.key)
             if index and index >= len_:
                 raise IndexError('pop index out of range')
             elif index in {0, None, len_-1, -1}:
