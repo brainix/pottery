@@ -172,7 +172,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             # supports inserting an element before a given (pivot) *value.*  So
             # our ridiculous hack is to set the pivot value to 0, then to
             # insert the desired value before the value 0, then to set the
-            # value 0 to the original pivot value.
+            # value 0 back to the original pivot value.
             #
             # More info:
             #   http://redis.io/commands/linsert
@@ -194,10 +194,9 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def sort(self, *, key: Optional[str] = None, reverse: bool = False) -> None:
         'Sort a RedisList in place.  O(n)'
-        if key is None:
-            self.redis.sort(self.key, desc=reverse, store=self.key)
-        else:
+        if key is not None:
             raise NotImplementedError('sorting by key not implemented')
+        self.redis.sort(self.key, desc=reverse, store=self.key)
 
     def __eq__(self, other: Any) -> bool:
         if super().__eq__(other):
