@@ -83,13 +83,11 @@ class RedisList(Base, collections.abc.MutableSequence):
     def __getitem__(self, index: Union[slice, int]) -> Any:
         'l.__getitem__(index) <==> l[index].  O(n)'
         if isinstance(index, slice):
-            # This is monumentally stupid.  Python's list API requires us
-            # to get elements by slice (defined as a start index, a stop
-            # index, and a step).  Of course, Redis allows us to only get
-            # elements by start and stop (no step), because it's Redis.  So
-            # our ridiculous hack is to get all of the elements between
-            # start and stop from Redis, then discard the ones between step
-            # in Python.  More info:
+            # Python's list API requires us to get elements by slice (a start
+            # index, a stop index, and a step).  Redis supports only getting
+            # elements by start and stop (no step).  So our workaround is to
+            # get all of the elements between start and stop from Redis, then
+            # discard the ones between step in Python code.  More info:
             #   http://redis.io/commands/lrange
             with self._watch() as pipeline:
                 indices = self.__slice_to_indices(index)
@@ -137,13 +135,9 @@ class RedisList(Base, collections.abc.MutableSequence):
             self.__delete(pipeline, index)
 
     def __delete(self, pipeline: Pipeline, index: Union[slice, int]) -> None:
-        # This is monumentally stupid.  Python's list API requires us to delete
-        # an element by *index.*  Of course, Redis doesn't support that,
-        # because it's Redis.  Instead, Redis supports deleting an element by
-        # *value.*  So our ridiculous hack is to set l[index] to 0, then to
-        # delete the value 0.
-        #
-        # More info:
+        # Python's list API requires us to delete an element by *index.*  Redis
+        # supports only deleting an element by *value.*  So our workaround is
+        # to set l[index] to 0, then to delete the value 0.  More info:
         #   http://redis.io/commands/lrem
         indices, num = self.__slice_to_indices(index), 0
         pipeline.multi()
@@ -166,15 +160,12 @@ class RedisList(Base, collections.abc.MutableSequence):
         if index <= 0:
             self.redis.lpush(self.key, encoded_value)
         elif index < len(self):
-            # This is monumentally stupid.  Python's list API requires us to
-            # insert an element before the given *index.*  Of course, Redis
-            # doesn't support that, because it's Redis.  Instead, Redis
-            # supports inserting an element before a given (pivot) *value.*  So
-            # our ridiculous hack is to set the pivot value to 0, then to
-            # insert the desired value before the value 0, then to set the
-            # value 0 back to the original pivot value.
-            #
-            # More info:
+            # Python's list API requires us to insert an element before the
+            # given *index.*  Redis supports only inserting an element before a
+            # given (pivot) *value.*  So our workaround is to set the pivot
+            # value to 0, then to insert the desired value before the value 0,
+            # then to set the value 0 back to the original pivot value.  More
+            # info:
             #   http://redis.io/commands/linsert
             with self._watch() as pipeline:
                 pivot = self._encode(self[index])
