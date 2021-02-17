@@ -267,10 +267,9 @@ class RedisList(Base, collections.abc.MutableSequence):
             for index, element in enumerate(self):
                 if element == value:
                     self.__delete(pipeline, index)
-                    break
-            else:
-                class_ = self.__class__.__name__
-                raise ValueError(f'{class_}.remove(x): x not in {class_}')
+                    return
+        class_name = self.__class__.__name__
+        raise ValueError(f'{class_name}.remove(x): x not in {class_name}')
 
     def to_list(self) -> List[JSONTypes]:
         return list(self)
