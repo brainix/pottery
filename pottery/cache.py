@@ -303,8 +303,7 @@ class CachedOrderedDict(collections.OrderedDict):
         except WatchError:  # pragma: no cover
             if try_num < self._num_tries - 1:
                 return self.__retry(callable, try_num=try_num+1)
-            else:
-                raise
+            raise
 
     @_set_expiration
     def update(self, arg: InitArg = tuple(), **kwargs: JSONTypes) -> None:  # type: ignore
