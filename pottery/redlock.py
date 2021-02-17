@@ -281,10 +281,10 @@ class Redlock(Primitive):
 
         if quorum and max(validity_time, 0):
             return True
-        else:
-            with contextlib.suppress(ReleaseUnlockedLock):
-                self.__release()
-            return False
+
+        with contextlib.suppress(ReleaseUnlockedLock):
+            self.__release()
+        return False
 
     def acquire(self, *, blocking: bool = True, timeout: int = -1) -> bool:
         '''Lock the lock.
@@ -335,13 +335,13 @@ class Redlock(Primitive):
                 while timeout == -1 or timer.elapsed() / 1000 < timeout:
                     if self.__acquire_masters():
                         return True
-                    else:
-                        time.sleep(random.uniform(0, self.RETRY_DELAY/1000))
+                    time.sleep(random.uniform(0, self.RETRY_DELAY/1000))
             return False
-        elif timeout == -1:
+
+        if timeout == -1:
             return self.__acquire_masters()
-        else:
-            raise ValueError("can't specify a timeout for a non-blocking call")
+
+        raise ValueError("can't specify a timeout for a non-blocking call")
 
     __acquire = acquire
 
@@ -396,8 +396,8 @@ class Redlock(Primitive):
                 validity_time = ttls[len(self.masters) // 2]
                 validity_time -= round(timer.elapsed() + self.__drift())
                 return max(validity_time, 0)
-            else:
-                return 0
+
+            return 0
 
     __locked = locked
 
