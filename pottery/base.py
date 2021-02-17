@@ -56,9 +56,9 @@ def random_key(*,
     'Find/return a random key that does not exist in the Redis instance.'
     if not isinstance(num_tries, int):
         raise TypeError('num_tries must be an int >= 0')
-    elif num_tries < 0:
+    if num_tries < 0:
         raise ValueError('num_tries must be an int >= 0')
-    elif num_tries <= 0:
+    if num_tries == 0:
         raise RandomKeyError(redis)
 
     all_chars = string.digits + string.ascii_letters
