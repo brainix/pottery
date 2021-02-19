@@ -10,7 +10,7 @@ isort==5.7.0
 keyring==22.0.1
 mccabe==0.6.1
 mmh3==2.5.1
-mypy==0.800
+mypy==0.812
 mypy-extensions==0.4.3
 packaging==20.8
 pkginfo==1.7.0
