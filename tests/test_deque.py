@@ -103,6 +103,13 @@ class DequeTests(TestCase):
         with self.assertRaises(IndexError):
             d.popleft()
 
+    def test_invalid_rotating(self):
+        d = RedisDeque(('g', 'h', 'i', 'j', 'k', 'l'), redis=self.redis)
+        for invalid_steps in {None, 'a', 0.5}:
+            with self.subTest(invalid_steps=invalid_steps), \
+                 self.assertRaises(TypeError):
+                d.rotate(invalid_steps)
+
     def test_rotate_zero_steps(self):
         d = RedisDeque(('g', 'h', 'i', 'j', 'k', 'l'), redis=self.redis)
         d.rotate(0)

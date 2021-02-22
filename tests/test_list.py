@@ -219,7 +219,7 @@ class ListTests(TestCase):
 
     def test_invalid_slicing(self):
         letters = RedisList(('a', 'b', 'c', 'd'), redis=self.redis)
-        for invalid_slice in {'a', 0.5}:
+        for invalid_slice in {None, 'a', 0.5}:
             with self.subTest(invalid_slice=invalid_slice), \
                  self.assertRaises(TypeError):
                 letters[invalid_slice]

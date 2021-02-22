@@ -124,16 +124,23 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
 
         If n is negative, rotates left.
         '''
-        if n:
-            with self._watch() as pipeline:
-                push_method = 'lpush' if n > 0 else 'rpush'
-                values = self[-n:][::-1] if n > 0 else self[:-n]
-                encoded_values = (self._encode(element) for element in values)
-                trim_indices = (0, len(self)-1) if n > 0 else (-n, len(self)-1-n)
+        if not isinstance(n, int):
+            raise TypeError(
+                f"'{n.__class__.__name__}' object cannot be interpreted "
+                'as an integer'
+            )
+        if not n:
+            return
 
-                pipeline.multi()
-                getattr(pipeline, push_method)(self.key, *encoded_values)
-                pipeline.ltrim(self.key, *trim_indices)
+        with self._watch() as pipeline:
+            push_method = 'lpush' if n > 0 else 'rpush'
+            values = self[-n:][::-1] if n > 0 else self[:-n]
+            encoded_values = (self._encode(element) for element in values)
+            trim_indices = (0, len(self)-1) if n > 0 else (-n, len(self)-1-n)
+
+            pipeline.multi()
+            getattr(pipeline, push_method)(self.key, *encoded_values)
+            pipeline.ltrim(self.key, *trim_indices)
 
     # Methods required for Raj's sanity:
 
