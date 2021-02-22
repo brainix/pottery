@@ -133,6 +133,9 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
             return
 
         with self._watch() as pipeline:
+            if not self:
+                return
+
             push_method = 'lpush' if n > 0 else 'rpush'
             values = self[-n:][::-1] if n > 0 else self[:-n]
             encoded_values = (self._encode(element) for element in values)
@@ -143,6 +146,9 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
             pipeline.ltrim(self.key, *trim_indices)
 
     # Methods required for Raj's sanity:
+
+    def __bool__(self) -> bool:
+        return bool(len(self))
 
     def __repr__(self) -> str:
         'Return the string representation of a RedisDeque.  O(n)'

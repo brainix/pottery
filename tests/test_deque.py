@@ -115,6 +115,11 @@ class DequeTests(TestCase):
         d.rotate(0)
         assert d == ['g', 'h', 'i', 'j', 'k', 'l']
 
+    def test_rotate_empty_deque(self):
+        d = RedisDeque(redis=self.redis)
+        d.rotate(2)
+        assert d == []
+
     def test_rotate_right(self):
         'A positive number rotates a RedisDeque right'
         # I got this example from here:
@@ -161,6 +166,12 @@ class DequeTests(TestCase):
         d.rotate(3)
         assert e == 'j'
         assert d == ['g', 'h', 'i', 'k', 'l']
+
+    def test_truthiness(self):
+        d = RedisDeque('ghi', redis=self.redis)
+        assert bool(d)
+        d.clear()
+        assert not bool(d)
 
     def test_repr(self):
         d = RedisDeque(redis=self.redis)
