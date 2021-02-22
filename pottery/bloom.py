@@ -75,7 +75,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
                  false_positives: float,
                  **kwargs: Any,
                  ) -> None:
-        '''Initialize a BloomFilter.  O(n * k)
+        '''Initialize the BloomFilter.  O(n * k)
 
         Here, n is the number of elements in iterable that you want to insert
         into this Bloom filter, and k is the number of times to run our hash
@@ -124,7 +124,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
         return num_hashes
 
     def add(self, value: JSONTypes) -> None:
-        '''Add an element to a BloomFilter.  O(k)
+        '''Add an element to the BloomFilter.  O(k)
 
         Here, k is the number of times to run our hash functions on a given
         input string to compute bit offests into the underlying string
@@ -133,7 +133,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
         self.update({value})
 
     def __len__(self) -> int:
-        '''Return the approximate the number of elements in a BloomFilter.  O(m)
+        '''Return the approximate the number of elements in the BloomFilter.  O(m)
 
         Here, m is the size in bits of the underlying string representing this
         Bloom filter.
@@ -258,7 +258,7 @@ class BloomFilter(BloomFilterABC, Base):
         return super()._bit_offsets(encoded_value)
 
     def update(self, *iterables: Iterable[JSONTypes]) -> None:
-        '''Populate a Bloom filter with the elements in iterables.  O(n * k)
+        '''Populate the Bloom filter with the elements in iterables.  O(n * k)
 
         Here, n is the number of elements in iterables that you want to insert
         into this Bloom filter, and k is the number of times to run our hash
@@ -296,7 +296,7 @@ class BloomFilter(BloomFilterABC, Base):
         return self.redis.bitcount(self.key)
 
     def __repr__(self) -> str:
-        'Return the string representation of a BloomFilter.  O(1)'
+        'Return the string representation of the BloomFilter.  O(1)'
         return f'<{self.__class__.__name__} key={self.key}>'
 
 

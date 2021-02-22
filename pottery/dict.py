@@ -43,7 +43,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
                  key: Optional[str] = None,
                  **kwargs: JSONTypes,
                  ) -> None:
-        'Initialize a RedisDict.  O(n)'
+        'Initialize the RedisDict.  O(n)'
         super().__init__(redis=redis, key=key)
         if arg or kwargs:
             with self._watch(arg) as pipeline:
@@ -95,13 +95,13 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
         return self.redis.hscan(self.key, cursor=cursor)
 
     def __len__(self) -> int:
-        'Return the number of items in a RedisDict.  O(1)'
+        'Return the number of items in the RedisDict.  O(1)'
         return self.redis.hlen(self.key)
 
     # Methods required for Raj's sanity:
 
     def __repr__(self) -> str:
-        'Return the string representation of a RedisDict.  O(n)'
+        'Return the string representation of the RedisDict.  O(n)'
         items = self.redis.hgetall(self.key).items()
         dict_ = {self._decode(key): self._decode(value) for key, value in items}
         return self.__class__.__name__ + str(dict_)

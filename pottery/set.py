@@ -33,7 +33,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
                  redis: Optional[Redis] = None,
                  key: Optional[str] = None,
                  ) -> None:
-        'Initialize a RedisSet.  O(n)'
+        'Initialize the RedisSet.  O(n)'
         super().__init__(redis=redis, key=key)
         if iterable:
             with self._watch(iterable) as pipeline:
@@ -63,21 +63,21 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         return self.redis.sscan(self.key, cursor=cursor)
 
     def __len__(self) -> int:
-        'Return the number of elements in a RedisSet.  O(1)'
+        'Return the number of elements in the RedisSet.  O(1)'
         return self.redis.scard(self.key)
 
     def add(self, value: JSONTypes) -> None:
-        'Add an element to a RedisSet.  O(1)'
+        'Add an element to the RedisSet.  O(1)'
         self.redis.sadd(self.key, self._encode(value))
 
     def discard(self, value: JSONTypes) -> None:
-        'Remove an element from a RedisSet.  O(1)'
+        'Remove an element from the RedisSet.  O(1)'
         self.redis.srem(self.key, self._encode(value))
 
     # Methods required for Raj's sanity:
 
     def __repr__(self) -> str:
-        'Return the string representation of a RedisSet.  O(n)'
+        'Return the string representation of the RedisSet.  O(n)'
         set_ = {self._decode(value) for value in self.redis.smembers(self.key)}  # type: ignore
         return self.__class__.__name__ + str(set_)
 
@@ -85,7 +85,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     # From collections.abc.MutableSet:
     def pop(self) -> JSONTypes:
-        'Remove and return an element from a RedisSet().  O(1)'
+        'Remove and return an element from the RedisSet().  O(1)'
         encoded_value = self.redis.spop(self.key)
         if encoded_value is None:
             raise KeyError('pop from an empty set')
@@ -93,7 +93,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     # From collections.abc.MutableSet:
     def remove(self, value: JSONTypes) -> None:
-        'Remove an element from a RedisSet().  O(1)'
+        'Remove an element from the RedisSet().  O(1)'
         if not self.redis.srem(self.key, self._encode(value)):
             raise KeyError(value)
 

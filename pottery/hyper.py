@@ -38,7 +38,7 @@ class HyperLogLog(Base):
                  redis: Optional[Redis] = None,
                  key: Optional[str] = None,
                  ) -> None:
-        '''Initialize a HyperLogLog.  O(n)
+        '''Initialize the HyperLogLog.  O(n)
 
         Here, n is the number of elements in iterable that you want to insert
         into this HyperLogLog.
@@ -47,7 +47,7 @@ class HyperLogLog(Base):
         self.update(iterable)
 
     def add(self, value: RedisValues) -> None:
-        'Add an element to a HyperLogLog.  O(1)'
+        'Add an element to the HyperLogLog.  O(1)'
         self.update({value})
 
     def update(self,
@@ -86,7 +86,7 @@ class HyperLogLog(Base):
         return new_hll
 
     def __len__(self) -> int:
-        '''Return the approximate number of elements in a HyperLogLog.  O(1)
+        '''Return the approximate number of elements in the HyperLogLog.  O(1)
 
         Please note that this method returns an approximation, not an exact
         value.  So please don't rely on it for anything important like
@@ -95,5 +95,5 @@ class HyperLogLog(Base):
         return self.redis.pfcount(self.key)
 
     def __repr__(self) -> str:
-        'Return the string representation of a HyperLogLog.  O(1)'
+        'Return the string representation of the HyperLogLog.  O(1)'
         return f'<{self.__class__.__name__} key={self.key} len={len(self)}>'
