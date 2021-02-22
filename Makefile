@@ -46,7 +46,6 @@ upgrade:
 	-brew update
 	-brew upgrade $(formulae)
 	brew cleanup
-	-heroku update
 ifneq ($(recursive),)
 	rm -rf $(venv)
 	~/.pyenv/versions/$(version)/bin/python3 -m venv $(venv)

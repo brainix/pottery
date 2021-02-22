@@ -129,7 +129,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
                 f"'{n.__class__.__name__}' object cannot be interpreted "
                 'as an integer'
             )
-        if not n:
+        if n == 0:
             return
 
         with self._watch() as pipeline:
