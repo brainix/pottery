@@ -31,7 +31,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
                  redis: Optional[Redis] = None,
                  key: Optional[str] = None,
                  ) -> None:
-        'Initialize a RedisDeque.  O(n)'
+        'Initialize the RedisDeque.  O(n)'
         if maxlen is not None and not isinstance(maxlen, int):
             raise TypeError('an integer is required')
         self._maxlen = maxlen
@@ -64,7 +64,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
         )
 
     def insert(self, index: int, value: JSONTypes) -> None:
-        'Insert an element into a RedisDeque before the given index.  O(n)'
+        'Insert an element into the RedisDeque before the given index.  O(n)'
         if self.maxlen is not None and len(self) >= self.maxlen:
             raise IndexError(
                 f'{self.__class__.__name__} already at its maximum size'
@@ -80,11 +80,11 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
         self.__extend((value,), right=False)
 
     def extend(self, values: Iterable[JSONTypes]) -> None:
-        'Extend a RedisList by appending elements from the iterable.  O(1)'
+        'Extend the RedisDeque by appending elements from the iterable.  O(1)'
         self.__extend(values, right=True)
 
     def extendleft(self, values: Iterable[JSONTypes]) -> None:
-        '''Extend a RedisList by prepending elements from the iterable.  O(1)
+        '''Extend the RedisDeque by prepending elements from the iterable.  O(1)
 
         Note the order in which the elements are prepended from the iterable:
 
@@ -148,10 +148,11 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
     # Methods required for Raj's sanity:
 
     def __bool__(self) -> bool:
+        'Whether the RedisDeque contains any elements.  O(1)'
         return bool(len(self))
 
     def __repr__(self) -> str:
-        'Return the string representation of a RedisDeque.  O(n)'
+        'Return the string representation of the RedisDeque.  O(n)'
         encoded = self.redis.lrange(self.key, 0, -1)
         values = [self._decode(value) for value in encoded]
         repr = self.__class__.__name__ + '(' + str(values)

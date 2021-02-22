@@ -61,7 +61,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                  redis: Optional[Redis] = None,
                  key: Optional[str] = None,
                  ) -> None:
-        'Initialize a RedisList.  O(n)'
+        'Initialize the RedisList.  O(n)'
         super().__init__(redis=redis, key=key)
         if iterable:
             with self._watch(iterable) as pipeline:
@@ -148,11 +148,11 @@ class RedisList(Base, collections.abc.MutableSequence):
             pipeline.lrem(self.key, num, 0)
 
     def __len__(self) -> int:
-        'Return the number of items in a RedisList.  O(1)'
+        'Return the number of items in the RedisList.  O(1)'
         return self.redis.llen(self.key)
 
     def insert(self, index: int, value: JSONTypes) -> None:
-        'Insert an element into a RedisList before the given index.  O(n)'
+        'Insert an element into the RedisList before the given index.  O(n)'
         self.__insert(index, value)
 
     def _insert(self, index: int, value: JSONTypes) -> None:
@@ -184,7 +184,7 @@ class RedisList(Base, collections.abc.MutableSequence):
     # Methods required for Raj's sanity:
 
     def sort(self, *, key: Optional[str] = None, reverse: bool = False) -> None:
-        'Sort a RedisList in place.  O(n)'
+        'Sort the RedisList in place.  O(n)'
         if key is not None:
             raise NotImplementedError('sorting by key not implemented')
         self.redis.sort(self.key, desc=reverse, store=self.key)
@@ -213,13 +213,13 @@ class RedisList(Base, collections.abc.MutableSequence):
                 return False
 
     def __add__(self, other: List[JSONTypes]) -> 'RedisList':
-        'Append the items in other to a RedisList.  O(n)'
+        'Append the items in other to the RedisList.  O(n)'
         with self._watch(other):
             iterable = itertools.chain(self, other)
             return self.__class__(iterable, redis=self.redis)
 
     def __repr__(self) -> str:
-        'Return the string representation of a RedisList.  O(n)'
+        'Return the string representation of the RedisList.  O(n)'
         encoded = self.redis.lrange(self.key, 0, -1)
         with self._watch():
             values = [self._decode(value) for value in encoded]
@@ -234,7 +234,7 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     # From collections.abc.MutableSequence:
     def extend(self, values: Iterable[JSONTypes]) -> None:
-        'Extend a RedisList by appending elements from the iterable.  O(1)'
+        'Extend the RedisList by appending elements from the iterable.  O(1)'
         encoded_values = (self._encode(value) for value in values)
         self.redis.rpush(self.key, *encoded_values)
 
@@ -272,4 +272,5 @@ class RedisList(Base, collections.abc.MutableSequence):
         raise ValueError(f'{class_name}.remove(x): x not in {class_name}')
 
     def to_list(self) -> List[JSONTypes]:
+        'Convert the RedisList to a Python list.  O(n)'
         return list(self)
