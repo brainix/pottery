@@ -130,10 +130,12 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
                 'as an integer'
             )
         if n == 0:
+            # Rotating 0 steps is a no-op.
             return
 
         with self._watch() as pipeline:
             if not self:
+                # Rotating an empty RedisDeque is a no-op.
                 return
 
             push_method = 'lpush' if n > 0 else 'rpush'
