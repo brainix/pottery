@@ -111,11 +111,13 @@ class DequeTests(TestCase):
                 d.rotate(invalid_steps)
 
     def test_rotate_zero_steps(self):
+        'Rotating 0 steps is a no-op'
         d = RedisDeque(('g', 'h', 'i', 'j', 'k', 'l'), redis=self.redis)
         d.rotate(0)
         assert d == ['g', 'h', 'i', 'j', 'k', 'l']
 
     def test_rotate_empty_deque(self):
+        'Rotating an empty RedisDeque is a no-op'
         d = RedisDeque(redis=self.redis)
         d.rotate(2)
         assert d == []

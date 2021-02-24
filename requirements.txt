@@ -9,7 +9,7 @@ idna==2.10
 isort==5.7.0
 keyring==22.0.1
 mccabe==0.6.1
-mmh3==2.5.1
+mmh3==3.0.0
 mypy==0.812
 mypy-extensions==0.4.3
 packaging==20.8
