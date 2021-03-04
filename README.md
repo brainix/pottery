@@ -24,7 +24,7 @@ know how to use Pottery.
 - [Lists ⛓](#lists-)
 - [Counters 🧮](#counters-)
 - [Deques 🖇️](#deques-%EF%B8%8F)
-- [Redlock 🔒](#redlock-)
+- [Redlock 🔒](#redlock)
     - [synchronize() 👯‍♀️](#synchronize-%EF%B8%8F)
 - [NextId 🔢](#nextid-)
 - [redis_cache()](#redis_cache)
@@ -286,7 +286,7 @@ _Limitations:_
 
 
 
-## Redlock 🔒
+## <a name="redlock"></a>Redlock 🔒
 
 `Redlock` is a safe and reliable lock to coordinate access to a resource shared
 across threads, processes, and even machines, without a single point of
