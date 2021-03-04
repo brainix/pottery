@@ -19,19 +19,19 @@ know how to use Pottery.
 
 
 ## Table of Contents
-- [Dicts 📖](#dicts-)
-- [Sets 🛍️](#sets-%EF%B8%8F)
-- [Lists ⛓](#lists-)
-- [Counters 🧮](#counters-)
-- [Deques 🖇️](#deques-%EF%B8%8F)
+- [Dicts 📖](#dicts)
+- [Sets 🛍️](#sets)
+- [Lists ⛓](#lists)
+- [Counters 🧮](#counters)
+- [Deques 🖇️](#deques)
 - [Redlock 🔒](#redlock)
-    - [synchronize() 👯‍♀️](#synchronize-%EF%B8%8F)
-- [NextId 🔢](#nextid-)
+    - [synchronize() 👯‍♀️](#synchronize)
+- [NextId 🔢](#nextid)
 - [redis_cache()](#redis_cache)
 - [CachedOrderedDict](#cachedordereddict)
 - [Bloom filters](#bloom-filters)
 - [HyperLogLogs](#hyperloglogs)
-- [ContextTimer ⏱️](#contexttimer-%EF%B8%8F)
+- [ContextTimer ⏱️](#contexttimer)
 
 
 
@@ -53,7 +53,7 @@ First, set up your Redis client:
 
 
 
-## Dicts 📖
+## <a name="dicts"></a>Dicts 📖
 
 `RedisDict` is a Redis-backed container compatible with Python&rsquo;s
 [`dict`](https://docs.python.org/3/tutorial/datastructures.html#dictionaries).
@@ -94,7 +94,7 @@ _Limitations:_
 
 
 
-## Sets 🛍️
+## <a name="sets"></a>Sets 🛍️
 
 `RedisSet` is a Redis-backed container compatible with Python&rsquo;s
 [`set`](https://docs.python.org/3/tutorial/datastructures.html#sets).
@@ -136,7 +136,7 @@ _Limitations:_
 
 
 
-## Lists ⛓
+## <a name="lists"></a>Lists ⛓
 
 `RedisList` is a Redis-backed container compatible with Python&rsquo;s
 [`list`](https://docs.python.org/3/tutorial/introduction.html#lists).
@@ -169,7 +169,7 @@ _Limitations:_
 
 
 
-## Counters 🧮
+## <a name="counters"></a>Counters 🧮
 
 `RedisCounter` is a Redis-backed container compatible with Python&rsquo;s
 [`collections.Counter`](https://docs.python.org/3/library/collections.html#collections.Counter).
@@ -220,7 +220,7 @@ _Limitations:_
 
 
 
-## Deques 🖇️
+## <a name="deques"></a>Deques 🖇️
 
 `RedisDeque` is a Redis-backed container compatible with Python&rsquo;s
 [`collections.deque`](https://docs.python.org/3/library/collections.html#collections.deque).
@@ -369,7 +369,7 @@ False
 
 
 
-### synchronize() 👯‍♀️
+### <a name="synchronize"></a>synchronize() 👯‍♀️
 
 `synchronize()` is a decorator that allows only one thread to execute a
 function at a time.  Under the hood, `synchronize()` uses a Redlock, so refer
@@ -388,7 +388,7 @@ Here&rsquo;s how to use `synchronize()`:
 ```
 
 
-## NextId 🔢
+## <a name="nextid"></a>NextId 🔢
 
 `NextId` safely and reliably produces increasing IDs across threads, processes,
 and even machines, without a single point of failure.  [Rationale and algorithm
@@ -795,7 +795,7 @@ _Limitations:_
 
 
 
-## ContextTimer ⏱️
+## <a name="contexttimer"></a>ContextTimer ⏱️
 
 `ContextTimer` helps you easily and accurately measure elapsed time.  Note that
 `ContextTimer` measures wall (real-world) time, not CPU time; and that
