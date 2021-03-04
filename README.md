@@ -19,19 +19,19 @@ know how to use Pottery.
 
 
 ## Table of Contents
-- [Dicts 📖](#dicts)
-- [Sets 🛍️](#sets)
-- [Lists ⛓](#lists)
-- [Counters 🧮](#counters)
-- [Deques 🖇️](#deques)
-- [Redlock 🔒](#redlock)
-    - [synchronize() 👯‍♀️](#synchronize)
-- [NextId 🔢](#nextid)
+- [Dicts 📖](#dicts-)
+- [Sets 🛍️](#sets-%EF%B8%8F)
+- [Lists ⛓](#lists-)
+- [Counters 🧮](#counters-)
+- [Deques 🖇️](#deques-%EF%B8%8F)
+- [Redlock 🔒](#redlock-)
+    - [synchronize() 👯‍♀️](#synchronize-%EF%B8%8F)
+- [NextId 🔢](#nextid-)
 - [redis_cache()](#redis_cache)
 - [CachedOrderedDict](#cachedordereddict)
 - [Bloom filters](#bloom-filters)
 - [HyperLogLogs](#hyperloglogs)
-- [ContextTimer ⏱️](#contexttimer)
+- [ContextTimer ⏱️](#contexttimer-%EF%B8%8F)
 
 
 
