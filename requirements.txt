@@ -26,9 +26,9 @@ requests-toolbelt==0.9.1
 rfc3986==1.4.0
 six==1.15.0
 tqdm==4.59.0
-twine==3.3.0
+twine==3.4.0
 typed-ast==1.4.2
 typing-extensions==3.7.4.3
-urllib3==1.26.3
+urllib3==1.26.4
 webencodings==0.5.1
 zipp==3.4.1
