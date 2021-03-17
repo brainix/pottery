@@ -54,9 +54,9 @@ class BailOutExecutor(concurrent.futures.ThreadPoolExecutor):
 
     @overload
     def __exit__(self,
-                 exc_type: Literal[None],
-                 exc_value: Literal[None],
-                 exc_traceback: Literal[None],
+                 exc_type: None,
+                 exc_value: None,
+                 exc_traceback: None,
                  ) -> Literal[False]:
         raise NotImplementedError
 

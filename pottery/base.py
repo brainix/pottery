@@ -40,6 +40,7 @@ from typing import Tuple
 from typing import Type
 from typing import Union
 from typing import cast
+from typing import overload
 
 from redis import Redis
 from redis import RedisError
@@ -213,10 +214,26 @@ class _ContextPipeline:
         self.pipeline = self.redis.pipeline()
         return self.pipeline
 
+    @overload
+    def __exit__(self,
+                 exc_type: None,
+                 exc_value: None,
+                 exc_traceback: None,
+                 ) -> None:
+        raise NotImplementedError
+
+    @overload
+    def __exit__(self,
+                 exc_type: Type[BaseException],
+                 exc_value: BaseException,
+                 exc_traceback: TracebackType,
+                 ) -> None:
+        raise NotImplementedError
+
     def __exit__(self,
                  exc_type: Optional[Type[BaseException]],
                  exc_value: Optional[BaseException],
-                 traceback: Optional[TracebackType],
+                 exc_traceback: Optional[TracebackType],
                  ) -> None:
         if exc_type is None:
             with contextlib.suppress(RedisError):
