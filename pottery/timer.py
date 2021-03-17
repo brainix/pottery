@@ -21,6 +21,7 @@ import timeit
 from types import TracebackType
 from typing import Optional
 from typing import Type
+from typing import overload
 
 
 class ContextTimer:
@@ -63,6 +64,22 @@ class ContextTimer:
     def __enter__(self) -> 'ContextTimer':
         self.__start()
         return self
+
+    @overload
+    def __exit__(self,
+                 exc_type: None,
+                 exc_value: None,
+                 exc_traceback: None,
+                 ) -> None:
+        raise NotImplementedError
+
+    @overload
+    def __exit__(self,
+                 exc_type: Type[BaseException],
+                 exc_value: BaseException,
+                 exc_traceback: TracebackType,
+                 ) -> None:
+        raise NotImplementedError
 
     def __exit__(self,
                  exc_type: Optional[Type[BaseException]],
