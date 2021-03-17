@@ -20,6 +20,7 @@ import concurrent.futures
 from types import TracebackType
 from typing import Optional
 from typing import Type
+from typing import overload
 
 from typing_extensions import Literal
 
@@ -50,6 +51,23 @@ class BailOutExecutor(concurrent.futures.ThreadPoolExecutor):
     This subclass overrides .__exit__() to not wait for pending futures to
     complete before returning control to the main thread, allowing bail out.
     '''
+
+    @overload
+    def __exit__(self,
+                 exc_type: Literal[None],
+                 exc_value: Literal[None],
+                 exc_traceback: Literal[None],
+                 ) -> Literal[False]:
+        raise NotImplementedError
+
+    @overload
+    def __exit__(self,
+                 exc_type: Type[BaseException],
+                 exc_value: BaseException,
+                 exc_traceback: TracebackType,
+                 ) -> Literal[False]:
+        raise NotImplementedError
+
     def __exit__(self,
                  exc_type: Optional[Type[BaseException]],
                  exc_value: Optional[BaseException],
