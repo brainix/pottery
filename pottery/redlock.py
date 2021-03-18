@@ -36,9 +36,9 @@ import concurrent.futures
 import contextlib
 import functools
 import logging
-import os
 import random
 import time
+import uuid
 from types import TracebackType
 from typing import Any
 from typing import Callable
@@ -147,7 +147,6 @@ class Redlock(Primitive):
     CLOCK_DRIFT_FACTOR: ClassVar[float] = 0.01
     RETRY_DELAY: ClassVar[int] = 200
     NUM_EXTENSIONS: ClassVar[int] = 3
-    NUM_RANDOM_BYTES: ClassVar[int] = 20
 
     _acquired_script: ClassVar[Optional[Script]] = None
     _extend_script: ClassVar[Optional[Script]] = None
@@ -159,7 +158,6 @@ class Redlock(Primitive):
                  masters: Iterable[Redis] = frozenset(),
                  auto_release_time: int = AUTO_RELEASE_TIME,
                  num_extensions: int = NUM_EXTENSIONS,
-                 num_random_bytes: int = NUM_RANDOM_BYTES,
                  ) -> None:
         super().__init__(key=key, masters=masters)
         self.__register_acquired_script()
@@ -168,9 +166,8 @@ class Redlock(Primitive):
 
         self.auto_release_time = auto_release_time
         self.num_extensions = num_extensions
-        self.num_random_bytes = num_random_bytes
 
-        self._value = b''
+        self._uuid = ''
         self._extension_num = 0
 
     # Preserve the Open-Closed Principle with name mangling.
@@ -225,17 +222,17 @@ class Redlock(Primitive):
     def __acquire_master(self, master: Redis) -> bool:
         acquired = master.set(
             self.key,
-            self._value,
+            self._uuid,
             px=self.auto_release_time,
             nx=True,
         )
         return bool(acquired)
 
     def __acquired_master(self, master: Redis) -> int:
-        if self._value:
+        if self._uuid:
             ttl: int = cast(Script, self._acquired_script)(
                 keys=(self.key,),
-                args=(self._value,),
+                args=(self._uuid,),
                 client=master,
             )
         else:
@@ -245,7 +242,7 @@ class Redlock(Primitive):
     def __extend_master(self, master: Redis) -> bool:
         extended = cast(Script, self._extend_script)(
             keys=(self.key,),
-            args=(self._value, self.auto_release_time),
+            args=(self._uuid, self.auto_release_time),
             client=master,
         )
         return bool(extended)
@@ -253,7 +250,7 @@ class Redlock(Primitive):
     def __release_master(self, master: Redis) -> bool:
         released = cast(Script, self._release_script)(
             keys=(self.key,),
-            args=(self._value,),
+            args=(self._uuid,),
             client=master,
         )
         return bool(released)
@@ -262,7 +259,7 @@ class Redlock(Primitive):
         return self.auto_release_time * self.CLOCK_DRIFT_FACTOR + 2
 
     def __acquire_masters(self) -> bool:
-        self._value = os.urandom(self.num_random_bytes)
+        self._uuid = str(uuid.uuid4())
         self._extension_num = 0
         quorum, validity_time = False, 0.0
 
@@ -555,8 +552,8 @@ class Redlock(Primitive):
 
     def __repr__(self) -> str:
         return (
-            f'<{self.__class__.__name__} key={self.key} '
-            f'value={str(self._value)} timeout={self.__locked()}>'
+            f"<{self.__class__.__name__} key={self.key} "
+            f"UUID='{self._uuid}' timeout={self.__locked()}>"
         )
 
 
