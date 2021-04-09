@@ -293,7 +293,7 @@ class Redlock(Primitive):
             self.__release()
         return False
 
-    def acquire(self, *, blocking: bool = True, timeout: int = -1) -> bool:
+    def acquire(self, *, blocking: bool = True, timeout: float = -1) -> bool:
         '''Lock the lock.
 
         If blocking is True and timeout is -1, then wait for as long as
