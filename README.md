@@ -3,7 +3,9 @@
 [Redis](http://redis.io/) is awesome, but [Redis
 commands](http://redis.io/commands) are not always fun.  Pottery is a Pythonic
 way to access Redis.  If you know how to use Python dicts, then you already
-know how to use Pottery.
+know how to use Pottery.  Pottery is useful for accessing Redis more easily,
+and also for implementing microservice resilience patterns; and it has been
+battle tested in production at scale.
 
 [![Build status](https://img.shields.io/github/workflow/status/brainix/pottery/Python%20package/master)](https://github.com/brainix/pottery/actions?query=branch%3Amaster)
 ![Dependencies up to date](https://img.shields.io/librariesio/github/brainix/pottery)
@@ -166,6 +168,13 @@ can use your `RedisList` the same way that you use any other Python `list`.
 _Limitations:_
 
 1. Elements must be JSON serializable.
+2. Under the hood, Python implements `list` using an array.  Redis implements
+   list using a
+   [doubly linked list](https://redis.io/topics/data-types-intro#redis-lists).
+   As such, inserting elements at the head or tail is fast, O(1).  However,
+   accessing elements by index is slow, O(n).  So in terms of performance and
+   ideal use cases, `RedisList` is more similar to Python&rsquo;s `deque` than
+   Python&rsquo;s `list`.
 
 
 
