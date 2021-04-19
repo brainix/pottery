@@ -72,13 +72,12 @@ class HyperLogLog(Base):
         with self._watch(objs) as pipeline:
             for obj in objs:
                 if isinstance(obj, self.__class__):
-                    if self.redis.connection_pool == obj.redis.connection_pool:
-                        other_hll_keys.append(obj.key)
-                    else:
+                    if self.redis.connection_pool != obj.redis.connection_pool:
                         raise RuntimeError(
                             f"can't update {self} with {obj} as they live on "
                             "different Redis instances/databases"
                         )
+                    other_hll_keys.append(obj.key)
                 else:
                     for value in cast(Iterable[JSONTypes], obj):
                         encoded_values.append(self._encode(value))
