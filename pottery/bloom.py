@@ -274,10 +274,11 @@ class BloomFilter(BloomFilterABC, Base):
         into this Bloom filter, and k is the number of times to run our hash
         functions on each element.
         '''
-        bit_offsets: Set[int] = set()
         with self._watch(*iterables) as pipeline:
+            bit_offsets: Set[int] = set()
             for value in itertools.chain(*iterables):
                 bit_offsets.update(self._bit_offsets(value))
+
             pipeline.multi()
             for bit_offset in bit_offsets:
                 pipeline.setbit(self.key, bit_offset, 1)
@@ -289,10 +290,9 @@ class BloomFilter(BloomFilterABC, Base):
         input string to compute bit offests into the underlying string
         representing this Bloom filter.
         '''
-        bit_offsets = set(self._bit_offsets(value))
         with self._watch() as pipeline:
             pipeline.multi()
-            for bit_offset in bit_offsets:
+            for bit_offset in self._bit_offsets(value):
                 pipeline.getbit(self.key, bit_offset)
             bits = pipeline.execute()
         return all(bits)
