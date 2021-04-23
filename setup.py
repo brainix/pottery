@@ -40,7 +40,7 @@ setup(
     author=pottery.__author__,
     author_email=pottery.__author_email__,
     license=pottery.__license__,
-    classifiers=[
+    classifiers=(
         'License :: OSI Approved :: Apache Software License',
         'Intended Audience :: Developers',
         'Natural Language :: English',
@@ -54,11 +54,12 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Typing :: Typed',
-    ],
+    ),
     keywords=pottery.__keywords__,
-    packages=find_packages(exclude=('contrib', 'docs', 'tests*')),
+    python_requires='>=3.6',
     install_requires=('redis>=3.4.1', 'mmh3', 'typing_extensions'),
     extras_require={},
+    packages=find_packages(exclude=('contrib', 'docs', 'tests*')),
     package_data={'pottery': ('py.typed',)},
     data_files=tuple(),
     entry_points={},
