@@ -171,10 +171,10 @@ _Limitations:_
 2. Under the hood, Python implements `list` using an array.  Redis implements
    list using a
    [doubly linked list](https://redis.io/topics/data-types-intro#redis-lists).
-   As such, inserting elements at the head or tail is fast, O(1).  However,
-   accessing elements by index is slow, O(n).  So in terms of performance and
-   ideal use cases, `RedisList` is more similar to Python&rsquo;s `deque` than
-   Python&rsquo;s `list`.
+   As such, inserting elements at the head or tail of a `RedisList` is fast,
+   O(1).  However, accessing `RedisList` elements by index is slow, O(n).  So
+   in terms of performance and ideal use cases, `RedisList` is more similar to
+   Python&rsquo;s `deque` than Python&rsquo;s `list`.
 
 
 
