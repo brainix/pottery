@@ -154,7 +154,7 @@ class NextId(Primitive):
                     current_id = int(future.result())
                 except RedisError as error:
                     _logger.exception(
-                        '%s.__current_id() getter caught an %s',
+                        '%s.__current_id() getter caught %s',
                         self.__class__.__name__,
                         error.__class__.__name__,
                     )
@@ -188,7 +188,7 @@ class NextId(Primitive):
                     num_masters_set += future.result() == value
                 except RedisError as error:
                     _logger.exception(
-                        '%s.__current_id() setter caught an %s',
+                        '%s.__current_id() setter caught %s',
                         self.__class__.__name__,
                         error.__class__.__name__,
                     )

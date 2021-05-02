@@ -275,7 +275,7 @@ class Redlock(Primitive):
                     num_masters_acquired += future.result()
                 except RedisError as error:  # pragma: no cover
                     _logger.exception(
-                        '%s.__acquire_masters() caught an %s',
+                        '%s.__acquire_masters() caught %s',
                         self.__class__.__name__,
                         error.__class__.__name__,
                     )
@@ -391,7 +391,7 @@ class Redlock(Primitive):
                     ttls.append(future.result())
                 except RedisError as error:  # pragma: no cover
                     _logger.exception(
-                        '%s.locked() caught an %s',
+                        '%s.locked() caught %s',
                         self.__class__.__name__,
                         error.__class__.__name__,
                     )
@@ -442,7 +442,7 @@ class Redlock(Primitive):
                     num_masters_extended += future.result()
                 except RedisError as error:  # pragma: no cover
                     _logger.exception(
-                        '%s.extend() caught an %s',
+                        '%s.extend() caught %s',
                         self.__class__.__name__,
                         error.__class__.__name__,
                     )
@@ -485,7 +485,7 @@ class Redlock(Primitive):
                     num_masters_released += future.result()
                 except RedisError as error:  # pragma: no cover
                     _logger.exception(
-                        '%s.release() caught an %s',
+                        '%s.release() caught %s',
                         self.__class__.__name__,
                         error.__class__.__name__,
                     )
