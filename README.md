@@ -174,7 +174,8 @@ _Limitations:_
    As such, inserting elements at the head or tail of a `RedisList` is fast,
    O(1).  However, accessing `RedisList` elements by index is slow, O(n).  So
    in terms of performance and ideal use cases, `RedisList` is more similar to
-   Python&rsquo;s `deque` than Python&rsquo;s `list`.
+   Python&rsquo;s `deque` than Python&rsquo;s `list`.  Instead of `RedisList`,
+   consider using [`RedisDeque`](#deques).
 
 
 
