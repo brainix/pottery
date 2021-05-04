@@ -57,8 +57,8 @@ class PrimitiveError(Exception):
     'Base exception class for distributed primitives.'
 
     def __init__(self, key: str, masters: Iterable[Redis]) -> None:
-        self._masters = masters
         self._key = key
+        self._masters = masters
 
     def __repr__(self) -> str:
         return (
