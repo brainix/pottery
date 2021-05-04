@@ -46,7 +46,7 @@ class ExecutorTests(TestCase):
         with BailOutExecutor() as executor:
             future = executor.submit(self._expensive_func, 0.1)
         assert future.running()
-        time.sleep(0.1)
+        time.sleep(0.15)
         assert not future.running()
 
         with BailOutExecutor() as executor:
