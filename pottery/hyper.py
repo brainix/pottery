@@ -54,11 +54,11 @@ class HyperLogLog(Base):
         into this HyperLogLog.
         '''
         super().__init__(redis=redis, key=key)
-        self.update(iterable)
+        self.__update(iterable)
 
     def add(self, value: RedisValues) -> None:
         'Add an element to the HyperLogLog.  O(1)'
-        self.update({value})
+        self.__update({value})
 
     def update(self,
                *objs: Union['HyperLogLog', Iterable[RedisValues]],
@@ -84,6 +84,11 @@ class HyperLogLog(Base):
             pipeline.multi()
             pipeline.pfmerge(self.key, *other_hll_keys)
             pipeline.pfadd(self.key, *encoded_values)
+
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    __update = update
 
     def union(self,
               *objs: Iterable[RedisValues],
