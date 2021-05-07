@@ -387,7 +387,7 @@ class Redlock(Primitive):
             ttls, quorum = [], False
             for future in concurrent.futures.as_completed(futures):
                 try:
-                    ttls.append(future.result())
+                    ttl = future.result()
                 except RedisError as error:  # pragma: no cover
                     _logger.exception(
                         '%s.locked() caught %s',
@@ -395,13 +395,14 @@ class Redlock(Primitive):
                         error.__class__.__name__,
                     )
                 else:
-                    num_masters_acquired = sum(ttl > 0 for ttl in ttls)
-                    quorum = num_masters_acquired > len(self.masters) // 2
-                    if quorum:
-                        break
+                    if ttl > 0:
+                        ttls.append(ttl)
+                        quorum = len(ttls) > len(self.masters) // 2
+                        if quorum:  # pragma: no cover
+                            break
 
             if quorum:
-                validity_time = min(ttl for ttl in ttls if ttl > 0)
+                validity_time = min(ttls)
                 validity_time -= round(timer.elapsed() + self.__drift())
                 return max(validity_time, 0)
 
