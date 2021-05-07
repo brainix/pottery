@@ -378,14 +378,13 @@ class Redlock(Primitive):
             >>> printer_lock_1.release()
 
         '''
-        with ContextTimer() as timer, \
-             concurrent.futures.ThreadPoolExecutor() as executor:
+        with ContextTimer() as timer, BailOutExecutor() as executor:
             futures = set()
             for master in self.masters:
                 future = executor.submit(self.__acquired_master, master)
                 futures.add(future)
 
-            ttls = []
+            ttls, quorum = [], False
             for future in concurrent.futures.as_completed(futures):
                 try:
                     ttls.append(future.result())
@@ -395,16 +394,18 @@ class Redlock(Primitive):
                         self.__class__.__name__,
                         error.__class__.__name__,
                     )
+                else:
+                    num_masters_acquired = sum(ttl > 0 for ttl in ttls)
+                    quorum = num_masters_acquired > len(self.masters) // 2
+                    if quorum:
+                        break
 
-            num_masters_acquired = sum(ttl > 0 for ttl in ttls)
-            quorum = num_masters_acquired > len(self.masters) // 2
             if quorum:
-                ttls = sorted(ttls, reverse=True)
-                validity_time = ttls[len(self.masters) // 2]
+                validity_time = min(ttl for ttl in ttls if ttl > 0)
                 validity_time -= round(timer.elapsed() + self.__drift())
                 return max(validity_time, 0)
 
-            return 0
+        return 0
 
     __locked = locked
 
