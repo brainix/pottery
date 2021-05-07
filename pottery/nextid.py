@@ -162,7 +162,7 @@ class NextId(Primitive):
                     current_ids.append(current_id)
 
         num_masters_gotten = len(current_ids)
-        quorum = num_masters_gotten >= len(self.masters) // 2 + 1
+        quorum = num_masters_gotten > len(self.masters) // 2
         if quorum:
             return max(current_ids)
         raise QuorumNotAchieved(self.key, self.masters)
@@ -193,7 +193,7 @@ class NextId(Primitive):
                         error.__class__.__name__,
                     )
                 else:
-                    quorum = num_masters_set >= len(self.masters) // 2 + 1
+                    quorum = num_masters_set > len(self.masters) // 2
                     if quorum:  # pragma: no cover
                         break
 
