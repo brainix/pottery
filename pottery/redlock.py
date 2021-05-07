@@ -280,7 +280,7 @@ class Redlock(Primitive):
                         error.__class__.__name__,
                     )
                 else:
-                    quorum = num_masters_acquired >= len(self.masters) // 2 + 1
+                    quorum = num_masters_acquired > len(self.masters) // 2
                     if quorum:
                         elapsed = timer.elapsed() - self.__drift()
                         validity_time = self.auto_release_time - elapsed
@@ -396,8 +396,8 @@ class Redlock(Primitive):
                         error.__class__.__name__,
                     )
 
-            num_masters_acquired = sum(1 for ttl in ttls if ttl > 0)
-            quorum = num_masters_acquired >= len(self.masters) // 2 + 1
+            num_masters_acquired = sum(ttl > 0 for ttl in ttls)
+            quorum = num_masters_acquired > len(self.masters) // 2
             if quorum:
                 ttls = sorted(ttls, reverse=True)
                 validity_time = ttls[len(self.masters) // 2]
@@ -447,7 +447,7 @@ class Redlock(Primitive):
                         error.__class__.__name__,
                     )
                 else:
-                    quorum = num_masters_extended >= len(self.masters) // 2 + 1
+                    quorum = num_masters_extended > len(self.masters) // 2
                     if quorum:
                         break
 
@@ -490,7 +490,7 @@ class Redlock(Primitive):
                         error.__class__.__name__,
                     )
                 else:
-                    quorum = num_masters_released >= len(self.masters) // 2 + 1
+                    quorum = num_masters_released > len(self.masters) // 2
                     if quorum:
                         break
 
