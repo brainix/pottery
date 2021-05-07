@@ -161,16 +161,12 @@ class NextId(Primitive):
                 else:
                     current_ids.append(current_id)
 
-        num_masters_gotten = len(current_ids)
-        quorum = num_masters_gotten > len(self.masters) // 2
-        if quorum:
+        if len(current_ids) > len(self.masters) // 2:
             return max(current_ids)
         raise QuorumNotAchieved(self.key, self.masters)
 
     @__current_id.setter
     def __current_id(self, value: int) -> None:
-        quorum = False
-
         with BailOutExecutor() as executor:
             futures = set()
             for master in self.masters:
@@ -193,12 +189,9 @@ class NextId(Primitive):
                         error.__class__.__name__,
                     )
                 else:
-                    quorum = num_masters_set > len(self.masters) // 2
-                    if quorum:  # pragma: no cover
-                        break
-
-        if not quorum:
-            raise QuorumNotAchieved(self.key, self.masters)
+                    if num_masters_set > len(self.masters) // 2:  # pragma: no cover
+                        return
+        raise QuorumNotAchieved(self.key, self.masters)
 
 
 if __name__ == '__main__':

@@ -261,7 +261,6 @@ class Redlock(Primitive):
     def __acquire_masters(self) -> bool:
         self._uuid = str(uuid.uuid4())
         self._extension_num = 0
-        quorum, validity_time = False, 0.0
 
         with ContextTimer() as timer, BailOutExecutor() as executor:
             futures = set()
@@ -280,14 +279,11 @@ class Redlock(Primitive):
                         error.__class__.__name__,
                     )
                 else:
-                    quorum = num_masters_acquired > len(self.masters) // 2
-                    if quorum:
+                    if num_masters_acquired > len(self.masters) // 2:
                         elapsed = timer.elapsed() - self.__drift()
                         validity_time = self.auto_release_time - elapsed
-                        break
-
-        if quorum and max(validity_time, 0):
-            return True
+                        if validity_time > 0:  # pragma: no cover
+                            return True
 
         with contextlib.suppress(ReleaseUnlockedLock):
             self.__release()
@@ -384,7 +380,7 @@ class Redlock(Primitive):
                 future = executor.submit(self.__acquired_master, master)
                 futures.add(future)
 
-            ttls, quorum = [], False
+            ttls = []
             for future in concurrent.futures.as_completed(futures):
                 try:
                     ttl = future.result()
@@ -395,16 +391,13 @@ class Redlock(Primitive):
                         error.__class__.__name__,
                     )
                 else:
-                    if ttl > 0:
+                    if ttl:
                         ttls.append(ttl)
-                        quorum = len(ttls) > len(self.masters) // 2
-                        if quorum:  # pragma: no cover
-                            break
-
-            if quorum:
-                validity_time = min(ttls)
-                validity_time -= round(timer.elapsed() + self.__drift())
-                return max(validity_time, 0)
+                        if len(ttls) > len(self.masters) // 2:  # pragma: no cover
+                            validity_time = min(ttls)
+                            validity_time -= round(self.__drift())
+                            validity_time -= timer.elapsed()
+                            return max(validity_time, 0)
 
         return 0
 
@@ -430,7 +423,6 @@ class Redlock(Primitive):
         '''
         if self._extension_num >= self.num_extensions:
             raise TooManyExtensions(self.key, self.masters)
-        quorum = False
 
         with BailOutExecutor() as executor:
             futures = set()
@@ -449,13 +441,11 @@ class Redlock(Primitive):
                         error.__class__.__name__,
                     )
                 else:
-                    quorum = num_masters_extended > len(self.masters) // 2
-                    if quorum:
-                        break
+                    if num_masters_extended > len(self.masters) // 2:
+                        self._extension_num += 1
+                        return
 
-        self._extension_num += quorum
-        if not quorum:
-            raise ExtendUnlockedLock(self.key, self.masters)
+        raise ExtendUnlockedLock(self.key, self.masters)
 
     def release(self) -> None:
         '''Unlock the lock.
@@ -473,8 +463,6 @@ class Redlock(Primitive):
             >>> bool(printer_lock.locked())
             False
         '''
-        quorum = False
-
         with BailOutExecutor() as executor:
             futures = set()
             for master in self.masters:
@@ -492,12 +480,10 @@ class Redlock(Primitive):
                         error.__class__.__name__,
                     )
                 else:
-                    quorum = num_masters_released > len(self.masters) // 2
-                    if quorum:
-                        break
+                    if num_masters_released > len(self.masters) // 2:
+                        return
 
-        if not quorum:
-            raise ReleaseUnlockedLock(self.key, self.masters)
+        raise ReleaseUnlockedLock(self.key, self.masters)
 
     __release = release
 
