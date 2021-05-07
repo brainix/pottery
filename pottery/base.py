@@ -168,17 +168,16 @@ class _Comparable(metaclass=abc.ABCMeta):
 
     def __eq__(self, other: Any) -> bool:
         if self is other:
-            equals = True
-        elif (
+            return True
+        if (
             isinstance(other, _Comparable)
             and self.redis.connection_pool == other.redis.connection_pool  # NoQA: W503
             and self.key == other.key  # NoQA: W503
         ):
-            equals = True
-        else:
-            equals = super().__eq__(other)
-            if equals is NotImplemented:
-                equals = False
+            return True
+        equals = super().__eq__(other)
+        if equals is NotImplemented:
+            equals = False
         return equals
 
 
