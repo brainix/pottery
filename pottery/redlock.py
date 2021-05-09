@@ -47,11 +47,13 @@ from typing import Iterable
 from typing import Optional
 from typing import Type
 from typing import cast
+from typing import overload
 
 from redis import Redis
 from redis import RedisError
 from redis.client import Script
 from typing_extensions import Final
+from typing_extensions import Literal
 
 from .annotations import F
 from .base import Primitive
@@ -512,11 +514,27 @@ class Redlock(Primitive):
         self.__acquire()
         return self
 
+    @overload
+    def __exit__(self,
+                 exc_type: None,
+                 exc_value: None,
+                 exc_traceback: None,
+                 ) -> Literal[False]:
+        raise NotImplementedError
+
+    @overload
+    def __exit__(self,
+                 exc_type: Type[BaseException],
+                 exc_value: BaseException,
+                 exc_traceback: TracebackType,
+                 ) -> Literal[False]:
+        raise NotImplementedError
+
     def __exit__(self,
                  exc_type: Optional[Type[BaseException]],
                  exc_value: Optional[BaseException],
                  traceback: Optional[TracebackType],
-                 ) -> None:
+                 ) -> Literal[False]:
         '''You can use a Redlock as a context manager.
 
         Usage:
@@ -538,6 +556,7 @@ class Redlock(Primitive):
             [True, False]
         '''
         self.__release()
+        return False
 
     def __repr__(self) -> str:
         return (
