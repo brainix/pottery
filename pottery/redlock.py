@@ -280,8 +280,9 @@ class Redlock(Primitive):
                     )
                 else:
                     if num_masters_acquired > len(self.masters) // 2:
-                        elapsed = timer.elapsed() - self.__drift()
-                        validity_time = self.auto_release_time - elapsed
+                        validity_time = self.auto_release_time
+                        validity_time -= round(self.__drift())
+                        validity_time -= timer.elapsed()
                         if validity_time > 0:  # pragma: no cover
                             return True
 
