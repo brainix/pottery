@@ -172,13 +172,13 @@ class ListTests(TestCase):
 
     def test_eq_different_lengths(self):
         squares1 = RedisList((1, 4, 9, 16, 25), redis=self.redis)
-        squares2 = (1, 4, 9, 16, 25, 36)
+        squares2 = [1, 4, 9, 16, 25, 36]
         assert not squares1 == squares2
         assert squares1 != squares2
 
     def test_eq_different_items(self):
         squares1 = RedisList((1, 4, 9, 16, 25), redis=self.redis)
-        squares2 = (4, 9, 16, 25, 36)
+        squares2 = [4, 9, 16, 25, 36]
         assert not squares1 == squares2
         assert squares1 != squares2
 
@@ -192,6 +192,12 @@ class ListTests(TestCase):
         squares = RedisList((1, 4, 9, 16, 25), redis=self.redis)
         assert not squares == None
         assert squares != None
+
+    def test_eq_tuple(self):
+        squares = RedisList((1, 4, 9, 16, 25), redis=self.redis)
+        assert squares == [1, 4, 9, 16, 25]
+        assert not squares == (1, 4, 9, 16, 25)
+        assert squares != (1, 4, 9, 16, 25)
 
     def test_repr(self):
         squares = RedisList((1, 4, 9, 16, 25), redis=self.redis)

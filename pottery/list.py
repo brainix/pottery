@@ -209,7 +209,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                 if len(self) != len(other):
                     # self and other are different lengths.
                     return False
-                elif isinstance(other, collections.abc.Sequence):
+                elif isinstance(other, collections.abc.MutableSequence):
                     # self and other are the same length, and other is an
                     # ordered collection too.  Compare self's and other's
                     # elements, pair by pair.

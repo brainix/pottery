@@ -191,6 +191,7 @@ class NextId(Primitive):
                 else:
                     if num_masters_set > len(self.masters) // 2:  # pragma: no cover
                         return
+
         raise QuorumNotAchieved(self.key, self.masters)
 
 
