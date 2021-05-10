@@ -46,6 +46,7 @@ from redis import Redis
 from redis import RedisError
 from redis.client import Pipeline
 from typing_extensions import Final
+from typing_extensions import Literal
 
 from . import monkey
 from .annotations import JSONTypes
@@ -218,7 +219,7 @@ class _ContextPipeline:
                  exc_type: None,
                  exc_value: None,
                  exc_traceback: None,
-                 ) -> None:
+                 ) -> Literal[False]:
         raise NotImplementedError
 
     @overload
@@ -226,19 +227,20 @@ class _ContextPipeline:
                  exc_type: Type[BaseException],
                  exc_value: BaseException,
                  exc_traceback: TracebackType,
-                 ) -> None:
+                 ) -> Literal[False]:
         raise NotImplementedError
 
     def __exit__(self,
                  exc_type: Optional[Type[BaseException]],
                  exc_value: Optional[BaseException],
                  exc_traceback: Optional[TracebackType],
-                 ) -> None:
+                 ) -> Literal[False]:
         if exc_type is None:
             with contextlib.suppress(RedisError):
                 self.pipeline.multi()
                 self.pipeline.ping()
             self.pipeline.execute()
+        return False
 
 
 class _Pipelined(metaclass=abc.ABCMeta):
