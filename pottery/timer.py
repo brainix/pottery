@@ -23,6 +23,8 @@ from typing import Optional
 from typing import Type
 from typing import overload
 
+from typing_extensions import Literal
+
 
 class ContextTimer:
     '''Measure the execution time of small code snippets.
@@ -70,7 +72,7 @@ class ContextTimer:
                  exc_type: None,
                  exc_value: None,
                  exc_traceback: None,
-                 ) -> None:
+                 ) -> Literal[False]:
         raise NotImplementedError
 
     @overload
@@ -78,15 +80,16 @@ class ContextTimer:
                  exc_type: Type[BaseException],
                  exc_value: BaseException,
                  exc_traceback: TracebackType,
-                 ) -> None:
+                 ) -> Literal[False]:
         raise NotImplementedError
 
     def __exit__(self,
                  exc_type: Optional[Type[BaseException]],
                  exc_value: Optional[BaseException],
                  exc_traceback: Optional[TracebackType],
-                 ) -> None:
+                 ) -> Literal[False]:
         self.__stop()
+        return False
 
     def start(self) -> None:
         if self._stopped:
