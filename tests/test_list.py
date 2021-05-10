@@ -189,9 +189,10 @@ class ListTests(TestCase):
         assert squares1 != squares2
 
     def test_eq_immutable_sequence(self):
-        squares = RedisList([1, 4, 9, 16, 25], redis=self.redis)
-        assert not squares == (1, 4, 9, 16, 25)
-        assert squares != (1, 4, 9, 16, 25)
+        squares1 = RedisList([1, 4, 9, 16, 25], redis=self.redis)
+        squares2 = (1, 4, 9, 16, 25)
+        assert not squares1 == squares2
+        assert squares1 != squares2
 
     def test_eq_typeerror(self):
         squares = RedisList([1, 4, 9, 16, 25], redis=self.redis)
