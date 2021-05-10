@@ -86,17 +86,21 @@ else
 		python3 -m unittest --verbose $(tests)
 endif
 
-.PHONY: test-readme
-test-readme: clean-redis run-doctest clean-redis-2
+.PHONY: doctest
+doctest: clean-redis doctest-readme clean-redis-2 doctest-code
 
 .PHONY: clean-redis clean-redis-2
 clean-redis clean-redis-2:
 	@source $(venv)/bin/activate && \
 		python3 -c "from redis import Redis; redis = Redis.from_url('redis://localhost:6379/1'); redis.flushdb()"
 
-.PHONY: run-doctest
-run-doctest:
-	source $(venv)/bin/activate && python3 -m doctest -v README.md
+.PHONY: doctest-readme
+doctest-readme:
+	source $(venv)/bin/activate && python3 -m doctest README.md
+
+.PHONY: doctest-code
+doctest-code:
+	TEST_DOCTESTS=1 make test tests=tests.test_doctests.DoctestTests.test_doctests
 
 
 .PHONY: release
