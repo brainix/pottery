@@ -439,21 +439,21 @@ Two caveats:
 
 ## redis_cache()
 
-`redis_cache()` is a simple function return value cache, sometimes called
+`redis_cache()` is a simple lightweight unbounded function return value cache,
+sometimes called
 [&ldquo;memoize&rdquo;](https://en.wikipedia.org/wiki/Memoization).
 `redis_cache()` implements Python&rsquo;s excellent
-[`functools.lru_cache()`](https://docs.python.org/3/library/functools.html#functools.lru_cache)
+[`functools.cache()`](https://docs.python.org/3/library/functools.html#functools.cache)
 API as closely as is feasible.  In other words, you can use `redis_cache()` the
-same way that you use `functools.lru_cache()`.
+same way that you use `functools.cache()`.
 
 _Limitations:_
 
 1. Arguments to the function must be hashable.
 2. Return values from the function must be JSON serializable.
-3. `functools.lru_cache()` allows for a maximum size and has an eviction
-   policy; `redis_cache()` has neither.  This means that your function&rsquo;s
-   return value cache can grow unbounded.  Only use `redis_cache()` in any of
-   these cases:
+3. Just like `functools.cache()`, `redis_cache()` does not allow for a maximum
+   size, and does not evict old values, and grows unbounded.  Only use
+   `redis_cache()` in one of these cases:
     1. Your function&rsquo;s argument space has a known small cardinality.
     2. You specify a `timeout` when calling `redis_cache()` to decorate your
        function, to dump your _entire_ return value cache `timeout` seconds

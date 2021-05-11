@@ -39,12 +39,12 @@ from .exceptions import KeyExistsError
 
 def _raise_on_error(func: F) -> Callable[[F], F]:
     @functools.wraps(func)
-    def wrap(*args: Any, **kwargs: Any) -> Any:
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             return func(*args, **kwargs)
         except ResponseError as error:
             raise IndexError('list assignment index out of range') from error
-    return wrap
+    return wrapper
 
 
 class RedisList(Base, collections.abc.MutableSequence):

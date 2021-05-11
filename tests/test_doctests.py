@@ -40,6 +40,7 @@ class DoctestTests(TestCase):  # pragma: no cover
         'our doctests run too slowly',
     )
     def test_doctests(self):
+        'Run doctests and confirm that they work and are not science fiction'
         for module in self._modules():
             with self.subTest(module=module):
                 results = doctest.testmod(m=module)
