@@ -211,7 +211,7 @@ class _ContextPipeline:
         self.redis = redis
 
     def __enter__(self) -> Pipeline:
-        self.pipeline = self.redis.pipeline()
+        self.pipeline = self.redis.pipeline(transaction=True)
         return self.pipeline
 
     @overload
