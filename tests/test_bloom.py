@@ -21,7 +21,23 @@ import random
 import string
 
 from pottery import BloomFilter
+from pottery.bloom import _store_on_self
 from tests.base import TestCase  # type: ignore
+
+
+class StoreOnSelfTests(TestCase):
+    def setUp(self):
+        super().setUp()
+        self._call_count = 0
+
+    @_store_on_self(attr='_expensive_method_call_count')
+    def expensive_method_call_count(self):
+        self._call_count += 1
+        return self._call_count
+
+    def test_store_on_self(self):
+        assert self.expensive_method_call_count() == 1
+        assert self.expensive_method_call_count() == 1
 
 
 class BloomFilterTests(TestCase):
