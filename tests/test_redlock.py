@@ -19,6 +19,9 @@
 
 import concurrent.futures
 import time
+import unittest.mock
+
+from redis import RedisError
 
 from pottery import ContextTimer
 from pottery import ExtendUnlockedLock
@@ -182,6 +185,31 @@ class RedlockTests(TestCase):
     def test_repr(self):
         assert repr(self.redlock) == \
             "<Redlock key=redlock:printer UUID='' timeout=0>"
+
+    def test_acquire_rediserror(self):
+        with unittest.mock.patch.object(self.redis, 'set') as set:
+            set.side_effect = RedisError
+            assert not self.redlock.acquire(blocking=False)
+
+    def test_locked_rediserror(self):
+        with self.redlock, \
+             unittest.mock.patch.object(self.redlock, '_acquired_script') as _acquired_script:
+            _acquired_script.side_effect = RedisError
+            assert not self.redlock.locked()
+
+    def test_extend_rediserror(self):
+        with self.redlock, \
+             unittest.mock.patch.object(self.redlock, '_extend_script') as _extend_script, \
+             self.assertRaises(ExtendUnlockedLock):
+            _extend_script.side_effect = RedisError
+            self.redlock.extend()
+
+    def test_release_rediserror(self):
+        with self.redlock, \
+             unittest.mock.patch.object(self.redlock, '_release_script') as _release_script, \
+             self.assertRaises(ReleaseUnlockedLock):
+            _release_script.side_effect = RedisError
+            self.redlock.release()
 
 
 class SynchronizeTests(TestCase):

@@ -20,7 +20,7 @@ import collections
 import concurrent.futures
 import random
 import time
-from unittest import mock
+import unittest.mock
 
 from pottery import redis_cache
 from pottery.cache import _DEFAULT_TIMEOUT
@@ -211,7 +211,7 @@ class CacheDecoratorTests(TestCase):
             currsize=1,
         )
 
-    @mock.patch('random.getrandbits')
+    @unittest.mock.patch('random.getrandbits')
     def test_bypass(self, getrandbits):
         getrandbits.return_value = 5
 
