@@ -439,7 +439,7 @@ class Redlock(Primitive):
 
     __locked = locked
 
-    def extend(self) -> None:
+    def extend(self, *, raise_on_redis_errors: Optional[bool] = None) -> None:
         '''Extend our hold on the lock (if we currently hold it).
 
         Usage:
@@ -482,10 +482,9 @@ class Redlock(Primitive):
                         self._extension_num += 1
                         return
 
-        if (
-            self.raise_on_redis_errors
-            and len(redis_errors) > len(self.masters) // 2
-        ):
+        if raise_on_redis_errors is None:
+            raise_on_redis_errors = self.raise_on_redis_errors
+        if raise_on_redis_errors and len(redis_errors) > len(self.masters) // 2:
             raise QuorumIsImpossible(
                 self.key,
                 self.masters,
@@ -497,7 +496,7 @@ class Redlock(Primitive):
             redis_errors=redis_errors,
         )
 
-    def release(self) -> None:
+    def release(self, *, raise_on_redis_errors: Optional[bool] = None) -> None:
         '''Unlock the lock.
 
         Usage:
@@ -534,10 +533,9 @@ class Redlock(Primitive):
                     if num_masters_released > len(self.masters) // 2:
                         return
 
-        if (
-            self.raise_on_redis_errors
-            and len(redis_errors) > len(self.masters) // 2
-        ):
+        if raise_on_redis_errors is None:
+            raise_on_redis_errors = self.raise_on_redis_errors
+        if raise_on_redis_errors and len(redis_errors) > len(self.masters) // 2:
             raise QuorumIsImpossible(
                 self.key,
                 self.masters,
