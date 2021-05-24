@@ -121,7 +121,8 @@ class RedlockTests(TestCase):
         except ReleaseUnlockedLock as wtf:
             assert repr(wtf) == (
                 "ReleaseUnlockedLock(key='redlock:printer', "
-                f"masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>])"
+                f"masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>], "
+                "redis_errors=[])"
             )
 
     def test_releaseunlockedlock_str(self):
@@ -130,7 +131,8 @@ class RedlockTests(TestCase):
         except ReleaseUnlockedLock as wtf:
             assert str(wtf) == (
                 "key='redlock:printer', "
-                f"masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>]"
+                f"masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>], "
+                "redis_errors=[]"
             )
 
     def test_release_same_lock_twice(self):
@@ -184,7 +186,7 @@ class RedlockTests(TestCase):
 
     def test_repr(self):
         assert repr(self.redlock) == \
-            "<Redlock key=redlock:printer UUID='' timeout=0>"
+            "<Redlock key=redlock:printer UUID= timeout=0>"
 
     def test_acquire_rediserror(self):
         with unittest.mock.patch.object(self.redis, 'set') as set:

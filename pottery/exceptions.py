@@ -20,6 +20,7 @@ from typing import Iterable
 from typing import Optional
 
 from redis import Redis
+from redis import RedisError
 
 
 class PotteryError(Exception):
@@ -56,18 +57,29 @@ class RandomKeyError(PotteryError, RuntimeError):
 class PrimitiveError(Exception):
     'Base exception class for distributed primitives.'
 
-    def __init__(self, key: str, masters: Iterable[Redis]) -> None:
+    def __init__(self,
+                 key: str,
+                 masters: Iterable[Redis],
+                 *,
+                 redis_errors: Iterable[RedisError] = tuple(),
+                 ) -> None:
         self._key = key
         self._masters = masters
+        self._redis_errors = redis_errors
 
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}(key='{self._key}', "
-            f"masters={list(self._masters)})"
+            f"masters={list(self._masters)}, "
+            f"redis_errors={list(self._redis_errors)})"
         )
 
     def __str__(self) -> str:
-        return f"key='{self._key}', masters={list(self._masters)}"
+        return (
+            f"key='{self._key}', "
+            f"masters={list(self._masters)}, "
+            f"redis_errors={list(self._redis_errors)}"
+        )
 
 class QuorumNotAchieved(PrimitiveError, RuntimeError):
     ...
@@ -79,4 +91,7 @@ class ExtendUnlockedLock(PrimitiveError, RuntimeError):
     ...
 
 class ReleaseUnlockedLock(PrimitiveError, RuntimeError):
+    ...
+
+class QuorumIsImpossible(PrimitiveError, RuntimeError):
     ...
