@@ -93,8 +93,8 @@ class NextId(Primitive):
                  *,
                  key: str = KEY,
                  masters: Iterable[Redis] = frozenset(),
-                 num_tries: int = NUM_TRIES,
                  raise_on_redis_errors: bool = False,
+                 num_tries: int = NUM_TRIES,
                  ) -> None:
         super().__init__(
             key=key,
@@ -103,7 +103,6 @@ class NextId(Primitive):
         )
         self.__register_set_id_script()
         self.num_tries = num_tries
-        self.raise_on_redis_errors = raise_on_redis_errors
         self.__init_masters()
 
     # Preserve the Open-Closed Principle with name mangling.

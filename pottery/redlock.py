@@ -158,9 +158,9 @@ class Redlock(Primitive):
                  *,
                  key: str,
                  masters: Iterable[Redis] = frozenset(),
+                 raise_on_redis_errors: bool = False,
                  auto_release_time: int = AUTO_RELEASE_TIME,
                  num_extensions: int = NUM_EXTENSIONS,
-                 raise_on_redis_errors: bool = False,
                  ) -> None:
         super().__init__(
             key=key,
