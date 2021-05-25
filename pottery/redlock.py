@@ -298,7 +298,7 @@ class Redlock(Primitive):
                             return True
 
         with contextlib.suppress(ReleaseUnlockedLock):
-            self.__release()
+            self.__release(raise_on_redis_errors=False)
         self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         return False
 
