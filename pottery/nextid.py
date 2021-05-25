@@ -169,7 +169,7 @@ class NextId(Primitive):
 
         if len(current_ids) > len(self.masters) // 2:
             return max(current_ids)
-        self._raise_on_redis_errors(None, redis_errors)
+        self._check_enough_masters_up(None, redis_errors)
         raise QuorumNotAchieved(
             self.key,
             self.masters,
@@ -204,7 +204,7 @@ class NextId(Primitive):
                     if num_masters_set > len(self.masters) // 2:  # pragma: no cover
                         return
 
-        self._raise_on_redis_errors(None, redis_errors)
+        self._check_enough_masters_up(None, redis_errors)
         raise QuorumNotAchieved(
             self.key,
             self.masters,

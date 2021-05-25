@@ -299,7 +299,7 @@ class Redlock(Primitive):
 
         with contextlib.suppress(ReleaseUnlockedLock):
             self.__release()
-        self._raise_on_redis_errors(raise_on_redis_errors, redis_errors)
+        self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         return False
 
     def acquire(self,
@@ -422,7 +422,7 @@ class Redlock(Primitive):
                             validity_time -= timer.elapsed()
                             return max(validity_time, 0)
 
-        self._raise_on_redis_errors(raise_on_redis_errors, redis_errors)
+        self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         return 0
 
     __locked = locked
@@ -470,7 +470,7 @@ class Redlock(Primitive):
                         self._extension_num += 1
                         return
 
-        self._raise_on_redis_errors(raise_on_redis_errors, redis_errors)
+        self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         raise ExtendUnlockedLock(
             self.key,
             self.masters,
@@ -514,7 +514,7 @@ class Redlock(Primitive):
                     if num_masters_released > len(self.masters) // 2:
                         return
 
-        self._raise_on_redis_errors(raise_on_redis_errors, redis_errors)
+        self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         raise ReleaseUnlockedLock(
             self.key,
             self.masters,

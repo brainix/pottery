@@ -350,10 +350,10 @@ class Primitive(metaclass=abc.ABCMeta):
     def key(self, value: str) -> None:
         self._key = f'{self.KEY_PREFIX}:{value}'
 
-    def _raise_on_redis_errors(self,
-                               raise_on_redis_errors: Optional[bool],
-                               redis_errors: List[RedisError],
-                               ) -> None:
+    def _check_enough_masters_up(self,
+                                 raise_on_redis_errors: Optional[bool],
+                                 redis_errors: List[RedisError],
+                                 ) -> None:
         if raise_on_redis_errors is None:
             raise_on_redis_errors = self.raise_on_redis_errors
         if raise_on_redis_errors and len(redis_errors) > len(self.masters) // 2:
