@@ -58,7 +58,6 @@ from typing_extensions import Literal
 from .annotations import F
 from .base import Primitive
 from .exceptions import ExtendUnlockedLock
-from .exceptions import QuorumIsImpossible
 from .exceptions import ReleaseUnlockedLock
 from .exceptions import TooManyExtensions
 from .executor import BailOutExecutor
@@ -163,14 +162,17 @@ class Redlock(Primitive):
                  num_extensions: int = NUM_EXTENSIONS,
                  raise_on_redis_errors: bool = False,
                  ) -> None:
-        super().__init__(key=key, masters=masters)
+        super().__init__(
+            key=key,
+            masters=masters,
+            raise_on_redis_errors=raise_on_redis_errors,
+        )
         self.__register_acquired_script()
         self.__register_extend_script()
         self.__register_release_script()
 
         self.auto_release_time = auto_release_time
         self.num_extensions = num_extensions
-        self.raise_on_redis_errors = raise_on_redis_errors
 
         self._uuid = ''
         self._extension_num = 0
@@ -297,14 +299,7 @@ class Redlock(Primitive):
 
         with contextlib.suppress(ReleaseUnlockedLock):
             self.__release()
-        if raise_on_redis_errors is None:
-            raise_on_redis_errors = self.raise_on_redis_errors
-        if raise_on_redis_errors and len(redis_errors) > len(self.masters) // 2:
-            raise QuorumIsImpossible(
-                self.key,
-                self.masters,
-                redis_errors=redis_errors,
-            )
+        self._raise_on_redis_errors(raise_on_redis_errors, redis_errors)
         return False
 
     def acquire(self,
@@ -427,14 +422,7 @@ class Redlock(Primitive):
                             validity_time -= timer.elapsed()
                             return max(validity_time, 0)
 
-        if raise_on_redis_errors is None:
-            raise_on_redis_errors = self.raise_on_redis_errors
-        if raise_on_redis_errors and len(redis_errors) > len(self.masters) // 2:
-            raise QuorumIsImpossible(
-                self.key,
-                self.masters,
-                redis_errors=redis_errors,
-            )
+        self._raise_on_redis_errors(raise_on_redis_errors, redis_errors)
         return 0
 
     __locked = locked
@@ -482,14 +470,7 @@ class Redlock(Primitive):
                         self._extension_num += 1
                         return
 
-        if raise_on_redis_errors is None:
-            raise_on_redis_errors = self.raise_on_redis_errors
-        if raise_on_redis_errors and len(redis_errors) > len(self.masters) // 2:
-            raise QuorumIsImpossible(
-                self.key,
-                self.masters,
-                redis_errors=redis_errors,
-            )
+        self._raise_on_redis_errors(raise_on_redis_errors, redis_errors)
         raise ExtendUnlockedLock(
             self.key,
             self.masters,
@@ -533,14 +514,7 @@ class Redlock(Primitive):
                     if num_masters_released > len(self.masters) // 2:
                         return
 
-        if raise_on_redis_errors is None:
-            raise_on_redis_errors = self.raise_on_redis_errors
-        if raise_on_redis_errors and len(redis_errors) > len(self.masters) // 2:
-            raise QuorumIsImpossible(
-                self.key,
-                self.masters,
-                redis_errors=redis_errors,
-            )
+        self._raise_on_redis_errors(raise_on_redis_errors, redis_errors)
         raise ReleaseUnlockedLock(
             self.key,
             self.masters,

@@ -96,7 +96,11 @@ class NextId(Primitive):
                  num_tries: int = NUM_TRIES,
                  raise_on_redis_errors: bool = False,
                  ) -> None:
-        super().__init__(key=key, masters=masters)
+        super().__init__(
+            key=key,
+            masters=masters,
+            raise_on_redis_errors=raise_on_redis_errors,
+        )
         self.__register_set_id_script()
         self.num_tries = num_tries
         self.raise_on_redis_errors = raise_on_redis_errors
@@ -166,15 +170,7 @@ class NextId(Primitive):
 
         if len(current_ids) > len(self.masters) // 2:
             return max(current_ids)
-        if (
-            self.raise_on_redis_errors
-            and len(redis_errors) > len(self.masters) // 2
-        ):
-            raise QuorumIsImpossible(
-                self.key,
-                self.masters,
-                redis_errors=redis_errors,
-            )
+        self._raise_on_redis_errors(None, redis_errors)
         raise QuorumNotAchieved(
             self.key,
             self.masters,
@@ -209,15 +205,7 @@ class NextId(Primitive):
                     if num_masters_set > len(self.masters) // 2:  # pragma: no cover
                         return
 
-        if (
-            self.raise_on_redis_errors
-            and len(redis_errors) > len(self.masters) // 2
-        ):
-            raise QuorumIsImpossible(
-                self.key,
-                self.masters,
-                redis_errors=redis_errors,
-            )
+        self._raise_on_redis_errors(None, redis_errors)
         raise QuorumNotAchieved(
             self.key,
             self.masters,
