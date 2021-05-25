@@ -82,16 +82,16 @@ class PrimitiveError(Exception):
         )
 
 class QuorumNotAchieved(PrimitiveError, RuntimeError):
-    ...
+    'Consensus-based algorithm could not achieve quorum.'
 
 class TooManyExtensions(PrimitiveError, RuntimeError):
-    ...
+    'Redlock has been extended too many times.'
 
 class ExtendUnlockedLock(PrimitiveError, RuntimeError):
-    ...
+    'Attempting to extend an unlocked Redlock.'
 
 class ReleaseUnlockedLock(PrimitiveError, RuntimeError):
-    ...
+    'Attempting to release an unlocked Redlock.'
 
 class QuorumIsImpossible(PrimitiveError, RuntimeError):
-    ...
+    'Too many Redis masters threw RedisErrors; quorum can not be achieved.'
