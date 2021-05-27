@@ -30,7 +30,7 @@ from typing_extensions import Final
 
 
 __title__ = 'pottery'
-__version__ = '1.1.8'
+__version__ = '1.2.0'
 __description__, __long_description__ = (
     s.strip() for s in __doc__.split(sep='\n\n', maxsplit=1)
 )
@@ -46,6 +46,7 @@ from .exceptions import PotteryError  # isort:skip
 from .exceptions import KeyExistsError  # isort:skip
 from .exceptions import RandomKeyError  # isort:skip
 from .exceptions import PrimitiveError  # isort:skip
+from .exceptions import QuorumIsImpossible  # isort:skip
 from .exceptions import QuorumNotAchieved  # isort:skip
 from .exceptions import TooManyExtensions  # isort:skip
 from .exceptions import ExtendUnlockedLock  # isort:skip
@@ -72,6 +73,7 @@ __all__: Final[Tuple[str, ...]] = (
     'KeyExistsError',
     'RandomKeyError',
     'PrimitiveError',
+    'QuorumIsImpossible',
     'QuorumNotAchieved',
     'TooManyExtensions',
     'ExtendUnlockedLock',

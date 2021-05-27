@@ -29,7 +29,9 @@ import contextlib
 import logging
 from typing import ClassVar
 from typing import Iterable
+from typing import List
 from typing import Optional
+from typing import Type
 from typing import cast
 
 from redis import Redis
@@ -38,6 +40,7 @@ from redis.client import Script
 from typing_extensions import Final
 
 from .base import Primitive
+from .exceptions import QuorumIsImpossible
 from .exceptions import QuorumNotAchieved
 from .executor import BailOutExecutor
 
@@ -90,9 +93,14 @@ class NextId(Primitive):
                  *,
                  key: str = KEY,
                  masters: Iterable[Redis] = frozenset(),
+                 raise_on_redis_errors: bool = False,
                  num_tries: int = NUM_TRIES,
                  ) -> None:
-        super().__init__(key=key, masters=masters)
+        super().__init__(
+            key=key,
+            masters=masters,
+            raise_on_redis_errors=raise_on_redis_errors,
+        )
         self.__register_set_id_script()
         self.num_tries = num_tries
         self.__init_masters()
@@ -127,18 +135,15 @@ class NextId(Primitive):
         return self
 
     def __next__(self) -> int:
+        suppressable_errors: List[Type[BaseException]] = [QuorumNotAchieved]
+        if not self.raise_on_redis_errors:
+            suppressable_errors.append(QuorumIsImpossible)
         for _ in range(self.num_tries):
-            with contextlib.suppress(QuorumNotAchieved):
+            with contextlib.suppress(*suppressable_errors):
                 next_id = self.__current_id + 1
                 self.__current_id = next_id
                 return next_id
         raise QuorumNotAchieved(self.key, self.masters)
-
-    def __repr__(self) -> str:
-        return (
-            f'<{self.__class__.__name__} key={self.key} '
-            f'value={self.__current_id}>'
-        )
 
     @property
     def __current_id(self) -> int:
@@ -148,11 +153,12 @@ class NextId(Primitive):
                 future = executor.submit(master.get, self.key)
                 futures.add(future)
 
-            current_ids = []
+            current_ids, redis_errors = [], []
             for future in concurrent.futures.as_completed(futures):
                 try:
                     current_id = int(future.result())
                 except RedisError as error:
+                    redis_errors.append(error)
                     _logger.exception(
                         '%s.__current_id() getter caught %s',
                         self.__class__.__name__,
@@ -163,7 +169,12 @@ class NextId(Primitive):
 
         if len(current_ids) > len(self.masters) // 2:
             return max(current_ids)
-        raise QuorumNotAchieved(self.key, self.masters)
+        self._check_enough_masters_up(None, redis_errors)
+        raise QuorumNotAchieved(
+            self.key,
+            self.masters,
+            redis_errors=redis_errors,
+        )
 
     @__current_id.setter
     def __current_id(self, value: int) -> None:
@@ -178,11 +189,12 @@ class NextId(Primitive):
                 )
                 futures.add(future)
 
-            num_masters_set = 0
+            num_masters_set, redis_errors = 0, []
             for future in concurrent.futures.as_completed(futures):
                 try:
                     num_masters_set += future.result() == value
                 except RedisError as error:
+                    redis_errors.append(error)
                     _logger.exception(
                         '%s.__current_id() setter caught %s',
                         self.__class__.__name__,
@@ -192,7 +204,18 @@ class NextId(Primitive):
                     if num_masters_set > len(self.masters) // 2:  # pragma: no cover
                         return
 
-        raise QuorumNotAchieved(self.key, self.masters)
+        self._check_enough_masters_up(None, redis_errors)
+        raise QuorumNotAchieved(
+            self.key,
+            self.masters,
+            redis_errors=redis_errors,
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f'<{self.__class__.__name__} key={self.key} '
+            f'value={self.__current_id}>'
+        )
 
 
 if __name__ == '__main__':

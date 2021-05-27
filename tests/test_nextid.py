@@ -22,6 +22,7 @@ import unittest.mock
 from redis.exceptions import TimeoutError
 
 from pottery import NextId
+from pottery import QuorumIsImpossible
 from pottery import QuorumNotAchieved
 from tests.base import TestCase  # type: ignore
 
@@ -44,7 +45,7 @@ class NextIdTests(TestCase):
     def test_iter(self):
         assert iter(self.ids) is self.ids
 
-    def test_next(self):
+    def test_next_quorumnotachieved(self):
         with self.assertRaises(QuorumNotAchieved), \
              unittest.mock.patch.object(
                  next(iter(self.ids.masters)),
@@ -54,6 +55,25 @@ class NextIdTests(TestCase):
             next(self.ids)
 
         with self.assertRaises(QuorumNotAchieved), \
+             unittest.mock.patch.object(
+                 self.ids,
+                 '_set_id_script',
+             ) as _set_id_script:
+            _set_id_script.side_effect = TimeoutError
+            next(self.ids)
+
+    def test_next_quorumisimpossible(self):
+        self.ids = NextId(masters={self.redis}, raise_on_redis_errors=True)
+
+        with self.assertRaises(QuorumIsImpossible), \
+             unittest.mock.patch.object(
+                 next(iter(self.ids.masters)),
+                 'get',
+             ) as get:
+            get.side_effect = TimeoutError
+            next(self.ids)
+
+        with self.assertRaises(QuorumIsImpossible), \
              unittest.mock.patch.object(
                  self.ids,
                  '_set_id_script',

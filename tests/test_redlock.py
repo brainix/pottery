@@ -21,10 +21,11 @@ import concurrent.futures
 import time
 import unittest.mock
 
-from redis import RedisError
+from redis.exceptions import TimeoutError
 
 from pottery import ContextTimer
 from pottery import ExtendUnlockedLock
+from pottery import QuorumIsImpossible
 from pottery import Redlock
 from pottery import ReleaseUnlockedLock
 from pottery import TooManyExtensions
@@ -121,7 +122,8 @@ class RedlockTests(TestCase):
         except ReleaseUnlockedLock as wtf:
             assert repr(wtf) == (
                 "ReleaseUnlockedLock(key='redlock:printer', "
-                f"masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>])"
+                f"masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>], "
+                "redis_errors=[])"
             )
 
     def test_releaseunlockedlock_str(self):
@@ -130,7 +132,8 @@ class RedlockTests(TestCase):
         except ReleaseUnlockedLock as wtf:
             assert str(wtf) == (
                 "key='redlock:printer', "
-                f"masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>]"
+                f"masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>], "
+                "redis_errors=[]"
             )
 
     def test_release_same_lock_twice(self):
@@ -184,32 +187,59 @@ class RedlockTests(TestCase):
 
     def test_repr(self):
         assert repr(self.redlock) == \
-            "<Redlock key=redlock:printer UUID='' timeout=0>"
+            "<Redlock key=redlock:printer UUID= timeout=0>"
 
     def test_acquire_rediserror(self):
         with unittest.mock.patch.object(self.redis, 'set') as set:
-            set.side_effect = RedisError
+            set.side_effect = TimeoutError
             assert not self.redlock.acquire(blocking=False)
+
+    def test_acquire_quorumisimpossible(self):
+        with unittest.mock.patch.object(self.redis, 'set') as set, \
+             self.assertRaises(QuorumIsImpossible):
+            set.side_effect = TimeoutError
+            self.redlock.acquire(raise_on_redis_errors=True)
 
     def test_locked_rediserror(self):
         with self.redlock, \
              unittest.mock.patch.object(self.redlock, '_acquired_script') as _acquired_script:
-            _acquired_script.side_effect = RedisError
+            _acquired_script.side_effect = TimeoutError
             assert not self.redlock.locked()
+
+    def test_locked_quorumisimpossible(self):
+        with self.redlock, \
+             unittest.mock.patch.object(self.redlock, '_acquired_script') as _acquired_script, \
+             self.assertRaises(QuorumIsImpossible):
+            _acquired_script.side_effect = TimeoutError
+            self.redlock.locked(raise_on_redis_errors=True)
 
     def test_extend_rediserror(self):
         with self.redlock, \
              unittest.mock.patch.object(self.redlock, '_extend_script') as _extend_script, \
              self.assertRaises(ExtendUnlockedLock):
-            _extend_script.side_effect = RedisError
+            _extend_script.side_effect = TimeoutError
             self.redlock.extend()
+
+    def test_extend_quorumisimpossible(self):
+        with self.redlock, \
+             unittest.mock.patch.object(self.redlock, '_extend_script') as _extend_script, \
+             self.assertRaises(QuorumIsImpossible):
+            _extend_script.side_effect = TimeoutError
+            self.redlock.extend(raise_on_redis_errors=True)
 
     def test_release_rediserror(self):
         with self.redlock, \
              unittest.mock.patch.object(self.redlock, '_release_script') as _release_script, \
              self.assertRaises(ReleaseUnlockedLock):
-            _release_script.side_effect = RedisError
+            _release_script.side_effect = TimeoutError
             self.redlock.release()
+
+    def test_release_quorumisimpossible(self):
+        with self.redlock, \
+             unittest.mock.patch.object(self.redlock, '_release_script') as _release_script, \
+             self.assertRaises(QuorumIsImpossible):
+            _release_script.side_effect = TimeoutError
+            self.redlock.release(raise_on_redis_errors=True)
 
 
 class SynchronizeTests(TestCase):

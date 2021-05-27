@@ -158,10 +158,15 @@ class Redlock(Primitive):
                  *,
                  key: str,
                  masters: Iterable[Redis] = frozenset(),
+                 raise_on_redis_errors: bool = False,
                  auto_release_time: int = AUTO_RELEASE_TIME,
                  num_extensions: int = NUM_EXTENSIONS,
                  ) -> None:
-        super().__init__(key=key, masters=masters)
+        super().__init__(
+            key=key,
+            masters=masters,
+            raise_on_redis_errors=raise_on_redis_errors,
+        )
         self.__register_acquired_script()
         self.__register_extend_script()
         self.__register_release_script()
@@ -260,7 +265,10 @@ class Redlock(Primitive):
     def __drift(self) -> float:
         return self.auto_release_time * self.CLOCK_DRIFT_FACTOR + 2
 
-    def __acquire_masters(self) -> bool:
+    def __acquire_masters(self,
+                          *,
+                          raise_on_redis_errors: Optional[bool] = None,
+                          ) -> bool:
         self._uuid = str(uuid.uuid4())
         self._extension_num = 0
 
@@ -270,11 +278,12 @@ class Redlock(Primitive):
                 future = executor.submit(self.__acquire_master, master)
                 futures.add(future)
 
-            num_masters_acquired = 0
+            num_masters_acquired, redis_errors = 0, []
             for future in concurrent.futures.as_completed(futures):
                 try:
                     num_masters_acquired += future.result()
                 except RedisError as error:
+                    redis_errors.append(error)
                     _logger.exception(
                         '%s.__acquire_masters() caught %s',
                         self.__class__.__name__,
@@ -289,10 +298,16 @@ class Redlock(Primitive):
                             return True
 
         with contextlib.suppress(ReleaseUnlockedLock):
-            self.__release()
+            self.__release(raise_on_redis_errors=False)
+        self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         return False
 
-    def acquire(self, *, blocking: bool = True, timeout: float = -1) -> bool:
+    def acquire(self,
+                *,
+                blocking: bool = True,
+                timeout: float = -1,
+                raise_on_redis_errors: Optional[bool] = None,
+                ) -> bool:
         '''Lock the lock.
 
         If blocking is True and timeout is -1, then wait for as long as
@@ -336,22 +351,26 @@ class Redlock(Primitive):
             False
             >>> printer_lock_1.release()
         '''
+        acquire_masters = functools.partial(
+            self.__acquire_masters,
+            raise_on_redis_errors=raise_on_redis_errors,
+        )
         if blocking:
             with ContextTimer() as timer:
                 while timeout == -1 or timer.elapsed() / 1000 < timeout:
-                    if self.__acquire_masters():
+                    if acquire_masters():
                         return True
                     time.sleep(random.uniform(0, self.RETRY_DELAY/1000))
             return False
 
         if timeout == -1:
-            return self.__acquire_masters()
+            return acquire_masters()
 
         raise ValueError("can't specify a timeout for a non-blocking call")
 
     __acquire = acquire
 
-    def locked(self) -> int:
+    def locked(self, *, raise_on_redis_errors: Optional[bool] = None) -> int:
         '''How much longer we'll hold the lock (unless we extend or release it).
 
         If we don't currently hold the lock, then this method returns 0.
@@ -383,11 +402,12 @@ class Redlock(Primitive):
                 future = executor.submit(self.__acquired_master, master)
                 futures.add(future)
 
-            ttls = []
+            ttls, redis_errors = [], []
             for future in concurrent.futures.as_completed(futures):
                 try:
                     ttl = future.result()
                 except RedisError as error:
+                    redis_errors.append(error)
                     _logger.exception(
                         '%s.locked() caught %s',
                         self.__class__.__name__,
@@ -402,11 +422,12 @@ class Redlock(Primitive):
                             validity_time -= timer.elapsed()
                             return max(validity_time, 0)
 
+        self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         return 0
 
     __locked = locked
 
-    def extend(self) -> None:
+    def extend(self, *, raise_on_redis_errors: Optional[bool] = None) -> None:
         '''Extend our hold on the lock (if we currently hold it).
 
         Usage:
@@ -433,11 +454,12 @@ class Redlock(Primitive):
                 future = executor.submit(self.__extend_master, master)
                 futures.add(future)
 
-            num_masters_extended = 0
+            num_masters_extended, redis_errors = 0, []
             for future in concurrent.futures.as_completed(futures):
                 try:
                     num_masters_extended += future.result()
                 except RedisError as error:
+                    redis_errors.append(error)
                     _logger.exception(
                         '%s.extend() caught %s',
                         self.__class__.__name__,
@@ -448,9 +470,14 @@ class Redlock(Primitive):
                         self._extension_num += 1
                         return
 
-        raise ExtendUnlockedLock(self.key, self.masters)
+        self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
+        raise ExtendUnlockedLock(
+            self.key,
+            self.masters,
+            redis_errors=redis_errors,
+        )
 
-    def release(self) -> None:
+    def release(self, *, raise_on_redis_errors: Optional[bool] = None) -> None:
         '''Unlock the lock.
 
         Usage:
@@ -472,11 +499,12 @@ class Redlock(Primitive):
                 future = executor.submit(self.__release_master, master)
                 futures.add(future)
 
-            num_masters_released = 0
+            num_masters_released, redis_errors = 0, []
             for future in concurrent.futures.as_completed(futures):
                 try:
                     num_masters_released += future.result()
                 except RedisError as error:
+                    redis_errors.append(error)
                     _logger.exception(
                         '%s.release() caught %s',
                         self.__class__.__name__,
@@ -486,7 +514,12 @@ class Redlock(Primitive):
                     if num_masters_released > len(self.masters) // 2:
                         return
 
-        raise ReleaseUnlockedLock(self.key, self.masters)
+        self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
+        raise ReleaseUnlockedLock(
+            self.key,
+            self.masters,
+            redis_errors=redis_errors,
+        )
 
     __release = release
 
@@ -560,8 +593,8 @@ class Redlock(Primitive):
 
     def __repr__(self) -> str:
         return (
-            f"<{self.__class__.__name__} key={self.key} "
-            f"UUID='{self._uuid}' timeout={self.__locked()}>"
+            f'<{self.__class__.__name__} key={self.key} UUID={self._uuid} '
+            f'timeout={self.__locked()}>'
         )
 
 
@@ -569,6 +602,7 @@ def synchronize(*,
                 key: str,
                 masters: Iterable[Redis] = frozenset(),
                 auto_release_time: int = AUTO_RELEASE_TIME,
+                raise_on_redis_errors: bool = False,
                 ) -> Callable[[F], F]:
     '''Decorator to synchronize a function's execution across threads.
 
@@ -593,6 +627,7 @@ def synchronize(*,
                 key=key,
                 masters=masters,
                 auto_release_time=auto_release_time,
+                raise_on_redis_errors=raise_on_redis_errors,
             )
             with ContextTimer() as timer, redlock:
                 return_value = func(*args, **kwargs)
