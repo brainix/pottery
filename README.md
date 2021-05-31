@@ -338,6 +338,14 @@ Or you can protect access to your resource inside a context manager:
 >>>
 ```
 
+It&rsquo;s safest to instantiate a new `Redlock` object every time you need to
+protect your resource and to not share `Redlock` instances across different
+parts of code.  In other words, think of the `key` as identifying the resource;
+don&rsquo;t think of any particular `Redlock` as identifying the resource.
+Instantiating a new `Redlock` every time you need a lock sidesteps bugs by
+decoupling how you use `Redlock` from the forking/threading model of your
+application/service.
+
 `Redlock`s time out (by default, after 10 seconds).  You should take care to
 ensure that your critical section completes well within the timeout.  The
 reasons that `Redlock`s time out are to preserve
