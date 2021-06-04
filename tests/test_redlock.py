@@ -194,6 +194,10 @@ class RedlockTests(TestCase):
             set.side_effect = TimeoutError
             assert not self.redlock.acquire(blocking=False)
 
+    def test_acquire_no_validity_time(self):
+        self.redlock.CLOCK_DRIFT_FACTOR = 1
+        assert not self.redlock.acquire(blocking=False)
+
     def test_acquire_quorumisimpossible(self):
         with unittest.mock.patch.object(self.redis, 'set') as set, \
              self.assertRaises(QuorumIsImpossible):

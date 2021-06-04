@@ -294,7 +294,7 @@ class Redlock(Primitive):
                         validity_time = self.auto_release_time
                         validity_time -= round(self.__drift())
                         validity_time -= timer.elapsed()
-                        if validity_time > 0:  # pragma: no cover
+                        if validity_time > 0:
                             return True
 
         with contextlib.suppress(ReleaseUnlockedLock):
