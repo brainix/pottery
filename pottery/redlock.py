@@ -167,15 +167,14 @@ class Redlock(Primitive):
             masters=masters,
             raise_on_redis_errors=raise_on_redis_errors,
         )
+        self.auto_release_time = auto_release_time
+        self.num_extensions = num_extensions
+        self._uuid = ''
+        self._extension_num = 0
+
         self.__register_acquired_script()
         self.__register_extend_script()
         self.__register_release_script()
-
-        self.auto_release_time = auto_release_time
-        self.num_extensions = num_extensions
-
-        self._uuid = ''
-        self._extension_num = 0
 
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
@@ -355,6 +354,7 @@ class Redlock(Primitive):
             self.__acquire_masters,
             raise_on_redis_errors=raise_on_redis_errors,
         )
+
         if blocking:
             with ContextTimer() as timer:
                 while timeout == -1 or timer.elapsed() / 1000 < timeout:

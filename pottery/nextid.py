@@ -101,8 +101,9 @@ class NextId(Primitive):
             masters=masters,
             raise_on_redis_errors=raise_on_redis_errors,
         )
-        self.__register_set_id_script()
         self.num_tries = num_tries
+
+        self.__register_set_id_script()
         self.__init_masters()
 
     # Preserve the Open-Closed Principle with name mangling.
