@@ -46,8 +46,8 @@ def __eq__(self: ConnectionPool, other: Any) -> bool:
 ConnectionPool.__eq__ = __eq__  # type: ignore
 
 _logger.info(
-    'Monkey patched ConnectionPool.__eq__() to compare clients by connection '
-    'params'
+    'Monkey patched ConnectionPool.__eq__() to compare Redis clients by '
+    'connection params'
 )
 
 
@@ -70,6 +70,6 @@ json.JSONEncoder.default = _default  # type: ignore
 
 _logger.info(
     'Monkey patched json.JSONEncoder.default() to be able to JSONify any '
-    'instance of any class that defines a to_dict(), to_list(), or to_str() '
+    'instance of any class that defines a .to_dict(), .to_list(), or .to_str() '
     'method'
 )
