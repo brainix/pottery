@@ -24,6 +24,7 @@ from typing import List
 from typing import NoReturn
 from typing import Optional
 from typing import Tuple
+from typing import cast
 
 from redis import Redis
 from redis.client import Pipeline
@@ -99,7 +100,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         encoded_value = self.redis.spop(self.key)
         if encoded_value is None:
             raise KeyError('pop from an empty set')
-        return self._decode(encoded_value)
+        return self._decode(cast(bytes, encoded_value))
 
     # From collections.abc.MutableSet:
     def remove(self, value: JSONTypes) -> None:

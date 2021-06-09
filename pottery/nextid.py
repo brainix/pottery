@@ -157,7 +157,7 @@ class NextId(Primitive):
             current_ids, redis_errors = [], []
             for future in concurrent.futures.as_completed(futures):
                 try:
-                    current_id = int(future.result())
+                    current_id = int(cast(bytes, future.result()))
                 except RedisError as error:
                     redis_errors.append(error)
                     _logger.exception(
