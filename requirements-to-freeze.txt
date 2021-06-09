@@ -25,6 +25,7 @@ typing_extensions
 
 coverage
 mypy
+types-redis
 flake8
 isort
 
