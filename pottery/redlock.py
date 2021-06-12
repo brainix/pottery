@@ -36,6 +36,7 @@ import concurrent.futures
 import contextlib
 import functools
 import logging
+import math
 import random
 import time
 import uuid
@@ -181,10 +182,8 @@ class Redlock(Primitive):
     #   https://stackoverflow.com/a/38534939
     def __register_acquired_script(self) -> None:
         if self._acquired_script is None:
-            _logger.info(
-                'Registering %s._acquired_script',
-                self.__class__.__name__,
-            )
+            class_name = self.__class__.__name__
+            _logger.info('Registering %s._acquired_script', class_name)
             master = next(iter(self.masters))
             self.__class__._acquired_script = master.register_script('''
                 if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -197,10 +196,8 @@ class Redlock(Primitive):
 
     def __register_extend_script(self) -> None:
         if self._extend_script is None:
-            _logger.info(
-                'Registering %s._extend_script',
-                self.__class__.__name__,
-            )
+            class_name = self.__class__.__name__
+            _logger.info('Registering %s._extend_script', class_name)
             master = next(iter(self.masters))
             self.__class__._extend_script = master.register_script('''
                 if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -212,10 +209,8 @@ class Redlock(Primitive):
 
     def __register_release_script(self) -> None:
         if self._release_script is None:
-            _logger.info(
-                'Registering %s._release_script',
-                self.__class__.__name__,
-            )
+            class_name = self.__class__.__name__
+            _logger.info('Registering %s._release_script', class_name)
             master = next(iter(self.masters))
             self.__class__._release_script = master.register_script('''
                 if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -355,12 +350,29 @@ class Redlock(Primitive):
             raise_on_redis_errors=raise_on_redis_errors,
         )
 
+        def log_time_enqueued(timer: ContextTimer, acquired: bool) -> None:
+            key_suffix = self.key.split(':', maxsplit=1)[1]
+            time_enqueued = math.ceil(timer.elapsed())
+            _logger.info(
+                'source=pottery sample#redlock.enqueued.%s=%dms sample#redlock.acquired.%s=%d',
+                key_suffix,
+                time_enqueued,
+                key_suffix,
+                acquired,
+            )
+
         if blocking:
+            enqueued = False
             with ContextTimer() as timer:
                 while timeout == -1 or timer.elapsed() / 1000 < timeout:
                     if acquire_masters():
+                        if enqueued:
+                            log_time_enqueued(timer, True)
                         return True
+                    enqueued = True
                     time.sleep(random.uniform(0, self.RETRY_DELAY/1000))
+            if enqueued:
+                log_time_enqueued(timer, False)
             return False
 
         if timeout == -1:
