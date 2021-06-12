@@ -30,6 +30,7 @@ from pottery import Redlock
 from pottery import ReleaseUnlockedLock
 from pottery import TooManyExtensions
 from pottery import synchronize
+from pottery.redlock import _logger
 from tests.base import TestCase  # type: ignore
 
 
@@ -41,7 +42,7 @@ class RedlockTests(TestCase):
         self.redlock = Redlock(
             masters={self.redis},
             key='printer',
-            auto_release_time=100,
+            auto_release_time=200,
         )
 
     def test_acquire_and_time_out(self):
@@ -53,19 +54,24 @@ class RedlockTests(TestCase):
 
     def test_acquire_same_lock_twice_blocking_without_timeout(self):
         assert not self.redis.exists(self.redlock.key)
-        with ContextTimer() as timer:
+        with ContextTimer() as timer, \
+             unittest.mock.patch.object(_logger, 'info') as info:
             assert self.redlock.acquire()
             assert self.redis.exists(self.redlock.key)
             assert self.redlock.acquire()
             assert self.redis.exists(self.redlock.key)
             assert timer.elapsed() >= self.redlock.auto_release_time
+            assert info.call_count == 1, f'_logger.info() called {info.call_count} times'
 
     def test_acquire_same_lock_twice_blocking_with_timeout(self):
-        assert not self.redis.exists(self.redlock.key)
-        assert self.redlock.acquire()
-        assert self.redis.exists(self.redlock.key)
-        assert not self.redlock.acquire(timeout=0)
-        assert self.redis.exists(self.redlock.key)
+        with unittest.mock.patch.object(_logger, 'info') as info:
+            assert not self.redis.exists(self.redlock.key)
+            assert self.redlock.acquire()
+            assert self.redis.exists(self.redlock.key)
+            assert not self.redlock.acquire(timeout=0)
+            assert not self.redlock.acquire(timeout=0.025)
+            assert self.redis.exists(self.redlock.key)
+            assert info.call_count == 1, f'_logger.info() called {info.call_count} times'
 
     def test_acquire_same_lock_twice_non_blocking_without_timeout(self):
         assert not self.redis.exists(self.redlock.key)
@@ -257,9 +263,11 @@ class SynchronizeTests(TestCase):
             time.sleep(1)
             return time.time()
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = {executor.submit(func) for _ in range(3)}
-        results = sorted(future.result() for future in futures)
-        for result1, result2 in zip(results, results[1:]):
-            delta = result2 - result1
-            assert 1 < delta < 2
+        with unittest.mock.patch.object(_logger, 'info') as info:
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = {executor.submit(func) for _ in range(3)}
+            results = sorted(future.result() for future in futures)
+            for result1, result2 in zip(results, results[1:]):
+                delta = result2 - result1
+                assert 1 < delta < 2
+            assert info.call_count == 5, f'_logger.info() called {info.call_count} times'
