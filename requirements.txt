@@ -7,7 +7,7 @@ docutils==0.17.1
 flake8==3.9.2
 idna==2.10
 importlib-metadata==4.5.0
-isort==5.8.0
+isort==5.9.1
 keyring==23.0.1
 mccabe==0.6.1
 mmh3==3.0.0
@@ -28,7 +28,7 @@ six==1.16.0
 toml==0.10.2
 tqdm==4.61.0
 twine==3.4.1
-types-redis==3.5.2
+types-redis==3.5.4
 typing-extensions==3.10.0.0
 urllib3==1.26.5
 webencodings==0.5.1
