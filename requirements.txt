@@ -11,7 +11,7 @@ isort==5.9.1
 keyring==23.0.1
 mccabe==0.6.1
 mmh3==3.0.0
-mypy==0.902
+mypy==0.910
 mypy-extensions==0.4.3
 packaging==20.9
 pkginfo==1.7.0
@@ -30,6 +30,6 @@ tqdm==4.61.0
 twine==3.4.1
 types-redis==3.5.4
 typing-extensions==3.10.0.0
-urllib3==1.26.5
+urllib3==1.26.6
 webencodings==0.5.1
 zipp==3.4.1
