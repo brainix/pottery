@@ -16,7 +16,7 @@
 # --------------------------------------------------------------------------- #
 
 
-import os
+import pathlib
 
 from setuptools import find_packages
 from setuptools import setup
@@ -24,10 +24,8 @@ from setuptools import setup
 import pottery
 
 
-package_dir = os.path.dirname(__file__)
-readme = os.path.join(package_dir, 'README.md')
-with open(readme, encoding='utf-8') as f:
-    long_description = f.read()
+package_dir = pathlib.Path(__file__).parent.resolve()
+long_description = (package_dir / 'README.md').read_text()
 
 
 setup(
