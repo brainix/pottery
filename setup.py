@@ -24,7 +24,7 @@ from setuptools import setup
 import pottery
 
 
-package_dir = pathlib.Path(__file__).parent.resolve()
+package_dir = pathlib.Path(__file__).parent
 long_description = (package_dir / 'README.md').read_text()
 
 

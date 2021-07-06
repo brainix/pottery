@@ -19,6 +19,7 @@
 import doctest
 import importlib
 import os
+import pathlib
 import unittest
 
 from tests.base import TestCase  # type: ignore
@@ -26,12 +27,12 @@ from tests.base import TestCase  # type: ignore
 
 class DoctestTests(TestCase):  # pragma: no cover
     def _modules(self):
-        test_dir = os.path.dirname(__file__)
-        package_dir = os.path.dirname(test_dir)
-        source_dir = os.path.join(package_dir, 'pottery')
-        source_files = (f for f in os.listdir(source_dir) if f.endswith('.py'))
+        test_dir = pathlib.Path(__file__).parent
+        package_dir = test_dir.parent
+        source_dir = package_dir / 'pottery'
+        source_files = source_dir.glob('*.py')
         for source_file in source_files:
-            module_name = os.path.splitext(source_file)[0]
+            module_name = source_file.stem
             module = importlib.import_module(f'pottery.{module_name}')
             yield module
 
