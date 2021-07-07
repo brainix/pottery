@@ -71,7 +71,7 @@ endif
 .PHONY: test
 test:
 ifeq ($(tests),)
-	$(eval $@_SOURCE_FILES := $(shell find . -name '*.py' -not -path './build/*' -not -path './dist/*' -not -path './pottery.egg-info/*' -not -path './venv/*'))
+	$(eval $@_SOURCE_FILES := $(shell find . -name '*.py' -not -path './.git/*' -not -path './build/*' -not -path './dist/*' -not -path './pottery.egg-info/*' -not -path './venv/*'))
 	source $(venv)/bin/activate && \
 		coverage3 run -m unittest discover --start-directory tests --verbose && \
 		coverage3 report && \

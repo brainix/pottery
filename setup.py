@@ -16,7 +16,7 @@
 # --------------------------------------------------------------------------- #
 
 
-import os
+import pathlib
 
 from setuptools import find_packages
 from setuptools import setup
@@ -24,10 +24,8 @@ from setuptools import setup
 import pottery
 
 
-package_dir = os.path.dirname(__file__)
-readme = os.path.join(package_dir, 'README.md')
-with open(readme, encoding='utf-8') as f:
-    long_description = f.read()
+package_dir = pathlib.Path(__file__).parent
+long_description = (package_dir / 'README.md').read_text()
 
 
 setup(
@@ -40,7 +38,7 @@ setup(
     author=pottery.__author__,
     author_email=pottery.__author_email__,
     license=pottery.__license__,
-    classifiers=(
+    classifiers=[
         'License :: OSI Approved :: Apache Software License',
         'Intended Audience :: Developers',
         'Natural Language :: English',
@@ -54,9 +52,9 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Typing :: Typed',
-    ),
+    ],
     keywords=pottery.__keywords__,
-    python_requires='>=3.6',
+    python_requires='>=3.6, <4',
     install_requires=('redis>=3.4.1', 'mmh3', 'typing_extensions'),
     extras_require={},
     packages=find_packages(exclude=('contrib', 'docs', 'tests*')),
