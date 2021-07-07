@@ -26,14 +26,18 @@ from tests.base import TestCase  # type: ignore
 
 
 class DoctestTests(TestCase):  # pragma: no cover
-    def _modules(self):
+    @staticmethod
+    def _modules():
         test_dir = pathlib.Path(__file__).parent
-        package_dir = test_dir.parent
-        source_dir = package_dir / 'pottery'
-        source_files = source_dir.glob('*.py')
+        root_dir = test_dir.parent
+        source_dir = root_dir / 'pottery'
+        source_files = source_dir.glob('**/*.py')
         for source_file in source_files:
-            module_name = source_file.stem
-            module = importlib.import_module(f'pottery.{module_name}')
+            relative_path = source_file.relative_to(root_dir)
+            parts = list(relative_path.parts)
+            parts[-1] = source_file.stem
+            module_name = '.'.join(parts)
+            module = importlib.import_module(module_name)
             yield module
 
     @unittest.skipUnless(
