@@ -26,6 +26,7 @@ from redis.exceptions import TimeoutError
 from pottery import ContextTimer
 from pottery import ExtendUnlockedLock
 from pottery import QuorumIsImpossible
+from pottery import QuorumNotAchieved
 from pottery import Redlock
 from pottery import ReleaseUnlockedLock
 from pottery import TooManyExtensions
@@ -190,6 +191,18 @@ class RedlockTests(TestCase):
             assert self.redis.exists(self.redlock.key)
             self.redlock.release()
             assert not self.redis.exists(self.redlock.key)
+
+    def test_context_manager_params(self):
+        redlock2 = Redlock(
+            masters={self.redis},
+            key='printer',
+            auto_release_time=200,
+            context_manager_blocking=False,
+        )
+        with self.redlock:
+            with self.assertRaises(QuorumNotAchieved):
+                with redlock2:
+                    ...
 
     def test_repr(self):
         assert repr(self.redlock) == \

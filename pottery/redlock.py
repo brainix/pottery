@@ -59,6 +59,7 @@ from typing_extensions import Literal
 from .annotations import F
 from .base import Primitive
 from .exceptions import ExtendUnlockedLock
+from .exceptions import QuorumNotAchieved
 from .exceptions import ReleaseUnlockedLock
 from .exceptions import TooManyExtensions
 from .executor import BailOutExecutor
@@ -560,10 +561,12 @@ class Redlock(Primitive):
             >>> states
             [True, False]
         '''
-        self.__acquire(
+        acquired = self.__acquire(
             blocking=self.context_manager_blocking,
             timeout=self.context_manager_timeout,
         )
+        if not acquired:
+            raise QuorumNotAchieved(self.key, self.masters)
         return self
 
     @overload
