@@ -565,9 +565,9 @@ class Redlock(Primitive):
             blocking=self.context_manager_blocking,
             timeout=self.context_manager_timeout,
         )
-        if not acquired:
-            raise QuorumNotAchieved(self.key, self.masters)
-        return self
+        if acquired:
+            return self
+        raise QuorumNotAchieved(self.key, self.masters)
 
     @overload
     def __exit__(self,
