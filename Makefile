@@ -118,4 +118,4 @@ clean:
 
 .PHONY: lines-of-code
 lines-of-code:
-	find . -name '*.py' -not -path "./venv/*" -not -path "./build/*" | xargs wc -l
+	find . -name '*.py' -not -path "./.git/*" -not -path "./venv/*" -not -path "./build/*" | xargs wc -l
