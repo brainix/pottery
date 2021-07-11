@@ -348,9 +348,10 @@ Instantiating a new `Redlock` every time you need a lock sidesteps bugs by
 decoupling how you use `Redlock` from the forking/threading model of your
 application/service.
 
-`Redlock`s time out (by default, after 10 seconds).  You should take care to
-ensure that your critical section completes well within the timeout.  The
-reasons that `Redlock`s time out are to preserve
+`Redlock`s are automatically released (by default, after 10 seconds).  You
+should take care to ensure that your critical section completes well within
+that timeout.  The reasons that `Redlock`s are automatically released are to
+preserve
 [&ldquo;liveness&rdquo;](http://redis.io/topics/distlock#liveness-arguments)
 and to avoid deadlocks (in the event that a process dies inside a critical
 section before it releases its lock).
@@ -369,10 +370,10 @@ False
 ```
 
 If 10 seconds isn&rsquo;t enough to complete executing your critical section,
-then you can specify your own timeout:
+then you can specify your own auto release time (in milliseconds):
 
 ```python
->>> printer_lock = Redlock(key='printer', auto_release_time=15*1000)
+>>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=15*1000)
 >>> printer_lock.acquire()
 True
 >>> bool(printer_lock.locked())
@@ -392,8 +393,8 @@ can make `.acquire()` return immediately with the `blocking` argument.
 `.acquire()` returns `True` if the lock was acquired; `False` if not.
 
 ```python
->>> printer_lock_1 = Redlock(key='printer')
->>> printer_lock_2 = Redlock(key='printer')
+>>> printer_lock_1 = Redlock(key='printer', masters={redis})
+>>> printer_lock_2 = Redlock(key='printer', masters={redis})
 >>> printer_lock_1.acquire(blocking=False)
 True
 >>> printer_lock_2.acquire(blocking=False)  # Returns immediately.
@@ -421,12 +422,14 @@ manager fails to acquire the lock, it raises the `QuorumNotAchieved` exception.
 ```python
 >>> import contextlib
 >>> from pottery import QuorumNotAchieved
->>> printer_lock_1 = Redlock(key='printer', context_manager_blocking=True, context_manager_timeout=0.2)
->>> printer_lock_2 = Redlock(key='printer', context_manager_blocking=True, context_manager_timeout=0.2)
+>>> printer_lock_1 = Redlock(key='printer', masters={redis}, context_manager_blocking=True, context_manager_timeout=0.2)
+>>> printer_lock_2 = Redlock(key='printer', masters={redis}, context_manager_blocking=True, context_manager_timeout=0.2)
 >>> with printer_lock_1:
 ...     with contextlib.suppress(QuorumNotAchieved):
 ...         with printer_lock_2:  # Waits 0.2 seconds; raises QuorumNotAchieved.
 ...             pass
+...     assert printer_lock_1.locked()
+...     assert not printer_lock_2.locked()
 >>>
 ```
 
