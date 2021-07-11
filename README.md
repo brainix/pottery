@@ -349,8 +349,8 @@ decoupling how you use `Redlock` from the forking/threading model of your
 application/service.
 
 `Redlock`s are automatically released (by default, after 10 seconds).  You
-should take care to ensure that your critical section completes well within the
-timeout.  The reasons that `Redlock`s are automatically released are to
+should take care to ensure that your critical section completes well within
+that timeout.  The reasons that `Redlock`s are automatically released are to
 preserve
 [&ldquo;liveness&rdquo;](http://redis.io/topics/distlock#liveness-arguments)
 and to avoid deadlocks (in the event that a process dies inside a critical
