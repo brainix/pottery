@@ -21,6 +21,7 @@ import concurrent.futures
 import time
 import unittest.mock
 
+from redis.client import Script
 from redis.exceptions import TimeoutError
 
 from pottery import ContextTimer
@@ -221,14 +222,14 @@ class RedlockTests(TestCase):
         assert repr(self.redlock) == \
             "<Redlock key=redlock:printer UUID= timeout=0>"
 
+    def test_slots(self):
+        with self.assertRaises(AttributeError):
+            self.redlock.__dict__
+
     def test_acquire_rediserror(self):
         with unittest.mock.patch.object(self.redis, 'set') as set:
             set.side_effect = TimeoutError
             assert not self.redlock.acquire(blocking=False)
-
-    def test_acquire_no_validity_time(self):
-        self.redlock.CLOCK_DRIFT_FACTOR = 1
-        assert not self.redlock.acquire(blocking=False)
 
     def test_acquire_quorumisimpossible(self):
         with unittest.mock.patch.object(self.redis, 'set') as set, \
@@ -238,43 +239,43 @@ class RedlockTests(TestCase):
 
     def test_locked_rediserror(self):
         with self.redlock, \
-             unittest.mock.patch.object(self.redlock, '_acquired_script') as _acquired_script:
-            _acquired_script.side_effect = TimeoutError
+             unittest.mock.patch.object(Script, '__call__') as __call__:
+            __call__.side_effect = TimeoutError
             assert not self.redlock.locked()
 
     def test_locked_quorumisimpossible(self):
         with self.redlock, \
-             unittest.mock.patch.object(self.redlock, '_acquired_script') as _acquired_script, \
+             unittest.mock.patch.object(Script, '__call__') as __call__, \
              self.assertRaises(QuorumIsImpossible):
-            _acquired_script.side_effect = TimeoutError
+            __call__.side_effect = TimeoutError
             self.redlock.locked(raise_on_redis_errors=True)
 
     def test_extend_rediserror(self):
         with self.redlock, \
-             unittest.mock.patch.object(self.redlock, '_extend_script') as _extend_script, \
+             unittest.mock.patch.object(Script, '__call__') as __call__, \
              self.assertRaises(ExtendUnlockedLock):
-            _extend_script.side_effect = TimeoutError
+            __call__.side_effect = TimeoutError
             self.redlock.extend()
 
     def test_extend_quorumisimpossible(self):
         with self.redlock, \
-             unittest.mock.patch.object(self.redlock, '_extend_script') as _extend_script, \
+             unittest.mock.patch.object(Script, '__call__') as __call__, \
              self.assertRaises(QuorumIsImpossible):
-            _extend_script.side_effect = TimeoutError
+            __call__.side_effect = TimeoutError
             self.redlock.extend(raise_on_redis_errors=True)
 
     def test_release_rediserror(self):
         with self.redlock, \
-             unittest.mock.patch.object(self.redlock, '_release_script') as _release_script, \
+             unittest.mock.patch.object(Script, '__call__') as __call__, \
              self.assertRaises(ReleaseUnlockedLock):
-            _release_script.side_effect = TimeoutError
+            __call__.side_effect = TimeoutError
             self.redlock.release()
 
     def test_release_quorumisimpossible(self):
         with self.redlock, \
-             unittest.mock.patch.object(self.redlock, '_release_script') as _release_script, \
+             unittest.mock.patch.object(Script, '__call__') as __call__, \
              self.assertRaises(QuorumIsImpossible):
-            _release_script.side_effect = TimeoutError
+            __call__.side_effect = TimeoutError
             self.redlock.release(raise_on_redis_errors=True)
 
 
