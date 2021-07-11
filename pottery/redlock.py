@@ -46,6 +46,7 @@ from typing import Callable
 from typing import ClassVar
 from typing import Iterable
 from typing import Optional
+from typing import Tuple
 from typing import Type
 from typing import cast
 from typing import overload
@@ -72,7 +73,73 @@ AUTO_RELEASE_TIME: Final[int] = 10 * 1000
 _logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
-class Redlock(Primitive):
+class _Scripts:
+    __slots__: Tuple[str, ...] = tuple()
+
+    _acquired_script: ClassVar[Optional[Script]] = None
+    _extend_script: ClassVar[Optional[Script]] = None
+    _release_script: ClassVar[Optional[Script]] = None
+
+    def __init__(self,
+                 *,
+                 key: str,
+                 masters: Iterable[Redis] = frozenset(),
+                 raise_on_redis_errors: bool = False,
+                 ) -> None:
+        super().__init__(  # type: ignore
+            key=key,
+            masters=masters,
+            raise_on_redis_errors=raise_on_redis_errors,
+        )
+        self.__register_acquired_script()
+        self.__register_extend_script()
+        self.__register_release_script()
+
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    def __register_acquired_script(self) -> None:
+        if self._acquired_script is None:
+            class_name = self.__class__.__qualname__
+            _logger.info('Registering %s._acquired_script', class_name)
+            master = next(iter(self.masters))  # type: ignore
+            self.__class__._acquired_script = master.register_script('''
+                if redis.call('get', KEYS[1]) == ARGV[1] then
+                    local pttl = redis.call('pttl', KEYS[1])
+                    return (pttl > 0) and pttl or 0
+                else
+                    return 0
+                end
+            ''')
+
+    def __register_extend_script(self) -> None:
+        if self._extend_script is None:
+            class_name = self.__class__.__qualname__
+            _logger.info('Registering %s._extend_script', class_name)
+            master = next(iter(self.masters))  # type: ignore
+            self.__class__._extend_script = master.register_script('''
+                if redis.call('get', KEYS[1]) == ARGV[1] then
+                    return redis.call('pexpire', KEYS[1], ARGV[2])
+                else
+                    return 0
+                end
+            ''')
+
+    def __register_release_script(self) -> None:
+        if self._release_script is None:
+            class_name = self.__class__.__qualname__
+            _logger.info('Registering %s._release_script', class_name)
+            master = next(iter(self.masters))  # type: ignore
+            self.__class__._release_script = master.register_script('''
+                if redis.call('get', KEYS[1]) == ARGV[1] then
+                    return redis.call('del', KEYS[1])
+                else
+                    return 0
+                end
+            ''')
+
+
+class Redlock(_Scripts, Primitive):
     '''Distributed Redis-powered lock.
 
     This algorithm safely and reliably provides a mutually-exclusive locking
@@ -161,10 +228,6 @@ class Redlock(Primitive):
     RETRY_DELAY: ClassVar[int] = 200
     NUM_EXTENSIONS: ClassVar[int] = 3
 
-    _acquired_script: ClassVar[Optional[Script]] = None
-    _extend_script: ClassVar[Optional[Script]] = None
-    _release_script: ClassVar[Optional[Script]] = None
-
     def __init__(self,
                  *,
                  key: str,
@@ -186,53 +249,6 @@ class Redlock(Primitive):
         self.context_manager_timeout = context_manager_timeout
         self._uuid = ''
         self._extension_num = 0
-
-        self.__register_acquired_script()
-        self.__register_extend_script()
-        self.__register_release_script()
-
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
-    def __register_acquired_script(self) -> None:
-        if self._acquired_script is None:
-            class_name = self.__class__.__name__
-            _logger.info('Registering %s._acquired_script', class_name)
-            master = next(iter(self.masters))
-            self.__class__._acquired_script = master.register_script('''
-                if redis.call('get', KEYS[1]) == ARGV[1] then
-                    local pttl = redis.call('pttl', KEYS[1])
-                    return (pttl > 0) and pttl or 0
-                else
-                    return 0
-                end
-            ''')
-
-    def __register_extend_script(self) -> None:
-        if self._extend_script is None:
-            class_name = self.__class__.__name__
-            _logger.info('Registering %s._extend_script', class_name)
-            master = next(iter(self.masters))
-            self.__class__._extend_script = master.register_script('''
-                if redis.call('get', KEYS[1]) == ARGV[1] then
-                    return redis.call('pexpire', KEYS[1], ARGV[2])
-                else
-                    return 0
-                end
-            ''')
-
-    def __register_release_script(self) -> None:
-        if self._release_script is None:
-            class_name = self.__class__.__name__
-            _logger.info('Registering %s._release_script', class_name)
-            master = next(iter(self.masters))
-            self.__class__._release_script = master.register_script('''
-                if redis.call('get', KEYS[1]) == ARGV[1] then
-                    return redis.call('del', KEYS[1])
-                else
-                    return 0
-                end
-            ''')
 
     def __acquire_master(self, master: Redis) -> bool:
         acquired = master.set(
