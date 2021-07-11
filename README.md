@@ -414,6 +414,22 @@ False
 >>>
 ```
 
+You can similarly configure the Redlock context manager&rsquo;s
+blocking/timeout behavior during Redlock initialization.  If the context
+manager fails to acquire the lock, it raises the `QuorumNotAchieved` exception.
+
+```python
+>>> import contextlib
+>>> from pottery import QuorumNotAchieved
+>>> printer_lock_1 = Redlock(key='printer', context_manager_blocking=True, context_manager_timeout=0.2)
+>>> printer_lock_2 = Redlock(key='printer', context_manager_blocking=True, context_manager_timeout=0.2)
+>>> with printer_lock_1:
+...     with contextlib.suppress(QuorumNotAchieved):
+...         with printer_lock_2:  # Waits up to 0.2 seconds; raises QuorumNotAchieved.
+...             pass
+>>>
+```
+
 
 
 ### <a name="synchronize"></a>synchronize() 👯‍♀️
