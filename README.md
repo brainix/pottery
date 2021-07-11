@@ -408,7 +408,7 @@ You can make `.acquire()` block but not indefinitely by specifying the
 ```python
 >>> printer_lock_1.acquire(timeout=1)
 True
->>> printer_lock_2.acquire(timeout=1)  # Waits up to 1 second.
+>>> printer_lock_2.acquire(timeout=1)  # Waits 1 second.
 False
 >>> printer_lock_1.release()
 >>>
@@ -425,7 +425,7 @@ manager fails to acquire the lock, it raises the `QuorumNotAchieved` exception.
 >>> printer_lock_2 = Redlock(key='printer', context_manager_blocking=True, context_manager_timeout=0.2)
 >>> with printer_lock_1:
 ...     with contextlib.suppress(QuorumNotAchieved):
-...         with printer_lock_2:  # Waits up to 0.2 seconds; raises QuorumNotAchieved.
+...         with printer_lock_2:  # Waits 0.2 seconds; raises QuorumNotAchieved.
 ...             pass
 >>>
 ```
