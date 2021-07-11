@@ -387,6 +387,21 @@ False
 >>>
 ```
 
+By default, `.acquire()` blocks indefinitely until the lock is acquired.  You
+can make `.acquire()` return immediately with the `blocking` argument.
+`.acquire()` returns `True` if the lock was acquired; `False` if not.
+
+```python
+>>> printer_lock_1 = Redlock(key='printer')
+>>> printer_lock_2 = Redlock(key='printer')
+>>> printer_lock_1.acquire(blocking=False)
+True
+>>> printer_lock_2.acquire(blocking=False)
+False
+>>> printer_lock_1.release()
+>>>
+```
+
 
 
 ### <a name="synchronize"></a>synchronize() 👯‍♀️
