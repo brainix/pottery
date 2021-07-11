@@ -442,7 +442,7 @@ Here&rsquo;s how to use `synchronize()`:
 
 ```python
 >>> from pottery import synchronize
->>> @synchronize(key='synchronized-func', masters={redis}, auto_release_time=500)
+>>> @synchronize(key='synchronized-func', masters={redis}, auto_release_time=500, blocking=True, timeout=-1)
 ... def func():
 ...   # Only one thread can execute this function at a time.
 ...   return True
