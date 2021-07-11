@@ -19,6 +19,7 @@
 
 import unittest.mock
 
+from redis.client import Script
 from redis.exceptions import TimeoutError
 
 from pottery import NextId
@@ -45,6 +46,13 @@ class NextIdTests(TestCase):
     def test_iter(self):
         assert iter(self.ids) is self.ids
 
+    def test_repr(self):
+        assert repr(self.ids) == '<NextId key=nextid:current value=0>'
+
+    def test_slots(self):
+        with self.assertRaises(AttributeError):
+            self.ids.__dict__
+
     def test_next_quorumnotachieved(self):
         with self.assertRaises(QuorumNotAchieved), \
              unittest.mock.patch.object(
@@ -55,11 +63,8 @@ class NextIdTests(TestCase):
             next(self.ids)
 
         with self.assertRaises(QuorumNotAchieved), \
-             unittest.mock.patch.object(
-                 self.ids,
-                 '_set_id_script',
-             ) as _set_id_script:
-            _set_id_script.side_effect = TimeoutError
+             unittest.mock.patch.object(Script, '__call__') as __call__:
+            __call__.side_effect = TimeoutError
             next(self.ids)
 
     def test_next_quorumisimpossible(self):
@@ -74,12 +79,6 @@ class NextIdTests(TestCase):
             next(self.ids)
 
         with self.assertRaises(QuorumIsImpossible), \
-             unittest.mock.patch.object(
-                 self.ids,
-                 '_set_id_script',
-             ) as _set_id_script:
-            _set_id_script.side_effect = TimeoutError
+             unittest.mock.patch.object(Script, '__call__') as __call__:
+            __call__.side_effect = TimeoutError
             next(self.ids)
-
-    def test_repr(self):
-        assert repr(self.ids) == '<NextId key=nextid:current value=0>'

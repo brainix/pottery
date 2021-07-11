@@ -147,6 +147,15 @@ class Redlock(Primitive):
         [True, False]
     '''
 
+    __slots__ = (
+        'auto_release_time',
+        'num_extensions',
+        'context_manager_blocking',
+        'context_manager_timeout',
+        '_uuid',
+        '_extension_num',
+    )
+
     KEY_PREFIX: ClassVar[str] = 'redlock'
     CLOCK_DRIFT_FACTOR: ClassVar[float] = 0.01
     RETRY_DELAY: ClassVar[int] = 200
@@ -293,7 +302,7 @@ class Redlock(Primitive):
                         validity_time = self.auto_release_time
                         validity_time -= round(self.__drift())
                         validity_time -= timer.elapsed()
-                        if validity_time > 0:
+                        if validity_time > 0:  # pragma: no cover
                             return True
 
         with contextlib.suppress(ReleaseUnlockedLock):

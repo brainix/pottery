@@ -83,6 +83,8 @@ class NextId(Primitive):
         3
     '''
 
+    __slots__ = ('num_tries',)
+
     KEY_PREFIX: ClassVar[str] = 'nextid'
     KEY: ClassVar[str] = 'current'
     NUM_TRIES: ClassVar[int] = 3
