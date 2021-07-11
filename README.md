@@ -396,7 +396,19 @@ can make `.acquire()` return immediately with the `blocking` argument.
 >>> printer_lock_2 = Redlock(key='printer')
 >>> printer_lock_1.acquire(blocking=False)
 True
->>> printer_lock_2.acquire(blocking=False)
+>>> printer_lock_2.acquire(blocking=False)  # Returns immediately.
+False
+>>> printer_lock_1.release()
+>>>
+```
+
+You can make `.acquire()` block but not indefinitely by specifying the
+`timeout` argument (in seconds):
+
+```python
+>>> printer_lock_1.acquire(timeout=1)
+True
+>>> printer_lock_2.acquire(timeout=1)  # Waits up to 1 second.
 False
 >>> printer_lock_1.release()
 >>>
