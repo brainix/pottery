@@ -31,6 +31,7 @@ from typing import ClassVar
 from typing import Iterable
 from typing import List
 from typing import Optional
+from typing import Tuple
 from typing import Type
 from typing import cast
 
@@ -48,7 +49,45 @@ from .executor import BailOutExecutor
 _logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
-class NextId(Primitive):
+class _Scripts:
+    __slots__: Tuple[str, ...] = tuple()
+
+    _set_id_script: ClassVar[Optional[Script]] = None
+
+    def __init__(self,
+                 *,
+                 key: str = 'current',
+                 masters: Iterable[Redis] = frozenset(),
+                 raise_on_redis_errors: bool = False,
+                 ) -> None:
+        super().__init__(  # type: ignore
+            key=key,
+            masters=masters,
+            raise_on_redis_errors=raise_on_redis_errors,
+        )
+        self.__register_set_id_script()
+
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    def __register_set_id_script(self) -> None:
+        if self._set_id_script is None:
+            class_name = self.__class__.__qualname__
+            _logger.info('Registering %s._set_id_script', class_name)
+            master = next(iter(self.masters))  # type: ignore
+            self.__class__._set_id_script = master.register_script('''
+                local curr = tonumber(redis.call('get', KEYS[1]))
+                local next = tonumber(ARGV[1])
+                if curr < next then
+                    redis.call('set', KEYS[1], next)
+                    return next
+                else
+                    return nil
+                end
+            ''')
+
+
+class NextId(_Scripts, Primitive):
     '''Distributed Redis-powered monotonically increasing ID generator.
 
     This algorithm safely and reliably produces monotonically increasing IDs
@@ -86,14 +125,11 @@ class NextId(Primitive):
     __slots__ = ('num_tries',)
 
     KEY_PREFIX: ClassVar[str] = 'nextid'
-    KEY: ClassVar[str] = 'current'
     NUM_TRIES: ClassVar[int] = 3
-
-    _set_id_script: ClassVar[Optional[Script]] = None
 
     def __init__(self,
                  *,
-                 key: str = KEY,
+                 key: str = 'current',
                  masters: Iterable[Redis] = frozenset(),
                  raise_on_redis_errors: bool = False,
                  num_tries: int = NUM_TRIES,
@@ -104,30 +140,7 @@ class NextId(Primitive):
             raise_on_redis_errors=raise_on_redis_errors,
         )
         self.num_tries = num_tries
-
-        self.__register_set_id_script()
         self.__init_masters()
-
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
-    def __register_set_id_script(self) -> None:
-        if self._set_id_script is None:
-            _logger.info(
-                'Registering %s._set_id_script',
-                self.__class__.__name__,
-            )
-            master = next(iter(self.masters))
-            self.__class__._set_id_script = master.register_script('''
-                local curr = tonumber(redis.call('get', KEYS[1]))
-                local next = tonumber(ARGV[1])
-                if curr < next then
-                    redis.call('set', KEYS[1], next)
-                    return next
-                else
-                    return nil
-                end
-            ''')
 
     def __init_masters(self) -> None:
         with concurrent.futures.ThreadPoolExecutor() as executor:
