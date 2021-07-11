@@ -306,7 +306,9 @@ description.](http://redis.io/topics/distlock)
 `Redlock` implements Python&rsquo;s excellent
 [`threading.Lock`](https://docs.python.org/3/library/threading.html#lock-objects)
 API as closely as is feasible.  In other words, you can use `Redlock` the same
-way that you use `threading.Lock`.
+way that you use `threading.Lock`.  The main reason to use `Redlock` over
+`threading.Lock` is that `Redlock` can coordinate access to a resource shared
+across different machines; `threading.Lock` can&rsquo;t.
 
 Instantiate a `Redlock`:
 
@@ -385,6 +387,49 @@ False
 >>>
 ```
 
+By default, `.acquire()` blocks indefinitely until the lock is acquired.  You
+can make `.acquire()` return immediately with the `blocking` argument.
+`.acquire()` returns `True` if the lock was acquired; `False` if not.
+
+```python
+>>> printer_lock_1 = Redlock(key='printer')
+>>> printer_lock_2 = Redlock(key='printer')
+>>> printer_lock_1.acquire(blocking=False)
+True
+>>> printer_lock_2.acquire(blocking=False)  # Returns immediately.
+False
+>>> printer_lock_1.release()
+>>>
+```
+
+You can make `.acquire()` block but not indefinitely by specifying the
+`timeout` argument (in seconds):
+
+```python
+>>> printer_lock_1.acquire(timeout=1)
+True
+>>> printer_lock_2.acquire(timeout=1)  # Waits 1 second.
+False
+>>> printer_lock_1.release()
+>>>
+```
+
+You can similarly configure the Redlock context manager&rsquo;s
+blocking/timeout behavior during Redlock initialization.  If the context
+manager fails to acquire the lock, it raises the `QuorumNotAchieved` exception.
+
+```python
+>>> import contextlib
+>>> from pottery import QuorumNotAchieved
+>>> printer_lock_1 = Redlock(key='printer', context_manager_blocking=True, context_manager_timeout=0.2)
+>>> printer_lock_2 = Redlock(key='printer', context_manager_blocking=True, context_manager_timeout=0.2)
+>>> with printer_lock_1:
+...     with contextlib.suppress(QuorumNotAchieved):
+...         with printer_lock_2:  # Waits 0.2 seconds; raises QuorumNotAchieved.
+...             pass
+>>>
+```
+
 
 
 ### <a name="synchronize"></a>synchronize() 👯‍♀️
@@ -397,7 +442,7 @@ Here&rsquo;s how to use `synchronize()`:
 
 ```python
 >>> from pottery import synchronize
->>> @synchronize(key='synchronized-func', masters={redis}, auto_release_time=500)
+>>> @synchronize(key='synchronized-func', masters={redis}, auto_release_time=500, blocking=True, timeout=-1)
 ... def func():
 ...   # Only one thread can execute this function at a time.
 ...   return True
