@@ -306,7 +306,9 @@ description.](http://redis.io/topics/distlock)
 `Redlock` implements Python&rsquo;s excellent
 [`threading.Lock`](https://docs.python.org/3/library/threading.html#lock-objects)
 API as closely as is feasible.  In other words, you can use `Redlock` the same
-way that you use `threading.Lock`.
+way that you use `threading.Lock`.  The main reason to use `Redlock` over
+`threading.Lock` is that `Redlock` can coordinate access to a resource shared
+across different machines; `threading.Lock` can&rsquo;t.
 
 Instantiate a `Redlock`:
 
