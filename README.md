@@ -428,6 +428,8 @@ manager fails to acquire the lock, it raises the `QuorumNotAchieved` exception.
 ...     with contextlib.suppress(QuorumNotAchieved):
 ...         with printer_lock_2:  # Waits 0.2 seconds; raises QuorumNotAchieved.
 ...             pass
+...     assert printer_lock_1.locked()
+...     assert not printer_lock_2.locked()
 >>>
 ```
 
