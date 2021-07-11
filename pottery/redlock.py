@@ -59,6 +59,7 @@ from typing_extensions import Literal
 from .annotations import F
 from .base import Primitive
 from .exceptions import ExtendUnlockedLock
+from .exceptions import QuorumNotAchieved
 from .exceptions import ReleaseUnlockedLock
 from .exceptions import TooManyExtensions
 from .executor import BailOutExecutor
@@ -162,6 +163,8 @@ class Redlock(Primitive):
                  raise_on_redis_errors: bool = False,
                  auto_release_time: int = AUTO_RELEASE_TIME,
                  num_extensions: int = NUM_EXTENSIONS,
+                 context_manager_blocking: bool = True,
+                 context_manager_timeout: float = -1,
                  ) -> None:
         super().__init__(
             key=key,
@@ -170,6 +173,8 @@ class Redlock(Primitive):
         )
         self.auto_release_time = auto_release_time
         self.num_extensions = num_extensions
+        self.context_manager_blocking = context_manager_blocking
+        self.context_manager_timeout = context_manager_timeout
         self._uuid = ''
         self._extension_num = 0
 
@@ -556,8 +561,13 @@ class Redlock(Primitive):
             >>> states
             [True, False]
         '''
-        self.__acquire()
-        return self
+        acquired = self.__acquire(
+            blocking=self.context_manager_blocking,
+            timeout=self.context_manager_timeout,
+        )
+        if acquired:
+            return self
+        raise QuorumNotAchieved(self.key, self.masters)
 
     @overload
     def __exit__(self,
@@ -613,8 +623,10 @@ class Redlock(Primitive):
 def synchronize(*,
                 key: str,
                 masters: Iterable[Redis] = frozenset(),
-                auto_release_time: int = AUTO_RELEASE_TIME,
                 raise_on_redis_errors: bool = False,
+                auto_release_time: int = AUTO_RELEASE_TIME,
+                blocking: bool = True,
+                timeout: float = -1,
                 ) -> Callable[[F], F]:
     '''Decorator to synchronize a function's execution across threads.
 
@@ -638,8 +650,10 @@ def synchronize(*,
             redlock = Redlock(
                 key=key,
                 masters=masters,
-                auto_release_time=auto_release_time,
                 raise_on_redis_errors=raise_on_redis_errors,
+                auto_release_time=auto_release_time,
+                context_manager_blocking=blocking,
+                context_manager_timeout=timeout,
             )
             with ContextTimer() as timer, redlock:
                 return_value = func(*args, **kwargs)
