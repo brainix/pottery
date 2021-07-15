@@ -244,6 +244,9 @@ class Redlock(_Scripts, Primitive):
                  context_manager_blocking: bool = True,
                  context_manager_timeout: float = -1,
                  ) -> None:
+        if not context_manager_blocking and context_manager_timeout != -1:
+            raise ValueError("can't specify a timeout for a non-blocking call")
+
         super().__init__(
             key=key,
             masters=masters,
