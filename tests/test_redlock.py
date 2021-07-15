@@ -193,6 +193,15 @@ class RedlockTests(TestCase):
             self.redlock.release()
             assert not self.redis.exists(self.redlock.key)
 
+    def test_invalid_context_manager_params(self):
+        with self.assertRaises(ValueError):
+            Redlock(
+                masters={self.redis},
+                key='printer',
+                context_manager_blocking=False,
+                context_manager_timeout=0.2,
+            )
+
     def test_default_context_manager_params(self):
         redlock2 = Redlock(
             masters={self.redis},
