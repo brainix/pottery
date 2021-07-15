@@ -74,6 +74,12 @@ _logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
 class _Scripts:
+    '''Parent class to define/register Lua scripts for Redis.
+
+    Note that we only have to register these Lua scripts once -- so we do it on
+    the first instantiation of Redlock.
+    '''
+
     __slots__: Tuple[str, ...] = tuple()
 
     _acquired_script: ClassVar[Optional[Script]] = None
