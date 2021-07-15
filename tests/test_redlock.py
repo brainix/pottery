@@ -222,10 +222,9 @@ class RedlockTests(TestCase):
             auto_release_time=200,
             context_manager_blocking=False,
         )
-        with self.redlock:
-            with self.assertRaises(QuorumNotAchieved):
-                with redlock2:
-                    ...
+        with self.redlock, self.assertRaises(QuorumNotAchieved):
+            with redlock2:
+                ...
 
     def test_repr(self):
         assert repr(self.redlock) == \
