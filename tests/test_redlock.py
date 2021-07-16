@@ -18,6 +18,7 @@
 
 
 import concurrent.futures
+import contextlib
 import time
 import unittest.mock
 
@@ -208,12 +209,12 @@ class RedlockTests(TestCase):
             key='printer',
             auto_release_time=200,
         )
-        self.redlock.acquire()
-        assert self.redlock.locked()
-        assert not redlock2.locked()
-        with redlock2:
-            assert not self.redlock.locked()
-            assert redlock2.locked()
+        with contextlib.suppress(ReleaseUnlockedLock), self.redlock:
+            assert self.redlock.locked()
+            assert not redlock2.locked()
+            with redlock2:
+                assert not self.redlock.locked()
+                assert redlock2.locked()
 
     def test_overridden_context_manager_params(self):
         redlock2 = Redlock(
