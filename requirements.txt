@@ -27,7 +27,7 @@ rfc3986==1.5.0
 six==1.16.0
 toml==0.10.2
 tqdm==4.61.2
-twine==3.4.1
+twine==3.4.2
 types-redis==3.5.4
 typing-extensions==3.10.0.0
 urllib3==1.26.6
