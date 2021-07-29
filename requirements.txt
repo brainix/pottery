@@ -7,7 +7,7 @@ docutils==0.17.1
 flake8==3.9.2
 idna==3.2
 importlib-metadata==4.6.1
-isort==5.9.2
+isort==5.9.3
 keyring==23.0.1
 mccabe==0.6.1
 mmh3==3.0.0
