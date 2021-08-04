@@ -319,9 +319,11 @@ Instantiate a `Redlock`:
 ```
 
 The `key` argument represents the resource, and the `masters` argument
-specifies your Redis masters across which to distribute the lock (in
-production, you should have 5 Redis masters).  Now you can protect access to
-your resource:
+specifies your Redis masters across which to distribute the lock.  In
+production, you should have 5 Redis masters.  This is to eliminate a single
+point of failure &mdash; you can lose up to 2 out of the 5 Redis masters and
+your `Redlock` will remain available and performant.  Now you can protect
+access to your resource:
 
 ```python
 >>> printer_lock.acquire()
