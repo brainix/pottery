@@ -208,6 +208,8 @@ class _ContextPipeline:
     Redis transactions: https://redis.io/topics/transactions
     '''
 
+    __slots__ = ('redis', 'pipeline')
+
     def __init__(self, redis: Redis) -> None:
         self.redis = redis
 
@@ -308,7 +310,8 @@ class Iterable_(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def _scan(self,
-              *, cursor: int = 0,
+              *,
+              cursor: int = 0,
               ) -> Tuple[int, Union[List[bytes], Mapping[bytes, bytes]]]:
         raise NotImplementedError
 
