@@ -678,29 +678,60 @@ def synchronize(*,
         >>> func()
         True
     '''
+    RedlockFactory = functools.partial(
+        Redlock,
+        key=key,
+        masters=masters,
+        raise_on_redis_errors=raise_on_redis_errors,
+        auto_release_time=auto_release_time,
+        context_manager_blocking=blocking,
+        context_manager_timeout=timeout,
+    )
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            redlock = Redlock(
-                key=key,
-                masters=masters,
-                raise_on_redis_errors=raise_on_redis_errors,
-                auto_release_time=auto_release_time,
-                context_manager_blocking=blocking,
-                context_manager_timeout=timeout,
-            )
-            with ContextTimer() as timer, redlock:
-                return_value = func(*args, **kwargs)
+            redlock = RedlockFactory()
+            waiting_timer, holding_timer = ContextTimer(), ContextTimer()
 
-            _logger.info(
-                '%s() held %s for %d ms',
-                func.__qualname__,
-                redlock.key,
-                timer.elapsed(),
-            )
+            try:
+                waiting_timer.start()
+                with redlock:
+                    waiting_timer.stop()
+                    holding_timer.start()
+                    return_value = func(*args, **kwargs)
+                holding_timer.stop()
+            finally:
+                _log_synchronize(func, redlock, waiting_timer, holding_timer)
+
             return return_value
         return cast(F, wrapper)
     return decorator
+
+
+def _log_synchronize(func: F,
+                     redlock: Redlock,
+                     waiting_timer: ContextTimer,
+                     holding_timer: ContextTimer,
+                     ) -> None:
+    try:
+        _logger.info(
+            '%s() waited for %s for %d ms; held for %d ms',
+            func.__qualname__,
+            redlock.key,
+            waiting_timer.elapsed(),
+            holding_timer.elapsed(),
+        )
+    except RuntimeError:  # pragma: no cover
+        # holding_timer.elapsed() threw a RuntimeError, which means that
+        # holding_timer never started, which means that we never acquired the
+        # lock / entered the critical section.
+        _logger.info(
+            '%s() waited for %s for %d ms; never acquired lock',
+            func.__qualname__,
+            redlock.key,
+            waiting_timer.elapsed(),
+        )
 
 
 if __name__ == '__main__':
