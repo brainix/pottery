@@ -47,7 +47,7 @@ class NextIdTests(TestCase):
         assert iter(self.ids) is self.ids
 
     def test_repr(self):
-        assert repr(self.ids) == '<NextId key=nextid:current value=0>'
+        assert repr(self.ids) == '<NextId key=nextid:current>'
 
     def test_slots(self):
         with self.assertRaises(AttributeError):

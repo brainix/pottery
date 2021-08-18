@@ -228,8 +228,7 @@ class RedlockTests(TestCase):
                 ...
 
     def test_repr(self):
-        assert repr(self.redlock) == \
-            "<Redlock key=redlock:printer UUID= timeout=0>"
+        assert repr(self.redlock) == "<Redlock key=redlock:printer>"
 
     def test_slots(self):
         with self.assertRaises(AttributeError):
