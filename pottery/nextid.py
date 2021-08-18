@@ -234,10 +234,7 @@ class NextId(_Scripts, Primitive):
         )
 
     def __repr__(self) -> str:
-        return (
-            f'<{self.__class__.__name__} key={self.key} '
-            f'value={self.__current_id}>'
-        )
+        return f'<{self.__class__.__name__} key={self.key}>'
 
 
 if __name__ == '__main__':

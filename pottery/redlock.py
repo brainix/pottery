@@ -648,10 +648,7 @@ class Redlock(_Scripts, Primitive):
         return False
 
     def __repr__(self) -> str:
-        return (
-            f'<{self.__class__.__name__} key={self.key} UUID={self._uuid} '
-            f'timeout={self.__locked()}>'
-        )
+        return f'<{self.__class__.__name__} key={self.key}>'
 
 
 def synchronize(*,
