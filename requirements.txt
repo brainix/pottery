@@ -1,4 +1,4 @@
-bleach==4.0.0
+bleach==4.1.0
 certifi==2021.5.30
 charset-normalizer==2.0.1
 colorama==0.4.4
