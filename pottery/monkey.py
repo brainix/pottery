@@ -46,7 +46,7 @@ def __eq__(self: ConnectionPool, other: Any) -> bool:
 ConnectionPool.__eq__ = __eq__  # type: ignore
 
 _logger.info(
-    'Monkey patched ConnectionPool.__eq__() to compare Redis clients by '
+    'Monkey patched redis.ConnectionPool.__eq__() to compare Redis clients by '
     'connection params'
 )
 
@@ -72,4 +72,25 @@ _logger.info(
     'Monkey patched json.JSONEncoder.default() to be able to JSONify any '
     'instance of any class that defines a .to_dict(), .to_list(), or .to_str() '
     'method'
+)
+
+
+# Monkey patch the Redis client to implement the LOLWUT command.
+#     1. LOLWUT command: https://redis.io/commands/lolwut
+#     2. PR upstream: https://github.com/andymccurdy/redis-py/pull/1448
+
+from redis import Redis  # isort: skip
+
+def lolwut(self: Redis, *version_numbers: int) -> bytes:
+    "Get the Redis version and a piece of generative computer art"
+    if version_numbers:
+        return self.execute_command('LOLWUT VERSION', *version_numbers)
+    else:
+        return self.execute_command('LOLWUT')
+
+Redis.lolwut = lolwut  # type: ignore
+
+_logger.info(
+    'Monkey patched redis.Redis.lolwut() to get the Redis version and a piece '
+    'of generative art'
 )
