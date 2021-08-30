@@ -24,7 +24,7 @@ import logging
 from typing import Any
 from typing import Callable
 from typing import ClassVar
-from typing import FrozenSet
+from typing import Collection
 from typing import Hashable
 from typing import Iterable
 from typing import NamedTuple
@@ -254,7 +254,7 @@ class CachedOrderedDict(collections.OrderedDict):
                 items.append(item)
         return super().__init__(items)
 
-    def misses(self) -> FrozenSet[JSONTypes]:
+    def misses(self) -> Collection[JSONTypes]:
         return frozenset(self._misses)
 
     @_set_expiration

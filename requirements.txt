@@ -29,7 +29,7 @@ toml==0.10.2
 tqdm==4.61.2
 twine==3.4.2
 types-redis==3.5.7
-typing-extensions==3.10.0.1
+typing-extensions==3.10.0.2
 urllib3==1.26.6
 webencodings==0.5.1
 zipp==3.5.0
