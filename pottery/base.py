@@ -243,6 +243,7 @@ class _ContextPipeline:
                 self.pipeline.multi()
                 self.pipeline.ping()
             self.pipeline.execute()
+        self.pipeline.reset()
         return False
 
 
