@@ -239,10 +239,9 @@ class _ContextPipeline:
                  exc_traceback: Optional[TracebackType],
                  ) -> Literal[False]:
         try:
-            if exc_type is None:
+            if exc_type is None and len(self.pipeline):
                 with contextlib.suppress(RedisError):
                     self.pipeline.multi()
-                    self.pipeline.ping()
                 self.pipeline.execute()
         finally:
             self.pipeline.reset()
