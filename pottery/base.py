@@ -242,6 +242,10 @@ class _ContextPipeline:
             if exc_type is None:
                 with contextlib.suppress(RedisError):
                     self.pipeline.multi()
+                _logger.info(
+                    'Running EXEC on a pipeline with %d commands',
+                    len(self.pipeline),
+                )
                 self.pipeline.execute()
         finally:
             self.pipeline.reset()
