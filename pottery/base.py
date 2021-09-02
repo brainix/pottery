@@ -238,12 +238,14 @@ class _ContextPipeline:
                  exc_value: Optional[BaseException],
                  exc_traceback: Optional[TracebackType],
                  ) -> Literal[False]:
-        if exc_type is None:
-            with contextlib.suppress(RedisError):
-                self.pipeline.multi()
-                self.pipeline.ping()
-            self.pipeline.execute()
-        self.pipeline.reset()
+        try:
+            if exc_type is None:
+                with contextlib.suppress(RedisError):
+                    self.pipeline.multi()
+                    self.pipeline.ping()
+                self.pipeline.execute()
+        finally:
+            self.pipeline.reset()
         return False
 
 
