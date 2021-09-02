@@ -273,7 +273,9 @@ class _Pipelined(metaclass=abc.ABCMeta):
         redises = collections.defaultdict(list)
         for container in itertools.chain((self,), others):
             if isinstance(container, _Pipelined):
-                connection_kwargs = frozenset(container.redis.connection_pool.connection_kwargs.items())
+                connection_kwargs = frozenset(
+                    container.redis.connection_pool.connection_kwargs.items(),
+                )
                 redises[connection_kwargs].append(container)
         for containers in redises.values():
             keys = (container.key for container in containers)
