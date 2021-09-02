@@ -19,6 +19,7 @@
 
 import concurrent.futures
 import contextlib
+import os
 import time
 import unittest.mock
 
@@ -66,6 +67,7 @@ class RedlockTests(TestCase):
             assert timer.elapsed() >= self.redlock.auto_release_time
             assert info.call_count == 1, f'_logger.info() called {info.call_count} times'
 
+    @unittest.skipIf('CI' in os.environ, 'this unit test is flaky on CI')
     def test_acquire_same_lock_twice_blocking_with_timeout(self):
         with unittest.mock.patch.object(_logger, 'info') as info:
             assert not self.redis.exists(self.redlock.key)
