@@ -240,8 +240,6 @@ class _ContextPipeline:
                  ) -> Literal[False]:
         try:
             if exc_type is None:
-                with contextlib.suppress(RedisError):
-                    self.pipeline.multi()
                 _logger.info(
                     'Running EXEC on a pipeline with %d commands',
                     len(self.pipeline),
