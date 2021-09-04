@@ -220,11 +220,16 @@ class _Pipelined(metaclass=abc.ABCMeta):
             pipeline.watch(*keys)
             try:
                 yield pipeline
-            except Exception:
+            except Exception as error:
+                _logger.warning(
+                    'Caught %s; aborting pipeline of %d commands',
+                    error.__class__.__name__,
+                    len(pipeline),
+                )
                 raise
             else:
                 _logger.info(
-                    'Running EXEC on a pipeline of %d commands',
+                    'Running EXEC on pipeline of %d commands',
                     len(pipeline),
                 )
                 pipeline.execute()
