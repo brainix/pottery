@@ -201,55 +201,6 @@ class _Clearable(metaclass=abc.ABCMeta):
         self.redis.delete(self.key)
 
 
-class _ContextPipeline:
-    '''Context manager that sets up, then executes, a Redis pipeline.
-
-    Redis pipelines: https://redis.io/topics/pipelining
-    Redis transactions: https://redis.io/topics/transactions
-    '''
-
-    __slots__ = ('redis', 'pipeline')
-
-    def __init__(self, redis: Redis) -> None:
-        self.redis = redis
-
-    def __enter__(self) -> Pipeline:
-        self.pipeline = self.redis.pipeline()
-        return self.pipeline
-
-    @overload
-    def __exit__(self,
-                 exc_type: None,
-                 exc_value: None,
-                 exc_traceback: None,
-                 ) -> Literal[False]:
-        raise NotImplementedError
-
-    @overload
-    def __exit__(self,
-                 exc_type: Type[BaseException],
-                 exc_value: BaseException,
-                 exc_traceback: TracebackType,
-                 ) -> Literal[False]:
-        raise NotImplementedError
-
-    def __exit__(self,
-                 exc_type: Optional[Type[BaseException]],
-                 exc_value: Optional[BaseException],
-                 exc_traceback: Optional[TracebackType],
-                 ) -> Literal[False]:
-        try:
-            if exc_type is None:
-                _logger.info(
-                    'Running EXEC on a pipeline with %d commands',
-                    len(self.pipeline),
-                )
-                self.pipeline.execute()
-        finally:
-            self.pipeline.reset()
-        return False
-
-
 class _Pipelined(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
@@ -265,9 +216,18 @@ class _Pipelined(metaclass=abc.ABCMeta):
     def __watch_keys(self,
                      *keys: str,
                      ) -> Generator[Pipeline, None, None]:
-        with _ContextPipeline(self.redis) as pipeline:
+        with self.redis.pipeline() as pipeline:
             pipeline.watch(*keys)
-            yield pipeline
+            try:
+                yield pipeline
+            except Exception:
+                raise
+            else:
+                _logger.info(
+                    'Running EXEC on a pipeline of %d commands',
+                    len(pipeline),
+                )
+                pipeline.execute()
 
     def __context_managers(self,
                            *others: Any,
