@@ -84,7 +84,7 @@ class _Scripts:
             self.__class__._set_id_script = master.register_script('''
                 local curr = tonumber(redis.call('get', KEYS[1]))
                 local next = tonumber(ARGV[1])
-                if curr < next then
+                if curr == nil or curr < next then
                     redis.call('set', KEYS[1], next)
                     return next
                 else
@@ -146,12 +146,6 @@ class NextId(_Scripts, Primitive):
             raise_on_redis_errors=raise_on_redis_errors,
         )
         self.num_tries = num_tries
-        self.__init_masters()
-
-    def __init_masters(self) -> None:
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            for master in self.masters:
-                executor.submit(master.setnx, self.key, 0)
 
     def __iter__(self) -> 'NextId':
         return self
@@ -178,7 +172,7 @@ class NextId(_Scripts, Primitive):
             current_ids, redis_errors = [], []
             for future in concurrent.futures.as_completed(futures):
                 try:
-                    current_id = int(cast(bytes, future.result()))
+                    current_id = int(cast(bytes, future.result() or b'0'))
                 except RedisError as error:
                     redis_errors.append(error)
                     _logger.exception(
