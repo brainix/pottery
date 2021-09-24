@@ -129,6 +129,29 @@ class CommonTests(_BaseTestCase):
                 self.fail(msg='RandomKeyError not raised')
 
 
+class EncodableTests(TestCase):
+    def test_decoded_responses(self):
+        'Ensure that Pottery still works if the Redis client decodes responses.'
+        tel = RedisDict(
+            {'jack': 4098, 'sape': 4139},
+            redis=self.redis_decoded_responses,
+        )
+
+        # Ensure that repr(tel) does not raise this exception:
+        #
+        # Traceback (most recent call last):
+        #   File "/Users/rajiv.shah/Documents/Code/pottery/tests/test_base.py", line 139, in test_decoded_responses
+        #     repr(tel)
+        #   File "/Users/rajiv.shah/Documents/Code/pottery/pottery/dict.py", line 116, in __repr__
+        #     dict_ = {self._decode(key): self._decode(value) for key, value in items}
+        #   File "/Users/rajiv.shah/Documents/Code/pottery/pottery/dict.py", line 116, in <dictcomp>
+        #     dict_ = {self._decode(key): self._decode(value) for key, value in items}
+        #   File "/Users/rajiv.shah/Documents/Code/pottery/pottery/base.py", line 154, in _decode
+        #     decoded: JSONTypes = json.loads(value.decode('utf-8'))
+        # AttributeError: 'str' object has no attribute 'decode'
+        repr(tel)
+
+
 class IterableTests(TestCase):
     def test_iter(self):
         garbage = RedisDict()

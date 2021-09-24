@@ -32,8 +32,15 @@ class MonkeyPatchTests(TestCase):
             }
 
     def test_redis_lolwut(self):
-        lolwut = self.redis.lolwut().decode('utf-8')
+        lolwut = self._lolwut()
         assert 'Redis ver.' in lolwut
 
-        lolwut = self.redis.lolwut(5, 6, 7, 8).decode('utf-8')
+        lolwut = self._lolwut(5, 6, 7, 8)
         assert 'Redis ver.' in lolwut
+
+    def _lolwut(self, *args: int) -> str:
+        response = self.redis.lolwut(*args)
+        try:
+            return response.decode('utf-8')
+        except AttributeError:  # pragma: no cover
+            return response

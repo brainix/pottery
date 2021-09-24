@@ -30,7 +30,7 @@ from typing_extensions import Final
 
 
 __title__ = 'pottery'
-__version__ = '1.3.5'
+__version__ = '1.3.6'
 __description__, __long_description__ = (
     s.strip() for s in __doc__.split(sep='\n\n', maxsplit=1)
 )

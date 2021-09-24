@@ -34,9 +34,20 @@ class TestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         super().setUp()
+
+        # Choose a random Redis database for this test.
         self.redis_db = random.randint(1, 15)
         url = f'redis://localhost:6379/{self.redis_db}'
+
+        # Set up our Redis clients.
         self.redis = Redis.from_url(url, socket_timeout=1)
+        self.redis_decoded_responses = Redis.from_url(
+            url,
+            socket_timeout=1,
+            decode_responses=True,
+        )
+
+        # Clean up the Redis database before and after the test.
         self.redis.flushdb()
         self.addCleanup(self.redis.flushdb)
 
