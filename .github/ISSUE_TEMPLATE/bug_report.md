@@ -22,7 +22,8 @@ A clear and concise description of what you expected to happen.
 
 **Environment (please complete the following information):**
  - OS: [e.g. macOS, Linux]
- - Python version [e.g. 3.9.1]
+ - Python version [e.g. 3.9.7]
+ - Redis version [e.g. 6.2.5]
 
 **Additional context**
 Add any other context about the problem here.
