@@ -34,7 +34,7 @@ _logger: Final[logging.Logger] = logging.getLogger('pottery')
 # connection pools to be equal if they're connected to the same host, port, and
 # database.
 
-from redis import ConnectionPool  # isort:skip
+from redis import ConnectionPool  # isort: skip
 
 def __eq__(self: ConnectionPool, other: Any) -> bool:
     try:
@@ -64,7 +64,7 @@ def _default(self: Any, obj: Any) -> Union[Dict[str, Any], List[Any], str]:
     return_value: Union[Dict[str, Any], List[Any], str] = func(obj)
     return return_value
 
-import json  # isort:skip
+import json  # isort: skip
 _default.default = json.JSONEncoder().default  # type: ignore
 json.JSONEncoder.default = _default  # type: ignore
 

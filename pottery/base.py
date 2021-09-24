@@ -28,6 +28,7 @@ import random
 import string
 from types import TracebackType
 from typing import Any
+from typing import AnyStr
 from typing import ClassVar
 from typing import ContextManager
 from typing import FrozenSet
@@ -150,8 +151,12 @@ class _Encodable:
         return encoded
 
     @staticmethod
-    def _decode(value: bytes) -> JSONTypes:
-        decoded: JSONTypes = json.loads(value.decode('utf-8'))
+    def _decode(value: AnyStr) -> JSONTypes:
+        try:
+            string = cast(bytes, value).decode('utf-8')
+        except AttributeError:
+            string = cast(str, value)
+        decoded: JSONTypes = json.loads(string)
         return decoded
 
 
