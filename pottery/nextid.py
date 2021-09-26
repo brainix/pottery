@@ -227,6 +227,36 @@ class NextId(_Scripts, Primitive):
             redis_errors=redis_errors,
         )
 
+    def reset(self) -> None:
+        with BailOutExecutor() as executor:
+            futures = set()
+            for master in self.masters:
+                future = executor.submit(master.delete, self.key)
+                futures.add(future)
+
+            num_masters_reset, redis_errors = 0, []
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    future.result()
+                except RedisError as error:
+                    redis_errors.append(error)
+                    _logger.exception(
+                        '%s.reset() caught %s',
+                        self.__class__.__name__,
+                        error.__class__.__name__,
+                    )
+                else:
+                    num_masters_reset += 1
+                    if num_masters_reset > len(self.masters) // 2:  # pragma: no cover
+                        return
+
+        self._check_enough_masters_up(None, redis_errors)
+        raise QuorumNotAchieved(
+            self.key,
+            self.masters,
+            redis_errors=redis_errors,
+        )
+
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} key={self.key}>'
 

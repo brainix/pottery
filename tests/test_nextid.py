@@ -46,6 +46,19 @@ class NextIdTests(TestCase):
     def test_iter(self):
         assert iter(self.ids) is self.ids
 
+    def test_reset(self):
+        self.ids.reset()
+        assert not self.redis.exists(self.ids.key)
+
+        assert next(self.ids) == 1
+        assert self.redis.exists(self.ids.key)
+
+        self.ids.reset()
+        assert not self.redis.exists(self.ids.key)
+
+        assert next(self.ids) == 1
+        assert self.redis.exists(self.ids.key)
+
     def test_repr(self):
         assert repr(self.ids) == '<NextId key=nextid:current>'
 
@@ -82,3 +95,23 @@ class NextIdTests(TestCase):
              unittest.mock.patch.object(Script, '__call__') as __call__:
             __call__.side_effect = TimeoutError
             next(self.ids)
+
+    def test_reset_quorumnotachieved(self):
+        with self.assertRaises(QuorumNotAchieved), \
+             unittest.mock.patch.object(
+                 next(iter(self.ids.masters)),
+                 'delete',
+             ) as delete:
+            delete.side_effect = TimeoutError
+            self.ids.reset()
+
+    def test_reset_quorumisimpossible(self):
+        self.ids = NextId(masters={self.redis}, raise_on_redis_errors=True)
+
+        with self.assertRaises(QuorumIsImpossible), \
+             unittest.mock.patch.object(
+                 next(iter(self.ids.masters)),
+                 'delete',
+             ) as delete:
+            delete.side_effect = TimeoutError
+            self.ids.reset()
