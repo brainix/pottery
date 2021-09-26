@@ -47,11 +47,17 @@ class NextIdTests(TestCase):
         assert iter(self.ids) is self.ids
 
     def test_reset(self):
-        next(self.ids)
+        self.ids.reset()
+        assert not self.redis.exists(self.ids.key)
+
+        assert next(self.ids) == 1
         assert self.redis.exists(self.ids.key)
 
         self.ids.reset()
         assert not self.redis.exists(self.ids.key)
+
+        assert next(self.ids) == 1
+        assert self.redis.exists(self.ids.key)
 
     def test_repr(self):
         assert repr(self.ids) == '<NextId key=nextid:current>'
