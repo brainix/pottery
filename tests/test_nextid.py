@@ -82,3 +82,10 @@ class NextIdTests(TestCase):
              unittest.mock.patch.object(Script, '__call__') as __call__:
             __call__.side_effect = TimeoutError
             next(self.ids)
+
+    def test_reset(self):
+        next(self.ids)
+        assert self.redis.exists(self.ids.key)
+
+        self.ids.reset()
+        assert not self.redis.exists(self.ids.key)
