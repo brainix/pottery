@@ -238,7 +238,7 @@ class NextId(_Scripts, Primitive):
             for future in concurrent.futures.as_completed(futures):
                 try:
                     future.result()
-                except RedisError as error:  # pragma: no cover
+                except RedisError as error:
                     redis_errors.append(error)
                     _logger.exception(
                         '%s.reset() caught %s',
@@ -250,8 +250,8 @@ class NextId(_Scripts, Primitive):
                     if num_masters_reset > len(self.masters) // 2:  # pragma: no cover
                         return
 
-            self._check_enough_masters_up(None, redis_errors)  # pragma: no cover
-            raise QuorumNotAchieved(  # pragma: no cover
+            self._check_enough_masters_up(None, redis_errors)
+            raise QuorumNotAchieved(
                 self.key,
                 self.masters,
                 redis_errors=redis_errors,

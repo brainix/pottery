@@ -89,3 +89,23 @@ class NextIdTests(TestCase):
              unittest.mock.patch.object(Script, '__call__') as __call__:
             __call__.side_effect = TimeoutError
             next(self.ids)
+
+    def test_reset_quorumnotachieved(self):
+        with self.assertRaises(QuorumNotAchieved), \
+             unittest.mock.patch.object(
+                 next(iter(self.ids.masters)),
+                 'delete',
+             ) as delete:
+            delete.side_effect = TimeoutError
+            self.ids.reset()
+
+    def test_reset_quorumisimpossible(self):
+        self.ids = NextId(masters={self.redis}, raise_on_redis_errors=True)
+
+        with self.assertRaises(QuorumIsImpossible), \
+             unittest.mock.patch.object(
+                 next(iter(self.ids.masters)),
+                 'delete',
+             ) as delete:
+            delete.side_effect = TimeoutError
+            self.ids.reset()
