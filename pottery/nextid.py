@@ -250,12 +250,12 @@ class NextId(_Scripts, Primitive):
                     if num_masters_reset > len(self.masters) // 2:  # pragma: no cover
                         return
 
-            self._check_enough_masters_up(None, redis_errors)
-            raise QuorumNotAchieved(
-                self.key,
-                self.masters,
-                redis_errors=redis_errors,
-            )
+        self._check_enough_masters_up(None, redis_errors)
+        raise QuorumNotAchieved(
+            self.key,
+            self.masters,
+            redis_errors=redis_errors,
+        )
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} key={self.key}>'
