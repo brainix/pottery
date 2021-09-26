@@ -46,6 +46,13 @@ class NextIdTests(TestCase):
     def test_iter(self):
         assert iter(self.ids) is self.ids
 
+    def test_reset(self):
+        next(self.ids)
+        assert self.redis.exists(self.ids.key)
+
+        self.ids.reset()
+        assert not self.redis.exists(self.ids.key)
+
     def test_repr(self):
         assert repr(self.ids) == '<NextId key=nextid:current>'
 
@@ -82,10 +89,3 @@ class NextIdTests(TestCase):
              unittest.mock.patch.object(Script, '__call__') as __call__:
             __call__.side_effect = TimeoutError
             next(self.ids)
-
-    def test_reset(self):
-        next(self.ids)
-        assert self.redis.exists(self.ids.key)
-
-        self.ids.reset()
-        assert not self.redis.exists(self.ids.key)
