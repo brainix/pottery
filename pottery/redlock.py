@@ -157,7 +157,9 @@ class Redlock(_Scripts, Primitive):
 
     Usage:
 
-        >>> printer_lock = Redlock(key='printer')
+        >>> from redis import Redis
+        >>> redis = Redis(socket_timeout=1)
+        >>> printer_lock = Redlock(key='printer', masters={redis})
         >>> bool(printer_lock.locked())
         False
         >>> printer_lock.acquire()
@@ -188,7 +190,7 @@ class Redlock(_Scripts, Primitive):
     If 10 seconds isn't enough to complete executing your critical section,
     then you can specify your own timeout:
 
-        >>> printer_lock = Redlock(key='printer', auto_release_time=15*1000)
+        >>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=15*1000)
         >>> printer_lock.acquire()
         True
         >>> bool(printer_lock.locked())
@@ -204,7 +206,7 @@ class Redlock(_Scripts, Primitive):
     You can use a Redlock as a context manager:
 
         >>> states = []
-        >>> with Redlock(key='printer') as printer_lock:
+        >>> with Redlock(key='printer', masters={redis}) as printer_lock:
         ...     states.append(bool(printer_lock.locked()))
         ...     # Critical section - print stuff here.
         >>> states.append(bool(printer_lock.locked()))
@@ -346,12 +348,14 @@ class Redlock(_Scripts, Primitive):
         If blocking is True and timeout is -1, then wait for as long as
         necessary to acquire the lock.  Return True.
 
-            >>> printer_lock_1 = Redlock(key='printer')
+            >>> from redis import Redis
+            >>> redis = Redis(socket_timeout=1)
+            >>> printer_lock_1 = Redlock(key='printer', masters={redis})
             >>> printer_lock_1.acquire()
             True
             >>> timer = ContextTimer()
             >>> timer.start()
-            >>> printer_lock_2 = Redlock(key='printer')
+            >>> printer_lock_2 = Redlock(key='printer', masters={redis})
             >>> printer_lock_2.acquire()
             True
             >>> 10 * 1000 < timer.elapsed() < 11 * 1000
@@ -426,11 +430,13 @@ class Redlock(_Scripts, Primitive):
 
         If we don't currently hold the lock, then this method returns 0.
 
-            >>> printer_lock_1 = Redlock(key='printer')
+            >>> from redis import Redis
+            >>> redis = Redis(socket_timeout=1)
+            >>> printer_lock_1 = Redlock(key='printer', masters={redis})
             >>> printer_lock_1.locked()
             0
 
-            >>> printer_lock_2 = Redlock(key='printer')
+            >>> printer_lock_2 = Redlock(key='printer', masters={redis})
             >>> printer_lock_2.acquire()
             True
             >>> printer_lock_1.locked()
@@ -483,7 +489,9 @@ class Redlock(_Scripts, Primitive):
 
         Usage:
 
-            >>> printer_lock = Redlock(key='printer')
+            >>> from redis import Redis
+            >>> redis = Redis(socket_timeout=1)
+            >>> printer_lock = Redlock(key='printer', masters={redis})
             >>> printer_lock.acquire()
             True
             >>> 9 * 1000 < printer_lock.locked() < 10 * 1000
@@ -533,7 +541,9 @@ class Redlock(_Scripts, Primitive):
 
         Usage:
 
-            >>> printer_lock = Redlock(key='printer')
+            >>> from redis import Redis
+            >>> redis = Redis(socket_timeout=1)
+            >>> printer_lock = Redlock(key='printer', masters={redis})
             >>> bool(printer_lock.locked())
             False
             >>> printer_lock.acquire()
@@ -580,7 +590,9 @@ class Redlock(_Scripts, Primitive):
         Usage:
 
             >>> states = []
-            >>> with Redlock(key='printer') as printer_lock:
+            >>> from redis import Redis
+            >>> redis = Redis(socket_timeout=1)
+            >>> with Redlock(key='printer', masters={redis}) as printer_lock:
             ...     states.append(bool(printer_lock.locked()))
             ...     # Critical section - print stuff here.
             >>> states.append(bool(printer_lock.locked()))
@@ -629,7 +641,9 @@ class Redlock(_Scripts, Primitive):
         Usage:
 
             >>> states = []
-            >>> with Redlock(key='printer') as printer_lock:
+            >>> from redis import Redis
+            >>> redis = Redis(socket_timeout=1)
+            >>> with Redlock(key='printer', masters={redis}) as printer_lock:
             ...     states.append(bool(printer_lock.locked()))
             ...     # Critical section - print stuff here.
             >>> states.append(bool(printer_lock.locked()))

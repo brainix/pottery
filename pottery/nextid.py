@@ -113,19 +113,23 @@ class NextId(_Scripts, Primitive):
     Clean up Redis for the doctest:
 
         >>> from redis import Redis
-        >>> Redis(socket_timeout=1).delete('nextid:current') in {0, 1}
+        >>> redis = Redis(socket_timeout=1)
+        >>> redis.delete('nextid:tweet-ids') in {0, 1}
         True
 
     Usage:
 
-        >>> ids1 = NextId()
-        >>> ids2 = NextId()
-        >>> next(ids1)
+        >>> tweet_ids_1 = NextId(key='tweet-ids', masters={redis})
+        >>> tweet_ids_2 = NextId(key='tweet-ids', masters={redis})
+        >>> next(tweet_ids_1)
         1
-        >>> next(ids2)
+        >>> next(tweet_ids_2)
         2
-        >>> next(ids1)
+        >>> next(tweet_ids_1)
         3
+        >>> tweet_ids_1.reset()
+        >>> next(tweet_ids_1)
+        1
     '''
 
     __slots__ = ('num_tries',)
@@ -228,6 +232,7 @@ class NextId(_Scripts, Primitive):
         )
 
     def reset(self) -> None:
+        'Reset the ID counter to 0.'
         with BailOutExecutor() as executor:
             futures = set()
             for master in self.masters:
