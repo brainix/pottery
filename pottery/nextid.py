@@ -167,7 +167,7 @@ class NextId(_Scripts, Primitive):
 
     @property
     def __current_id(self) -> int:
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with BailOutExecutor() as executor:
             futures = set()
             for master in self.masters:
                 future = executor.submit(master.get, self.key)
@@ -186,9 +186,9 @@ class NextId(_Scripts, Primitive):
                     )
                 else:
                     current_ids.append(current_id)
+                    if len(current_ids) > len(self.masters) // 2:  # pragma: no cover
+                        return max(current_ids)
 
-        if len(current_ids) > len(self.masters) // 2:
-            return max(current_ids)
         self._check_enough_masters_up(None, redis_errors)
         raise QuorumNotAchieved(
             self.key,
