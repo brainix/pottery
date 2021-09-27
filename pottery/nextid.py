@@ -167,7 +167,7 @@ class NextId(_Scripts, Primitive):
 
     @property
     def __current_id(self) -> int:
-        with BailOutExecutor() as executor:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = set()
             for master in self.masters:
                 future = executor.submit(master.get, self.key)
