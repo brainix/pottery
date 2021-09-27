@@ -466,7 +466,7 @@ Instantiate an ID generator:
 
 ```python
 >>> from pottery import NextId
->>> user_ids = NextId(key='user-ids', masters={redis})
+>>> tweet_ids = NextId(key='tweet-ids', masters={redis})
 >>>
 ```
 
@@ -477,11 +477,11 @@ production, you should have 5 Redis masters).  Now, whenever you need a user
 ID, call `next()` on the ID generator:
 
 ```python
->>> next(user_ids)
+>>> next(tweet_ids)
 1
->>> next(user_ids)
+>>> next(tweet_ids)
 2
->>> next(user_ids)
+>>> next(tweet_ids)
 3
 >>>
 ```
