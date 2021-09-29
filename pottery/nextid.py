@@ -233,7 +233,7 @@ class NextId(_Scripts, Primitive):
 
     def reset(self) -> None:
         'Reset the ID counter to 0.'
-        with BailOutExecutor() as executor:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = set()
             for master in self.masters:
                 future = executor.submit(master.delete, self.key)
@@ -252,7 +252,7 @@ class NextId(_Scripts, Primitive):
                     )
                 else:
                     num_masters_reset += 1
-                    if num_masters_reset > len(self.masters) // 2:  # pragma: no cover
+                    if num_masters_reset == len(self.masters):  # pragma: no cover
                         return
 
         self._check_enough_masters_up(None, redis_errors)
