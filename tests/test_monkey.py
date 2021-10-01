@@ -30,17 +30,3 @@ class MonkeyPatchTests(TestCase):
                 "Object of type 'object' is not JSON serializable",  # Python 3.6
                 'Object of type object is not JSON serializable',    # Python 3.7+
             }
-
-    def test_redis_lolwut(self):
-        lolwut = self._lolwut()
-        assert 'Redis ver.' in lolwut
-
-        lolwut = self._lolwut(5, 6, 7, 8)
-        assert 'Redis ver.' in lolwut
-
-    def _lolwut(self, *args: int) -> str:
-        response = self.redis.lolwut(*args)
-        try:
-            return response.decode('utf-8')
-        except AttributeError:  # pragma: no cover
-            return response
