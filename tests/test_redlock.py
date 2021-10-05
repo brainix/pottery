@@ -227,7 +227,7 @@ class RedlockTests(TestCase):
         )
         with self.redlock, self.assertRaises(QuorumNotAchieved):
             with redlock2:
-                ...
+                ...  # pragma: no cover
 
     def test_repr(self):
         assert repr(self.redlock) == "<Redlock key=redlock:printer>"
