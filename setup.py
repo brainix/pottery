@@ -24,15 +24,15 @@ from setuptools import setup
 import pottery
 
 
-package_dir = pathlib.Path(__file__).parent
-long_description = (package_dir / 'README.md').read_text()
+_package_dir = pathlib.Path(__file__).parent
+_long_description = (_package_dir / 'README.md').read_text()
 
 
 setup(
     name=pottery.__name__,
     version=pottery.__version__,
     description=pottery.__description__,
-    long_description=long_description,
+    long_description=_long_description,
     long_description_content_type='text/markdown',
     url=pottery.__url__,
     author=pottery.__author__,
