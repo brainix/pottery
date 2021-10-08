@@ -131,22 +131,24 @@ class SetTests(TestCase):
     def test_issubset(self):
         a = RedisSet('abc', redis=self.redis)
         b = RedisSet('abc', redis=self.redis)
-        # assert a.issubset(b)
-        # assert b.issubset(a)
+        assert a.issubset(tuple(b))
+        assert b.issubset(tuple(a))
+        assert a.issubset(b)
+        assert b.issubset(a)
         assert a <= b
         assert b <= a
         assert not a < b
         assert not b < a
         c = RedisSet('abcd', redis=self.redis)
-        # assert a.issubset(c)
-        # assert not c.issubset(a)
+        assert a.issubset(c)
+        assert not c.issubset(a)
         assert a <= c
         assert not c <= a
         assert a < c
         assert not c < a
         d = RedisSet('def', redis=self.redis)
-        # assert not a.issubset(d)
-        # assert not d.issubset(a)
+        assert not a.issubset(d)
+        assert not d.issubset(a)
         assert not a <= d
         assert not d <= a
         assert not a < d
@@ -155,26 +157,47 @@ class SetTests(TestCase):
     def test_issuperset(self):
         a = RedisSet('abc', redis=self.redis)
         b = RedisSet('abc', redis=self.redis)
-        # assert a.issuperset(b)
-        # assert b.issuperset(a)
+        assert a.issuperset(tuple(b))
+        assert b.issuperset(tuple(a))
+        assert a.issuperset(b)
+        assert b.issuperset(a)
         assert a >= b
         assert b >= a
         assert not a > b
         assert not b > a
         c = RedisSet('abcd', redis=self.redis)
-        # assert not a.issuperset(c)
-        # assert c.issuperset(a)
+        assert not a.issuperset(c)
+        assert c.issuperset(a)
         assert not a >= c
         assert c >= a
         assert not a > c
         assert c > a
         d = RedisSet('def', redis=self.redis)
-        # assert not a.issuperset(d)
-        # assert not d.issuperset(a)
+        assert not a.issuperset(d)
+        assert not d.issuperset(a)
         assert not a >= d
         assert not d >= a
         assert not a > d
         assert not d > a
+
+    def test_intersection(self):
+        a = RedisSet('abc', redis=self.redis)
+        b = RedisSet('cde', redis=self.redis)
+        assert a.intersection(b) == {'c'}
+        c = RedisSet('def', redis=self.redis)
+        assert a.intersection(c) == set()
+
+        other_url = 'redis://127.0.0.1:6379/'
+        other_redis = Redis.from_url(other_url, socket_timeout=1)
+        b = RedisSet('cde', redis=other_redis)
+        assert a.intersection(b) == {'c'}
+        c = RedisSet('def', redis=other_redis)
+        assert a.intersection(c) == set()
+
+        d = {'c', 'd', 'e'}
+        assert a.intersection(d) == {'c'}
+        e = {'d', 'e', 'f'}
+        assert a.intersection(e) == set()
 
     def test_update_with_no_arguments(self):
         s = RedisSet(redis=self.redis)
