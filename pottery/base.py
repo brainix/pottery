@@ -20,7 +20,6 @@ import abc
 import collections
 import contextlib
 import functools
-import itertools
 import json
 import logging
 import os
@@ -251,7 +250,7 @@ class _Pipelined(metaclass=abc.ABCMeta):
                            *others: Any,
                            ) -> Generator[ContextManager[Pipeline], None, None]:
         redises = collections.defaultdict(list)
-        for container in itertools.chain((self,), others):
+        for container in (self, *others):
             if isinstance(container, _Pipelined):
                 connection_kwargs = frozenset(
                     container.redis.connection_pool.connection_kwargs.items(),
