@@ -43,7 +43,7 @@ jobs:
         coverage3 report
     - name: Type check with Mypy
       run: |
-        mypy --no-incremental
+        mypy
     - name: Lint with Flake8 and isort
       run: |
         flake8 *\.py pottery/*\.py tests/*\.py --count --max-complexity=10 --statistics
