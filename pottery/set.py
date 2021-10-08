@@ -23,6 +23,7 @@ from typing import Iterable
 from typing import List
 from typing import NoReturn
 from typing import Optional
+from typing import Set
 from typing import Tuple
 from typing import cast
 
@@ -111,66 +112,73 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     # From collections.abc.Set:
     def isdisjoint(self, other: Iterable[Any]) -> bool:
         'Return True if two sets have a null intersection.  O(n)'
-        if (
-            isinstance(other, self.__class__)
-            and self.redis.connection_pool == other.redis.connection_pool  # NoQA: W503
-        ):
-            disjoint = not self.redis.sinter(self.key, other.key)
-        else:
-            with self._watch(other):
-                disjoint = super().isdisjoint(other)
-        return disjoint
+        return not self.__intersection(other)
 
     # Where does this method come from?
-    def issubset(self, other: Iterable[Any]) -> NoReturn:  # pragma: no cover
+    def issubset(self, other: Iterable[Any]) -> bool:
+        if not isinstance(other, collections.abc.Set):
+            other = frozenset(other)
+        return self <= other
+
+    # Where does this method come from?
+    def issuperset(self, other: Iterable[Any]) -> bool:
+        if not isinstance(other, collections.abc.Set):
+            other = frozenset(other)
+        return self >= other
+
+    # Where does this method come from?
+    def union(self, *others: Iterable[Any]) -> NoReturn:  # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def issuperset(self, other: Iterable[Any]) -> NoReturn:  # pragma: no cover
-        raise NotImplementedError
+    def intersection(self, *others: Iterable[Any]) -> Set[Any]:
+        if self._same_redis(*others):
+            keys = (self.key, *(cast(RedisSet, other).key for other in others))
+            encoded_values = self.redis.sinter(*keys)
+            decoded_values = {
+                self._decode(cast(bytes, value)) for value in encoded_values
+            }
+            return decoded_values
+        with self._watch(*others):
+            set_ = set(self)
+            return set_.intersection(*others)
+
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    __intersection = intersection
 
     # Where does this method come from?
-    def union(self, *args: Iterable[Any]) -> NoReturn:  # pragma: no cover
-        raise NotImplementedError
-
-    # Where does this method come from?
-    def intersection(self, *args: Iterable[Any]) -> NoReturn:  # pragma: no cover
-        raise NotImplementedError
-
-    # Where does this method come from?
-    def difference(self, *args: Iterable[Any]) -> NoReturn:  # pragma: no cover
+    def difference(self, *others: Iterable[Any]) -> NoReturn:  # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
     def symmetric_difference(self, other: Iterable[Any]) -> NoReturn:  # pragma: no cover
         raise NotImplementedError
 
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
     def __update(self,
-                 *iterables: Iterable[JSONTypes],
+                 *others: Iterable[JSONTypes],
                  redis_method: str,
                  ) -> None:
-        with self._watch(*iterables) as pipeline:
+        with self._watch(*others) as pipeline:
             encoded_values = set()
-            for value in itertools.chain(*iterables):
+            for value in itertools.chain(*others):
                 encoded_values.add(self._encode(value))
             if encoded_values:
                 pipeline.multi()
                 getattr(pipeline, redis_method)(self.key, *encoded_values)
 
     # Where does this method come from?
-    def update(self, *iterables: Iterable[JSONTypes]) -> None:
-        self.__update(*iterables, redis_method='sadd')
+    def update(self, *others: Iterable[JSONTypes]) -> None:
+        self.__update(*others, redis_method='sadd')
 
     # Where does this method come from?
-    def intersection_update(self, *args: Iterable[JSONTypes]) -> NoReturn:  # pragma: no cover
+    def intersection_update(self, *others: Iterable[JSONTypes]) -> NoReturn:  # pragma: no cover
         raise NotImplementedError
 
     # Where does this method come from?
-    def difference_update(self, *iterables: Iterable[JSONTypes]) -> None:
-        self.__update(*iterables, redis_method='srem')
+    def difference_update(self, *others: Iterable[JSONTypes]) -> None:
+        self.__update(*others, redis_method='srem')
 
     # Where does this method come from?
     def symmetric_difference_update(self, other: Iterable[JSONTypes]) -> NoReturn:  # pragma: no cover

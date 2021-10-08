@@ -141,6 +141,14 @@ class _Common:
     #   https://stackoverflow.com/a/38534939
     __random_key = _random_key
 
+    def _same_redis(self, *others: Any) -> bool:
+        for other in others:
+            if not isinstance(other, self.__class__):
+                return False
+            if self.redis.connection_pool != other.redis.connection_pool:
+                return False
+        return True
+
 
 class _Encodable:
     'Mixin class that implements JSON encoding and decoding.'
