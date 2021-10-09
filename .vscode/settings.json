@@ -7,5 +7,8 @@
         "test_*.py"
     ],
     "python.testing.pytestEnabled": false,
-    "python.testing.unittestEnabled": true
+    "python.testing.unittestEnabled": true,
+    "python.linting.mypyEnabled": false,
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true
 }
