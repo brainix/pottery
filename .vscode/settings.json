@@ -8,7 +8,7 @@
     ],
     "python.testing.pytestEnabled": false,
     "python.testing.unittestEnabled": true,
-    "python.linting.mypyEnabled": false,
+    "python.linting.mypyEnabled": true,
     "python.linting.enabled": true,
     "python.linting.flake8Enabled": true
 }
