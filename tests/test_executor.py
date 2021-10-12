@@ -24,19 +24,15 @@ from tests.base import TestCase  # type: ignore
 
 
 class ExecutorTests(TestCase):
-    @staticmethod
-    def _expensive_func(delay):
-        time.sleep(delay)
-
     def test_threadpoolexecutor(self):
         'ThreadPoolExecutor waits for futures to complete on .__exit__()'
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(self._expensive_func, 0.1)
+            future = executor.submit(time.sleep, 0.1)
         assert not future.running()
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            future1 = executor.submit(self._expensive_func, 0.1)
-            future2 = executor.submit(self._expensive_func, 0.2)
+            future1 = executor.submit(time.sleep, 0.1)
+            future2 = executor.submit(time.sleep, 0.2)
             future1.result()
         assert not future1.running()
         assert not future2.running()
@@ -44,14 +40,14 @@ class ExecutorTests(TestCase):
     def test_bailoutexecutor(self):
         'BailOutExecutor does not wait for futures to complete on .__exit__()'
         with BailOutExecutor() as executor:
-            future = executor.submit(self._expensive_func, 0.1)
+            future = executor.submit(time.sleep, 0.1)
         assert future.running()
         time.sleep(0.15)
         assert not future.running()
 
         with BailOutExecutor() as executor:
-            future1 = executor.submit(self._expensive_func, 0.1)
-            future2 = executor.submit(self._expensive_func, 0.2)
+            future1 = executor.submit(time.sleep, 0.1)
+            future2 = executor.submit(time.sleep, 0.2)
             future1.result()
         assert not future1.running()
         assert future2.running()

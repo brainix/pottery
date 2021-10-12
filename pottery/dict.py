@@ -112,9 +112,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
 
     def __repr__(self) -> str:
         'Return the string representation of the RedisDict.  O(n)'
-        items = self.redis.hgetall(self.key).items()
-        dict_ = {self._decode(key): self._decode(value) for key, value in items}
-        return self.__class__.__name__ + str(dict_)
+        return self.__class__.__name__ + str(self.to_dict())
 
     # Method overrides:
 
@@ -131,5 +129,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
         except TypeError:
             return False
 
-    def to_dict(self) -> Dict[str, JSONTypes]:
-        return dict(self)
+    def to_dict(self) -> Dict[JSONTypes, JSONTypes]:
+        items = self.redis.hgetall(self.key).items()
+        dict_ = {self._decode(key): self._decode(value) for key, value in items}
+        return dict_
