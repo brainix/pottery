@@ -230,10 +230,7 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def __repr__(self) -> str:
         'Return the string representation of the RedisList.  O(n)'
-        encoded = self.redis.lrange(self.key, 0, -1)
-        with self._watch():
-            values = [self._decode(value) for value in encoded]
-        return self.__class__.__name__ + str(values)
+        return self.__class__.__name__ + str(self.to_list())
 
     # Method overrides:
 
@@ -283,4 +280,6 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def to_list(self) -> List[JSONTypes]:
         'Convert the RedisList to a Python list.  O(n)'
-        return list(self)
+        encoded = self.redis.lrange(self.key, 0, -1)
+        values = [self._decode(value) for value in encoded]
+        return values
