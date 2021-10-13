@@ -156,6 +156,11 @@ class ListTests(TestCase):
         with self.assertRaises(NotImplementedError):
             squares.sort(key=str)
 
+    def test_eq_same_object(self):
+        squares = RedisList([1, 4, 9, 16, 25], redis=self.redis, key=self._KEY)
+        assert squares == squares
+        assert not squares != squares
+
     def test_eq_same_redis_instance_and_key(self):
         squares1 = RedisList([1, 4, 9, 16, 25], redis=self.redis, key=self._KEY)
         squares2 = RedisList(redis=self.redis, key=self._KEY)
