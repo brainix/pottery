@@ -229,6 +229,7 @@ class _Pipelined(metaclass=abc.ABCMeta):
     def _watch(self,
                *others: Any,
                ) -> Generator[Pipeline, None, None]:
+        'Watch self and others, and yield a Redis pipeline.'
         pipelines = []
         with contextlib.ExitStack() as stack:
             for context_manager in self.__context_managers(*others):
@@ -255,7 +256,7 @@ class _Comparable(metaclass=abc.ABCMeta):
     def _watch(self,
                *others: Any,
                ) -> Generator[Pipeline, None, None]:
-        'Watch self and others, and return a Redis pipeline.'
+        'Watch self and others, and yield a Redis pipeline.'
 
     def _same_redis(self, *others: Any) -> bool:
         for other in others:

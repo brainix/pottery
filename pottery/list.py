@@ -214,9 +214,8 @@ class RedisList(Base, collections.abc.MutableSequence):
             # TypeError: other has no len()
             return False
         if isinstance(other, collections.abc.MutableSequence):
-            # self and other are the same length, and other is an ordered
-            # collection too.  Compare self's and other's elements, pair by
-            # pair.
+            # self and other are the same length, and other is a mutable
+            # sequence too.  Compare self's and other's elements, pair by pair.
             with self._watch(other):
                 return all(x == y for x, y in zip(self, other))
         # self and other are the same length, but other is an unordered
