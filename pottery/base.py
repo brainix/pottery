@@ -269,8 +269,10 @@ class _Comparable(metaclass=abc.ABCMeta):
     def __eq__(self, other: Any) -> bool:
         if self is other:
             return True
+
         if self._same_redis(other) and self.key == other.key:
             return True
+
         with self._watch(other):
             equals = super().__eq__(other)
         if equals is NotImplemented:

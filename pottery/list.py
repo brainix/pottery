@@ -202,22 +202,46 @@ class RedisList(Base, collections.abc.MutableSequence):
     def __eq__(self, other: Any) -> bool:
         if self is other:
             return True
+
         if self._same_redis(other) and self.key == other.key:
             # self and other are both RedisLists on the same Redis database and
             # with the same key.  No need to compare element by element.
             return True
-        try:
-            if len(self) != len(other):
+
+        with self._watch(other) as pipeline:
+            len_xs = cast(int, pipeline.llen(self.key))
+            if isinstance(other, RedisList):
+                len_ys = cast(int, pipeline.llen(other.key))
+            else:
+                try:
+                    len_ys = len(other)
+                except TypeError:
+                    # TypeError: other has no len()
+                    return False
+            if len_xs != len_ys:
                 # self and other are different lengths.
                 return False
-        except TypeError:
-            # TypeError: other has no len()
-            return False
-        if isinstance(other, collections.abc.MutableSequence):
-            # self and other are the same length, and other is a mutable
-            # sequence too.  Compare self's and other's elements, pair by pair.
-            with self._watch(other):
-                return all(x == y for x, y in zip(self, other))
+
+            if isinstance(other, collections.abc.MutableSequence):
+                # self and other are the same length, and other is a mutable
+                # sequence too.  Compare self's and other's elements, pair by pair.
+                encoded_xs = cast(
+                    List[bytes],
+                    pipeline.lrange(self.key, 0, len_xs-1),
+                )
+                decoded_xs = (self._decode(x) for x in encoded_xs)
+                if isinstance(other, RedisList):
+                    encoded_ys = cast(
+                        List[bytes],
+                        pipeline.lrange(other.key, 0, len_ys-1),
+                    )
+                    decoded_ys: collections.abc.Iterable[Any] = (  # pragma: no cover
+                        self._decode(y) for y in encoded_ys
+                    )
+                else:
+                    decoded_ys = other
+                return all(x == y for x, y in zip(decoded_xs, decoded_ys))
+
         # self and other are the same length, but other is an unordered
         # collection.
         return False
