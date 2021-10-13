@@ -6,7 +6,7 @@ coverage==6.0.2
 docutils==0.17.1
 flake8==4.0.1
 idna==3.2
-importlib-metadata==4.6.1
+importlib-metadata==4.2.0
 isort==5.9.3
 keyring==23.0.1
 mccabe==0.6.1
