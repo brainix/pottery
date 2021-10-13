@@ -63,10 +63,6 @@ class HyperLogLog(Base):
     def update(self,
                *objs: Union['HyperLogLog', Iterable[RedisValues]],
                ) -> None:
-        # We have to iterate over objs multiple times, so cast it to a tuple.
-        # This allows the caller to pass in a generator for objs, and we can
-        # still iterate over it multiple times.
-        objs = tuple(objs)
         other_hll_keys: List[str] = []
         encoded_values: List[str] = []
         with self._watch(objs) as pipeline:
@@ -79,8 +75,9 @@ class HyperLogLog(Base):
                         )
                     other_hll_keys.append(obj.key)
                 else:
-                    for value in cast(Iterable[JSONTypes], obj):
-                        encoded_values.append(self._encode(value))
+                    for decoded_value in cast(Iterable[JSONTypes], obj):
+                        encoded_value = self._encode(decoded_value)
+                        encoded_values.append(encoded_value)
             pipeline.multi()
             pipeline.pfmerge(self.key, *other_hll_keys)
             pipeline.pfadd(self.key, *encoded_values)
