@@ -140,14 +140,6 @@ class _Common:
     #   https://stackoverflow.com/a/38534939
     __random_key = _random_key
 
-    def _same_redis(self, *others: Any) -> bool:
-        for other in others:
-            if not isinstance(other, self.__class__):
-                return False
-            if self.redis.connection_pool != other.redis.connection_pool:
-                return False
-        return True
-
 
 class _Encodable:
     'Mixin class that implements JSON encoding and decoding.'
@@ -165,34 +157,6 @@ class _Encodable:
             string = cast(str, value)
         decoded: JSONTypes = json.loads(string)
         return decoded
-
-
-class _Comparable(metaclass=abc.ABCMeta):
-    'Mixin class that implements equality testing for Redis-backed collections.'
-
-    @property
-    @abc.abstractmethod
-    def redis(self) -> Redis:
-        'Redis client.'
-
-    @property
-    @abc.abstractmethod
-    def key(self) -> str:
-        'Redis key.'
-
-    def __eq__(self, other: Any) -> bool:
-        if self is other:
-            return True
-        if (
-            isinstance(other, _Comparable)
-            and self.redis.connection_pool == other.redis.connection_pool  # NoQA: W503
-            and self.key == other.key  # NoQA: W503
-        ):
-            return True
-        equals = super().__eq__(other)
-        if equals is NotImplemented:
-            equals = False
-        return equals
 
 
 class _Clearable(metaclass=abc.ABCMeta):
@@ -273,7 +237,47 @@ class _Pipelined(metaclass=abc.ABCMeta):
             yield pipelines[0]
 
 
-class Base(_Common, _Encodable, _Comparable, _Clearable, _Pipelined):
+class _Comparable(metaclass=abc.ABCMeta):
+    'Mixin class that implements equality testing for Redis-backed collections.'
+
+    @property
+    @abc.abstractmethod
+    def redis(self) -> Redis:
+        'Redis client.'
+
+    @property
+    @abc.abstractmethod
+    def key(self) -> str:
+        'Redis key.'
+
+    @abc.abstractmethod
+    @contextlib.contextmanager
+    def _watch(self,
+               *others: Any,
+               ) -> Generator[Pipeline, None, None]:
+        'Watch self and others, and return a Redis pipeline.'
+
+    def _same_redis(self, *others: Any) -> bool:
+        for other in others:
+            if not isinstance(other, _Comparable):
+                return False
+            if self.redis.connection_pool != other.redis.connection_pool:
+                return False
+        return True
+
+    def __eq__(self, other: Any) -> bool:
+        if self is other:
+            return True
+        if self._same_redis(other) and self.key == other.key:
+            return True
+        with self._watch(other):
+            equals = super().__eq__(other)
+        if equals is NotImplemented:
+            equals = False
+        return equals
+
+
+class Base(_Common, _Encodable, _Clearable, _Pipelined, _Comparable):
     'Base class for Redis-backed collections.'
 
 

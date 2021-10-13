@@ -281,3 +281,8 @@ class DictTests(TestCase):
     def test_json_dumps(self):
         a = RedisDict(redis=self.redis, one=1, two=2, three=3)
         assert json.dumps(a) == '{"one": 1, "two": 2, "three": 3}'
+
+    def test_eq_same_redis_database_and_key(self):
+        a = RedisDict(redis=self.redis, one=1, two=2, three=3)
+        b = RedisDict(redis=a.redis, key=a.key)
+        assert a == b

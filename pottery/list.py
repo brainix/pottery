@@ -200,27 +200,28 @@ class RedisList(Base, collections.abc.MutableSequence):
         self.redis.sort(self.key, desc=reverse, store=self.key)
 
     def __eq__(self, other: Any) -> bool:
-        if super().__eq__(other):
-            # self and other are both RedisLists on the same Redis instance and
+        if self is other:
+            return True
+        if self._same_redis(other) and self.key == other.key:
+            # self and other are both RedisLists on the same Redis database and
             # with the same key.  No need to compare element by element.
             return True
-        else:
-            try:
-                if len(self) != len(other):
-                    # self and other are different lengths.
-                    return False
-                elif isinstance(other, collections.abc.MutableSequence):
-                    # self and other are the same length, and other is an
-                    # ordered collection too.  Compare self's and other's
-                    # elements, pair by pair.
-                    with self._watch(other):
-                        return all(x == y for x, y in zip(self, other))
-                else:
-                    # self and other are the same length, but other is an
-                    # unordered collection.
-                    return False
-            except TypeError:
+        try:
+            if len(self) != len(other):
+                # self and other are different lengths.
                 return False
+        except TypeError:
+            # TypeError: other has no len()
+            return False
+        if isinstance(other, collections.abc.MutableSequence):
+            # self and other are the same length, and other is an ordered
+            # collection too.  Compare self's and other's elements, pair by
+            # pair.
+            with self._watch(other):
+                return all(x == y for x, y in zip(self, other))
+        # self and other are the same length, but other is an unordered
+        # collection.
+        return False
 
     def __add__(self, other: List[JSONTypes]) -> 'RedisList':
         'Append the items in other to the RedisList.  O(n)'
