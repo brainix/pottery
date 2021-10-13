@@ -227,13 +227,13 @@ class RedisList(Base, collections.abc.MutableSequence):
                 # sequence too.  Compare self's and other's elements, pair by pair.
                 encoded_xs = cast(
                     List[bytes],
-                    pipeline.lrange(self.key, 0, len_xs-1),
+                    pipeline.lrange(self.key, 0, -1),
                 )
                 decoded_xs = (self._decode(x) for x in encoded_xs)
                 if isinstance(other, RedisList):
                     encoded_ys = cast(
                         List[bytes],
-                        pipeline.lrange(other.key, 0, len_ys-1),
+                        pipeline.lrange(other.key, 0, -1),
                     )
                     decoded_ys: collections.abc.Iterable[Any] = (  # pragma: no cover
                         self._decode(y) for y in encoded_ys
