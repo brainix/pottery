@@ -28,7 +28,7 @@ six==1.16.0
 toml==0.10.2
 tqdm==4.61.2
 twine==3.4.2
-types-redis==3.5.13
+types-redis==3.5.14
 typing-extensions==3.10.0.2
 urllib3==1.26.7
 webencodings==0.5.1
