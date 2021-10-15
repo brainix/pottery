@@ -113,7 +113,7 @@ release:
 
 .PHONY: clean
 clean:
-	rm -rf {$(venv),.coverage,.mypy_cache,build/*,dist/*}
+	rm -rf {$(venv),pottery/__pycache__,tests/__pycache__,.coverage,.mypy_cache,pottery.egg-info,build,dist}
 
 
 .PHONY: lines-of-code
