@@ -453,8 +453,7 @@ class Redlock(_Scripts, Primitive):
             >>> printer_lock_1.release()
 
         '''
-        with ContextTimer() as timer, \
-             concurrent.futures.ThreadPoolExecutor() as executor:
+        with ContextTimer() as timer, BailOutExecutor() as executor:
             futures = set()
             for master in self.masters:
                 future = executor.submit(self.__acquired_master, master)
