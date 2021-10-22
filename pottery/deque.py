@@ -21,6 +21,7 @@ from typing import Iterable
 from typing import Optional
 from typing import Tuple
 from typing import Union
+from typing import cast
 
 from redis import Redis
 from redis.client import Pipeline
@@ -59,6 +60,8 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
             if self.maxlen:
                 iterable = tuple(iterable)[-self.maxlen:]
             else:
+                # self.maxlen == 0.  Populate the RedisDeque with an empty
+                # iterable.
                 iterable = tuple()
         super()._populate(pipeline, iterable)
 
@@ -75,11 +78,32 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
 
     def insert(self, index: int, value: JSONTypes) -> None:
         'Insert an element into the RedisDeque before the given index.  O(n)'
-        if self.maxlen is not None and len(self) >= self.maxlen:
-            raise IndexError(
-                f'{self.__class__.__name__} already at its maximum size'
-            )
-        return super()._insert(index, value)
+        encoded_value = self._encode(value)
+        with self._watch() as pipeline:
+            current_length = cast(int, pipeline.llen(self.key))
+            if self.maxlen is not None and current_length >= self.maxlen:
+                raise IndexError(
+                    f'{self.__class__.__name__} already at its maximum size'
+                )
+            if index <= 0:
+                pipeline.multi()
+                pipeline.lpush(self.key, encoded_value)
+            elif index < current_length:
+                # Python's list API requires us to insert an element before the
+                # given *index.*  Redis supports only inserting an element
+                # before a given (pivot) *value.*  So our workaround is to set
+                # the pivot value to 0, then to insert the desired value before
+                # the value 0, then to set the value 0 back to the original
+                # pivot value.  More info:
+                #   http://redis.io/commands/linsert
+                pivot = cast(bytes, pipeline.lindex(self.key, index))
+                pipeline.multi()
+                pipeline.lset(self.key, index, 0)
+                pipeline.linsert(self.key, 'BEFORE', 0, encoded_value)
+                pipeline.lset(self.key, index+1, pivot)
+            else:
+                pipeline.multi()
+                pipeline.rpush(self.key, encoded_value)
 
     def append(self, value: JSONTypes) -> None:
         'Add an element to the right side of the RedisDeque.  O(1)'

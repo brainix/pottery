@@ -144,6 +144,9 @@ class RedisList(Base, collections.abc.MutableSequence):
         with self._watch() as pipeline:
             self.__delete(pipeline, index)
 
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
     def __delete(self, pipeline: Pipeline, index: Union[slice, int]) -> None:
         # Python's list API requires us to delete an element by *index.*  Redis
         # supports only deleting an element by *value.*  So our workaround is
@@ -163,33 +166,28 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def insert(self, index: int, value: JSONTypes) -> None:
         'Insert an element into the RedisList before the given index.  O(n)'
-        self.__insert(index, value)
-
-    def _insert(self, index: int, value: JSONTypes) -> None:
         encoded_value = self._encode(value)
-        if index <= 0:
-            self.redis.lpush(self.key, encoded_value)
-        elif index < len(self):
-            # Python's list API requires us to insert an element before the
-            # given *index.*  Redis supports only inserting an element before a
-            # given (pivot) *value.*  So our workaround is to set the pivot
-            # value to 0, then to insert the desired value before the value 0,
-            # then to set the value 0 back to the original pivot value.  More
-            # info:
-            #   http://redis.io/commands/linsert
-            with self._watch() as pipeline:
-                pivot = self._encode(self[index])
+        with self._watch() as pipeline:
+            current_length = cast(int, pipeline.llen(self.key))
+            if index <= 0:
+                pipeline.multi()
+                pipeline.lpush(self.key, encoded_value)
+            elif index < current_length:
+                # Python's list API requires us to insert an element before the
+                # given *index.*  Redis supports only inserting an element
+                # before a given (pivot) *value.*  So our workaround is to set
+                # the pivot value to 0, then to insert the desired value before
+                # the value 0, then to set the value 0 back to the original
+                # pivot value.  More info:
+                #   http://redis.io/commands/linsert
+                pivot = cast(bytes, pipeline.lindex(self.key, index))
                 pipeline.multi()
                 pipeline.lset(self.key, index, 0)
                 pipeline.linsert(self.key, 'BEFORE', 0, encoded_value)
                 pipeline.lset(self.key, index+1, pivot)
-        else:
-            self.redis.rpush(self.key, encoded_value)
-
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
-    __insert = _insert
+            else:
+                pipeline.multi()
+                pipeline.rpush(self.key, encoded_value)
 
     # Methods required for Raj's sanity:
 
