@@ -139,7 +139,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
         with self._watch(values) as pipeline:
             push_method = 'rpush' if right else 'lpush'
             encoded_values = [self._encode(value) for value in values]
-            len_ = len(self) + len(encoded_values)
+            len_ = cast(int, pipeline.llen(self.key)) + len(encoded_values)
             trim_indices: Union[Tuple[int, int], Tuple] = tuple()
             if self.maxlen is not None and len_ >= self.maxlen:
                 trim_indices = (len_-self.maxlen, len_) if right else (0, self.maxlen-1)

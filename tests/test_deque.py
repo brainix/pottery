@@ -104,6 +104,12 @@ class DequeTests(TestCase):
         nums.insert(2, 2)
         assert nums == [0, 0, 2, 0, 0]
 
+    def test_insert_right(self):
+        squares = RedisDeque([1, 4, 9], redis=self.redis)
+        squares.insert(100, 16)
+        squares.insert(100, 25)
+        assert squares == [1, 4, 9, 16, 25]
+
     def test_append_trims_when_full(self):
         d = RedisDeque('gh', redis=self.redis, maxlen=3)
         d.append('i')
