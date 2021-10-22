@@ -17,7 +17,6 @@
 
 
 import collections
-import uuid
 from typing import Iterable
 from typing import Optional
 from typing import Tuple
@@ -79,33 +78,13 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
 
     def insert(self, index: int, value: JSONTypes) -> None:
         'Insert an element into the RedisDeque before the given index.  O(n)'
-        encoded_value = self._encode(value)
         with self._watch() as pipeline:
             current_length = cast(int, pipeline.llen(self.key))
             if self.maxlen is not None and current_length >= self.maxlen:
                 raise IndexError(
                     f'{self.__class__.__name__} already at its maximum size'
                 )
-            if index <= 0:
-                pipeline.multi()
-                pipeline.lpush(self.key, encoded_value)
-            elif index < current_length:
-                # Python's list API requires us to insert an element before the
-                # given *index.*  Redis supports only inserting an element
-                # before a given (pivot) *value.*  So our workaround is to set
-                # the pivot value to a UUID4, then to insert the desired value
-                # before the UUID4, then to set the value UUID4 back to the
-                # original pivot value.  More info:
-                #   http://redis.io/commands/linsert
-                pivot = cast(bytes, pipeline.lindex(self.key, index))
-                pipeline.multi()
-                uuid4 = str(uuid.uuid4())
-                pipeline.lset(self.key, index, uuid4)
-                pipeline.linsert(self.key, 'BEFORE', uuid4, encoded_value)
-                pipeline.lset(self.key, index+1, pivot)
-            else:
-                pipeline.multi()
-                pipeline.rpush(self.key, encoded_value)
+            super()._insert(index, value, pipeline=pipeline)
 
     def append(self, value: JSONTypes) -> None:
         'Add an element to the right side of the RedisDeque.  O(1)'

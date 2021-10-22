@@ -166,30 +166,40 @@ class RedisList(Base, collections.abc.MutableSequence):
         return self.redis.llen(self.key)
 
     def insert(self, index: int, value: JSONTypes) -> None:
-        'Insert an element into the RedisList before the given index.  O(n)'
-        encoded_value = self._encode(value)
+        'Insert an element into the RedisDeque before the given index.  O(n)'
         with self._watch() as pipeline:
-            current_length = cast(int, pipeline.llen(self.key))
-            if index <= 0:
-                pipeline.multi()
-                pipeline.lpush(self.key, encoded_value)
-            elif index < current_length:
-                # Python's list API requires us to insert an element before the
-                # given *index.*  Redis supports only inserting an element
-                # before a given (pivot) *value.*  So our workaround is to set
-                # the pivot value to a UUID4, then to insert the desired value
-                # before the UUID4, then to set the value UUID4 back to the
-                # original pivot value.  More info:
-                #   http://redis.io/commands/linsert
-                pivot = cast(bytes, pipeline.lindex(self.key, index))
-                pipeline.multi()
-                uuid4 = str(uuid.uuid4())
-                pipeline.lset(self.key, index, uuid4)
-                pipeline.linsert(self.key, 'BEFORE', uuid4, encoded_value)
-                pipeline.lset(self.key, index+1, pivot)
-            else:
-                pipeline.multi()
-                pipeline.rpush(self.key, encoded_value)
+            self.__insert(index, value, pipeline=pipeline)
+
+    def _insert(self,
+                index: int,
+                value: JSONTypes,
+                *,
+                pipeline: Pipeline,
+                ) -> None:
+        encoded_value = self._encode(value)
+        current_length = cast(int, pipeline.llen(self.key))
+        if index <= 0:
+            pipeline.multi()
+            pipeline.lpush(self.key, encoded_value)
+        elif index < current_length:
+            # Python's list API requires us to insert an element before the
+            # given *index.*  Redis supports only inserting an element before a
+            # given (pivot) *value.*  So our workaround is to set the pivot
+            # value to a UUID4, then to insert the desired value before the
+            # UUID4, then to set the value UUID4 back to the original pivot
+            # pivot value.  More info:
+            #   http://redis.io/commands/linsert
+            pivot = cast(bytes, pipeline.lindex(self.key, index))
+            pipeline.multi()
+            uuid4 = str(uuid.uuid4())
+            pipeline.lset(self.key, index, uuid4)
+            pipeline.linsert(self.key, 'BEFORE', uuid4, encoded_value)
+            pipeline.lset(self.key, index+1, pivot)
+        else:
+            pipeline.multi()
+            pipeline.rpush(self.key, encoded_value)
+
+    __insert = _insert
 
     # Methods required for Raj's sanity:
 
