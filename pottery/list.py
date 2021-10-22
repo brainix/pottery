@@ -19,6 +19,7 @@
 import collections.abc
 import functools
 import itertools
+import uuid
 from typing import Any
 from typing import Callable
 from typing import Iterable
@@ -176,14 +177,15 @@ class RedisList(Base, collections.abc.MutableSequence):
                 # Python's list API requires us to insert an element before the
                 # given *index.*  Redis supports only inserting an element
                 # before a given (pivot) *value.*  So our workaround is to set
-                # the pivot value to 0, then to insert the desired value before
-                # the value 0, then to set the value 0 back to the original
-                # pivot value.  More info:
+                # the pivot value to a UUID4, then to insert the desired value
+                # before the UUID4, then to set the value UUID4 back to the
+                # original pivot value.  More info:
                 #   http://redis.io/commands/linsert
                 pivot = cast(bytes, pipeline.lindex(self.key, index))
                 pipeline.multi()
-                pipeline.lset(self.key, index, 0)
-                pipeline.linsert(self.key, 'BEFORE', 0, encoded_value)
+                uuid4 = str(uuid.uuid4())
+                pipeline.lset(self.key, index, uuid4)
+                pipeline.linsert(self.key, 'BEFORE', uuid4, encoded_value)
                 pipeline.lset(self.key, index+1, pivot)
             else:
                 pipeline.multi()

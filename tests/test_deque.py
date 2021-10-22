@@ -92,6 +92,18 @@ class DequeTests(TestCase):
         with self.assertRaises(IndexError):
             d.insert(len(d), 'j')
 
+    def test_insert_left(self):
+        squares = RedisDeque([9, 16, 25], redis=self.redis)
+        squares.insert(-1, 4)
+        assert squares == [4, 9, 16, 25]
+        squares.insert(0, 1)
+        assert squares == [1, 4, 9, 16, 25]
+
+    def test_insert_middle(self):
+        nums = RedisDeque([0, 0, 0, 0], redis=self.redis)
+        nums.insert(2, 2)
+        assert nums == [0, 0, 2, 0, 0]
+
     def test_append_trims_when_full(self):
         d = RedisDeque('gh', redis=self.redis, maxlen=3)
         d.append('i')
