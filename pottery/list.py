@@ -110,7 +110,9 @@ class RedisList(Base, collections.abc.MutableSequence):
                 pipeline.lrange(self.key, start, stop)
                 encoded = pipeline.execute()[0]
                 encoded = encoded[::index.step]
-                value: Union[List[JSONTypes], JSONTypes] = [self._decode(value) for value in encoded]
+                value: Union[List[JSONTypes], JSONTypes] = [
+                    self._decode(value) for value in encoded
+                ]
         else:
             index = self.__slice_to_indices(index).start
             encoded = self.redis.lindex(self.key, index)
@@ -151,15 +153,17 @@ class RedisList(Base, collections.abc.MutableSequence):
     def __delete(self, pipeline: Pipeline, index: Union[slice, int]) -> None:
         # Python's list API requires us to delete an element by *index.*  Redis
         # supports only deleting an element by *value.*  So our workaround is
-        # to set l[index] to 0, then to delete the value 0.  More info:
+        # to set l[index] to a UUID4, then to delete the value UUID4.  More
+        # info:
         #   http://redis.io/commands/lrem
         indices, num = self.__slice_to_indices(index), 0
+        uuid4 = str(uuid.uuid4())
         pipeline.multi()
         for index in indices:
-            pipeline.lset(self.key, index, 0)
+            pipeline.lset(self.key, index, uuid4)
             num += 1
         if num:
-            pipeline.lrem(self.key, num, 0)
+            pipeline.lrem(self.key, num, uuid4)
 
     def __len__(self) -> int:
         'Return the number of items in the RedisList.  O(1)'
@@ -232,7 +236,8 @@ class RedisList(Base, collections.abc.MutableSequence):
 
             if isinstance(other, collections.abc.MutableSequence):
                 # self and other are the same length, and other is a mutable
-                # sequence too.  Compare self's and other's elements, pair by pair.
+                # sequence too.  Compare self's and other's elements, pair by
+                # pair.
                 encoded_xs = cast(
                     List[bytes],
                     pipeline.lrange(self.key, 0, -1),
