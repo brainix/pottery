@@ -178,10 +178,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                 ) -> None:
         encoded_value = self._encode(value)
         current_length = cast(int, pipeline.llen(self.key))
-        if index <= 0:
-            pipeline.multi()
-            pipeline.lpush(self.key, encoded_value)
-        elif index < current_length:
+        if 0 < index < current_length:
             # Python's list API requires us to insert an element before the
             # given *index.*  Redis supports only inserting an element before a
             # given (pivot) *value.*  So our workaround is to set the pivot
@@ -189,15 +186,16 @@ class RedisList(Base, collections.abc.MutableSequence):
             # UUID4, then to set the value UUID4 back to the original pivot
             # pivot value.  More info:
             #   http://redis.io/commands/linsert
+            uuid4 = str(uuid.uuid4())
             pivot = cast(bytes, pipeline.lindex(self.key, index))
             pipeline.multi()
-            uuid4 = str(uuid.uuid4())
             pipeline.lset(self.key, index, uuid4)
             pipeline.linsert(self.key, 'BEFORE', uuid4, encoded_value)
             pipeline.lset(self.key, index+1, pivot)
         else:
             pipeline.multi()
-            pipeline.rpush(self.key, encoded_value)
+            push_method = pipeline.lpush if index <= 0 else pipeline.rpush
+            push_method(self.key, encoded_value)
 
     __insert = _insert
 
