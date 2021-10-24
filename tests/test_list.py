@@ -140,6 +140,17 @@ class ListTests(TestCase):
         squares.insert(0, 1)
         assert squares == [1, 4, 9, 16, 25]
 
+    def test_insert_middle(self):
+        nums = RedisList([0, 0, 0, 0], redis=self.redis)
+        nums.insert(2, 2)
+        assert nums == [0, 0, 2, 0, 0]
+
+    def test_insert_right(self):
+        squares = RedisList([1, 4, 9], redis=self.redis)
+        squares.insert(100, 16)
+        squares.insert(100, 25)
+        assert squares == [1, 4, 9, 16, 25]
+
     def test_extend(self):
         squares = RedisList([1, 4, 9], redis=self.redis)
         squares.extend([16, 25])

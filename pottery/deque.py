@@ -21,6 +21,7 @@ from typing import Iterable
 from typing import Optional
 from typing import Tuple
 from typing import Union
+from typing import cast
 
 from redis import Redis
 from redis.client import Pipeline
@@ -59,6 +60,8 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
             if self.maxlen:
                 iterable = tuple(iterable)[-self.maxlen:]
             else:
+                # self.maxlen == 0.  Populate the RedisDeque with an empty
+                # iterable.
                 iterable = tuple()
         super()._populate(pipeline, iterable)
 
@@ -75,11 +78,13 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
 
     def insert(self, index: int, value: JSONTypes) -> None:
         'Insert an element into the RedisDeque before the given index.  O(n)'
-        if self.maxlen is not None and len(self) >= self.maxlen:
-            raise IndexError(
-                f'{self.__class__.__name__} already at its maximum size'
-            )
-        return super()._insert(index, value)
+        with self._watch() as pipeline:
+            current_length = cast(int, pipeline.llen(self.key))
+            if self.maxlen is not None and current_length >= self.maxlen:
+                raise IndexError(
+                    f'{self.__class__.__name__} already at its maximum size'
+                )
+            super()._insert(index, value, pipeline=pipeline)
 
     def append(self, value: JSONTypes) -> None:
         'Add an element to the right side of the RedisDeque.  O(1)'
@@ -113,7 +118,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
         with self._watch(values) as pipeline:
             push_method = 'rpush' if right else 'lpush'
             encoded_values = [self._encode(value) for value in values]
-            len_ = len(self) + len(encoded_values)
+            len_ = cast(int, pipeline.llen(self.key)) + len(encoded_values)
             trim_indices: Union[Tuple[int, int], Tuple] = tuple()
             if self.maxlen is not None and len_ >= self.maxlen:
                 trim_indices = (len_-self.maxlen, len_) if right else (0, self.maxlen-1)
