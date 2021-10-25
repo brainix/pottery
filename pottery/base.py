@@ -19,13 +19,10 @@
 import abc
 import collections
 import contextlib
-import functools
 import json
 import logging
 import os
-import random
-import string
-from types import TracebackType
+import uuid
 from typing import Any
 from typing import AnyStr
 from typing import ClassVar
@@ -37,20 +34,16 @@ from typing import List
 from typing import Mapping
 from typing import Optional
 from typing import Tuple
-from typing import Type
 from typing import Union
 from typing import cast
-from typing import overload
 
 from redis import Redis
 from redis import RedisError
 from redis.client import Pipeline
 from typing_extensions import Final
-from typing_extensions import Literal
 
 from . import monkey
 from .annotations import JSONTypes
-from .annotations import RedisValues
 from .exceptions import QuorumIsImpossible
 from .exceptions import RandomKeyError
 
@@ -63,7 +56,6 @@ _logger: Final[logging.Logger] = logging.getLogger('pottery')
 def random_key(*,
                redis: Redis,
                prefix: str = 'pottery:',
-               length: int = 16,
                num_tries: int = 3,
                ) -> str:
     'Find/return a random key that does not exist in the Redis instance.'
@@ -74,15 +66,12 @@ def random_key(*,
     if num_tries == 0:
         raise RandomKeyError(redis)
 
-    all_chars = string.digits + string.ascii_letters
-    random_char = functools.partial(random.choice, all_chars)
-    suffix = ''.join(cast(str, random_char()) for n in range(length))
-    key = prefix + suffix
+    uuid4 = str(uuid.uuid4())
+    key = prefix + uuid4
     if redis.exists(key):
         key = random_key(
             redis=redis,
             prefix=prefix,
-            length=length,
             num_tries=num_tries-1,
         )
     return key

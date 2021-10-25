@@ -24,9 +24,9 @@ from typing import cast
 
 from redis import Redis
 
+from .annotations import RedisValues
 from .base import Base
 from .base import JSONTypes
-from .base import RedisValues
 
 
 class HyperLogLog(Base):
