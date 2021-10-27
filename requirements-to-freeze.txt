@@ -20,6 +20,7 @@
 # authentication (a username and password).  For more info:
 #   https://github.com/andymccurdy/redis-py/issues/1278
 redis>=3.4.1
+hiredis
 mmh3
 typing_extensions
 
