@@ -90,7 +90,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     def __repr__(self) -> str:
         'Return the string representation of the RedisSet.  O(n)'
-        set_ = {self._decode(value) for value in self.redis.smembers(self.key)}  # type: ignore
+        set_ = {self._decode(value) for value in self.redis.smembers(self.key)}
         return self.__class__.__name__ + str(set_)
 
     # Method overrides:
