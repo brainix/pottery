@@ -20,7 +20,7 @@ from redis import Redis
 
 from pottery import KeyExistsError
 from pottery import RedisSet
-from tests.base import TestCase  # type: ignore
+from tests.base import TestCase
 
 
 class SetTests(TestCase):

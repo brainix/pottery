@@ -19,7 +19,7 @@
 from redis import Redis
 
 from pottery import HyperLogLog
-from tests.base import TestCase  # type: ignore
+from tests.base import TestCase
 
 
 class HyperLogLogTests(TestCase):

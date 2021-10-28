@@ -19,7 +19,7 @@
 import time
 
 from pottery import ContextTimer
-from tests.base import TestCase  # type: ignore
+from tests.base import TestCase
 
 
 class ContextTimerTests(TestCase):

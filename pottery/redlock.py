@@ -751,5 +751,5 @@ if __name__ == '__main__':
     #   $ python3 -m pottery.redlock
     #   $ deactivate
     with contextlib.suppress(ImportError):
-        from tests.base import run_doctests  # type: ignore
+        from tests.base import run_doctests
         run_doctests()

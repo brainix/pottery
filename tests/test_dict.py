@@ -21,7 +21,7 @@ import json
 
 from pottery import KeyExistsError
 from pottery import RedisDict
-from tests.base import TestCase  # type: ignore
+from tests.base import TestCase
 
 
 class DictTests(TestCase):

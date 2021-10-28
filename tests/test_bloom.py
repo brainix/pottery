@@ -22,7 +22,7 @@ import string
 
 from pottery import BloomFilter
 from pottery.bloom import _store_on_self
-from tests.base import TestCase  # type: ignore
+from tests.base import TestCase
 
 
 class StoreOnSelfTests(TestCase):

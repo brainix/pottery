@@ -22,7 +22,7 @@ import unittest.mock
 from pottery import RandomKeyError
 from pottery import RedisDict
 from pottery.base import random_key
-from tests.base import TestCase  # type: ignore
+from tests.base import TestCase
 
 
 class RandomKeyTests(TestCase):
