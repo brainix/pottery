@@ -25,7 +25,7 @@ from redis.exceptions import TimeoutError
 from pottery import NextId
 from pottery import QuorumIsImpossible
 from pottery import QuorumNotAchieved
-from tests.base import TestCase  # type: ignore
+from tests.base import TestCase
 
 
 class NextIdTests(TestCase):

@@ -26,7 +26,7 @@ from pottery import redis_cache
 from pottery.cache import _DEFAULT_TIMEOUT
 from pottery.cache import CachedOrderedDict
 from pottery.cache import CacheInfo
-from tests.base import TestCase  # type: ignore
+from tests.base import TestCase
 
 
 class CacheDecoratorTests(TestCase):

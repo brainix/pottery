@@ -22,7 +22,7 @@ import os
 import pathlib
 import unittest
 
-from tests.base import TestCase  # type: ignore
+from tests.base import TestCase
 
 
 class DoctestTests(TestCase):  # pragma: no cover

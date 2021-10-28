@@ -35,7 +35,7 @@ from pottery import ReleaseUnlockedLock
 from pottery import TooManyExtensions
 from pottery import synchronize
 from pottery.redlock import _logger
-from tests.base import TestCase  # type: ignore
+from tests.base import TestCase
 
 
 class RedlockTests(TestCase):

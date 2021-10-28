@@ -20,7 +20,7 @@ import concurrent.futures
 import time
 
 from pottery.executor import BailOutExecutor
-from tests.base import TestCase  # type: ignore
+from tests.base import TestCase
 
 
 class ExecutorTests(TestCase):
