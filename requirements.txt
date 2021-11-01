@@ -2,7 +2,7 @@ bleach==4.1.0
 certifi==2021.10.8
 charset-normalizer==2.0.7
 colorama==0.4.4
-coverage==6.0.2
+coverage==6.1.1
 docutils==0.18
 flake8==4.0.1
 hiredis==2.0.0
