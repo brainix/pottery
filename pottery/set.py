@@ -132,16 +132,11 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     # Where does this method come from?
     def intersection(self, *others: Iterable[Any]) -> Set[Any]:
-        if self._same_redis(*others):
-            keys = (self.key, *(cast(RedisSet, other).key for other in others))
-            encoded_values = self.redis.sinter(*keys)
-            decoded_values = {
-                self._decode(cast(bytes, value)) for value in encoded_values
-            }
-            return decoded_values
-        with self._watch(*others):
-            set_ = set(self)
-            return set_.intersection(*others)
+        return self.__set_op(
+            *others,
+            redis_method='sinter',
+            set_method='intersection',
+        )
 
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
@@ -149,8 +144,30 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     __intersection = intersection
 
     # Where does this method come from?
-    def difference(self, *others: Iterable[Any]) -> NoReturn:  # pragma: no cover
-        raise NotImplementedError
+    def difference(self, *others: Iterable[Any]) -> Set[Any]:
+        return self.__set_op(
+            *others,
+            redis_method='sdiff',
+            set_method='difference',
+        )
+
+    def __set_op(self,
+                 *others: Iterable[Any],
+                 redis_method: str,
+                 set_method: str,
+                 ) -> Set[Any]:
+        if self._same_redis(*others):
+            method = getattr(self.redis, redis_method)
+            keys = (self.key, *(cast(RedisSet, other).key for other in others))
+            encoded_values = method(*keys)
+            decoded_values = {
+                self._decode(cast(bytes, value)) for value in encoded_values
+            }
+            return decoded_values
+        with self._watch(*others):
+            set_ = set(self)
+            method = getattr(set_, set_method)
+            return method(*others)
 
     # Where does this method come from?
     def symmetric_difference(self, other: Iterable[Any]) -> NoReturn:  # pragma: no cover
