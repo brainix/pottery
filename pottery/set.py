@@ -149,8 +149,17 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     __intersection = intersection
 
     # Where does this method come from?
-    def difference(self, *others: Iterable[Any]) -> NoReturn:  # pragma: no cover
-        raise NotImplementedError
+    def difference(self, *others: Iterable[Any]) -> Set[Any]:  # pragma: no cover
+        if self._same_redis(*others):
+            keys = (self.key, *(cast(RedisSet, other).key for other in others))
+            encoded_values = self.redis.sdiff(*keys)
+            decoded_values = {
+                self._decode(cast(bytes, value)) for value in encoded_values
+            }
+            return decoded_values
+        with self._watch(*others):
+            set_ = set(self)
+            return set_.difference(*others)
 
     # Where does this method come from?
     def symmetric_difference(self, other: Iterable[Any]) -> NoReturn:  # pragma: no cover

@@ -199,6 +199,18 @@ class SetTests(TestCase):
         e = {'d', 'e', 'f'}
         assert a.intersection(e) == set()
 
+    def test_difference(self):
+        a = RedisSet('abcd', redis=self.redis)
+        b = RedisSet('c', redis=self.redis)
+        c = RedisSet('ace', redis=self.redis)
+        assert a.difference(b, c) == {'b', 'd'}
+        assert a - b - c == {'b', 'd'}
+
+        b = {'c'}
+        c = {'a', 'c', 'e'}
+        assert a.difference(b, c) == {'b', 'd'}
+        assert a - b - c == {'b', 'd'}
+
     def test_update_with_no_arguments(self):
         s = RedisSet(redis=self.redis)
         s.update()
