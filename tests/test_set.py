@@ -180,6 +180,21 @@ class SetTests(TestCase):
         assert not a > d
         assert not d > a
 
+    def test_union(self):
+        a = RedisSet('abc', redis=self.redis)
+        b = RedisSet('cde', redis=self.redis)
+        assert a.union(b) == {'a', 'b', 'c', 'd', 'e'}
+
+        other_url = 'redis://127.0.0.1:6379/'
+        other_redis = Redis.from_url(other_url, socket_timeout=1)
+        a = RedisSet('abc', redis=self.redis)
+        b = RedisSet('cde', redis=other_redis)
+        assert a.union(b) == {'a', 'b', 'c', 'd', 'e'}
+
+        a = RedisSet(redis=self.redis)
+        b = {'a', 'b', 'c'}
+        assert a.union(b) == {'a', 'b', 'c'}
+
     def test_intersection(self):
         a = RedisSet('abc', redis=self.redis)
         b = RedisSet('cde', redis=self.redis)

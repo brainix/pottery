@@ -127,8 +127,12 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         return self >= other
 
     # Where does this method come from?
-    def union(self, *others: Iterable[Any]) -> NoReturn:  # pragma: no cover
-        raise NotImplementedError
+    def union(self, *others: Iterable[Any]) -> Set[Any]:  # pragma: no cover
+        return self.__set_op(
+            *others,
+            redis_method='sunion',
+            set_method='union',
+        )
 
     # Where does this method come from?
     def intersection(self, *others: Iterable[Any]) -> Set[Any]:
