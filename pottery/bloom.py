@@ -64,7 +64,8 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
                      encoded_value: JSONTypes,
                      ) -> Generator[int, None, None]:
         for seed in range(self.num_hashes()):
-            yield mmh3.hash(encoded_value, seed=seed) % self.size()
+            hash_ = mmh3.hash(encoded_value, seed=seed)
+            yield hash_ % self.size()
 
     @abc.abstractmethod
     def update(self, *iterables: Iterable[JSONTypes]) -> None:
