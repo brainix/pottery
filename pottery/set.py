@@ -116,18 +116,20 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     # Where does this method come from?
     def issubset(self, other: Iterable[Any]) -> bool:
-        if not isinstance(other, collections.abc.Set):
-            other = frozenset(other)
-        return self <= other
+        with self._watch(other):
+            if not isinstance(other, collections.abc.Set):
+                other = frozenset(other)
+            return self <= other
 
     # Where does this method come from?
     def issuperset(self, other: Iterable[Any]) -> bool:
-        if not isinstance(other, collections.abc.Set):
-            other = frozenset(other)
-        return self >= other
+        with self._watch(other):
+            if not isinstance(other, collections.abc.Set):
+                other = frozenset(other)
+            return self >= other
 
     # Where does this method come from?
-    def union(self, *others: Iterable[Any]) -> Set[Any]:  # pragma: no cover
+    def union(self, *others: Iterable[Any]) -> Set[Any]:
         return self.__set_op(
             *others,
             redis_method='sunion',
