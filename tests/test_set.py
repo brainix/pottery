@@ -232,6 +232,18 @@ class SetTests(TestCase):
         metasyntactic_variables.update(set())
         assert metasyntactic_variables == {'foo', 'bar', 'baz'}
 
+    def test_update_with_redisset(self):
+        metasyntactic_variables_1 = RedisSet(redis=self.redis)
+        metasyntactic_variables_2 = RedisSet(
+            {'foo', 'bar', 'baz'},
+            redis=self.redis,
+        )
+        metasyntactic_variables_1.update(metasyntactic_variables_2)
+        assert metasyntactic_variables_1 == {'foo', 'bar', 'baz'}
+        metasyntactic_variables_3 = RedisSet({'qux'}, redis=self.redis)
+        metasyntactic_variables_1.update(metasyntactic_variables_3)
+        assert metasyntactic_variables_1 == {'foo', 'bar', 'baz', 'qux'}
+
     def test_update_with_set(self):
         metasyntactic_variables = RedisSet(redis=self.redis)
         metasyntactic_variables.update({'foo', 'bar', 'baz'})
@@ -259,6 +271,16 @@ class SetTests(TestCase):
         ramanujans_friends = RedisSet(range(10), redis=self.redis)
         ramanujans_friends.difference_update(set())
         assert ramanujans_friends == {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+    def test_difference_update_with_redisset(self):
+        ramanujans_friends_1 = RedisSet(redis=self.redis)
+        ramanujans_friends_2 = RedisSet({5, 6, 7, 8, 9}, redis=self.redis)
+        ramanujans_friends_1.difference_update(ramanujans_friends_2)
+        assert ramanujans_friends_1 == set()
+
+        ramanujans_friends_1 = RedisSet(range(10), redis=self.redis)
+        ramanujans_friends_1.difference_update(ramanujans_friends_2)
+        assert ramanujans_friends_1 == {0, 1, 2, 3, 4}
 
     def test_difference_update_with_set(self):
         ramanujans_friends = RedisSet(redis=self.redis)

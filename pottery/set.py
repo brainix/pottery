@@ -176,18 +176,35 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     def __update(self,
                  *others: Iterable[JSONTypes],
                  redis_method: str,
+                 pipeline_method: str,
                  ) -> None:
-        with self._watch(*others) as pipeline:
-            encoded_values = set()
-            for value in itertools.chain(*others):
-                encoded_values.add(self._encode(value))
-            if encoded_values:
-                pipeline.multi()
-                getattr(pipeline, redis_method)(self.key, *encoded_values)
+        if not others:
+            return
+        if self._same_redis(*others):
+            method = getattr(self.redis, redis_method)
+            keys = (
+                self.key,
+                self.key,
+                *(cast(RedisSet, other).key for other in others)
+            )
+            method(*keys)
+        else:
+            with self._watch(*others) as pipeline:
+                encoded_values = set()
+                for value in itertools.chain(*others):
+                    encoded_values.add(self._encode(value))
+                if encoded_values:
+                    pipeline.multi()
+                    method = getattr(pipeline, pipeline_method)
+                    method(self.key, *encoded_values)
 
     # Where does this method come from?
     def update(self, *others: Iterable[JSONTypes]) -> None:
-        self.__update(*others, redis_method='sadd')
+        self.__update(
+            *others,
+            redis_method='sunionstore',
+            pipeline_method='sadd',
+        )
 
     # Where does this method come from?
     def intersection_update(self, *others: Iterable[JSONTypes]) -> NoReturn:  # pragma: no cover
@@ -195,7 +212,11 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     # Where does this method come from?
     def difference_update(self, *others: Iterable[JSONTypes]) -> None:
-        self.__update(*others, redis_method='srem')
+        self.__update(
+            *others,
+            redis_method='sdiffstore',
+            pipeline_method='srem',
+        )
 
     # Where does this method come from?
     def symmetric_difference_update(self, other: Iterable[JSONTypes]) -> NoReturn:  # pragma: no cover
