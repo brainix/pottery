@@ -64,7 +64,8 @@ class CacheInfo(NamedTuple):
 
 
 def _arg_hash(*args: Hashable, **kwargs: Hashable) -> int:
-    return hash((args, frozenset(kwargs.items())))
+    kwargs_items = frozenset(kwargs.items())
+    return hash((args, kwargs_items))
 
 
 F = TypeVar('F', bound=Callable[..., JSONTypes])
