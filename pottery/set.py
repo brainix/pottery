@@ -21,12 +21,12 @@ import itertools
 from typing import Any
 from typing import Iterable
 from typing import List
-from typing import Literal
 from typing import NoReturn
 from typing import Optional
 from typing import Set
 from typing import Tuple
 from typing import cast
+from typing_extensions import Literal
 
 from redis import Redis
 from redis.client import Pipeline
