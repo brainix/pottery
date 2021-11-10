@@ -26,10 +26,10 @@ from typing import Optional
 from typing import Set
 from typing import Tuple
 from typing import cast
-from typing_extensions import Literal
 
 from redis import Redis
 from redis.client import Pipeline
+from typing_extensions import Literal
 
 from .base import Base
 from .base import Iterable_
