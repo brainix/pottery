@@ -21,6 +21,7 @@ import itertools
 from typing import Any
 from typing import Iterable
 from typing import List
+from typing import Literal
 from typing import NoReturn
 from typing import Optional
 from typing import Set
@@ -159,8 +160,8 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     def __set_op(self,
                  *others: Iterable[Any],
-                 redis_method: str,
-                 set_method: str,
+                 redis_method: Literal['sunion', 'sinter', 'sdiff'],
+                 set_method: Literal['union', 'intersection', 'difference'],
                  ) -> Set[Any]:
         if self._same_redis(*others):
             method = getattr(self.redis, redis_method)
@@ -178,31 +179,6 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     # Where does this method come from?
     def symmetric_difference(self, other: Iterable[Any]) -> NoReturn:  # pragma: no cover
         raise NotImplementedError
-
-    def __update(self,
-                 *others: Iterable[JSONTypes],
-                 redis_method: str,
-                 pipeline_method: str,
-                 ) -> None:
-        if not others:
-            return
-        if self._same_redis(*others):
-            method = getattr(self.redis, redis_method)
-            keys = (
-                self.key,
-                self.key,
-                *(cast(RedisSet, other).key for other in others)
-            )
-            method(*keys)
-        else:
-            with self._watch(*others) as pipeline:
-                encoded_values = set()
-                for value in itertools.chain(*others):
-                    encoded_values.add(self._encode(value))
-                if encoded_values:
-                    pipeline.multi()
-                    method = getattr(pipeline, pipeline_method)
-                    method(self.key, *encoded_values)
 
     # Where does this method come from?
     def update(self, *others: Iterable[JSONTypes]) -> None:
@@ -223,6 +199,31 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             redis_method='sdiffstore',
             pipeline_method='srem',
         )
+
+    def __update(self,
+                 *others: Iterable[JSONTypes],
+                 redis_method: Literal['sunionstore', 'sdiffstore'],
+                 pipeline_method: Literal['sadd', 'srem'],
+                 ) -> None:
+        if not others:
+            return
+        if self._same_redis(*others):
+            method = getattr(self.redis, redis_method)
+            keys = (
+                self.key,
+                self.key,
+                *(cast(RedisSet, other).key for other in others)
+            )
+            method(*keys)
+        else:
+            with self._watch(*others) as pipeline:
+                encoded_values = set()
+                for value in itertools.chain(*others):
+                    encoded_values.add(self._encode(value))
+                if encoded_values:
+                    pipeline.multi()
+                    method = getattr(pipeline, pipeline_method)
+                    method(self.key, *encoded_values)
 
     # Where does this method come from?
     def symmetric_difference_update(self, other: Iterable[JSONTypes]) -> NoReturn:  # pragma: no cover
