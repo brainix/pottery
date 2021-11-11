@@ -153,13 +153,14 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
                 # Rotating an empty RedisDeque is a no-op.
                 return
 
-            push_method = 'lpush' if n > 0 else 'rpush'
-            values = self[-n:][::-1] if n > 0 else self[:-n]
-            encoded_values = (self._encode(element) for element in values)
+            push_method_name = 'lpush' if n > 0 else 'rpush'
+            decoded_values = self[-n:][::-1] if n > 0 else self[:-n]
+            encoded_values = (self._encode(value) for value in decoded_values)
             trim_indices = (0, len(self)-1) if n > 0 else (-n, len(self)-1-n)
 
             pipeline.multi()
-            getattr(pipeline, push_method)(self.key, *encoded_values)
+            push_method = getattr(pipeline, push_method_name)
+            push_method(self.key, *encoded_values)
             pipeline.ltrim(self.key, *trim_indices)
 
     # Methods required for Raj's sanity:
