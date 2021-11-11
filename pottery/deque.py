@@ -116,7 +116,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
                  right: bool = True,
                  ) -> None:
         with self._watch(values) as pipeline:
-            push_method = 'rpush' if right else 'lpush'
+            push_method_name = 'rpush' if right else 'lpush'
             encoded_values = [self._encode(value) for value in values]
             len_ = cast(int, pipeline.llen(self.key)) + len(encoded_values)
             trim_indices: Union[Tuple[int, int], Tuple] = tuple()
@@ -124,7 +124,8 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
                 trim_indices = (len_-self.maxlen, len_) if right else (0, self.maxlen-1)
 
             pipeline.multi()
-            getattr(pipeline, push_method)(self.key, *encoded_values)
+            push_method = getattr(pipeline, push_method_name)
+            push_method(self.key, *encoded_values)
             if trim_indices:
                 pipeline.ltrim(self.key, *trim_indices)
 
@@ -153,13 +154,14 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
                 # Rotating an empty RedisDeque is a no-op.
                 return
 
-            push_method = 'lpush' if n > 0 else 'rpush'
-            values = self[-n:][::-1] if n > 0 else self[:-n]
-            encoded_values = (self._encode(element) for element in values)
+            push_method_name = 'lpush' if n > 0 else 'rpush'
+            decoded_values = self[-n:][::-1] if n > 0 else self[:-n]
+            encoded_values = (self._encode(value) for value in decoded_values)
             trim_indices = (0, len(self)-1) if n > 0 else (-n, len(self)-1-n)
 
             pipeline.multi()
-            getattr(pipeline, push_method)(self.key, *encoded_values)
+            push_method = getattr(pipeline, push_method_name)
+            push_method(self.key, *encoded_values)
             pipeline.ltrim(self.key, *trim_indices)
 
     # Methods required for Raj's sanity:
