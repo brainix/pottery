@@ -30,7 +30,7 @@ from typing_extensions import Final
 
 
 __title__ = 'pottery'
-__version__ = '1.4.7'
+__version__ = '2.0.0'
 __description__ = __doc__.split(sep='\n\n', maxsplit=1)[0]
 __url__ = 'https://github.com/brainix/pottery'
 __author__ = 'Rajiv Bakulesh Shah'

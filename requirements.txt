@@ -3,6 +3,7 @@ certifi==2021.10.8
 charset-normalizer==2.0.7
 colorama==0.4.4
 coverage==6.1.2
+Deprecated==1.2.13
 docutils==0.18
 flake8==4.0.1
 hiredis==2.0.0
@@ -14,14 +15,14 @@ mccabe==0.6.1
 mmh3==3.0.0
 mypy==0.910
 mypy-extensions==0.4.3
-packaging==21.0
+packaging==21.2
 pkginfo==1.7.1
 pycodestyle==2.8.0
 pyflakes==2.4.0
 Pygments==2.10.0
-pyparsing==3.0.1
+pyparsing==2.4.7
 readme-renderer==30.0
-redis==3.5.3
+redis==4.0.0
 requests==2.26.0
 requests-toolbelt==0.9.1
 rfc3986==1.5.0
@@ -33,4 +34,5 @@ types-redis==3.5.16
 typing_extensions==4.0.0
 urllib3==1.26.7
 webencodings==0.5.1
+wrapt==1.13.3
 zipp==3.6.0

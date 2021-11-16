@@ -19,7 +19,7 @@
 
 import unittest.mock
 
-from redis.client import Script
+from redis.commands.core import Script  # type: ignore
 from redis.exceptions import TimeoutError
 
 from pottery import NextId
