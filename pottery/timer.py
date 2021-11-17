@@ -116,7 +116,8 @@ class ContextTimer:
 
     def elapsed(self) -> int:
         if self._started:
-            elapsed = (self._stopped or timeit.default_timer()) - self._started
+            stopped_or_current = self._stopped or timeit.default_timer()
+            elapsed = stopped_or_current - self._started
             return round(elapsed * 1000)
         else:
             raise RuntimeError("timer hasn't yet been started")
