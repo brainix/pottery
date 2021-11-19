@@ -22,7 +22,7 @@ pyflakes==2.4.0
 Pygments==2.10.0
 pyparsing==2.4.7
 readme-renderer==30.0
-redis==4.0.0
+redis==4.0.1
 requests==2.26.0
 requests-toolbelt==0.9.1
 rfc3986==1.5.0
@@ -30,7 +30,7 @@ six==1.16.0
 toml==0.10.2
 tqdm==4.62.3
 twine==3.6.0
-types-redis==3.5.16
+types-redis==3.5.17
 typing_extensions==4.0.0
 urllib3==1.26.7
 webencodings==0.5.1
