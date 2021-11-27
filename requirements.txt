@@ -2,7 +2,7 @@ bleach==4.1.0
 certifi==2021.10.8
 charset-normalizer==2.0.7
 colorama==0.4.4
-coverage==6.1.2
+coverage==6.2
 Deprecated==1.2.13
 docutils==0.18
 flake8==4.0.1
@@ -22,7 +22,7 @@ pyflakes==2.4.0
 Pygments==2.10.0
 pyparsing==2.4.7
 readme-renderer==30.0
-redis==4.0.1
+redis==4.0.2
 requests==2.26.0
 requests-toolbelt==0.9.1
 rfc3986==1.5.0
@@ -30,7 +30,7 @@ six==1.16.0
 toml==0.10.2
 tqdm==4.62.3
 twine==3.6.0
-types-redis==3.5.17
+types-redis==4.0.1
 typing_extensions==4.0.0
 urllib3==1.26.7
 webencodings==0.5.1
