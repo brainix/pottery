@@ -16,7 +16,7 @@ mmh3==3.0.0
 mypy==0.910
 mypy-extensions==0.4.3
 packaging==21.2
-pkginfo==1.7.1
+pkginfo==1.8.1
 pycodestyle==2.8.0
 pyflakes==2.4.0
 Pygments==2.10.0
@@ -29,9 +29,9 @@ rfc3986==1.5.0
 six==1.16.0
 toml==0.10.2
 tqdm==4.62.3
-twine==3.6.0
-types-redis==4.0.1
-typing_extensions==4.0.0
+twine==3.7.0
+types-redis==4.0.3
+typing_extensions==4.0.1
 urllib3==1.26.7
 webencodings==0.5.1
 wrapt==1.13.3
