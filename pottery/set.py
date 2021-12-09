@@ -128,18 +128,18 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     # Where does this method come from?
     def issubset(self, other: Iterable[Any]) -> bool:
         'Report whether another set contains this set.  O(n)'
-        warnings.warn(
-            cast(str, InefficientAccessWarning.__doc__),
-            InefficientAccessWarning,
-        )
-        with self._watch(other):
-            if not isinstance(other, collections.abc.Set):
-                other = frozenset(other)
-            return self <= other
+        return self.__sub_or_super(other, set_method='__le__')
 
     # Where does this method come from?
     def issuperset(self, other: Iterable[Any]) -> bool:
         'Report whether this set contains another set.  O(n)'
+        return self.__sub_or_super(other, set_method='__ge__')
+
+    def __sub_or_super(self,
+                       other: Iterable[Any],
+                       *,
+                       set_method: Literal['__le__', '__ge__'],
+                       ) -> bool:
         warnings.warn(
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
@@ -147,7 +147,8 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         with self._watch(other):
             if not isinstance(other, collections.abc.Set):
                 other = frozenset(other)
-            return self >= other
+            method = getattr(self, set_method)
+            return method(other)
 
     # Where does this method come from?
     def union(self, *others: Iterable[Any]) -> Set[Any]:
