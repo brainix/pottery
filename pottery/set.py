@@ -126,40 +126,6 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         return not self.__intersection(other)
 
     # Where does this method come from?
-    def issubset(self, other: Iterable[Any]) -> bool:
-        'Report whether another set contains this set.  O(n)'
-        return self.__sub_or_super(other, set_method='__le__')
-
-    # Where does this method come from?
-    def issuperset(self, other: Iterable[Any]) -> bool:
-        'Report whether this set contains another set.  O(n)'
-        return self.__sub_or_super(other, set_method='__ge__')
-
-    def __sub_or_super(self,
-                       other: Iterable[Any],
-                       *,
-                       set_method: Literal['__le__', '__ge__'],
-                       ) -> bool:
-        warnings.warn(
-            cast(str, InefficientAccessWarning.__doc__),
-            InefficientAccessWarning,
-        )
-        with self._watch(other):
-            if not isinstance(other, collections.abc.Set):
-                other = frozenset(other)
-            method = getattr(self, set_method)
-            return method(other)
-
-    # Where does this method come from?
-    def union(self, *others: Iterable[Any]) -> Set[Any]:
-        'Return the union of sets as a new set.  O(n)'
-        return self.__set_op(
-            *others,
-            redis_method='sunion',
-            set_method='union',
-        )
-
-    # Where does this method come from?
     def intersection(self, *others: Iterable[Any]) -> Set[Any]:
         'Return the intersection of two sets as a new set.  O(n)'
         return self.__set_op(
@@ -172,6 +138,15 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     #   https://youtu.be/miGolgp9xq8?t=2086
     #   https://stackoverflow.com/a/38534939
     __intersection = intersection
+
+    # Where does this method come from?
+    def union(self, *others: Iterable[Any]) -> Set[Any]:
+        'Return the union of sets as a new set.  O(n)'
+        return self.__set_op(
+            *others,
+            redis_method='sunion',
+            set_method='union',
+        )
 
     # Where does this method come from?
     def difference(self, *others: Iterable[Any]) -> Set[Any]:
@@ -203,6 +178,31 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             set_ = set(self)
             method = getattr(set_, set_method)
             return method(*others)
+
+    # Where does this method come from?
+    def issubset(self, other: Iterable[Any]) -> bool:
+        'Report whether another set contains this set.  O(n)'
+        return self.__sub_or_super(other, set_method='__le__')
+
+    # Where does this method come from?
+    def issuperset(self, other: Iterable[Any]) -> bool:
+        'Report whether this set contains another set.  O(n)'
+        return self.__sub_or_super(other, set_method='__ge__')
+
+    def __sub_or_super(self,
+                       other: Iterable[Any],
+                       *,
+                       set_method: Literal['__le__', '__ge__'],
+                       ) -> bool:
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
+        with self._watch(other):
+            if not isinstance(other, collections.abc.Set):
+                other = frozenset(other)
+            method = getattr(self, set_method)
+            return method(other)
 
     # Where does this method come from?
     def symmetric_difference(self, other: Iterable[Any]) -> NoReturn:  # pragma: no cover
