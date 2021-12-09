@@ -18,6 +18,7 @@
 
 import collections.abc
 import itertools
+import warnings
 from typing import Any
 from typing import Iterable
 from typing import List
@@ -34,6 +35,7 @@ from typing_extensions import Literal
 from .base import Base
 from .base import Iterable_
 from .base import JSONTypes
+from .exceptions import InefficientAccessWarning
 from .exceptions import KeyExistsError
 
 
@@ -73,6 +75,10 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             return False
 
     def _scan(self, *, cursor: int = 0) -> Tuple[int, List[bytes]]:
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         return self.redis.sscan(self.key, cursor=cursor)
 
     def __len__(self) -> int:
@@ -91,6 +97,10 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     def __repr__(self) -> str:
         'Return the string representation of the RedisSet.  O(n)'
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         set_ = {self._decode(value) for value in self.redis.smembers(self.key)}
         return self.__class__.__name__ + str(set_)
 
@@ -117,6 +127,11 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     # Where does this method come from?
     def issubset(self, other: Iterable[Any]) -> bool:
+        'Report whether another set contains this set.  O(n)'
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         with self._watch(other):
             if not isinstance(other, collections.abc.Set):
                 other = frozenset(other)
@@ -124,6 +139,11 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     # Where does this method come from?
     def issuperset(self, other: Iterable[Any]) -> bool:
+        'Report whether this set contains another set.  O(n)'
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         with self._watch(other):
             if not isinstance(other, collections.abc.Set):
                 other = frozenset(other)
@@ -131,6 +151,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     # Where does this method come from?
     def union(self, *others: Iterable[Any]) -> Set[Any]:
+        'Return the union of sets as a new set.  O(n)'
         return self.__set_op(
             *others,
             redis_method='sunion',
@@ -139,6 +160,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     # Where does this method come from?
     def intersection(self, *others: Iterable[Any]) -> Set[Any]:
+        'Return the intersection of two sets as a new set.  O(n)'
         return self.__set_op(
             *others,
             redis_method='sinter',
@@ -152,6 +174,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     # Where does this method come from?
     def difference(self, *others: Iterable[Any]) -> Set[Any]:
+        'Return the difference of two or more sets as a new set.  O(n)'
         return self.__set_op(
             *others,
             redis_method='sdiff',
@@ -163,6 +186,10 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
                  redis_method: Literal['sunion', 'sinter', 'sdiff'],
                  set_method: Literal['union', 'intersection', 'difference'],
                  ) -> Set[Any]:
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         if self._same_redis(*others):
             method = getattr(self.redis, redis_method)
             keys = (self.key, *(cast(RedisSet, other).key for other in others))
@@ -182,6 +209,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     # Where does this method come from?
     def update(self, *others: Iterable[JSONTypes]) -> None:
+        'Update a set with the union of itself and others.  O(n)'
         self.__update(
             *others,
             redis_method='sunionstore',
@@ -194,6 +222,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     # Where does this method come from?
     def difference_update(self, *others: Iterable[JSONTypes]) -> None:
+        'Remove all elements of another set from this set.  O(n)'
         self.__update(
             *others,
             redis_method='sdiffstore',
@@ -207,6 +236,10 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
                  ) -> None:
         if not others:
             return
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         if self._same_redis(*others):
             method = getattr(self.redis, redis_method)
             keys = (
