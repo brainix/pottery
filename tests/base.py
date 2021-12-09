@@ -21,9 +21,12 @@ import logging
 import random
 import sys
 import unittest
+import warnings
 from typing import NoReturn
 
 from redis import Redis
+
+from pottery import PotteryWarning
 
 
 class TestCase(unittest.TestCase):
@@ -31,6 +34,7 @@ class TestCase(unittest.TestCase):
     def setUpClass(cls) -> None:
         logger = logging.getLogger('pottery')
         logger.setLevel(logging.CRITICAL)
+        warnings.filterwarnings('ignore', category=PotteryWarning)
 
     def setUp(self) -> None:
         super().setUp()

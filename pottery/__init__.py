@@ -30,7 +30,7 @@ from typing_extensions import Final
 
 
 __title__ = 'pottery'
-__version__ = '2.0.0'
+__version__ = '2.0.1'
 __description__ = __doc__.split(sep='\n\n', maxsplit=1)[0]
 __url__ = 'https://github.com/brainix/pottery'
 __author__ = 'Rajiv Bakulesh Shah'
@@ -49,6 +49,8 @@ from .exceptions import QuorumNotAchieved  # isort:skip
 from .exceptions import TooManyExtensions  # isort:skip
 from .exceptions import ExtendUnlockedLock  # isort:skip
 from .exceptions import ReleaseUnlockedLock  # isort:skip
+from .exceptions import PotteryWarning  # isort:skip
+from .exceptions import InefficientAccessWarning  # isort:skip
 
 from .bloom import BloomFilter  # isort:skip
 from .cache import CachedOrderedDict  # isort:skip
@@ -76,6 +78,8 @@ __all__: Final[Tuple[str, ...]] = (
     'TooManyExtensions',
     'ExtendUnlockedLock',
     'ReleaseUnlockedLock',
+    'PotteryWarning',
+    'InefficientAccessWarning',
 
     'BloomFilter',
     'CachedOrderedDict',
