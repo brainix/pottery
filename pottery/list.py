@@ -95,14 +95,19 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def __getitem__(self, index: Union[slice, int]) -> Any:
         'l.__getitem__(index) <==> l[index].  O(n)'
-        if isinstance(index, slice):
-            # Python's list API requires us to get elements by slice (a start
-            # index, a stop index, and a step).  Redis supports only getting
-            # elements by start and stop (no step).  So our workaround is to
-            # get all of the elements between start and stop from Redis, then
-            # discard the ones between step in Python code.  More info:
-            #   http://redis.io/commands/lrange
-            with self._watch() as pipeline:
+        with self._watch() as pipeline:
+            if isinstance(index, slice):
+                # Python's list API requires us to get elements by slice (a
+                # start index, a stop index, and a step).  Redis supports only
+                # getting elements by start and stop (no step).  So our
+                # workaround is to get all of the elements between start and
+                # stop from Redis, then discard the ones between step in Python
+                # code.  More info:
+                #   http://redis.io/commands/lrange
+                warnings.warn(
+                    cast(str, InefficientAccessWarning.__doc__),
+                    InefficientAccessWarning,
+                )
                 indices = self.__slice_to_indices(index)
                 if indices.step >= 0:
                     start, stop = indices.start, indices.stop-1
@@ -115,12 +120,18 @@ class RedisList(Base, collections.abc.MutableSequence):
                 value: Union[List[JSONTypes], JSONTypes] = [
                     self._decode(value) for value in encoded
                 ]
-        else:
-            index = self.__slice_to_indices(index).start
-            encoded = self.redis.lindex(self.key, index)
-            if encoded is None:
-                raise IndexError('list index out of range')
-            value = self._decode(encoded)
+            else:
+                index = self.__slice_to_indices(index).start
+                len_ = cast(int, pipeline.llen(self.key))
+                if index not in {-1, 0, len_-1}:
+                    warnings.warn(
+                        cast(str, InefficientAccessWarning.__doc__),
+                        InefficientAccessWarning,
+                    )
+                encoded = pipeline.lindex(self.key, index)
+                if encoded is None:
+                    raise IndexError('list index out of range')
+                value = self._decode(encoded)
         return value
 
     @_raise_on_error
@@ -230,6 +241,10 @@ class RedisList(Base, collections.abc.MutableSequence):
         'Sort the RedisList in place.  O(n)'
         if key is not None:
             raise NotImplementedError('sorting by key not implemented')
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         self.redis.sort(self.key, desc=reverse, store=self.key)
 
     def __eq__(self, other: Any) -> bool:
@@ -259,6 +274,10 @@ class RedisList(Base, collections.abc.MutableSequence):
                 # self and other are the same length, and other is a mutable
                 # sequence too.  Compare self's and other's elements, pair by
                 # pair.
+                warnings.warn(
+                    cast(str, InefficientAccessWarning.__doc__),
+                    InefficientAccessWarning,
+                )
                 encoded_xs = cast(
                     List[bytes],
                     pipeline.lrange(self.key, 0, -1),
@@ -282,12 +301,20 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def __add__(self, other: List[JSONTypes]) -> 'RedisList':
         'Append the items in other to the RedisList.  O(n)'
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         with self._watch(other):
             iterable = itertools.chain(self, other)
             return self.__class__(iterable, redis=self.redis)
 
     def __repr__(self) -> str:
         'Return the string representation of the RedisList.  O(n)'
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         return self.__class__.__name__ + str(self.to_list())
 
     # Method overrides:
@@ -338,6 +365,10 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def to_list(self) -> List[JSONTypes]:
         'Convert the RedisList to a Python list.  O(n)'
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         encoded = self.redis.lrange(self.key, 0, -1)
         values = [self._decode(value) for value in encoded]
         return values
