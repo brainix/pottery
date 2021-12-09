@@ -355,6 +355,11 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     # From collections.abc.MutableSequence:
     def remove(self, value: JSONTypes) -> None:
+        'Remove first occurrence of value.  O(n)'
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         with self._watch() as pipeline:
             for index, element in enumerate(self):
                 if element == value:
