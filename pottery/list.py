@@ -20,6 +20,7 @@ import collections.abc
 import functools
 import itertools
 import uuid
+import warnings
 from typing import Any
 from typing import Callable
 from typing import Iterable
@@ -35,6 +36,7 @@ from redis.client import Pipeline
 from .annotations import F
 from .base import Base
 from .base import JSONTypes
+from .exceptions import InefficientAccessWarning
 from .exceptions import KeyExistsError
 
 
@@ -124,8 +126,12 @@ class RedisList(Base, collections.abc.MutableSequence):
     @_raise_on_error
     def __setitem__(self, index: int, value: JSONTypes) -> None:  # type: ignore
         'l.__setitem__(index, value) <==> l[index] = value.  O(n)'
-        if isinstance(index, slice):
-            with self._watch() as pipeline:
+        with self._watch() as pipeline:
+            if isinstance(index, slice):
+                warnings.warn(
+                    cast(str, InefficientAccessWarning.__doc__),
+                    InefficientAccessWarning,
+                )
                 encoded_values = [self._encode(value) for value in value]
                 indices = self.__slice_to_indices(index)
                 pipeline.multi()
@@ -137,9 +143,16 @@ class RedisList(Base, collections.abc.MutableSequence):
                     num += 1
                 if num:
                     pipeline.lrem(self.key, num, 0)
-        else:
-            index = self.__slice_to_indices(index).start
-            self.redis.lset(self.key, index, self._encode(value))
+            else:
+                index = self.__slice_to_indices(index).start
+                len_ = cast(int, pipeline.llen(self.key))
+                if index not in {-1, 0, len_-1}:
+                    warnings.warn(
+                        cast(str, InefficientAccessWarning.__doc__),
+                        InefficientAccessWarning,
+                    )
+                pipeline.multi()
+                pipeline.lset(self.key, index, self._encode(value))
 
     @_raise_on_error
     def __delitem__(self, index: Union[slice, int]) -> None:  # type: ignore
@@ -156,6 +169,10 @@ class RedisList(Base, collections.abc.MutableSequence):
         # to set l[index] to a UUID4, then to delete the value UUID4.  More
         # info:
         #   http://redis.io/commands/lrem
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         indices, num = self.__slice_to_indices(index), 0
         uuid4 = str(uuid.uuid4())
         pipeline.multi()
@@ -190,6 +207,10 @@ class RedisList(Base, collections.abc.MutableSequence):
             # UUID4, then to set the value UUID4 back to the original pivot
             # pivot value.  More info:
             #   http://redis.io/commands/linsert
+            warnings.warn(
+                cast(str, InefficientAccessWarning.__doc__),
+                InefficientAccessWarning,
+            )
             uuid4 = str(uuid.uuid4())
             pivot = cast(bytes, pipeline.lindex(self.key, index))
             pipeline.multi()

@@ -95,3 +95,10 @@ class ReleaseUnlockedLock(PrimitiveError, RuntimeError):
 
 class QuorumIsImpossible(PrimitiveError, RuntimeError):
     'Too many Redis masters threw RedisErrors; quorum can not be achieved.'
+
+
+class PotteryWarning(Warning):
+    'Base warning class for Pottery containers.'
+
+class InefficientAccessWarning(PotteryWarning):
+    'Doing an O(n) Redis operation.'
