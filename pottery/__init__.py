@@ -49,6 +49,7 @@ from .exceptions import QuorumNotAchieved  # isort:skip
 from .exceptions import TooManyExtensions  # isort:skip
 from .exceptions import ExtendUnlockedLock  # isort:skip
 from .exceptions import ReleaseUnlockedLock  # isort:skip
+from .exceptions import PotteryWarning  # isort:skip
 from .exceptions import InefficientAccessWarning  # isort:skip
 
 from .bloom import BloomFilter  # isort:skip
@@ -77,6 +78,7 @@ __all__: Final[Tuple[str, ...]] = (
     'TooManyExtensions',
     'ExtendUnlockedLock',
     'ReleaseUnlockedLock',
+    'PotteryWarning',
     'InefficientAccessWarning',
 
     'BloomFilter',
