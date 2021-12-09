@@ -17,6 +17,7 @@
 
 
 import collections
+import warnings
 from typing import Iterable
 from typing import Optional
 from typing import Tuple
@@ -27,6 +28,7 @@ from redis import Redis
 from redis.client import Pipeline
 
 from .base import JSONTypes
+from .exceptions import InefficientAccessWarning
 from .list import RedisList
 
 
@@ -172,6 +174,10 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
 
     def __repr__(self) -> str:
         'Return the string representation of the RedisDeque.  O(n)'
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         encoded = self.redis.lrange(self.key, 0, -1)
         values = [self._decode(value) for value in encoded]
         repr = self.__class__.__name__ + '(' + str(values)
