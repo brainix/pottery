@@ -114,14 +114,16 @@ class HyperLogLog(Base):
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         tmp_hll_key = random_key(redis=self.redis)
         self.redis.copy(self.key, tmp_hll_key)  # type: ignore
-        encoded_values = (self._encode(value) for value in values)
-        pipeline = self.redis.pipeline()
-        for encoded_value in encoded_values:
-            pipeline.pfadd(tmp_hll_key, encoded_value)
-        cardinalities_changed = pipeline.execute()
-        self.redis.delete(tmp_hll_key)
-        for cardinality_changed in cardinalities_changed:
-            yield not cardinality_changed
+        try:
+            encoded_values = (self._encode(value) for value in values)
+            pipeline = self.redis.pipeline()
+            for encoded_value in encoded_values:
+                pipeline.pfadd(tmp_hll_key, encoded_value)
+            cardinalities_changed = pipeline.execute()
+            for cardinality_changed in cardinalities_changed:
+                yield not cardinality_changed
+        finally:
+            self.redis.delete(tmp_hll_key)
 
     __contains_many = contains_many
 
