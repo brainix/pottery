@@ -61,7 +61,7 @@ def _default(self: Any, obj: Any) -> Union[Dict[str, Any], List[Any], str]:
     funcs.discard(None)
     assert len(funcs) <= 1
     func = funcs.pop() if any(funcs) else _default.default  # type: ignore
-    return_value: Union[Dict[str, Any], List[Any], str] = func(obj)  # type: ignore
+    return_value = func(obj)  # type: ignore
     return return_value
 
 import json  # isort: skip
