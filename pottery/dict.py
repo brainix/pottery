@@ -19,6 +19,7 @@
 import collections.abc
 import contextlib
 import itertools
+import warnings
 from typing import Any
 from typing import Dict
 from typing import Iterable
@@ -34,6 +35,7 @@ from redis.client import Pipeline
 from .base import Base
 from .base import Iterable_
 from .base import JSONTypes
+from .exceptions import InefficientAccessWarning
 from .exceptions import KeyExistsError
 
 
@@ -102,6 +104,10 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
               *,
               cursor: int = 0,
               ) -> Tuple[int, Dict[bytes, bytes]]:
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         return self.redis.hscan(self.key, cursor=cursor)
 
     def __len__(self) -> int:
@@ -130,6 +136,10 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
             return False
 
     def to_dict(self) -> Dict[JSONTypes, JSONTypes]:
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         items = self.redis.hgetall(self.key).items()
         dict_ = {self._decode(key): self._decode(value) for key, value in items}
         return dict_
