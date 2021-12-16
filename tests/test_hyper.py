@@ -110,7 +110,8 @@ class HyperLogLogTests(TestCase):
             uuid_ = str(uuid.uuid4())
             uuid_list.append(uuid_)
         uuid_hll = HyperLogLog(uuid_list, redis=self.redis)
-        assert sum(uuid_hll.contains_many(*uuid_list)) == NUM_ELEMENTS
+        num_contained = sum(uuid_hll.contains_many(*uuid_list))
+        assert num_contained == NUM_ELEMENTS
 
     def test_repr(self):
         'Test HyperLogLog.__repr__()'
