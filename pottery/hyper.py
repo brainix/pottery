@@ -16,6 +16,7 @@
 # --------------------------------------------------------------------------- #
 
 
+from typing import Generator
 from typing import Iterable
 from typing import List
 from typing import Optional
@@ -109,12 +110,23 @@ class HyperLogLog(Base):
     def __contains__(self, value: JSONTypes) -> bool:
         'hll.__contains__(element) <==> element in hll.  O(1)'
         tmp_hll_key = random_key(redis=self.redis)
-        if not self.redis.copy(self.key, tmp_hll_key):  # type: ignore
-            return False
+        self.redis.copy(self.key, tmp_hll_key)  # type: ignore
         encoded_value = self._encode(value)
         cardinality_changed = self.redis.pfadd(tmp_hll_key, encoded_value)
         self.redis.delete(tmp_hll_key)
         return not cardinality_changed
+
+    def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
+        tmp_hll_key = random_key(redis=self.redis)
+        self.redis.copy(self.key, tmp_hll_key)  # type: ignore
+        encoded_values = (self._encode(value) for value in values)
+        pipeline = self.redis.pipeline()
+        for encoded_value in encoded_values:
+            pipeline.pfadd(tmp_hll_key, encoded_value)
+        cardinalities_changed = pipeline.execute()
+        self.redis.delete(tmp_hll_key)
+        for cardinality_changed in cardinalities_changed:
+            yield not cardinality_changed
 
     def __repr__(self) -> str:
         'Return the string representation of the HyperLogLog.  O(1)'

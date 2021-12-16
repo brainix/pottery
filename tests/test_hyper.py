@@ -96,6 +96,11 @@ class HyperLogLogTests(TestCase):
             with self.subTest(metasyntactic_variable=metasyntactic_variable):
                 assert metasyntactic_variable not in metasyntactic_variables
 
+    def test_contains_many(self):
+        metasyntactic_variables = HyperLogLog({'foo', 'bar', 'zap', 'a'}, redis=self.redis)
+        contains_many = metasyntactic_variables.contains_many('foo', 'bar', 'baz', 'quz')
+        assert tuple(contains_many) == (True, True, False, False)
+
     def test_repr(self):
         'Test HyperLogLog.__repr__()'
         hll = HyperLogLog(
