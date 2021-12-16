@@ -16,6 +16,7 @@
 # --------------------------------------------------------------------------- #
 
 
+import warnings
 from typing import Iterable
 from typing import List
 from typing import Optional
@@ -28,6 +29,7 @@ from .annotations import RedisValues
 from .base import Base
 from .base import JSONTypes
 from .base import random_key
+from .exceptions import InaccurateAlgorithmWarning
 
 
 class HyperLogLog(Base):
@@ -108,13 +110,17 @@ class HyperLogLog(Base):
 
     def __contains__(self, value: JSONTypes) -> bool:
         'hll.__contains__(element) <==> element in hll.  O(1)'
+        warnings.warn(
+            cast(str, InaccurateAlgorithmWarning.__doc__),
+            InaccurateAlgorithmWarning,
+        )
         tmp_hll_key = random_key(redis=self.redis)
         if not self.redis.copy(self.key, tmp_hll_key):  # type: ignore
             return False
         encoded_value = self._encode(value)
-        modified = self.redis.pfadd(tmp_hll_key, encoded_value)
+        registers_altered = self.redis.pfadd(tmp_hll_key, encoded_value)
         self.redis.delete(tmp_hll_key)
-        return not modified
+        return not registers_altered
 
     def __repr__(self) -> str:
         'Return the string representation of the HyperLogLog.  O(1)'
