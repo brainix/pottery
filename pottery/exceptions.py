@@ -102,6 +102,3 @@ class PotteryWarning(Warning):
 
 class InefficientAccessWarning(PotteryWarning):
     'Doing an O(n) Redis operation.'
-
-class InaccurateAlgorithmWarning(PotteryWarning):
-    'Using a highly inaccurate algorithm.'
