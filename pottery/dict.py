@@ -118,10 +118,6 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
 
     def __repr__(self) -> str:
         'Return the string representation of the RedisDict.  O(n)'
-        warnings.warn(
-            cast(str, InefficientAccessWarning.__doc__),
-            InefficientAccessWarning,
-        )
         return self.__class__.__name__ + str(self.to_dict())
 
     # Method overrides:
