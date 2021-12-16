@@ -26,7 +26,4 @@ class MonkeyPatchTests(TestCase):
         try:
             json.dumps(object())
         except TypeError as error:
-            assert str(error) in {
-                "Object of type 'object' is not JSON serializable",  # Python 3.6
-                'Object of type object is not JSON serializable',    # Python 3.7+
-            }
+            assert str(error) == 'Object of type object is not JSON serializable'
