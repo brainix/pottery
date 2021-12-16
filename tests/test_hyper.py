@@ -86,6 +86,21 @@ class HyperLogLogTests(TestCase):
         assert len(hll1.union({'b', 'c', 'd', 'foo'}, redis=self.redis)) == 7
         assert len(hll1.union(hll2, {'b', 'c', 'd', 'baz'}, redis=self.redis)) == 8
 
+    def test_contains(self):
+        empty_hll = HyperLogLog(redis=self.redis)
+        for letter in {'a', 'b', 'c', 'd', 'e'}:
+            with self.subTest(letter=letter):
+                assert letter not in empty_hll
+
+        metasyntactic_variables = HyperLogLog({'foo', 'bar', 'zap', 'a'}, redis=self.redis)
+        for metasyntactic_variable in {'foo', 'bar'}:
+            with self.subTest(metasyntactic_variable=metasyntactic_variable):
+                assert metasyntactic_variable in metasyntactic_variables
+
+        for metasyntactic_variable in {'baz', 'qux'}:
+            with self.subTest(metasyntactic_variable=metasyntactic_variable):
+                assert metasyntactic_variable not in metasyntactic_variables
+
     def test_repr(self):
         'Test HyperLogLog.__repr__()'
         hll = HyperLogLog(
