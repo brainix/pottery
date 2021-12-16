@@ -109,7 +109,7 @@ class HyperLogLog(Base):
 
     def __contains__(self, value: JSONTypes) -> bool:
         'hll.__contains__(element) <==> element in hll.  O(1)'
-        return next(self.contains_many(value))
+        return next(self.__contains_many(value))
 
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         tmp_hll_key = random_key(redis=self.redis)
@@ -122,6 +122,8 @@ class HyperLogLog(Base):
         self.redis.delete(tmp_hll_key)
         for cardinality_changed in cardinalities_changed:
             yield not cardinality_changed
+
+    __contains_many = contains_many
 
     def __repr__(self) -> str:
         'Return the string representation of the HyperLogLog.  O(1)'
