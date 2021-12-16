@@ -16,6 +16,8 @@
 # --------------------------------------------------------------------------- #
 
 
+import uuid
+
 from redis import Redis
 
 from pottery import HyperLogLog
@@ -100,6 +102,14 @@ class HyperLogLogTests(TestCase):
         metasyntactic_variables = HyperLogLog({'foo', 'bar', 'zap', 'a'}, redis=self.redis)
         contains_many = metasyntactic_variables.contains_many('foo', 'bar', 'baz', 'quz')
         assert tuple(contains_many) == (True, True, False, False)
+
+        NUM_ELEMENTS = 5000
+        uuid_list = []
+        for _ in range(NUM_ELEMENTS):
+            uuid_ = str(uuid.uuid4())
+            uuid_list.append(uuid_)
+        uuid_hll = HyperLogLog(uuid_list, redis=self.redis)
+        assert sum(uuid_hll.contains_many(*uuid_list)) == NUM_ELEMENTS
 
     def test_repr(self):
         'Test HyperLogLog.__repr__()'
