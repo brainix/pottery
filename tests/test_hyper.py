@@ -98,11 +98,12 @@ class HyperLogLogTests(TestCase):
             with self.subTest(metasyntactic_variable=metasyntactic_variable):
                 assert metasyntactic_variable not in metasyntactic_variables
 
-    def test_contains_many(self):
+    def test_contains_many_metasyntactic_variables(self):
         metasyntactic_variables = HyperLogLog({'foo', 'bar', 'zap', 'a'}, redis=self.redis)
         contains_many = metasyntactic_variables.contains_many('foo', 'bar', 'baz', 'quz')
         assert tuple(contains_many) == (True, True, False, False)
 
+    def test_contains_many_uuids(self):
         NUM_ELEMENTS = 5000
         uuid_list = []
         for _ in range(NUM_ELEMENTS):
