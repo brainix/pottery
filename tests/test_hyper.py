@@ -16,6 +16,8 @@
 # --------------------------------------------------------------------------- #
 
 
+import uuid
+
 from redis import Redis
 
 from pottery import HyperLogLog
@@ -96,10 +98,19 @@ class HyperLogLogTests(TestCase):
             with self.subTest(metasyntactic_variable=metasyntactic_variable):
                 assert metasyntactic_variable not in metasyntactic_variables
 
-    def test_contains_many(self):
+    def test_contains_many_metasyntactic_variables(self):
         metasyntactic_variables = HyperLogLog({'foo', 'bar', 'zap', 'a'}, redis=self.redis)
         contains_many = metasyntactic_variables.contains_many('foo', 'bar', 'baz', 'quz')
         assert tuple(contains_many) == (True, True, False, False)
+
+    def test_contains_many_uuids(self):
+        NUM_ELEMENTS = 5000
+        uuid_list = []
+        for _ in range(NUM_ELEMENTS):
+            uuid_ = str(uuid.uuid4())
+            uuid_list.append(uuid_)
+        uuid_hll = HyperLogLog(uuid_list, redis=self.redis)
+        assert sum(uuid_hll.contains_many(*uuid_list)) == NUM_ELEMENTS
 
     def test_repr(self):
         'Test HyperLogLog.__repr__()'
