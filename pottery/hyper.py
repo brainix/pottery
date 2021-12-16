@@ -118,9 +118,9 @@ class HyperLogLog(Base):
         if not self.redis.copy(self.key, tmp_hll_key):  # type: ignore
             return False
         encoded_value = self._encode(value)
-        registers_altered = self.redis.pfadd(tmp_hll_key, encoded_value)
+        cardinality_changed = self.redis.pfadd(tmp_hll_key, encoded_value)
         self.redis.delete(tmp_hll_key)
-        return not registers_altered
+        return not cardinality_changed
 
     def __repr__(self) -> str:
         'Return the string representation of the HyperLogLog.  O(1)'
