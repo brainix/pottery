@@ -16,6 +16,7 @@
 # --------------------------------------------------------------------------- #
 
 
+import contextlib
 from typing import Generator
 from typing import Iterable
 from typing import List
@@ -112,20 +113,25 @@ class HyperLogLog(Base):
         return next(self.__contains_many(value))
 
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
-        tmp_hll_key = random_key(redis=self.redis)
-        self.redis.copy(self.key, tmp_hll_key)  # type: ignore
-        try:
+        with self.__tmp_hyperloglog_key() as tmp_hyperloglog_key:
             encoded_values = (self._encode(value) for value in values)
             pipeline = self.redis.pipeline()
             for encoded_value in encoded_values:
-                pipeline.pfadd(tmp_hll_key, encoded_value)
+                pipeline.pfadd(tmp_hyperloglog_key, encoded_value)
             cardinalities_changed = pipeline.execute()
             for cardinality_changed in cardinalities_changed:
                 yield not cardinality_changed
-        finally:
-            self.redis.delete(tmp_hll_key)
 
     __contains_many = contains_many
+
+    @contextlib.contextmanager
+    def __tmp_hyperloglog_key(self):
+        tmp_hyperloglog_key = random_key(redis=self.redis)
+        self.redis.copy(self.key, tmp_hyperloglog_key)  # type: ignore
+        try:
+            yield tmp_hyperloglog_key
+        finally:
+            self.redis.delete(tmp_hyperloglog_key)
 
     def __repr__(self) -> str:
         'Return the string representation of the HyperLogLog.  O(1)'
