@@ -31,7 +31,7 @@ toml==0.10.2
 tomli==2.0.0
 tqdm==4.62.3
 twine==3.7.1
-types-redis==4.0.3
+types-redis==4.0.4
 typing_extensions==4.0.1
 urllib3==1.26.7
 webencodings==0.5.1
