@@ -792,13 +792,13 @@ Remove all of the elements from the `BloomFilter`:
 
 ## HyperLogLogs
 
-HyperLogLogs are an interesting data structure that allow you to answer the
-question, _&ldquo;How many distinct elements have I seen?&rdquo;_; but not the
-questions, _&ldquo;Have I seen this element before?&rdquo;_ or _&ldquo;What are
-all of the elements that I&rsquo;ve seen before?&rdquo;_  So think of
-HyperLogLogs as Python sets that you can add elements to and get the length of;
-but that you can&rsquo;t use to test element membership, iterate through, or
-get elements back out of.
+HyperLogLogs are an interesting data structure designed to answer the question,
+_&ldquo;How many distinct elements have I seen?&rdquo;_; but not the questions,
+_&ldquo;Have I seen this element before?&rdquo;_ or _&ldquo;What are all of the
+elements that I&rsquo;ve seen before?&rdquo;_  So think of HyperLogLogs as
+Python sets that you can add elements to and get the length of; but that you
+can&rsquo;t use to test element membership, iterate through, or get elements
+out of.
 
 HyperLogLogs are probabilistic, which means that they&rsquo;re accurate within
 a margin of error up to 2%.  However, they can reasonably accurately estimate
@@ -846,6 +846,26 @@ Insert multiple elements into the `HyperLogLog`:
 10
 >>>
 ```
+
+Through a clever hack, we can do membership testing against a `HyperLogLog`,
+even though it was never designed for this purpose.  The way that the hack works
+is that it creates a temporary copy of the `HyperLogLog`, then inserts the
+element that you&rsquo;re running the membership test for into the temporary
+copy.  If the insertion changes the temporary `HyperLogLog`&rsquo;s cardinality,
+then the element must not have been in the original `HyperLogLog`.
+
+```python
+>>> 'joey tribbiani' in google_searches
+True
+>>> 'jennifer aniston' in google_searches
+False
+>>> tuple(google_searches.contains_many('joey tribbiani', 'jennifer aniston'))
+(True, False)
+>>>
+```
+
+Tip: Use `.contains_many()` to do efficient membership testing for multiple
+elements.
 
 Remove all of the elements from the `HyperLogLog`:
 
