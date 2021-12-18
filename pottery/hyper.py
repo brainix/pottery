@@ -122,13 +122,12 @@ class HyperLogLog(Base):
             pipeline = self.redis.pipeline()
             for encoded_value in self.__encode_many(*values):
                 pipeline.pfadd(tmp_key, encoded_value)
-
-            # After each insertion, if the cardinality of the temporary
-            # HyperLogLog changes, then the element must not have been in this
-            # HyperLogLog.
             cardinalities_changed = pipeline.execute()
-            for cardinality_changed in cardinalities_changed:
-                yield not cardinality_changed
+
+        # After each insertion, if the cardinality of the temporary HyperLogLog
+        # changes, then the element must not have been in this HyperLogLog.
+        for cardinality_changed in cardinalities_changed:
+            yield not cardinality_changed
 
     __contains_many = contains_many
 
