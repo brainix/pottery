@@ -23,15 +23,16 @@ from tests.base import TestCase
 
 
 class ContextTimerTests(TestCase):
-    ACCURACY = 50   # in milliseconds
+    _ACCURACY = 50   # in milliseconds
 
     def setUp(self):
         super().setUp()
         self.timer = ContextTimer()
 
     def _confirm_elapsed(self, expected):
-        got = round(self.timer.elapsed() / self.ACCURACY) * self.ACCURACY
-        assert got == expected, f'{got} != {expected}'
+        elapsed = self.timer.elapsed()
+        assert elapsed >= expected, f'elapsed ({elapsed}) is not >= expected ({expected})'
+        assert elapsed < expected + self._ACCURACY, f'elapsed ({elapsed}) is not < expected ({expected + self._ACCURACY})'
 
     def test_start_stop_and_elapsed(self):
         # timer hasn't been started
