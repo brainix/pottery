@@ -131,6 +131,16 @@ Notice the two keyword arguments to `RedisSet()`:  The first is your Redis
 client.  The second is the Redis key name for your set.  Other than that, you
 can use your `RedisSet` the same way that you use any other Python `set`.
 
+You can do more efficient membership testing for multiple elements using
+`.contains_many()`:
+
+```python
+>>> nirvana = RedisSet({'kurt', 'krist', 'dave'}, redis=redis, key='nirvana')
+>>> tuple(nirvana.contains_many('kurt', 'krist', 'chat', 'dave'))
+(True, True, False, True)
+>>>
+```
+
 _Limitations:_
 
 1. Elements must be JSON serializable.
