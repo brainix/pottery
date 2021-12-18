@@ -19,6 +19,7 @@
 import math
 import random
 import string
+import uuid
 
 from pottery import BloomFilter
 from pottery.bloom import _store_on_self
@@ -214,6 +215,31 @@ class BloomFilterTests(TestCase):
         assert 'will' in dilberts
         assert 'rhodes' not in dilberts
         assert len(dilberts) == 6
+
+    def test_contains_many_metasyntactic_variables(self):
+        metasyntactic_variables = BloomFilter(
+            {'foo', 'bar', 'zap', 'a'},
+            redis=self.redis,
+            num_elements=4,
+            false_positives=0.01,
+        )
+        contains_many = metasyntactic_variables.contains_many('foo', 'bar', 'baz', 'quz')
+        assert tuple(contains_many) == (True, True, False, False)
+
+    def test_contains_many_uuids(self):
+        NUM_ELEMENTS = 5000
+        uuid_list = []
+        for _ in range(NUM_ELEMENTS):
+            uuid_ = str(uuid.uuid4())
+            uuid_list.append(uuid_)
+        uuid_hll = BloomFilter(
+            uuid_list,
+            redis=self.redis,
+            num_elements=NUM_ELEMENTS,
+            false_positives=0.01,
+        )
+        num_contained = sum(uuid_hll.contains_many(*uuid_list))
+        assert num_contained == NUM_ELEMENTS
 
     def test_repr(self):
         'Test BloomFilter.__repr__()'
