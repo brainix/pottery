@@ -20,6 +20,7 @@ import collections.abc
 import itertools
 import warnings
 from typing import Any
+from typing import Generator
 from typing import Iterable
 from typing import List
 from typing import NoReturn
@@ -70,9 +71,16 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     def __contains__(self, value: Any) -> bool:
         's.__contains__(element) <==> element in s.  O(1)'
         try:
-            return self.redis.sismember(self.key, self._encode(value))
+            encoded_value = self._encode(value)
         except TypeError:
             return False
+        return self.redis.sismember(self.key, encoded_value)
+
+    def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
+        'Yield whether this RedisSet contains multiple elements.  O(n)'
+        encoded_values = (self._encode(value) for value in values)
+        for is_member in self.redis.smismember(self.key, encoded_values):  # type: ignore
+            yield bool(is_member)
 
     def _scan(self, *, cursor: int = 0) -> Tuple[int, List[bytes]]:
         warnings.warn(
@@ -87,11 +95,13 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     def add(self, value: JSONTypes) -> None:
         'Add an element to the RedisSet.  O(1)'
-        self.redis.sadd(self.key, self._encode(value))
+        encoded_value = self._encode(value)
+        self.redis.sadd(self.key, encoded_value)
 
     def discard(self, value: JSONTypes) -> None:
         'Remove an element from the RedisSet.  O(1)'
-        self.redis.srem(self.key, self._encode(value))
+        encoded_value = self._encode(value)
+        self.redis.srem(self.key, encoded_value)
 
     # Methods required for Raj's sanity:
 
@@ -117,7 +127,8 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     # From collections.abc.MutableSet:
     def remove(self, value: JSONTypes) -> None:
         'Remove an element from the RedisSet().  O(1)'
-        if not self.redis.srem(self.key, self._encode(value)):
+        encoded_value = self._encode(value)
+        if not self.redis.srem(self.key, encoded_value):
             raise KeyError(value)
 
     # From collections.abc.Set:

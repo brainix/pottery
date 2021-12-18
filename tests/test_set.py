@@ -16,6 +16,8 @@
 # --------------------------------------------------------------------------- #
 
 
+import uuid
+
 from redis import Redis
 
 from pottery import KeyExistsError
@@ -45,6 +47,21 @@ class SetTests(TestCase):
         assert basket == {'orange', 'banana', 'pear', 'apple'}
         assert 'orange' in basket
         assert not 'crabgrass' in basket
+
+    def test_contains_many_metasyntactic_variables(self):
+        metasyntactic_variables = RedisSet({'foo', 'bar', 'zap', 'a'}, redis=self.redis)
+        contains_many = metasyntactic_variables.contains_many('foo', 'bar', 'baz', 'quz')
+        assert tuple(contains_many) == (True, True, False, False)
+
+    def test_contains_many_uuids(self):
+        NUM_ELEMENTS = 5000
+        uuid_list = []
+        for _ in range(NUM_ELEMENTS):
+            uuid_ = str(uuid.uuid4())
+            uuid_list.append(uuid_)
+        uuid_set = RedisSet(uuid_list, redis=self.redis)
+        num_contained = sum(uuid_set.contains_many(*uuid_list))
+        assert num_contained == NUM_ELEMENTS
 
     def test_add(self):
         fruits = {'apple', 'orange', 'apple', 'pear', 'orange', 'banana'}
