@@ -116,10 +116,10 @@ class HyperLogLog(Base):
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         'Yield whether this HyperLogLog contains multiple elements.  O(n)'
         # Create a temporary copy of this HyperLogLog:
-        with self.__tmp_key() as tmp_key:
+        with self.__tmp_key() as (pipeline, tmp_key):
             # Insert the encoded elements one by one into the temporary
             # HyperLogLog:
-            pipeline = self.redis.pipeline()
+            pipeline.multi()
             for encoded_value in self.__encode_many(*values):
                 pipeline.pfadd(tmp_key, encoded_value)
             cardinalities_changed = pipeline.execute()
@@ -134,10 +134,11 @@ class HyperLogLog(Base):
     @contextlib.contextmanager
     def __tmp_key(self):
         # Create a yield a tmp copy of this HLL; finally, delete the tmp HLL.
-        tmp_key = random_key(redis=self.redis)
-        self.redis.copy(self.key, tmp_key)  # type: ignore
         try:
-            yield tmp_key
+            with self._watch() as pipeline:
+                tmp_key = random_key(redis=pipeline)
+                pipeline.copy(self.key, tmp_key)  # type: ignore
+                yield pipeline, tmp_key
         finally:
             self.redis.delete(tmp_key)
 
