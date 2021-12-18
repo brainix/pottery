@@ -125,6 +125,8 @@ class HyperLogLog(Base):
                 try:
                     encoded_value = self._encode(value)
                 except TypeError:
+                    # value can't be encoded / converted to JSON.  Do a
+                    # membership test for a UUID in place of value.
                     uuid_ = str(uuid.uuid4())
                     encoded_value = self._encode(uuid_)
                 encoded_values.append(encoded_value)
