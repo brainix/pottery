@@ -300,12 +300,20 @@ class BloomFilter(BloomFilterABC, Base):
             for value in values:
                 for bit_offset in self._bit_offsets(value):
                     pipeline.getbit(self.key, bit_offset)
-            all_bits = pipeline.execute()
+            bits = iter(pipeline.execute())
 
         # I stole this recipe from here:
-        #   https://stackoverflow.com/a/3415136
-        for element_bits in zip(*[iter(all_bits)]*self.num_hashes()):
-            yield all(element_bits)
+        #   https://stackoverflow.com/a/61435714
+        #
+        # TODO: When we drop support for Python 3.7, rewrite the following loop
+        # using the walrus operator, like in the Stack Overflow answer linked
+        # above.
+        bits_per_chunk = self.num_hashes()
+        while True:
+            chunk = tuple(itertools.islice(bits, bits_per_chunk))
+            if not chunk:
+                break
+            yield all(chunk)
 
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
