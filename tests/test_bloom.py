@@ -241,6 +241,15 @@ class BloomFilterTests(TestCase):
         num_contained = sum(uuid_hll.contains_many(*uuid_list))
         assert num_contained == NUM_ELEMENTS
 
+    def test_membership_for_non_jsonifyable_element(self):
+        dilberts = BloomFilter(
+            redis=self.redis,
+            key=self._KEY,
+            num_elements=100,
+            false_positives=0.01,
+        )
+        assert not BaseException in dilberts
+
     def test_repr(self):
         'Test BloomFilter.__repr__()'
         dilberts = BloomFilter(

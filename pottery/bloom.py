@@ -20,6 +20,7 @@ import abc
 import functools
 import itertools
 import math
+import uuid
 from typing import Any
 from typing import Callable
 from typing import Generator
@@ -298,7 +299,14 @@ class BloomFilter(BloomFilterABC, Base):
         with self._watch() as pipeline:
             pipeline.multi()
             for value in values:
-                for bit_offset in self._bit_offsets(value):
+                try:
+                    bit_offsets = self._bit_offsets(value)
+                except TypeError:
+                    # value can't be encoded / converted to JSON.  Do a
+                    # membership test for a UUID in place of value.
+                    uuid_ = str(uuid.uuid4())
+                    bit_offsets = self._bit_offsets(uuid_)
+                for bit_offset in bit_offsets:
                     pipeline.getbit(self.key, bit_offset)
             bits = iter(pipeline.execute())
 
