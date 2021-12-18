@@ -115,24 +115,12 @@ class HyperLogLog(Base):
 
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         'Yield whether this HyperLogLog contains multiple elements.  O(n)'
-        # Encode the elements:
-        encoded_values = []
-        for value in values:
-            try:
-                encoded_value = self._encode(value)
-            except TypeError:
-                # value can't be encoded / converted to JSON.  Do a
-                # membership test for a UUID in place of value.
-                uuid_ = str(uuid.uuid4())
-                encoded_value = self._encode(uuid_)
-            encoded_values.append(encoded_value)
-
         # Create a temporary copy of this HyperLogLog:
         with self.__tmp_key() as tmp_key:
             # Insert the encoded elements one by one into the temporary
             # HyperLogLog:
             pipeline = self.redis.pipeline()
-            for encoded_value in encoded_values:
+            for encoded_value in self.__encode_many(*values):
                 pipeline.pfadd(tmp_key, encoded_value)
 
             # After each insertion, if the cardinality of the temporary
@@ -143,6 +131,16 @@ class HyperLogLog(Base):
                 yield not cardinality_changed
 
     __contains_many = contains_many
+
+    def __encode_many(self, *values: JSONTypes) -> Generator[str, None, None]:
+        for value in values:
+            try:
+                yield self._encode(value)
+            except TypeError:
+                # value can't be encoded / converted to JSON.  Do a membership
+                # test for a UUID in place of value.
+                uuid_ = str(uuid.uuid4())
+                yield self._encode(uuid_)
 
     @contextlib.contextmanager
     def __tmp_key(self):
