@@ -125,7 +125,7 @@ class HyperLogLog(Base):
             cardinalities_changed = pipeline.execute()
 
         # After each insertion, if the cardinality of the temporary HyperLogLog
-        # changes, then the element must not have been in this HyperLogLog.
+        # changed, then the element must not have been in this HyperLogLog.
         for cardinality_changed in cardinalities_changed:
             yield not cardinality_changed
 
