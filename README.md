@@ -131,7 +131,7 @@ Notice the two keyword arguments to `RedisSet()`:  The first is your Redis
 client.  The second is the Redis key name for your set.  Other than that, you
 can use your `RedisSet` the same way that you use any other Python `set`.
 
-You can do more efficient membership testing for multiple elements using
+Do more efficient membership testing for multiple elements using
 `.contains_many()`:
 
 ```python
@@ -782,6 +782,15 @@ Insert multiple elements into the `BloomFilter`:
 
 ```python
 >>> dilberts.update({'raj', 'dan'})
+>>>
+```
+
+Do more efficient membership testing for multiple elements using
+`.contains_many()`:
+
+```python
+>>> tuple(dilberts.contains_many('rajiv', 'raj', 'dan', 'luis'))
+(True, True, True, False)
 >>>
 ```
 
