@@ -25,6 +25,7 @@ from typing import Any
 from typing import Callable
 from typing import Generator
 from typing import Iterable
+from typing import List
 from typing import Set
 from typing import cast
 
@@ -296,22 +297,20 @@ class BloomFilter(BloomFilterABC, Base):
 
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         'Yield whether this Bloom filter contains multiple elements.  O(n)'
-        bit_offsets_list = []
+        bit_offsets: List[int] = []
         for value in values:
             try:
-                bit_offsets = self._bit_offsets(value)
+                bit_offsets.extend(self._bit_offsets(value))
             except TypeError:
                 # value can't be encoded / converted to JSON.  Do a
                 # membership test for a UUID in place of value.
                 uuid_ = str(uuid.uuid4())
-                bit_offsets = self._bit_offsets(uuid_)
-            bit_offsets_list.append(bit_offsets)
+                bit_offsets.extend(self._bit_offsets(uuid_))
 
         with self._watch() as pipeline:
             pipeline.multi()
-            for bit_offsets in bit_offsets_list:
-                for bit_offset in bit_offsets:
-                    pipeline.getbit(self.key, bit_offset)
+            for bit_offset in bit_offsets:
+                pipeline.getbit(self.key, bit_offset)
             bits = iter(pipeline.execute())
 
         # I stole this recipe from here:
