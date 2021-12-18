@@ -302,8 +302,8 @@ class BloomFilter(BloomFilterABC, Base):
             try:
                 bit_offsets.extend(self._bit_offsets(value))
             except TypeError:
-                # value can't be encoded / converted to JSON.  Do a
-                # membership test for a UUID in place of value.
+                # value can't be encoded / converted to JSON.  Do a membership
+                # test for a UUID in place of value.
                 uuid_ = str(uuid.uuid4())
                 bit_offsets.extend(self._bit_offsets(uuid_))
 
