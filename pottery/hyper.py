@@ -132,16 +132,6 @@ class HyperLogLog(Base):
 
     __contains_many = contains_many
 
-    def __encode_many(self, *values: JSONTypes) -> Generator[str, None, None]:
-        for value in values:
-            try:
-                yield self._encode(value)
-            except TypeError:
-                # value can't be encoded / converted to JSON.  Do a membership
-                # test for a UUID in place of value.
-                uuid_ = str(uuid.uuid4())
-                yield self._encode(uuid_)
-
     @contextlib.contextmanager
     def __tmp_key(self):
         # Create a yield a tmp copy of this HLL; finally, delete the tmp HLL.
@@ -151,6 +141,16 @@ class HyperLogLog(Base):
             yield tmp_key
         finally:
             self.redis.delete(tmp_key)
+
+    def __encode_many(self, *values: JSONTypes) -> Generator[str, None, None]:
+        for value in values:
+            try:
+                yield self._encode(value)
+            except TypeError:
+                # value can't be encoded / converted to JSON.  Do a membership
+                # test for a UUID in place of value.
+                uuid_ = str(uuid.uuid4())
+                yield self._encode(uuid_)
 
     def __repr__(self) -> str:
         'Return the string representation of the HyperLogLog.  O(1)'
