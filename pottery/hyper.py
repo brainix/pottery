@@ -116,13 +116,13 @@ class HyperLogLog(Base):
         'Yield whether this HyperLogLog contains multiple elements.  O(n)'
 
         # Create a temporary copy of this HyperLogLog:
-        with self.__tmp_hyperloglog_key() as tmp_hyperloglog_key:
+        with self.__tmp_key() as tmp_key:
 
             # Insert the elements one by one into the temporary HyperLogLog:
             encoded_values = (self._encode(value) for value in values)
             pipeline = self.redis.pipeline()
             for encoded_value in encoded_values:
-                pipeline.pfadd(tmp_hyperloglog_key, encoded_value)
+                pipeline.pfadd(tmp_key, encoded_value)
 
             # After each insertion, if the cardinality of the temporary
             # HyperLogLog changes, then the element must not have been in this
@@ -134,14 +134,14 @@ class HyperLogLog(Base):
     __contains_many = contains_many
 
     @contextlib.contextmanager
-    def __tmp_hyperloglog_key(self):
+    def __tmp_key(self):
         # Create a yield a tmp copy of this HLL; finally, delete the tmp HLL.
-        tmp_hyperloglog_key = random_key(redis=self.redis)
-        self.redis.copy(self.key, tmp_hyperloglog_key)  # type: ignore
+        tmp_key = random_key(redis=self.redis)
+        self.redis.copy(self.key, tmp_key)  # type: ignore
         try:
-            yield tmp_hyperloglog_key
+            yield tmp_key
         finally:
-            self.redis.delete(tmp_hyperloglog_key)
+            self.redis.delete(tmp_key)
 
     def __repr__(self) -> str:
         'Return the string representation of the HyperLogLog.  O(1)'
