@@ -291,12 +291,26 @@ class BloomFilter(BloomFilterABC, Base):
         input string to compute bit offests into the underlying string
         representing this Bloom filter.
         '''
+        return next(self.__contains_many(value))
+
+    def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
+        'Yield whether this Bloom filter contains multiple elements.  O(n)'
         with self._watch() as pipeline:
             pipeline.multi()
-            for bit_offset in self._bit_offsets(value):
-                pipeline.getbit(self.key, bit_offset)
-            bits = pipeline.execute()
-        return all(bits)
+            for value in values:
+                for bit_offset in self._bit_offsets(value):
+                    pipeline.getbit(self.key, bit_offset)
+            all_bits = pipeline.execute()
+
+        # I stole this recipe from here:
+        #   https://stackoverflow.com/a/3415136
+        for element_bits in zip(*[iter(all_bits)]*self.num_hashes()):
+            yield all(element_bits)
+
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    __contains_many = contains_many
 
     def _num_bits_set(self) -> int:
         '''The number of bits set to 1 in this Bloom filter.  O(m)
