@@ -310,10 +310,10 @@ class BloomFilter(BloomFilterABC, Base):
         # above.
         bits_per_chunk = self.num_hashes()
         while True:
-            chunk = tuple(itertools.islice(bits, bits_per_chunk))
-            if not chunk:
+            bits_in_chunk = tuple(itertools.islice(bits, bits_per_chunk))
+            if not bits_in_chunk:
                 break
-            yield all(chunk)
+            yield all(bits_in_chunk)
 
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
