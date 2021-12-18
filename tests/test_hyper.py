@@ -113,6 +113,10 @@ class HyperLogLogTests(TestCase):
         num_contained = sum(uuid_hll.contains_many(*uuid_list))
         assert num_contained == NUM_ELEMENTS
 
+    def test_membership_for_non_jsonifyable_element(self):
+        hll = HyperLogLog(redis=self.redis, key=self._KEY)
+        assert not BaseException in hll
+
     def test_repr(self):
         'Test HyperLogLog.__repr__()'
         hll = HyperLogLog(

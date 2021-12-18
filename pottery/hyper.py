@@ -17,6 +17,7 @@
 
 
 import contextlib
+import uuid
 from typing import Generator
 from typing import Iterable
 from typing import List
@@ -118,8 +119,18 @@ class HyperLogLog(Base):
         # Create a temporary copy of this HyperLogLog:
         with self.__tmp_key() as tmp_key:
 
-            # Insert the elements one by one into the temporary HyperLogLog:
-            encoded_values = (self._encode(value) for value in values)
+            # Encode the elements:
+            encoded_values = []
+            for value in values:
+                try:
+                    encoded_value = self._encode(value)
+                except TypeError:
+                    uuid_ = str(uuid.uuid4())
+                    encoded_value = self._encode(uuid_)
+                encoded_values.append(encoded_value)
+
+            # Insert the encoded elements one by one into the temporary
+            # HyperLogLog:
             pipeline = self.redis.pipeline()
             for encoded_value in encoded_values:
                 pipeline.pfadd(tmp_key, encoded_value)
