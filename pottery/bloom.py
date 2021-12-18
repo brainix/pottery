@@ -296,16 +296,20 @@ class BloomFilter(BloomFilterABC, Base):
 
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         'Yield whether this Bloom filter contains multiple elements.  O(n)'
+        bit_offsets_list = []
+        for value in values:
+            try:
+                bit_offsets = self._bit_offsets(value)
+            except TypeError:
+                # value can't be encoded / converted to JSON.  Do a
+                # membership test for a UUID in place of value.
+                uuid_ = str(uuid.uuid4())
+                bit_offsets = self._bit_offsets(uuid_)
+            bit_offsets_list.append(bit_offsets)
+
         with self._watch() as pipeline:
             pipeline.multi()
-            for value in values:
-                try:
-                    bit_offsets = self._bit_offsets(value)
-                except TypeError:
-                    # value can't be encoded / converted to JSON.  Do a
-                    # membership test for a UUID in place of value.
-                    uuid_ = str(uuid.uuid4())
-                    bit_offsets = self._bit_offsets(uuid_)
+            for bit_offsets in bit_offsets_list:
                 for bit_offset in bit_offsets:
                     pipeline.getbit(self.key, bit_offset)
             bits = iter(pipeline.execute())
