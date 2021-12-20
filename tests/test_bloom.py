@@ -227,19 +227,23 @@ class BloomFilterTests(TestCase):
         assert tuple(contains_many) == (True, True, False, False)
 
     def test_contains_many_uuids(self):
-        NUM_ELEMENTS = 5000
-        uuid_list = []
-        for _ in range(NUM_ELEMENTS):
-            uuid_ = str(uuid.uuid4())
-            uuid_list.append(uuid_)
+        NUM_ELEMENTS, FALSE_POSITIVES = 5000, 0.01
+        known_uuids, unknown_uuids = [], []
+        for uuids in (known_uuids, unknown_uuids):
+            for _ in range(NUM_ELEMENTS):
+                uuid_ = str(uuid.uuid4())
+                uuids.append(uuid_)
         uuid_hll = BloomFilter(
-            uuid_list,
+            known_uuids,
             redis=self.redis,
             num_elements=NUM_ELEMENTS,
-            false_positives=0.01,
+            false_positives=FALSE_POSITIVES,
         )
-        num_contained = sum(uuid_hll.contains_many(*uuid_list))
-        assert num_contained == NUM_ELEMENTS
+        num_known_contained = sum(uuid_hll.contains_many(*known_uuids))
+        num_unknown_contained = sum(uuid_hll.contains_many(*unknown_uuids))
+        assert num_known_contained == NUM_ELEMENTS
+        assert num_unknown_contained <= NUM_ELEMENTS * FALSE_POSITIVES * 2, \
+            f'{num_unknown_contained} is not <= {NUM_ELEMENTS * FALSE_POSITIVES * 2}'
 
     def test_membership_for_non_jsonifyable_element(self):
         dilberts = BloomFilter(

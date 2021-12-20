@@ -55,13 +55,16 @@ class SetTests(TestCase):
 
     def test_contains_many_uuids(self):
         NUM_ELEMENTS = 5000
-        uuid_list = []
-        for _ in range(NUM_ELEMENTS):
-            uuid_ = str(uuid.uuid4())
-            uuid_list.append(uuid_)
-        uuid_set = RedisSet(uuid_list, redis=self.redis)
-        num_contained = sum(uuid_set.contains_many(*uuid_list))
-        assert num_contained == NUM_ELEMENTS
+        known_uuids, unknown_uuids = [], []
+        for uuids in (known_uuids, unknown_uuids):
+            for _ in range(NUM_ELEMENTS):
+                uuid_ = str(uuid.uuid4())
+                uuids.append(uuid_)
+        uuid_set = RedisSet(known_uuids, redis=self.redis)
+        num_known_contained = sum(uuid_set.contains_many(*known_uuids))
+        num_unknown_contained = sum(uuid_set.contains_many(*unknown_uuids))
+        assert num_known_contained == NUM_ELEMENTS
+        assert num_unknown_contained == 0
 
     def test_add(self):
         fruits = {'apple', 'orange', 'apple', 'pear', 'orange', 'banana'}
