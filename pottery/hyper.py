@@ -122,11 +122,11 @@ class HyperLogLog(Base):
 
         with self._watch() as pipeline:
             tmp_hll_key = random_key(redis=pipeline)
-            pipeline.copy(self.key, tmp_hll_key)  # type: ignore
             pipeline.multi()
+            pipeline.copy(self.key, tmp_hll_key)  # type: ignore
             pipeline.pfadd(tmp_hll_key, encoded_value)
             pipeline.delete(tmp_hll_key)
-            cardinality_changed = pipeline.execute()[0]
+            cardinality_changed = pipeline.execute()[1]
             return not cardinality_changed
 
     def __repr__(self) -> str:
