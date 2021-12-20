@@ -16,9 +16,6 @@
 # --------------------------------------------------------------------------- #
 
 
-import contextlib
-import uuid
-from typing import Generator
 from typing import Iterable
 from typing import List
 from typing import Optional
@@ -111,46 +108,19 @@ class HyperLogLog(Base):
 
     def __contains__(self, value: JSONTypes) -> bool:
         'hll.__contains__(element) <==> element in hll.  O(1)'
-        return next(self.__contains_many(value))
-
-    def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
-        'Yield whether this HyperLogLog contains multiple elements.  O(n)'
-        # Create a temporary copy of this HyperLogLog:
-        with self.__tmp_key() as (pipeline, tmp_key):
-            # Insert the encoded elements one by one into the temporary
-            # HyperLogLog:
-            pipeline.multi()
-            for encoded_value in self.__encode_many(*values):
-                pipeline.pfadd(tmp_key, encoded_value)
-            cardinalities_changed = pipeline.execute()
-
-        # After each insertion, if the cardinality of the temporary HyperLogLog
-        # changed, then the element must not have been in this HyperLogLog.
-        for cardinality_changed in cardinalities_changed:
-            yield not cardinality_changed
-
-    __contains_many = contains_many
-
-    @contextlib.contextmanager
-    def __tmp_key(self):
-        # Create a yield a tmp copy of this HLL; finally, delete the tmp HLL.
         try:
-            with self._watch() as pipeline:
-                tmp_key = random_key(redis=pipeline)
-                pipeline.copy(self.key, tmp_key)  # type: ignore
-                yield pipeline, tmp_key
-        finally:
-            self.redis.delete(tmp_key)
+            encoded_value = self._encode(value)
+        except TypeError:
+            return False
 
-    def __encode_many(self, *values: JSONTypes) -> Generator[str, None, None]:
-        for value in values:
-            try:
-                yield self._encode(value)
-            except TypeError:
-                # value can't be encoded / converted to JSON.  Do a membership
-                # test for a UUID in place of value.
-                uuid_ = str(uuid.uuid4())
-                yield self._encode(uuid_)
+        with self._watch() as pipeline:
+            tmp_hll_key = random_key(redis=pipeline)
+            pipeline.copy(self.key, tmp_hll_key)  # type: ignore
+            pipeline.multi()
+            pipeline.pfadd(tmp_hll_key, encoded_value)
+            pipeline.delete(tmp_hll_key)
+            cardinality_changed = pipeline.execute()[0]
+            return not cardinality_changed
 
     def __repr__(self) -> str:
         'Return the string representation of the HyperLogLog.  O(1)'
