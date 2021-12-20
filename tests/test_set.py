@@ -56,10 +56,10 @@ class SetTests(TestCase):
     def test_contains_many_uuids(self):
         NUM_ELEMENTS = 5000
         known_uuids, unknown_uuids = [], []
-        for uuids in (known_uuids, unknown_uuids):
-            for _ in range(NUM_ELEMENTS):
-                uuid_ = str(uuid.uuid4())
-                uuids.append(uuid_)
+        generate_uuid = lambda: str(uuid.uuid4())  # NoQA: E731
+        for _ in range(NUM_ELEMENTS):
+            known_uuids.append(generate_uuid())
+            unknown_uuids.append(generate_uuid())
         uuid_set = RedisSet(known_uuids, redis=self.redis)
         num_known_contained = sum(uuid_set.contains_many(*known_uuids))
         num_unknown_contained = sum(uuid_set.contains_many(*unknown_uuids))

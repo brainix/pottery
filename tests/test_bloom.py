@@ -229,10 +229,10 @@ class BloomFilterTests(TestCase):
     def test_contains_many_uuids(self):
         NUM_ELEMENTS, FALSE_POSITIVES = 5000, 0.01
         known_uuids, unknown_uuids = [], []
-        for uuids in (known_uuids, unknown_uuids):
-            for _ in range(NUM_ELEMENTS):
-                uuid_ = str(uuid.uuid4())
-                uuids.append(uuid_)
+        generate_uuid = lambda: str(uuid.uuid4())  # NoQA: E731
+        for _ in range(NUM_ELEMENTS):
+            known_uuids.append(generate_uuid())
+            unknown_uuids.append(generate_uuid())
         uuid_bf = BloomFilter(
             known_uuids,
             redis=self.redis,
