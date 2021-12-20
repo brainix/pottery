@@ -242,8 +242,8 @@ class BloomFilterTests(TestCase):
         num_known_contained = sum(uuid_hll.contains_many(*known_uuids))
         num_unknown_contained = sum(uuid_hll.contains_many(*unknown_uuids))
         assert num_known_contained == NUM_ELEMENTS
-        assert num_unknown_contained <= NUM_ELEMENTS * FALSE_POSITIVES, \
-            f'{num_unknown_contained} is not <= {NUM_ELEMENTS * FALSE_POSITIVES}'
+        assert num_unknown_contained <= NUM_ELEMENTS * FALSE_POSITIVES * 2, \
+            f'{num_unknown_contained} is not <= {NUM_ELEMENTS * FALSE_POSITIVES * 2}'
 
     def test_membership_for_non_jsonifyable_element(self):
         dilberts = BloomFilter(
