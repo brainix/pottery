@@ -878,13 +878,8 @@ then the element must not have been in the original `HyperLogLog`.
 True
 >>> 'jennifer aniston' in google_searches
 False
->>> tuple(google_searches.contains_many('joey tribbiani', 'jennifer aniston'))
-(True, False)
 >>>
 ```
-
-Tip: Use `.contains_many()` to do efficient membership testing for multiple
-elements.
 
 Remove all of the elements from the `HyperLogLog`:
 
