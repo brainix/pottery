@@ -884,7 +884,7 @@ even though it was never designed for this purpose.  The way that the hack works
 is that it creates a temporary copy of the `HyperLogLog`, then inserts the
 element that you&rsquo;re running the membership test for into the temporary
 copy.  If the insertion changes the temporary `HyperLogLog`&rsquo;s cardinality,
-then the element must not have been in the original `HyperLogLog`.
+then the element must not have been inserted into the original `HyperLogLog`.
 
 ```python
 >>> 'joey tribbiani' in google_searches
