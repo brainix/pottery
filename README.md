@@ -894,6 +894,15 @@ False
 >>>
 ```
 
+Do more efficient membership testing for multiple elements using
+`.contains_many()`:
+
+```python
+>>> tuple(google_searches.contains_many('joey tribbiani', 'jennifer aniston'))
+(True, False)
+>>>
+```
+
 Remove all of the elements from the `HyperLogLog`:
 
 ```python
