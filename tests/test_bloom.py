@@ -233,14 +233,14 @@ class BloomFilterTests(TestCase):
             for _ in range(NUM_ELEMENTS):
                 uuid_ = str(uuid.uuid4())
                 uuids.append(uuid_)
-        uuid_hll = BloomFilter(
+        uuid_bf = BloomFilter(
             known_uuids,
             redis=self.redis,
             num_elements=NUM_ELEMENTS,
             false_positives=FALSE_POSITIVES,
         )
-        num_known_contained = sum(uuid_hll.contains_many(*known_uuids))
-        num_unknown_contained = sum(uuid_hll.contains_many(*unknown_uuids))
+        num_known_contained = sum(uuid_bf.contains_many(*known_uuids))
+        num_unknown_contained = sum(uuid_bf.contains_many(*unknown_uuids))
         assert num_known_contained == NUM_ELEMENTS
         assert num_unknown_contained <= NUM_ELEMENTS * FALSE_POSITIVES * 2, \
             f'{num_unknown_contained} is not <= {NUM_ELEMENTS * FALSE_POSITIVES * 2}'

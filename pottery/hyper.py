@@ -107,7 +107,14 @@ class HyperLogLog(Base):
         return self.redis.pfcount(self.key)
 
     def __contains__(self, value: JSONTypes) -> bool:
-        'hll.__contains__(element) <==> element in hll.  O(1)'
+        '''hll.__contains__(element) <==> element in hll.  O(1)
+
+        Please note that this method *may* return false positives, but *never*
+        returns false negatives.  This means that if `element in hll` evaluates
+        to True, then you *may* have inserted the element into the HyperLogLog.
+        But if `element in hll` evaluates to False, then you *must not* have
+        inserted it.
+        '''
         try:
             encoded_value = self._encode(value)
         except TypeError:
@@ -115,11 +122,11 @@ class HyperLogLog(Base):
 
         with self._watch() as pipeline:
             tmp_hll_key = random_key(redis=pipeline)
-            pipeline.copy(self.key, tmp_hll_key)  # type: ignore
             pipeline.multi()
+            pipeline.copy(self.key, tmp_hll_key)  # type: ignore
             pipeline.pfadd(tmp_hll_key, encoded_value)
             pipeline.delete(tmp_hll_key)
-            cardinality_changed = pipeline.execute()[0]
+            cardinality_changed = pipeline.execute()[1]
             return not cardinality_changed
 
     def __repr__(self) -> str:
