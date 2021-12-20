@@ -143,8 +143,7 @@ class HyperLogLog(Base):
                 tmp_hll_keys.append(tmp_hll_key)
 
             pipeline.multi()
-            for index, encoded_value in enumerate(encoded_values):
-                tmp_hll_key = tmp_hll_keys[index]
+            for encoded_value, tmp_hll_key in zip(encoded_values, tmp_hll_keys):
                 pipeline.copy(self.key, tmp_hll_key)  # type: ignore
                 pipeline.pfadd(tmp_hll_key, encoded_value)
                 pipeline.delete(tmp_hll_key)
