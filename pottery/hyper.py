@@ -16,6 +16,8 @@
 # --------------------------------------------------------------------------- #
 
 
+import logging
+from typing import Final
 from typing import Iterable
 from typing import List
 from typing import Optional
@@ -28,6 +30,9 @@ from .annotations import RedisValues
 from .base import Base
 from .base import JSONTypes
 from .base import random_key
+
+
+_logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
 class HyperLogLog(Base):
@@ -115,11 +120,19 @@ class HyperLogLog(Base):
 
         tmp_hll_key = random_key(redis=self.redis)
         self.redis.copy(self.key, tmp_hll_key)  # type: ignore
+        _logger.debug(
+            'Created tmp HyperLogLog %s (for membership testing)',
+            tmp_hll_key,
+        )
         try:
             cardinality_changed = self.redis.pfadd(tmp_hll_key, encoded_value)
             return not cardinality_changed
         finally:
             self.redis.delete(tmp_hll_key)
+            _logger.debug(
+                'Deleted tmp HyperLogLog %s (for membership testing)',
+                tmp_hll_key,
+            )
 
     def __repr__(self) -> str:
         'Return the string representation of the HyperLogLog.  O(1)'
