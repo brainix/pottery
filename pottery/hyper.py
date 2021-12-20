@@ -107,7 +107,14 @@ class HyperLogLog(Base):
         return self.redis.pfcount(self.key)
 
     def __contains__(self, value: JSONTypes) -> bool:
-        'hll.__contains__(element) <==> element in hll.  O(1)'
+        '''hll.__contains__(element) <==> element in hll.  O(1)
+
+        Please note that this method *may* return false positives, but *never*
+        returns false negatives.  This means that if `element in hll` evaluates
+        to True, then you *may* have inserted the element into the HyperLogLog.
+        But if `element in hll` evaluates to False, then you *must not* have
+        inserted it.
+        '''
         try:
             encoded_value = self._encode(value)
         except TypeError:

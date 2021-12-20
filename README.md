@@ -89,7 +89,7 @@ Redis client.  The second is the Redis key name for your dict.  Other than
 that, you can use your `RedisDict` the same way that you use any other Python
 `dict`.
 
-_Limitations:_
+*Limitations:*
 
 1. Keys and values must be JSON serializable.
 
@@ -141,7 +141,7 @@ Do more efficient membership testing for multiple elements using
 >>>
 ```
 
-_Limitations:_
+*Limitations:*
 
 1. Elements must be JSON serializable.
 
@@ -174,7 +174,7 @@ Notice the two keyword arguments to `RedisList()`:  The first is your Redis
 client.  The second is the Redis key name for your list.  Other than that, you
 can use your `RedisList` the same way that you use any other Python `list`.
 
-_Limitations:_
+*Limitations:*
 
 1. Elements must be JSON serializable.
 2. Under the hood, Python implements `list` using an array.  Redis implements
@@ -233,7 +233,7 @@ Redis client.  The second is the Redis key name for your counter.  Other than
 that, you can use your `RedisCounter` the same way that you use any other
 Python `Counter`.
 
-_Limitations:_
+*Limitations:*
 
 1. Keys must be JSON serializable.
 
@@ -299,7 +299,7 @@ Notice the two keyword arguments to `RedisDeque()`:  The first is your Redis
 client.  The second is the Redis key name for your deque.  Other than that, you
 can use your `RedisDeque` the same way that you use any other Python `deque`.
 
-_Limitations:_
+*Limitations:*
 
 1. Elements must be JSON serializable.
 
@@ -500,7 +500,9 @@ Two caveats:
 1. If many clients are generating IDs concurrently, then there may be
    &ldquo;holes&rdquo; in the sequence of IDs (e.g.: 1, 2, 6, 10, 11, 21,
    &hellip;).
-2. This algorithm scales to about 5,000 IDs per second (with 5 Redis masters).  If you need IDs faster than that, then you may want to consider other techniques.
+2. This algorithm scales to about 5,000 IDs per second (with 5 Redis masters).
+   If you need IDs faster than that, then you may want to consider other
+   techniques.
 
 
 
@@ -514,7 +516,7 @@ sometimes called
 API as closely as is feasible.  In other words, you can use `redis_cache()` the
 same way that you use `functools.cache()`.
 
-_Limitations:_
+*Limitations:*
 
 1. Arguments to the function must be hashable.
 2. Return values from the function must be JSON serializable.
@@ -703,7 +705,7 @@ Now, let&rsquo;s look at a combination of cache hits and misses:
 >>>
 ```
 
-_Limitations:_
+*Limitations:*
 
 1. Keys and values must be JSON serializable.
 
@@ -806,6 +808,17 @@ Remove all of the elements from the `BloomFilter`:
 *Limitations:*
 
 1. Elements must be JSON serializable.
+2. `len(bf)` is probabilistic in that it&rsquo;s an accurate approximation.  You
+   can tune how accurate you want it to be with the `num_elements` and
+   `false_positives` arguments to `.__init__()`, at the expense of storage space
+   and insertion/lookup time.
+3. Membership testing against a Bloom filter is probabilistic in that it *may*
+   return false positives, but *never* returns false negatives.  This means that
+   if `element in bf` evaluates to `True`, then you *may* have inserted the
+   element into the Bloom filter.  But if `element in bf` evaluates to `False`,
+   then you *must not* have inserted it.  Again, you can tune accuracy with the
+   `num_elements` and `false_positives` arguments to `.__init__()`, at the
+   expense of storage space and insertion/lookup time.
 
 
 
@@ -890,9 +903,15 @@ Remove all of the elements from the `HyperLogLog`:
 >>>
 ```
 
-_Limitations:_
+*Limitations:*
 
 1. Elements must be JSON serializable.
+2. `len(hll)` is probabilistic in that it&rsquo;s an accurate approximation.
+3. Membership testing against a HyperLogLog is probabilistic in that it *may*
+   return false positives, but *never* returns false negatives.  This means that
+   if `element in hll` evaluates to `True`, then you *may* have inserted the
+   element into the HyperLogLog.  But if `element in hll` evaluates to `False`,
+   then you *must not* have inserted it.
 
 
 
