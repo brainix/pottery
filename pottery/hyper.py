@@ -16,6 +16,8 @@
 # --------------------------------------------------------------------------- #
 
 
+import uuid
+from typing import Generator
 from typing import Iterable
 from typing import List
 from typing import Optional
@@ -115,19 +117,42 @@ class HyperLogLog(Base):
         But if `element in hll` evaluates to False, then you *must not* have
         inserted it.
         '''
-        try:
-            encoded_value = self._encode(value)
-        except TypeError:
-            return False
+        return next(self.__contains_many(value))
+
+    def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
+        '''Yield whether this HyperLogLog contains multiple elements.  O(n)
+
+        Please note that this method *may* return false positives, but *never*
+        returns false negatives.  This means that if .contains_many() yields
+        True, then you *may* have inserted the element into the HyperLogLog.
+        But if .contains_many() yields False, then you *must not* have inserted
+        it.
+        '''
+        encoded_values = []
+        for value in values:
+            try:
+                encoded_value = self._encode(value)
+            except TypeError:
+                encoded_value = str(uuid.uuid4())
+            encoded_values.append(encoded_value)
 
         with self._watch() as pipeline:
-            tmp_hll_key = random_key(redis=pipeline)
+            tmp_hll_keys = []
+            for encoded_value in encoded_values:
+                tmp_hll_key = random_key(redis=pipeline)
+                tmp_hll_keys.append(tmp_hll_key)
+
             pipeline.multi()
-            pipeline.copy(self.key, tmp_hll_key)  # type: ignore
-            pipeline.pfadd(tmp_hll_key, encoded_value)
-            pipeline.delete(tmp_hll_key)
-            cardinality_changed = pipeline.execute()[1]
-            return not cardinality_changed
+            for encoded_value, tmp_hll_key in zip(encoded_values, tmp_hll_keys):
+                pipeline.copy(self.key, tmp_hll_key)  # type: ignore
+                pipeline.pfadd(tmp_hll_key, encoded_value)
+                pipeline.delete(tmp_hll_key)
+            cardinalities_changed = pipeline.execute()[1::3]
+
+        for cardinality_changed in cardinalities_changed:
+            yield not cardinality_changed
+
+    __contains_many = contains_many
 
     def __repr__(self) -> str:
         'Return the string representation of the HyperLogLog.  O(1)'

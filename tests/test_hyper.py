@@ -98,19 +98,16 @@ class HyperLogLogTests(TestCase):
             with self.subTest(metasyntactic_variable=metasyntactic_variable):
                 assert metasyntactic_variable not in metasyntactic_variables
 
-    def test_contains_uuids(self):
+    def test_contains_many_uuids(self):
         NUM_ELEMENTS = 5000
         known_uuids, unknown_uuids = [], []
-        for uuids in (known_uuids, unknown_uuids):
-            for _ in range(NUM_ELEMENTS):
-                uuid_ = str(uuid.uuid4())
-                uuids.append(uuid_)
+        generate_uuid = lambda: str(uuid.uuid4())  # NoQA: E731
+        for _ in range(NUM_ELEMENTS):
+            known_uuids.append(generate_uuid())
+            unknown_uuids.append(generate_uuid())
         uuid_hll = HyperLogLog(known_uuids, redis=self.redis)
-        num_known_contained, num_unknown_contained = 0, 0
-        for uuid_ in known_uuids:
-            num_known_contained += uuid_ in uuid_hll
-        for uuid_ in unknown_uuids:
-            num_unknown_contained += uuid_ in uuid_hll
+        num_known_contained = sum(uuid_hll.contains_many(*known_uuids))
+        num_unknown_contained = sum(uuid_hll.contains_many(*unknown_uuids))
         assert num_known_contained == NUM_ELEMENTS
         assert num_unknown_contained <= NUM_ELEMENTS * 0.25, \
             f'{num_unknown_contained} is not <= {NUM_ELEMENTS * 0.25}'
