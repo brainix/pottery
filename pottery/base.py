@@ -40,9 +40,11 @@ from typing import cast
 from redis import Redis
 from redis import RedisError
 from redis.client import Pipeline
-# TODO: When we drop support for Python 3.7, change the following import to:
+# TODO: When we drop support for Python 3.7, change the following imports to:
 #   from typing import Final
+#   from typing import final
 from typing_extensions import Final
+from typing_extensions import final
 
 from . import monkey
 from .annotations import JSONTypes
@@ -135,11 +137,13 @@ class _Common:
 class _Encodable:
     'Mixin class that implements JSON encoding and decoding.'
 
+    @final
     @staticmethod
     def _encode(value: JSONTypes) -> str:
         encoded = json.dumps(value, sort_keys=True)
         return encoded
 
+    @final
     @staticmethod
     def _decode(value: AnyStr) -> JSONTypes:
         try:
@@ -179,6 +183,7 @@ class _Pipelined(metaclass=abc.ABCMeta):
     def key(self) -> str:
         'Redis key.'
 
+    @final
     @contextlib.contextmanager
     def __watch_keys(self,
                      *keys: str,
@@ -201,6 +206,7 @@ class _Pipelined(metaclass=abc.ABCMeta):
                 )
                 pipeline.execute()
 
+    @final
     def __context_managers(self,
                            *others: Any,
                            ) -> Generator[ContextManager[Pipeline], None, None]:
@@ -216,6 +222,7 @@ class _Pipelined(metaclass=abc.ABCMeta):
             pipeline = containers[0].__watch_keys(*keys)
             yield pipeline
 
+    @final
     @contextlib.contextmanager
     def _watch(self,
                *others: Any,
