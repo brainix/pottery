@@ -16,6 +16,13 @@
 # --------------------------------------------------------------------------- #
 
 
+# TODO: Remove the following import after deferred evaluation of annotations
+# because the default.
+#   1. https://docs.python.org/3/whatsnew/3.7.html#whatsnew37-pep563
+#   2. https://www.python.org/dev/peps/pep-0563/
+#   3. https://www.python.org/dev/peps/pep-0649/
+from __future__ import annotations
+
 import uuid
 from typing import Generator
 from typing import Iterable
@@ -64,7 +71,7 @@ class HyperLogLog(Base):
         self.__update({value})
 
     def update(self,
-               *objs: Union['HyperLogLog', Iterable[RedisValues]],
+               *objs: Union[HyperLogLog, Iterable[RedisValues]],
                ) -> None:
         other_hll_keys: List[str] = []
         encoded_values: List[str] = []
@@ -94,7 +101,7 @@ class HyperLogLog(Base):
               *objs: Iterable[RedisValues],
               redis: Optional[Redis] = None,
               key: Optional[str] = None,
-              ) -> 'HyperLogLog':
+              ) -> HyperLogLog:
         new_hll = self.__class__(redis=redis, key=key)
         new_hll.update(self, *objs)
         return new_hll

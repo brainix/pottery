@@ -16,6 +16,13 @@
 # --------------------------------------------------------------------------- #
 
 
+# TODO: Remove the following import after deferred evaluation of annotations
+# because the default.
+#   1. https://docs.python.org/3/whatsnew/3.7.html#whatsnew37-pep563
+#   2. https://www.python.org/dev/peps/pep-0563/
+#   3. https://www.python.org/dev/peps/pep-0649/
+from __future__ import annotations
+
 import collections
 import contextlib
 import itertools
@@ -174,7 +181,7 @@ class RedisCounter(RedisDict, collections.Counter):
                    other: Counter[JSONTypes],
                    *,
                    sign: int = +1,
-                   ) -> 'RedisCounter':
+                   ) -> RedisCounter:
         with self._watch(other) as pipeline:
             try:
                 other_items = cast('RedisCounter', other)._make_counter().items()
@@ -209,7 +216,7 @@ class RedisCounter(RedisDict, collections.Counter):
                   other: Counter[JSONTypes],
                   *,
                   method: Callable[[int, int], bool],
-                  ) -> 'RedisCounter':
+                  ) -> RedisCounter:
         with self._watch(other) as pipeline:
             self_counter = self.__make_counter()
             try:
