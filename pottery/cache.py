@@ -20,7 +20,6 @@ import collections
 import contextlib
 import functools
 import itertools
-import logging
 from typing import Any
 from typing import Callable
 from typing import ClassVar
@@ -39,6 +38,7 @@ from typing_extensions import Final
 
 from .base import JSONTypes
 from .base import _default_redis
+from .base import logger
 from .base import random_key
 from .dict import InitArg
 from .dict import InitIter
@@ -47,8 +47,6 @@ from .dict import RedisDict
 
 
 _DEFAULT_TIMEOUT: Final[int] = 60   # seconds
-
-_logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
 class CacheInfo(NamedTuple):
@@ -129,7 +127,7 @@ def redis_cache(*,  # NoQA: C901
         nonlocal redis, key
         if key is None:  # pragma: no cover
             key = random_key(redis=cast(Redis, redis))
-            _logger.warning(
+            logger.warning(
                 "Self-assigning key redis_cache(key='%s') for function %s",
                 key,
                 func.__qualname__,

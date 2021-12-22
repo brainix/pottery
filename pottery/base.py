@@ -48,9 +48,9 @@ from .exceptions import QuorumIsImpossible
 from .exceptions import RandomKeyError
 
 
+logger: Final[logging.Logger] = logging.getLogger('pottery')
 _default_url: Final[str] = os.environ.get('REDIS_URL', 'redis://localhost:6379/')
 _default_redis: Final[Redis] = Redis.from_url(_default_url, socket_timeout=1)
-_logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
 def random_key(*,
@@ -93,7 +93,7 @@ class _Common:
     def __del__(self) -> None:
         if self.key.startswith(self._RANDOM_KEY_PREFIX):
             self.redis.delete(self.key)
-            _logger.warning(
+            logger.warning(
                 "Deleted tmp <%s key='%s'> (instance is about to be destroyed)",
                 self.__class__.__name__,
                 self.key,
@@ -117,7 +117,7 @@ class _Common:
 
     def _random_key(self) -> str:
         key = random_key(redis=self.redis, prefix=self._RANDOM_KEY_PREFIX)
-        _logger.warning(
+        logger.warning(
             "Self-assigning tmp key <%s key='%s'>",
             self.__class__.__name__,
             key,
@@ -186,14 +186,14 @@ class _Pipelined(metaclass=abc.ABCMeta):
             try:
                 yield pipeline
             except Exception as error:
-                _logger.warning(
+                logger.warning(
                     'Caught %s; aborting pipeline of %d commands',
                     error.__class__.__name__,
                     len(pipeline),
                 )
                 raise
             else:
-                _logger.info(
+                logger.info(
                     'Running EXEC on pipeline of %d commands',
                     len(pipeline),
                 )

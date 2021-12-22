@@ -35,7 +35,6 @@ Lua scripting:
 import concurrent.futures
 import contextlib
 import functools
-import logging
 import math
 import random
 import time
@@ -59,6 +58,7 @@ from typing_extensions import Literal
 
 from .annotations import F
 from .base import Primitive
+from .base import logger
 from .exceptions import ExtendUnlockedLock
 from .exceptions import QuorumNotAchieved
 from .exceptions import ReleaseUnlockedLock
@@ -68,9 +68,6 @@ from .timer import ContextTimer
 
 
 AUTO_RELEASE_TIME: Final[int] = 10 * 1000
-
-
-_logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
 class _Scripts:
@@ -107,7 +104,7 @@ class _Scripts:
     def __register_acquired_script(self) -> None:
         if self._acquired_script is None:
             class_name = self.__class__.__qualname__
-            _logger.info('Registering %s._acquired_script', class_name)
+            logger.info('Registering %s._acquired_script', class_name)
             master = next(iter(self.masters))  # type: ignore
             self.__class__._acquired_script = master.register_script('''
                 if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -121,7 +118,7 @@ class _Scripts:
     def __register_extend_script(self) -> None:
         if self._extend_script is None:
             class_name = self.__class__.__qualname__
-            _logger.info('Registering %s._extend_script', class_name)
+            logger.info('Registering %s._extend_script', class_name)
             master = next(iter(self.masters))  # type: ignore
             self.__class__._extend_script = master.register_script('''
                 if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -134,7 +131,7 @@ class _Scripts:
     def __register_release_script(self) -> None:
         if self._release_script is None:
             class_name = self.__class__.__qualname__
-            _logger.info('Registering %s._release_script', class_name)
+            logger.info('Registering %s._release_script', class_name)
             master = next(iter(self.masters))  # type: ignore
             self.__class__._release_script = master.register_script('''
                 if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -319,7 +316,7 @@ class Redlock(_Scripts, Primitive):
                     num_masters_acquired += future.result()
                 except RedisError as error:
                     redis_errors.append(error)
-                    _logger.exception(
+                    logger.exception(
                         '%s.__acquire_masters() caught %s',
                         self.__class__.__name__,
                         error.__class__.__name__,
@@ -396,7 +393,7 @@ class Redlock(_Scripts, Primitive):
         def log_time_enqueued(timer: ContextTimer, acquired: bool) -> None:
             key_suffix = self.key.split(':', maxsplit=1)[1]
             time_enqueued = math.ceil(timer.elapsed())
-            _logger.info(
+            logger.info(
                 'source=pottery sample#redlock.enqueued.%s=%dms sample#redlock.acquired.%s=%d',
                 key_suffix,
                 time_enqueued,
@@ -465,7 +462,7 @@ class Redlock(_Scripts, Primitive):
                     ttl = future.result()
                 except RedisError as error:
                     redis_errors.append(error)
-                    _logger.exception(
+                    logger.exception(
                         '%s.locked() caught %s',
                         self.__class__.__name__,
                         error.__class__.__name__,
@@ -519,7 +516,7 @@ class Redlock(_Scripts, Primitive):
                     num_masters_extended += future.result()
                 except RedisError as error:
                     redis_errors.append(error)
-                    _logger.exception(
+                    logger.exception(
                         '%s.extend() caught %s',
                         self.__class__.__name__,
                         error.__class__.__name__,
@@ -566,7 +563,7 @@ class Redlock(_Scripts, Primitive):
                     num_masters_released += future.result()
                 except RedisError as error:
                     redis_errors.append(error)
-                    _logger.exception(
+                    logger.exception(
                         '%s.release() caught %s',
                         self.__class__.__name__,
                         error.__class__.__name__,
@@ -726,7 +723,7 @@ def _log_synchronize(func: F,
                      holding_timer: ContextTimer,
                      ) -> None:
     try:
-        _logger.info(
+        logger.info(
             '%s() waited for %s for %d ms; held for %d ms',
             func.__qualname__,
             redlock.key,
@@ -737,7 +734,7 @@ def _log_synchronize(func: F,
         # holding_timer.elapsed() threw a RuntimeError, which means that
         # holding_timer never started, which means that we never acquired the
         # lock / entered the critical section.
-        _logger.info(
+        logger.info(
             '%s() waited for %s for %d ms; never acquired lock',
             func.__qualname__,
             redlock.key,

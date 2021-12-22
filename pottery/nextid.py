@@ -26,7 +26,6 @@ Lua scripting:
 
 import concurrent.futures
 import contextlib
-import logging
 from typing import ClassVar
 from typing import Iterable
 from typing import List
@@ -38,15 +37,12 @@ from typing import cast
 from redis import Redis
 from redis import RedisError
 from redis.client import Script
-from typing_extensions import Final
 
 from .base import Primitive
+from .base import logger
 from .exceptions import QuorumIsImpossible
 from .exceptions import QuorumNotAchieved
 from .executor import BailOutExecutor
-
-
-_logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
 class _Scripts:
@@ -79,7 +75,7 @@ class _Scripts:
     def __register_set_id_script(self) -> None:
         if self._set_id_script is None:
             class_name = self.__class__.__qualname__
-            _logger.info('Registering %s._set_id_script', class_name)
+            logger.info('Registering %s._set_id_script', class_name)
             master = next(iter(self.masters))  # type: ignore
             self.__class__._set_id_script = master.register_script('''
                 local curr = tonumber(redis.call('get', KEYS[1]))
@@ -179,7 +175,7 @@ class NextId(_Scripts, Primitive):
                     current_id = int(cast(bytes, future.result() or b'0'))
                 except RedisError as error:
                     redis_errors.append(error)
-                    _logger.exception(
+                    logger.exception(
                         '%s.__current_id() getter caught %s',
                         self.__class__.__name__,
                         error.__class__.__name__,
@@ -215,7 +211,7 @@ class NextId(_Scripts, Primitive):
                     num_masters_set += future.result() == value
                 except RedisError as error:
                     redis_errors.append(error)
-                    _logger.exception(
+                    logger.exception(
                         '%s.__current_id() setter caught %s',
                         self.__class__.__name__,
                         error.__class__.__name__,
@@ -245,7 +241,7 @@ class NextId(_Scripts, Primitive):
                     future.result()
                 except RedisError as error:
                     redis_errors.append(error)
-                    _logger.exception(
+                    logger.exception(
                         '%s.reset() caught %s',
                         self.__class__.__name__,
                         error.__class__.__name__,

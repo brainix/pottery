@@ -27,12 +27,12 @@ from typing import NoReturn
 from redis import Redis
 
 from pottery import PotteryWarning
+from pottery.base import logger
 
 
 class TestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        logger = logging.getLogger('pottery')
         logger.setLevel(logging.CRITICAL)
         warnings.filterwarnings('ignore', category=PotteryWarning)
 

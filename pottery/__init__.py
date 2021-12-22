@@ -26,18 +26,20 @@ battle tested in production at scale.
 
 from typing import Tuple
 
+# TODO: When we drop support for Python 3.7, change the following import to:
+#   from typing import Final
 from typing_extensions import Final
 
 
-__title__ = 'pottery'
-__version__ = '2.2.1'
-__description__ = __doc__.split(sep='\n\n', maxsplit=1)[0]
-__url__ = 'https://github.com/brainix/pottery'
-__author__ = 'Rajiv Bakulesh Shah'
-__author_email__ = 'brainix@gmail.com'
-__license__ = 'Apache 2.0'
-__keywords__ = 'Redis client persistent storage'
-__copyright__ = f'Copyright © 2015-2021, {__author__}, original author.'
+__title__: Final[str] = 'pottery'
+__version__: Final[str] = '2.2.1'
+__description__: Final[str] = __doc__.split(sep='\n\n', maxsplit=1)[0]
+__url__: Final[str] = 'https://github.com/brainix/pottery'
+__author__: Final[str] = 'Rajiv Bakulesh Shah'
+__author_email__: Final[str] = 'brainix@gmail.com'
+__license__: Final[str] = 'Apache 2.0'
+__keywords__: Final[str] = 'Redis client persistent storage'
+__copyright__: Final[str] = f'Copyright © 2015-2021, {__author__}, original author.'
 
 
 from .exceptions import PotteryError  # isort:skip
