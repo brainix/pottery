@@ -23,6 +23,8 @@ from typing import Dict
 from typing import List
 from typing import Union
 
+# TODO: When we drop support for Python 3.7, change the following import to:
+#   from typing import Final
 from typing_extensions import Final
 
 
