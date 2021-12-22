@@ -40,7 +40,11 @@ from typing import cast
 from redis import Redis
 from redis import RedisError
 from redis.client import Pipeline
+# TODO: When we drop support for Python 3.7, change the following imports to:
+#   from typing import Final
+#   from typing import final
 from typing_extensions import Final
+from typing_extensions import final
 
 from . import monkey
 from .annotations import JSONTypes
@@ -48,9 +52,9 @@ from .exceptions import QuorumIsImpossible
 from .exceptions import RandomKeyError
 
 
+logger: Final[logging.Logger] = logging.getLogger('pottery')
 _default_url: Final[str] = os.environ.get('REDIS_URL', 'redis://localhost:6379/')
 _default_redis: Final[Redis] = Redis.from_url(_default_url, socket_timeout=1)
-_logger: Final[logging.Logger] = logging.getLogger('pottery')
 
 
 def random_key(*,
@@ -93,7 +97,7 @@ class _Common:
     def __del__(self) -> None:
         if self.key.startswith(self._RANDOM_KEY_PREFIX):
             self.redis.delete(self.key)
-            _logger.warning(
+            logger.warning(
                 "Deleted tmp <%s key='%s'> (instance is about to be destroyed)",
                 self.__class__.__name__,
                 self.key,
@@ -117,7 +121,7 @@ class _Common:
 
     def _random_key(self) -> str:
         key = random_key(redis=self.redis, prefix=self._RANDOM_KEY_PREFIX)
-        _logger.warning(
+        logger.warning(
             "Self-assigning tmp key <%s key='%s'>",
             self.__class__.__name__,
             key,
@@ -133,11 +137,13 @@ class _Common:
 class _Encodable:
     'Mixin class that implements JSON encoding and decoding.'
 
+    @final
     @staticmethod
     def _encode(value: JSONTypes) -> str:
         encoded = json.dumps(value, sort_keys=True)
         return encoded
 
+    @final
     @staticmethod
     def _decode(value: AnyStr) -> JSONTypes:
         try:
@@ -177,6 +183,7 @@ class _Pipelined(metaclass=abc.ABCMeta):
     def key(self) -> str:
         'Redis key.'
 
+    @final
     @contextlib.contextmanager
     def __watch_keys(self,
                      *keys: str,
@@ -186,19 +193,20 @@ class _Pipelined(metaclass=abc.ABCMeta):
             try:
                 yield pipeline
             except Exception as error:
-                _logger.warning(
+                logger.warning(
                     'Caught %s; aborting pipeline of %d commands',
                     error.__class__.__name__,
                     len(pipeline),
                 )
                 raise
             else:
-                _logger.info(
+                logger.info(
                     'Running EXEC on pipeline of %d commands',
                     len(pipeline),
                 )
                 pipeline.execute()
 
+    @final
     def __context_managers(self,
                            *others: Any,
                            ) -> Generator[ContextManager[Pipeline], None, None]:
@@ -214,6 +222,7 @@ class _Pipelined(metaclass=abc.ABCMeta):
             pipeline = containers[0].__watch_keys(*keys)
             yield pipeline
 
+    @final
     @contextlib.contextmanager
     def _watch(self,
                *others: Any,

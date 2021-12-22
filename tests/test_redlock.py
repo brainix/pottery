@@ -34,7 +34,7 @@ from pottery import Redlock
 from pottery import ReleaseUnlockedLock
 from pottery import TooManyExtensions
 from pottery import synchronize
-from pottery.redlock import _logger
+from pottery.base import logger
 from tests.base import TestCase
 
 
@@ -59,7 +59,7 @@ class RedlockTests(TestCase):
     def test_acquire_same_lock_twice_blocking_without_timeout(self):
         assert not self.redis.exists(self.redlock.key)
         with ContextTimer() as timer, \
-             unittest.mock.patch.object(_logger, 'info') as info:
+             unittest.mock.patch.object(logger, 'info') as info:
             assert self.redlock.acquire()
             assert self.redis.exists(self.redlock.key)
             assert self.redlock.acquire()
@@ -69,7 +69,7 @@ class RedlockTests(TestCase):
 
     @unittest.skipIf('CI' in os.environ, 'this unit test is flaky on CI')
     def test_acquire_same_lock_twice_blocking_with_timeout(self):
-        with unittest.mock.patch.object(_logger, 'info') as info:
+        with unittest.mock.patch.object(logger, 'info') as info:
             assert not self.redis.exists(self.redlock.key)
             assert self.redlock.acquire()
             assert self.redis.exists(self.redlock.key)
@@ -300,7 +300,7 @@ class SynchronizeTests(TestCase):
             time.sleep(1)
             return time.time()
 
-        with unittest.mock.patch.object(_logger, 'info') as info:
+        with unittest.mock.patch.object(logger, 'info') as info:
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 futures = {executor.submit(func) for _ in range(3)}
             results = sorted(future.result() for future in futures)
