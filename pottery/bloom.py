@@ -151,7 +151,9 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
         Bloom filter.
 
         Please note that this method returns an approximation, not an exact
-        value, though it's quite accurate.
+        value, though it's quite accurate.  The accuracy can be tuned with the
+        num_elements and false_positives arguments to .__init__(), at the
+        expense of storage and CPU time.
 
         More about the formula that this method implements:
             https://en.wikipedia.org/wiki/Bloom_filter#Approximating_the_number_of_items_in_a_Bloom_filter
@@ -209,7 +211,7 @@ class BloomFilter(BloomFilterABC, Base):
 
         >>> dilberts.add('rajiv')
 
-    Test for membership in the Bloom filter:
+    Test for element membership in the Bloom filter:
 
         >>> 'rajiv' in dilberts
         True
@@ -229,6 +231,8 @@ class BloomFilter(BloomFilterABC, Base):
     Insert multiple elements into the Bloom filter:
 
         >>> dilberts.update({'raj', 'dan'})
+        >>> len(dilberts)
+        3
 
     Remove all of the elements from the Bloom filter:
 

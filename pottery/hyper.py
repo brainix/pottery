@@ -42,6 +42,18 @@ from .base import random_key
 class HyperLogLog(Base):
     '''Redis-backed HyperLogLog with a Pythonic API.
 
+    HyperLogLogs are an interesting data structure designed to answer the
+    question, "How many distinct elements have I seen?"; but not the questions,
+    "Have I seen this element before?" or "What are all of the elements that
+    I've seen before?"  So think of HyperLogLogs as Python sets that you can add
+    elements to and get the length of; but that you might not want to use to
+    test element membership, and can't iterate through, or get elements out of.
+
+    HyperLogLogs are probabilistic, which means that they&rsquo;re accurate
+    within a margin of error up to 2%.  However, they can reasonably accurately
+    estimate the cardinality (size) of vast datasets (like the number of unique
+    Google searches issued in a day) with a tiny amount of storage (1.5 KB).
+
     Wikipedia article:
         https://en.wikipedia.org/wiki/HyperLogLog
 
@@ -50,6 +62,47 @@ class HyperLogLog(Base):
 
     Riak blog post:
         https://riak.com/posts/technical/what-in-the-hell-is-hyperloglog/index.html?p=13169.html
+
+    Create a HyperLogLog and clean up Redis before the doctest:
+
+        >>> google_searches = HyperLogLog(key='google-searches')
+        >>> google_searches.clear()
+
+    Insert an element into the HyperLogLog:
+
+        >>> google_searches.add('sonic the hedgehog video game')
+
+    See how many elements we've inserted into the HyperLogLog:
+
+        >>> len(google_searches)
+        1
+
+    Insert multiple elements into the HyperLogLog:
+
+        >>> google_searches.update({
+        ...     'google in 1998',
+        ...     'minesweeper',
+        ...     'joey tribbiani',
+        ...     'wizard of oz',
+        ...     'rgb to hex',
+        ...     'pac-man',
+        ...     'breathing exercise',
+        ...     'do a barrel roll',
+        ...     'snake',
+        ... })
+        >>> len(google_searches)
+        10
+
+    Test for element membership in the HyperLogLog:
+
+        >>> 'joey tribbiani' in google_searches
+        True
+        >>> 'jennifer aniston' in google_searches
+        False
+
+    Remove all of the elements from the HyperLogLog:
+
+        >>> google_searches.clear()
     '''
 
     def __init__(self,
@@ -110,8 +163,7 @@ class HyperLogLog(Base):
         '''Return the approximate number of elements in the HyperLogLog.  O(1)
 
         Please note that this method returns an approximation, not an exact
-        value.  So please don't rely on it for anything important like
-        financial systems or cat gif websites.
+        value, though it's quite accurate.
         '''
         return self.redis.pfcount(self.key)
 
@@ -150,6 +202,9 @@ class HyperLogLog(Base):
                 pipeline.copy(self.key, tmp_hll_key)  # type: ignore
                 pipeline.pfadd(tmp_hll_key, encoded_value)
                 pipeline.delete(tmp_hll_key)
+            # Pluck out the results of the pipeline.pfadd() commands.  Ignore
+            # the results of the enclosing pipeline.copy() and pipeline.delete()
+            # commands.
             cardinalities_changed = pipeline.execute()[1::3]
 
         for cardinality_changed in cardinalities_changed:
@@ -160,3 +215,14 @@ class HyperLogLog(Base):
     def __repr__(self) -> str:
         'Return the string representation of the HyperLogLog.  O(1)'
         return f'<{self.__class__.__name__} key={self.key} len={len(self)}>'
+
+
+if __name__ == '__main__':
+    # Run the doctests in this module with:
+    #   $ source venv/bin/activate
+    #   $ python3 -m pottery.bloom
+    #   $ deactivate
+    import contextlib
+    with contextlib.suppress(ImportError):
+        from tests.base import run_doctests  # type: ignore
+        run_doctests()
