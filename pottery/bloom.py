@@ -346,8 +346,8 @@ class BloomFilter(BloomFilterABC, Base):
             except TypeError:
                 # value can't be encoded / converted to JSON.  Do a membership
                 # test for a UUID in place of value.
-                uuid_ = str(uuid.uuid4())
-                yield from self._bit_offsets(uuid_)
+                uuid4 = str(uuid.uuid4())
+                yield from self._bit_offsets(uuid4)
 
     def _num_bits_set(self) -> int:
         '''The number of bits set to 1 in this Bloom filter.  O(m)
