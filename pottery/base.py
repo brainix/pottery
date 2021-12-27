@@ -53,7 +53,7 @@ from .exceptions import RandomKeyError
 
 
 logger: Final[logging.Logger] = logging.getLogger('pottery')
-_default_url: Final[str] = os.environ.get('REDIS_URL', 'redis://localhost:6379/')
+_default_url: Final[str] = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 _default_redis: Final[Redis] = Redis.from_url(_default_url, socket_timeout=1)
 
 
@@ -213,8 +213,10 @@ class _Pipelined(metaclass=abc.ABCMeta):
         redises = collections.defaultdict(list)
         for container in (self, *others):
             if isinstance(container, _Pipelined):
-                connection_kwargs = frozenset(
-                    container.redis.connection_pool.connection_kwargs.items(),
+                connection_kwargs = (
+                    container.redis.connection_pool.connection_kwargs['host'],
+                    container.redis.connection_pool.connection_kwargs.get('port', 6379),
+                    container.redis.connection_pool.connection_kwargs.get('db', 0),
                 )
                 redises[connection_kwargs].append(container)
         for containers in redises.values():
