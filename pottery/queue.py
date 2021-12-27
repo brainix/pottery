@@ -35,6 +35,7 @@ class RedisSimpleQueue(Base):
     RETRY_DELAY: ClassVar[int] = 200
 
     def qsize(self) -> int:
+        'Return the approximate size of the queue (not reliable!).  O(1)'
         return self.redis.xlen(self.key)
 
     # Preserve the Open-Closed Principle with name mangling.
@@ -43,6 +44,7 @@ class RedisSimpleQueue(Base):
     __qsize = qsize
 
     def empty(self) -> bool:
+        'Return True if the queue is empty, False otherwise (not reliable!).  O(1)'
         return self.__qsize() == 0
 
     def put(self,
@@ -50,18 +52,39 @@ class RedisSimpleQueue(Base):
             block: bool = True,
             timeout: Optional[float] = None,
             ) -> None:
+        '''Put the item on the queue.  O(1)
+
+        The optional 'block' and 'timeout' arguments are ignored, as this method
+        never blocks.  They are provided for compatibility with the queue.Queue
+        class.
+        '''
         encoded_value = self._encode(item)
         self.redis.xadd(self.key, {'item': encoded_value}, id='*')
 
     __put = put
 
     def put_nowait(self, item: JSONTypes) -> None:
+        '''Put an item into the queue without blocking.  O(1)
+
+        This is exactly equivalent to `.put(item)` and is only provided for
+        compatibility with the queue.Queue class.
+        '''
         return self.__put(item, False)
 
     def get(self,
             block: bool = True,
             timeout: Optional[float] = None,
             ) -> JSONTypes:
+        '''Remove and return an item from the queue.  O(1)
+
+        If optional args 'block' is true and 'timeout' is None (the default),
+        block if necessary until an item is available.  If 'timeout' is
+        a non-negative number, it blocks at most 'timeout' seconds and raises
+        the Empty exception if no item was available within that time.
+        Otherwise ('block' is false), return an item if one is immediately
+        available, else raise the QueueEmptyError exception ('timeout' is
+        ignored in that case).
+        '''
         redis_block = (timeout or 0.0) if block else 0.0
         redis_block = math.floor(redis_block)
         with ContextTimer() as timer:
@@ -94,4 +117,9 @@ class RedisSimpleQueue(Base):
         return item
 
     def get_nowait(self) -> JSONTypes:
+        '''Remove and return an item from the queue without blocking.  O(1)
+
+        Only get an item if one is immediately available.  Otherwise
+        raise the Empty exception.
+        '''
         return self.__get(False)
