@@ -62,7 +62,8 @@ class RedisSimpleQueue(Base):
             block: bool = True,
             timeout: Optional[float] = None,
             ) -> JSONTypes:
-        redis_block = math.floor((timeout or 0.0) if block else 0.0)
+        redis_block = (timeout or 0.0) if block else 0.0
+        redis_block = math.floor(redis_block)
         with ContextTimer() as timer:
             while True:
                 try:
@@ -78,8 +79,9 @@ class RedisSimpleQueue(Base):
 
     def __remove_and_return(self, redis_block: int) -> JSONTypes:
         with self._watch() as pipeline:
-            # The following line raises WatchError if the RedisQueue is empty
-            # and we're not blocking.
+            # XXX: The following line raises WatchError after the socket timeout
+            # if the RedisQueue is empty and we're not blocking.  This feels
+            # like a bug in redis-py?
             returned_value = pipeline.xread({self.key: 0}, count=1, block=redis_block)
             # The following line raises IndexError if the RedisQueue is empty
             # and we're blocking.
