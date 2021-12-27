@@ -16,6 +16,7 @@
 # --------------------------------------------------------------------------- #
 
 
+from queue import Empty
 from typing import Iterable
 from typing import Optional
 
@@ -52,6 +53,9 @@ class RandomKeyError(PotteryError, RuntimeError):
 
     def __str__(self) -> str:
         return f'redis={self._redis}'
+
+class QueueEmptyError(PotteryError, Empty):
+    'Non-blocking .get() or .get_nowait() called on RedisQueue which is empty.'
 
 
 class PrimitiveError(Exception):

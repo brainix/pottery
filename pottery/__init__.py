@@ -45,6 +45,7 @@ __copyright__: Final[str] = f'Copyright © 2015-2021, {__author__}, original aut
 from .exceptions import PotteryError  # isort:skip
 from .exceptions import KeyExistsError  # isort:skip
 from .exceptions import RandomKeyError  # isort:skip
+from .exceptions import QueueEmptyError  # isort:skip
 from .exceptions import PrimitiveError  # isort:skip
 from .exceptions import QuorumIsImpossible  # isort:skip
 from .exceptions import QuorumNotAchieved  # isort:skip
@@ -67,6 +68,7 @@ from .counter import RedisCounter
 from .deque import RedisDeque
 from .dict import RedisDict
 from .list import RedisList
+from .queue import RedisSimpleQueue
 from .set import RedisSet
 
 
@@ -74,6 +76,7 @@ __all__: Final[Tuple[str, ...]] = (
     'PotteryError',
     'KeyExistsError',
     'RandomKeyError',
+    'QueueEmptyError',
     'PrimitiveError',
     'QuorumIsImpossible',
     'QuorumNotAchieved',
@@ -96,5 +99,6 @@ __all__: Final[Tuple[str, ...]] = (
     'RedisDeque',
     'RedisDict',
     'RedisList',
+    'RedisSimpleQueue',
     'RedisSet',
 )
