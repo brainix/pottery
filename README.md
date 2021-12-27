@@ -25,6 +25,7 @@ battle tested in production at scale.
 - [Lists ⛓](#lists)
 - [Counters 🧮](#counters)
 - [Deques 🖇️](#deques)
+- [Queues 🚶‍♂️🚶‍♀️🚶‍♂️](#queues)
 - [Redlock 🔒](#redlock)
     - [synchronize() 👯‍♀️](#synchronize)
 - [NextId 🔢](#nextid)
@@ -302,6 +303,63 @@ can use your `RedisDeque` the same way that you use any other Python `deque`.
 *Limitations:*
 
 1. Elements must be JSON serializable.
+
+
+
+## <a name="queues"></a>Queues 🚶‍♂️🚶‍♀️🚶‍♂️
+
+`RedisSimpleQueue` is a Redis-backed multi-producer, multi-consumer FIFO queue
+compatible with Python&rsquo;s
+[`queue.SimpleQueue`](https://docs.python.org/3/library/queue.html#simplequeue-objects).
+In general, use a Python `queue.Queue` if you&rsquo;re using it in one or more
+threads, use `multiprocessing.Queue` if you&rsquo;re using it between processes,
+and use `RedisSimpleQueue` if you&rsquo;re sharing it across machines or if you
+need for your queue to persist across application crashes or restarts.
+
+Instantiate a `RedisSimpleQueue`:
+
+```python
+>>> from pottery import RedisSimpleQueue
+>>> cars = RedisSimpleQueue(redis=redis, key='cars')
+>>>
+```
+
+Notice the two keyword arguments to `RedisSimpleQueue()`:  The first is your
+Redis client.  The second is the Redis key name for your queue.  Other than
+that, you can use your `RedisSimpleQueue` the same way that you use any other
+Python `queue.SimpleQueue`.
+
+Check the queue state, put some items in the queue, and get those items back
+out:
+
+```python
+>>> cars.empty()
+True
+>>> cars.qsize()
+0
+>>> cars.put('Jeep')
+>>> cars.put('Honda')
+>>> cars.put('Audi')
+>>> cars.empty()
+False
+>>> cars.qsize()
+3
+>>> cars.get()
+'Jeep'
+>>> cars.get()
+'Honda'
+>>> cars.get()
+'Audi'
+>>> cars.empty()
+True
+>>> cars.qsize()
+0
+>>>
+```
+
+*Limitations:*
+
+1. Items must be JSON serializable.
 
 
 
