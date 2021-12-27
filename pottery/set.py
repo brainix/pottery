@@ -18,6 +18,7 @@
 
 import collections.abc
 import itertools
+import uuid
 import warnings
 from typing import Any
 from typing import Generator
@@ -70,15 +71,20 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     def __contains__(self, value: Any) -> bool:
         's.__contains__(element) <==> element in s.  O(1)'
-        try:
-            encoded_value = self._encode(value)
-        except TypeError:
-            return False
-        return self.redis.sismember(self.key, encoded_value)
+        return next(self.contains_many(value))
 
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         'Yield whether this RedisSet contains multiple elements.  O(n)'
-        encoded_values = (self._encode(value) for value in values)
+        encoded_values = []
+        for value in values:
+            try:
+                encoded_value = self._encode(value)
+            except TypeError:
+                # value can't be encoded / converted to JSON.  Do a membership
+                # test for a UUID in place of value.
+                encoded_value = str(uuid.uuid4())
+            encoded_values.append(encoded_value)
+
         for is_member in self.redis.smismember(self.key, encoded_values):  # type: ignore
             yield bool(is_member)
 
