@@ -61,23 +61,21 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
     '''
 
     @abc.abstractmethod
-    def _bit_offsets(self,
-                     encoded_value: JSONTypes,
-                     ) -> Generator[int, None, None]:
+    def _bit_offsets(self, value: JSONTypes) -> Generator[int, None, None]:
         for seed in range(self.num_hashes()):
-            hash_ = mmh3.hash(encoded_value, seed=seed)
+            hash_ = mmh3.hash(cast(str, value), seed=seed)
             yield hash_ % self.size()
+
+    @abc.abstractmethod
+    def _num_bits_set(self) -> int:
+        raise NotImplementedError
 
     @abc.abstractmethod
     def update(self, *iterables: Iterable[JSONTypes]) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def __contains__(self, value: JSONTypes) -> bool:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def _num_bits_set(self) -> int:
+    def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         raise NotImplementedError
 
     def __init__(self,
@@ -135,6 +133,18 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
         num_hashes = math.ceil(num_hashes)
         return num_hashes
 
+    def _bit_offsets_many(self,
+                          *values: JSONTypes,
+                          ) -> Generator[int, None, None]:
+        for value in values:
+            try:
+                yield from self._bit_offsets(value)
+            except TypeError:
+                # value can't be encoded / converted to JSON.  Do a membership
+                # test for a UUID in place of value.
+                uuid4 = str(uuid.uuid4())
+                yield from self._bit_offsets(uuid4)
+
     def add(self, value: JSONTypes) -> None:
         '''Add an element to the BloomFilter.  O(k)
 
@@ -164,6 +174,21 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
             * math.log(1 - self._num_bits_set() / self.size())
         )
         return math.floor(len_)
+
+    def __contains__(self, value: JSONTypes) -> bool:
+        '''bf.__contains__(element) <==> element in bf.  O(k)
+
+        Here, k is the number of times to run our hash functions on a given
+        input string to compute bit offests into the underlying string
+        representing this Bloom filter.
+
+        Please note that this method *may* return false positives, but *never*
+        returns false negatives.  This means that if `element in bf` evaluates
+        to True, then you *may* have inserted the element into the Bloom filter.
+        But if `element in bf` evaluates to False, then you *must not* have
+        inserted it.
+        '''
+        return next(self.contains_many(value))
 
 
 class BloomFilter(BloomFilterABC, Base):
@@ -273,6 +298,14 @@ class BloomFilter(BloomFilterABC, Base):
         encoded_value = self._encode(value)
         return super()._bit_offsets(encoded_value)
 
+    def _num_bits_set(self) -> int:
+        '''The number of bits set to 1 in this Bloom filter.  O(m)
+
+        Here, m is the size in bits of the underlying string representing this
+        Bloom filter.
+        '''
+        return self.redis.bitcount(self.key)
+
     def update(self, *iterables: Iterable[JSONTypes]) -> None:
         '''Populate the Bloom filter with the elements in iterables.  O(n * k)
 
@@ -289,21 +322,6 @@ class BloomFilter(BloomFilterABC, Base):
             for bit_offset in bit_offsets:
                 pipeline.setbit(self.key, bit_offset, 1)
 
-    def __contains__(self, value: JSONTypes) -> bool:
-        '''bf.__contains__(element) <==> element in bf.  O(k)
-
-        Here, k is the number of times to run our hash functions on a given
-        input string to compute bit offests into the underlying string
-        representing this Bloom filter.
-
-        Please note that this method *may* return false positives, but *never*
-        returns false negatives.  This means that if `element in bf` evaluates
-        to True, then you *may* have inserted the element into the Bloom filter.
-        But if `element in bf` evaluates to False, then you *must not* have
-        inserted it.
-        '''
-        return next(self.__contains_many(value))
-
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         '''Yield whether this Bloom filter contains multiple elements.  O(n)
 
@@ -315,7 +333,7 @@ class BloomFilter(BloomFilterABC, Base):
         '''
         with self._watch() as pipeline:
             pipeline.multi()
-            for bit_offset in self.__bit_offsets_many(*values):
+            for bit_offset in self._bit_offsets_many(*values):
                 pipeline.getbit(self.key, bit_offset)
             bits = iter(pipeline.execute())
 
@@ -332,31 +350,6 @@ class BloomFilter(BloomFilterABC, Base):
                 break
             yield all(bits_in_chunk)
 
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
-    __contains_many = contains_many
-
-    def __bit_offsets_many(self,
-                           *values: JSONTypes,
-                           ) -> Generator[int, None, None]:
-        for value in values:
-            try:
-                yield from self._bit_offsets(value)
-            except TypeError:
-                # value can't be encoded / converted to JSON.  Do a membership
-                # test for a UUID in place of value.
-                uuid4 = str(uuid.uuid4())
-                yield from self._bit_offsets(uuid4)
-
-    def _num_bits_set(self) -> int:
-        '''The number of bits set to 1 in this Bloom filter.  O(m)
-
-        Here, m is the size in bits of the underlying string representing this
-        Bloom filter.
-        '''
-        return self.redis.bitcount(self.key)
-
     def __repr__(self) -> str:
         'Return the string representation of the BloomFilter.  O(1)'
         return f'<{self.__class__.__name__} key={self.key}>'
@@ -369,5 +362,5 @@ if __name__ == '__main__':
     #   $ deactivate
     import contextlib
     with contextlib.suppress(ImportError):
-        from tests.base import run_doctests  # type: ignore
+        from tests.base import run_doctests
         run_doctests()
