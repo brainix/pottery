@@ -36,7 +36,7 @@ from typing import cast
 
 from redis import Redis
 from redis import RedisError
-from redis.client import Script
+from redis.commands.core import Script
 
 from .base import Primitive
 from .base import logger
