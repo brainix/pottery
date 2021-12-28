@@ -29,6 +29,9 @@ from typing import Set
 from typing import cast
 
 import mmh3
+# TODO: When we drop support for Python 3.7, change the following import to:
+#   from typing import final
+from typing_extensions import final
 
 from .annotations import F
 from .base import Base
@@ -78,6 +81,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         raise NotImplementedError
 
+    @final
     def __init__(self,
                  iterable: Iterable[JSONTypes] = frozenset(),
                  *args: Any,
@@ -96,6 +100,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
         self.false_positives = false_positives
         self.update(iterable)
 
+    @final
     @_store_on_self(attr='_size')
     def size(self) -> int:
         '''The required number of bits (m) given n and p.
@@ -116,6 +121,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
         size = math.ceil(size)
         return size
 
+    @final
     @_store_on_self(attr='_num_hashes')
     def num_hashes(self) -> int:
         '''The number of hash functions (k) given m and n, minimizing p.
@@ -133,6 +139,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
         num_hashes = math.ceil(num_hashes)
         return num_hashes
 
+    @final
     def _bit_offsets_many(self,
                           *values: JSONTypes,
                           ) -> Generator[int, None, None]:
@@ -145,6 +152,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
                 uuid4 = str(uuid.uuid4())
                 yield from self._bit_offsets(uuid4)
 
+    @final
     def add(self, value: JSONTypes) -> None:
         '''Add an element to the BloomFilter.  O(k)
 
@@ -154,6 +162,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
         '''
         self.update({value})
 
+    @final
     def __len__(self) -> int:
         '''Return the approximate the number of elements in the BloomFilter.  O(m)
 
@@ -175,6 +184,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
         )
         return math.floor(len_)
 
+    @final
     def __contains__(self, value: JSONTypes) -> bool:
         '''bf.__contains__(element) <==> element in bf.  O(k)
 
@@ -325,8 +335,8 @@ class BloomFilter(BloomFilterABC, Base):
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         '''Yield whether this Bloom filter contains multiple elements.  O(n)
 
-        Please note that this method *may* return false positives, but *never*
-        returns false negatives.  This means that if .contains_many() yields
+        Please note that this method *may* produce false positives, but *never*
+        produces false negatives.  This means that if .contains_many() yields
         True, then you *may* have inserted the element into the Bloom filter.
         But if .contains_many() yields False, then you *must not* have inserted
         it.
