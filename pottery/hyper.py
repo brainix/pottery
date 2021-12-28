@@ -181,8 +181,8 @@ class HyperLogLog(Base):
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         '''Yield whether this HyperLogLog contains multiple elements.  O(n)
 
-        Please note that this method *may* return false positives, but *never*
-        returns false negatives.  This means that if .contains_many() yields
+        Please note that this method *may* produce false positives, but *never*
+        produces false negatives.  This means that if .contains_many() yields
         True, then you *may* have inserted the element into the HyperLogLog.
         But if .contains_many() yields False, then you *must not* have inserted
         it.
