@@ -69,14 +69,16 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
                   arg: InitArg = tuple(),
                   **kwargs: JSONTypes,
                   ) -> None:
-        encoded_dict = {}
         with contextlib.suppress(AttributeError):
             arg = cast(InitMap, arg).items()
         decoded_items = itertools.chain(cast(InitIter, arg), kwargs.items())
+
+        encoded_dict = {}
         for decoded_key, decoded_value in decoded_items:
             encoded_key = self._encode(decoded_key)
             encoded_value = self._encode(decoded_value)
             encoded_dict[encoded_key] = encoded_value
+
         if encoded_dict:
             pipeline.multi()
             pipeline.hset(self.key, mapping=encoded_dict)  # type: ignore
