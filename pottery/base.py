@@ -325,6 +325,11 @@ class Primitive(metaclass=abc.ABCMeta):
 
     _DEFAULT_MASTERS: ClassVar[FrozenSet[Redis]] = frozenset({_default_redis})
 
+    @property
+    @abc.abstractmethod
+    def KEY_PREFIX(self) -> str:
+        'Redis key prefix/namespace.'
+
     def __init__(self,
                  *,
                  key: str,
@@ -334,11 +339,6 @@ class Primitive(metaclass=abc.ABCMeta):
         self.key = key
         self.masters = frozenset(masters) or self._DEFAULT_MASTERS
         self.raise_on_redis_errors = raise_on_redis_errors
-
-    @property
-    @abc.abstractmethod
-    def KEY_PREFIX(self) -> str:
-        'Redis key prefix/namespace.'
 
     @property
     def key(self) -> str:
