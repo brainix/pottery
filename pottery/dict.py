@@ -22,6 +22,7 @@ import itertools
 import warnings
 from typing import Any
 from typing import Dict
+from typing import Generator
 from typing import Iterable
 from typing import Mapping
 from typing import Optional
@@ -100,15 +101,14 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
         if not self.redis.hdel(self.key, self._encode(key)):
             raise KeyError(key)
 
-    def _scan(self,
-              *,
-              cursor: int = 0,
-              ) -> Tuple[int, Dict[bytes, bytes]]:
+    def __iter__(self) -> Generator[JSONTypes, None, None]:
         warnings.warn(
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        return self.redis.hscan(self.key, cursor=cursor)
+        encoded_items = self.redis.hscan_iter(self.key)
+        decoded_keys = (self._decode(key) for key, _ in encoded_items)
+        yield from decoded_keys
 
     def __len__(self) -> int:
         'Return the number of items in the RedisDict.  O(1)'

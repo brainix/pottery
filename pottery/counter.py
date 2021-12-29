@@ -111,18 +111,7 @@ class RedisCounter(RedisDict, collections.Counter):
         return self.__class__.__name__ + '{' + repr_ + '}'
 
     def _make_counter(self) -> Counter[JSONTypes]:
-        counter: Counter[JSONTypes] = collections.Counter()
-        cursor = 0
-        while True:
-            cursor, encoded_dict = self._scan(cursor=cursor)
-            decoded_dict = {
-                self._decode(key): self._decode(value)
-                for key, value in encoded_dict.items()
-            }
-            counter.update(decoded_dict)
-            if cursor == 0:
-                break
-        return counter
+        return collections.Counter(self)
 
     __make_counter = _make_counter
 

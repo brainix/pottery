@@ -290,32 +290,9 @@ class Base(_Common, _Encodable, _Clearable, _Pipelined, _Comparable):
 class Iterable_(metaclass=abc.ABCMeta):
     'Mixin class that implements iterating over a Redis-backed collection.'
 
-    @staticmethod
     @abc.abstractmethod
-    def _decode(value: bytes) -> JSONTypes:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def key(self) -> str:
-        'Redis key.'
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def _scan(self,
-              *,
-              cursor: int = 0,
-              ) -> Tuple[int, Union[List[bytes], Mapping[bytes, bytes]]]:
-        raise NotImplementedError
-
     def __iter__(self) -> Generator[JSONTypes, None, None]:
-        'Iterate over the items in a Redis-backed container.  O(n)'
-        cursor = 0
-        while True:
-            cursor, iterable = self._scan(cursor=cursor)
-            yield from (self._decode(value) for value in iterable)
-            if cursor == 0:
-                break
+        raise NotImplementedError
 
 
 class Primitive(metaclass=abc.ABCMeta):
