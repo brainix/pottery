@@ -73,10 +73,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
             arg = cast(InitMap, arg).items()
         items = itertools.chain(cast(InitIter, arg), kwargs.items())
         dict_ = dict(items)
-        encoded_dict = {
-            self._encode(key): self._encode(value)
-            for key, value in dict_.items()
-        }
+        encoded_dict = self.__encode_dict(dict_)
         if encoded_dict:
             pipeline.multi()
             pipeline.hset(self.key, mapping=encoded_dict)  # type: ignore
@@ -85,6 +82,15 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
     #   https://youtu.be/miGolgp9xq8?t=2086
     #   https://stackoverflow.com/a/38534939
     __populate = _populate
+
+    def _encode_dict(self, dict_):
+        encoded_dict = {
+            self._encode(key): self._encode(value)
+            for key, value in dict_.items()
+        }
+        return encoded_dict
+
+    __encode_dict = _encode_dict
 
     # Methods required by collections.abc.MutableMapping:
 
