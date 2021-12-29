@@ -140,8 +140,11 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        items = self.redis.hgetall(self.key).items()
-        dict_ = {self._decode(key): self._decode(value) for key, value in items}
-        return dict_
+        encoded_items = self.redis.hgetall(self.key).items()
+        decoded_dict = {
+            self._decode(encoded_key): self._decode(encoded_value)
+            for encoded_key, encoded_value in encoded_items
+        }
+        return decoded_dict
 
     __to_dict = to_dict
