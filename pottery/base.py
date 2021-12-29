@@ -81,6 +81,14 @@ def random_key(*,
     return key
 
 
+def connection_args(redis: Redis) -> Tuple[str, int, int]:
+    return (
+        redis.connection_pool.connection_kwargs['host'],
+        redis.connection_pool.connection_kwargs.get('port', 6379),
+        redis.connection_pool.connection_kwargs.get('db', 0),
+    )
+
+
 class _Common:
     'Mixin class that implements self.redis and self.key properties.'
 
@@ -213,12 +221,7 @@ class _Pipelined(metaclass=abc.ABCMeta):
         redises = collections.defaultdict(list)
         for container in (self, *others):
             if isinstance(container, _Pipelined):
-                connection_kwargs = (
-                    container.redis.connection_pool.connection_kwargs['host'],
-                    container.redis.connection_pool.connection_kwargs.get('port', 6379),
-                    container.redis.connection_pool.connection_kwargs.get('db', 0),
-                )
-                redises[connection_kwargs].append(container)
+                redises[connection_args(container.redis)].append(container)
         for containers in redises.values():
             keys = (container.key for container in containers)
             pipeline = containers[0].__watch_keys(*keys)
@@ -262,7 +265,7 @@ class _Comparable(metaclass=abc.ABCMeta):
         for other in others:
             if not isinstance(other, _Comparable):
                 return False
-            if self.redis.connection_pool != other.redis.connection_pool:
+            if connection_args(self.redis) != connection_args(other.redis):
                 return False
         return True
 
