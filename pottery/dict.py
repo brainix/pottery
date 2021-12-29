@@ -72,13 +72,11 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
         with contextlib.suppress(AttributeError):
             arg = cast(InitMap, arg).items()
         items = itertools.chain(cast(InitIter, arg), kwargs.items())
-
-        encoded_dict = {}
-        for key, value in items:
-            encoded_key = self._encode(key)
-            encoded_value = self._encode(value)
-            encoded_dict[encoded_key] = encoded_value
-
+        dict_ = dict(items)
+        encoded_dict = {
+            self._encode(key): self._encode(value)
+            for key, value in dict_.items()
+        }
         if encoded_dict:
             pipeline.multi()
             pipeline.hset(self.key, mapping=encoded_dict)  # type: ignore
