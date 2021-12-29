@@ -386,4 +386,3 @@ class RedisList(Base, collections.abc.MutableSequence):
         return values
 
     __to_list = to_list
-    
