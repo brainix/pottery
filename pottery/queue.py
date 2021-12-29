@@ -21,6 +21,7 @@ import random
 import time
 from typing import ClassVar
 from typing import Optional
+from typing import Tuple
 from typing import cast
 
 from redis import WatchError
@@ -35,7 +36,11 @@ class RedisSimpleQueue(Base):
     RETRY_DELAY: ClassVar[int] = 200
 
     def qsize(self) -> int:
-        'Return the approximate size of the queue (not reliable!).  O(1)'
+        '''Return the size of the queue.  O(1)
+
+        Be aware that there's a potential race condition here where the queue
+        changes before you use the result of .qsize().
+        '''
         return self.redis.xlen(self.key)
 
     # Preserve the Open-Closed Principle with name mangling.
@@ -44,7 +49,13 @@ class RedisSimpleQueue(Base):
     __qsize = qsize
 
     def empty(self) -> bool:
-        'Return True if the queue is empty, False otherwise (not reliable!).  O(1)'
+        '''Return True if the queue is empty; False otherwise.  O(1)
+
+        This method is likely to be removed at some point.  Use `.qsize() == 0`
+        as a direct substitute, but be aware that either approach risks a race
+        condition where the queue grows before you use the result of .empty() or
+        .qsize().
+        '''
         return self.__qsize() == 0
 
     def put(self,
@@ -54,7 +65,7 @@ class RedisSimpleQueue(Base):
             ) -> None:
         '''Put the item on the queue.  O(1)
 
-        The optional 'block' and 'timeout' arguments are ignored, as this method
+        The optional block and timeout arguments are ignored, as this method
         never blocks.  They are provided for compatibility with the queue.Queue
         class.
         '''
@@ -66,10 +77,10 @@ class RedisSimpleQueue(Base):
     def put_nowait(self, item: JSONTypes) -> None:
         '''Put an item into the queue without blocking.  O(1)
 
-        This is exactly equivalent to `.put(item)` and is only provided for
+        This is exactly equivalent to `.put(item)` and is provided for
         compatibility with the queue.Queue class.
         '''
-        return self.__put(item, False)
+        return self.__put(item, block=False)
 
     def get(self,
             block: bool = True,
@@ -77,13 +88,12 @@ class RedisSimpleQueue(Base):
             ) -> JSONTypes:
         '''Remove and return an item from the queue.  O(1)
 
-        If optional args 'block' is true and 'timeout' is None (the default),
-        block if necessary until an item is available.  If 'timeout' is
-        a non-negative number, it blocks at most 'timeout' seconds and raises
-        the Empty exception if no item was available within that time.
-        Otherwise ('block' is false), return an item if one is immediately
-        available, else raise the QueueEmptyError exception ('timeout' is
-        ignored in that case).
+        If optional args block is True and timeout is None (the default), block
+        if necessary until an item is available.  If timeout is a non-negative
+        number, block at most timeout seconds and raise the QueueEmptyError
+        exception if no item becomes available within that time.  Otherwise
+        (block is False), return an item if one is immediately available, else
+        raise the QueueEmptyError exception (timeout is ignored in this case).
         '''
         redis_block = (timeout or 0.0) if block else 0.0
         redis_block = math.floor(redis_block)
@@ -108,8 +118,7 @@ class RedisSimpleQueue(Base):
             returned_value = pipeline.xread({self.key: 0}, count=1, block=redis_block)
             # The following line raises IndexError if the RedisQueue is empty
             # and we're blocking.
-            id_ = cast(bytes, returned_value[0][1][0][0])
-            dict_ = cast(dict, returned_value[0][1][0][1])
+            id_, dict_ = cast(Tuple[bytes, dict], returned_value[0][1][0])
             pipeline.multi()
             pipeline.xdel(self.key, id_)
         encoded_value = dict_[b'item']
@@ -119,7 +128,10 @@ class RedisSimpleQueue(Base):
     def get_nowait(self) -> JSONTypes:
         '''Remove and return an item from the queue without blocking.  O(1)
 
-        Only get an item if one is immediately available.  Otherwise
-        raise the Empty exception.
+        Get an item if one is immediately available.  Otherwise raise the
+        QueueEmptyError exception.
+
+        This is exactly equivalent to `.get(block=False)` and is provided for
+        compatibility with the queue.Queue class.
         '''
-        return self.__get(False)
+        return self.__get(block=False)

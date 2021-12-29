@@ -26,6 +26,7 @@ venv ?= venv
 init upgrade: formulae := {openssl,readline,xz,redis}
 python upgrade: version ?= 3.10.1
 upgrade: requirements ?= requirements-to-freeze.txt
+delete-keys: pattern ?= tmp:*
 
 
 .PHONY: install
@@ -110,6 +111,12 @@ release:
 		python3 setup.py sdist && \
 		python3 setup.py bdist_wheel && \
 		twine upload dist/*
+
+# Usage:
+#	make pattern="tmp:*" delete-keys
+.PHONY: delete-keys
+delete-keys:
+	redis-cli --scan --pattern "$(pattern)" | xargs redis-cli del
 
 .PHONY: clean
 clean:
