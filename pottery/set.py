@@ -117,7 +117,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        return self.__class__.__name__ + str(set(self))
+        return f'{self.__class__.__name__}{self.__to_set()}'
 
     # Method overrides:
 
@@ -191,7 +191,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             }
             return decoded_values
         with self._watch(*others):
-            set_ = set(self)
+            set_ = self.__to_set()
             method = getattr(set_, set_method)
             return method(*others)
 
@@ -278,3 +278,9 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     # Where does this method come from?
     def symmetric_difference_update(self, other: Iterable[JSONTypes]) -> NoReturn:  # pragma: no cover
         raise NotImplementedError
+
+    def to_set(self):
+        'Convert a RedisSet into a plain Python set.'
+        return set(self)
+
+    __to_set = to_set

@@ -110,10 +110,11 @@ class RedisCounter(RedisDict, collections.Counter):
         repr_ = ', '.join(pairs)
         return self.__class__.__name__ + '{' + repr_ + '}'
 
-    def _make_counter(self) -> Counter[JSONTypes]:
+    def to_counter(self) -> Counter[JSONTypes]:
+        'Convert a RedisCounter into a plain Python collections.Counter.'
         return collections.Counter(self)
 
-    __make_counter = _make_counter
+    __to_counter = to_counter
 
     def __math_op(self,
                   other: Counter[JSONTypes],
@@ -121,7 +122,7 @@ class RedisCounter(RedisDict, collections.Counter):
                   method: Callable[[Counter[JSONTypes], Counter[JSONTypes]], Counter[JSONTypes]],
                   ) -> Counter[JSONTypes]:
         with self._watch(other):
-            counter = self.__make_counter()
+            counter = self.__to_counter()
             return method(counter, other)
 
     def __add__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
@@ -147,7 +148,7 @@ class RedisCounter(RedisDict, collections.Counter):
                    ) -> Counter[JSONTypes]:
         with self._watch():
             counter: Counter[JSONTypes] = collections.Counter()
-            for key, value in self.__make_counter().items():
+            for key, value in self.__to_counter().items():
                 if test_func(value):
                     counter[key] = modifier_func(value)
             return counter
@@ -173,7 +174,7 @@ class RedisCounter(RedisDict, collections.Counter):
                    ) -> RedisCounter:
         with self._watch(other) as pipeline:
             try:
-                other_items = cast('RedisCounter', other)._make_counter().items()
+                other_items = cast('RedisCounter', other).to_counter().items()
             except AttributeError:
                 other_items = other.items()
             to_set = {k: self[k] + sign * v for k, v in other_items}
@@ -207,9 +208,9 @@ class RedisCounter(RedisDict, collections.Counter):
                   method: Callable[[int, int], bool],
                   ) -> RedisCounter:
         with self._watch(other) as pipeline:
-            self_counter = self.__make_counter()
+            self_counter = self.__to_counter()
             try:
-                other_counter = cast('RedisCounter', other)._make_counter()
+                other_counter = cast('RedisCounter', other).to_counter()
             except AttributeError:
                 other_counter = other
             to_set, to_del = {}, set()
@@ -245,5 +246,5 @@ class RedisCounter(RedisDict, collections.Counter):
     def most_common(self,
                     n: Optional[int] = None,
                     ) -> List[Tuple[JSONTypes, int]]:
-        counter = self.__make_counter()
+        counter = self.__to_counter()
         return counter.most_common(n=n)

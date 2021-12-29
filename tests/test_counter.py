@@ -112,7 +112,7 @@ class CounterTests(TestCase):
     def test_make_counter(self):
         'Test RedisCounter._make_counter()'
         kwargs = {str(element): element for element in range(1000)}
-        c = RedisCounter(redis=self.redis, **kwargs)._make_counter()
+        c = RedisCounter(redis=self.redis, **kwargs).to_counter()
         assert c == collections.Counter(**kwargs)
 
     def test_add(self):
