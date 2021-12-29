@@ -69,17 +69,17 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
                   arg: InitArg = tuple(),
                   **kwargs: JSONTypes,
                   ) -> None:
-        mapping = {}
+        encoded_dict = {}
         with contextlib.suppress(AttributeError):
             arg = cast(InitMap, arg).items()
         decoded_items = itertools.chain(cast(InitIter, arg), kwargs.items())
         for decoded_key, decoded_value in decoded_items:
             encoded_key = self._encode(decoded_key)
             encoded_value = self._encode(decoded_value)
-            mapping[encoded_key] = encoded_value
-        if mapping:
+            encoded_dict[encoded_key] = encoded_value
+        if encoded_dict:
             pipeline.multi()
-            pipeline.hset(self.key, mapping=mapping)  # type: ignore
+            pipeline.hset(self.key, mapping=encoded_dict)  # type: ignore
 
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
