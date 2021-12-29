@@ -36,6 +36,7 @@ from redis import Redis
 from .annotations import RedisValues
 from .base import Base
 from .base import JSONTypes
+from .base import connection_args
 from .base import random_key
 
 
@@ -131,7 +132,7 @@ class HyperLogLog(Base):
         with self._watch(objs) as pipeline:
             for obj in objs:
                 if isinstance(obj, self.__class__):
-                    if self.redis.connection_pool != obj.redis.connection_pool:
+                    if connection_args(self.redis) != connection_args(obj.redis):
                         raise RuntimeError(
                             f"can't update {self} with {obj} as they live on "
                             "different Redis instances/databases"
