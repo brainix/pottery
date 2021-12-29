@@ -118,7 +118,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
 
     def __repr__(self) -> str:
         'Return the string representation of the RedisDict.  O(n)'
-        return self.__class__.__name__ + str(self.to_dict())
+        return self.__class__.__name__ + str(self.__to_dict())
 
     # Method overrides:
 
@@ -143,3 +143,5 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
         items = self.redis.hgetall(self.key).items()
         dict_ = {self._decode(key): self._decode(value) for key, value in items}
         return dict_
+
+    __to_dict = to_dict
