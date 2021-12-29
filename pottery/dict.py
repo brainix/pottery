@@ -136,6 +136,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
             return False
 
     def to_dict(self) -> Dict[JSONTypes, JSONTypes]:
+        'Convert a RedisDict into a plain Python dict.'
         warnings.warn(
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,

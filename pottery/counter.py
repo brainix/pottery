@@ -111,6 +111,7 @@ class RedisCounter(RedisDict, collections.Counter):
         return self.__class__.__name__ + '{' + repr_ + '}'
 
     def to_counter(self) -> Counter[JSONTypes]:
+        'Convert a RedisCounter into a plain Python collections.Counter.'
         return collections.Counter(self)
 
     __to_counter = to_counter
