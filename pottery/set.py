@@ -23,11 +23,9 @@ import warnings
 from typing import Any
 from typing import Generator
 from typing import Iterable
-from typing import List
 from typing import NoReturn
 from typing import Optional
 from typing import Set
-from typing import Tuple
 from typing import cast
 
 from redis import Redis
@@ -88,12 +86,14 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         for is_member in self.redis.smismember(self.key, encoded_values):  # type: ignore
             yield bool(is_member)
 
-    def _scan(self, *, cursor: int = 0) -> Tuple[int, List[bytes]]:
+    def __iter__(self) -> Generator[JSONTypes, None, None]:
         warnings.warn(
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        return self.redis.sscan(self.key, cursor=cursor)
+        encoded_values = self.redis.sscan_iter(self.key)
+        decoded_values = (self._decode(value) for value in encoded_values)
+        yield from decoded_values
 
     def __len__(self) -> int:
         'Return the number of elements in the RedisSet.  O(1)'
@@ -117,8 +117,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        set_ = {self._decode(value) for value in self.redis.smembers(self.key)}
-        return self.__class__.__name__ + str(set_)
+        return self.__class__.__name__ + str(set(self))
 
     # Method overrides:
 
