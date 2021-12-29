@@ -57,23 +57,33 @@ class RedisCounter(RedisDict, collections.Counter):
                   sign: int = +1,
                   **kwargs: int,
                   ) -> None:
-        to_set = {}
+        decoded_dict = {}
         try:
-            for key, value in cast(Counter[JSONTypes], arg).items():
-                to_set[key] = sign * value
+            decoded_items = cast(Counter[JSONTypes], arg).items()
+            for decoded_key, decoded_value in decoded_items:
+                decoded_dict[decoded_key] = sign * decoded_value
         except AttributeError:
-            for key in arg:
-                to_set[key] = to_set.get(key, self[key]) + sign
-        for key, value in kwargs.items():
-            original = self[key] if to_set.get(key, 0) == 0 else to_set[key]
-            to_set[key] = original + sign * value
-        to_set = {key: self[key] + value for key, value in to_set.items()}
-        encoded_to_set = {
-            self._encode(k): self._encode(v) for k, v in to_set.items()
+            for decoded_key in arg:
+                decoded_value = decoded_dict.get(decoded_key, self[decoded_key]) + sign
+                decoded_dict[decoded_key] = decoded_value
+
+        for decoded_key, decoded_value in kwargs.items():
+            if decoded_dict.get(decoded_key, 0) == 0:
+                original = self[decoded_key]
+            else:
+                original = decoded_dict[decoded_key]
+            decoded_dict[decoded_key] = original + sign * decoded_value
+
+        decoded_dict = {
+            key: self[key] + value for key, value in decoded_dict.items()
         }
-        if encoded_to_set:
+        encoded_dict = {
+            self._encode(key): self._encode(value)
+            for key, value in decoded_dict.items()
+        }
+        if encoded_dict:
             pipeline.multi()
-            pipeline.hset(self.key, mapping=encoded_to_set)  # type: ignore
+            pipeline.hset(self.key, mapping=encoded_dict)  # type: ignore
 
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
@@ -105,7 +115,7 @@ class RedisCounter(RedisDict, collections.Counter):
 
     def __repr__(self) -> str:
         'Return the string representation of the RedisCounter.  O(n)'
-        items = self.most_common()
+        items = self.__most_common()
         pairs = (f"'{key}': {value}" for key, value in items)
         repr_ = ', '.join(pairs)
         return self.__class__.__name__ + '{' + repr_ + '}'
@@ -224,16 +234,15 @@ class RedisCounter(RedisDict, collections.Counter):
                     to_del.add(k)
             if to_set or to_del:
                 pipeline.multi()
-                if to_set:
-                    encoded_to_set = {
-                        self._encode(k): self._encode(v)
-                        for k, v in to_set.items()
-                    }
-                    pipeline.hset(self.key, mapping=encoded_to_set)  # type: ignore
-                if to_del:
-                    encoded_to_del = {self._encode(k) for k in to_del}
-                    pipeline.hdel(self.key, *encoded_to_del)
-            return self
+            if to_set:
+                encoded_to_set = {
+                    self._encode(k): self._encode(v) for k, v in to_set.items()
+                }
+                pipeline.hset(self.key, mapping=encoded_to_set)  # type: ignore
+            if to_del:
+                encoded_to_del = {self._encode(k) for k in to_del}
+                pipeline.hdel(self.key, *encoded_to_del)
+        return self
 
     def __ior__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:  # type: ignore
         'Same as __or__(), but in-place.  O(n)'
@@ -248,3 +257,5 @@ class RedisCounter(RedisDict, collections.Counter):
                     ) -> List[Tuple[JSONTypes, int]]:
         counter = self.__to_counter()
         return counter.most_common(n=n)
+
+    __most_common = most_common
