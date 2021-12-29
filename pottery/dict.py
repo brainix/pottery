@@ -69,14 +69,17 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
                   arg: InitArg = tuple(),
                   **kwargs: JSONTypes,
                   ) -> None:
-        to_set = {}
+        mapping = {}
         with contextlib.suppress(AttributeError):
             arg = cast(InitMap, arg).items()
-        for key, value in itertools.chain(cast(InitIter, arg), kwargs.items()):
-            to_set[self._encode(key)] = self._encode(value)
-        if to_set:
+        decoded_items = itertools.chain(cast(InitIter, arg), kwargs.items())
+        for decoded_key, decoded_value in decoded_items:
+            encoded_key = self._encode(decoded_key)
+            encoded_value = self._encode(decoded_value)
+            mapping[encoded_key] = encoded_value
+        if mapping:
             pipeline.multi()
-            pipeline.hset(self.key, mapping=to_set)  # type: ignore
+            pipeline.hset(self.key, mapping=mapping)  # type: ignore
 
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
@@ -87,18 +90,23 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
 
     def __getitem__(self, key: JSONTypes) -> JSONTypes:
         'd.__getitem__(key) <==> d[key].  O(1)'
-        encoded_value = self.redis.hget(self.key, self._encode(key))
+        encoded_key = self._encode(key)
+        encoded_value = self.redis.hget(self.key, encoded_key)
         if encoded_value is None:
             raise KeyError(key)
-        return self._decode(encoded_value)
+        decoded_value = self._decode(encoded_value)
+        return decoded_value
 
     def __setitem__(self, key: JSONTypes, value: JSONTypes) -> None:
         'd.__setitem__(key, value) <==> d[key] = value.  O(1)'
-        self.redis.hset(self.key, self._encode(key), self._encode(value))
+        encoded_key = self._encode(key)
+        encoded_value = self._encode(value)
+        self.redis.hset(self.key, encoded_key, encoded_value)
 
     def __delitem__(self, key: JSONTypes) -> None:
         'd.__delitem__(key) <==> del d[key].  O(1)'
-        if not self.redis.hdel(self.key, self._encode(key)):
+        encoded_key = self._encode(key)
+        if not self.redis.hdel(self.key, encoded_key):
             raise KeyError(key)
 
     def __iter__(self) -> Generator[JSONTypes, None, None]:
@@ -131,9 +139,10 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
     def __contains__(self, key: Any) -> bool:
         'd.__contains__(key) <==> key in d.  O(1)'
         try:
-            return self.redis.hexists(self.key, self._encode(key))
+            encoded_key = self._encode(key)
         except TypeError:
             return False
+        return self.redis.hexists(self.key, encoded_key)
 
     def to_dict(self) -> Dict[JSONTypes, JSONTypes]:
         'Convert a RedisDict into a plain Python dict.'
