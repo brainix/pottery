@@ -322,7 +322,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        return self.__class__.__name__ + str(self.to_list())
+        return self.__class__.__name__ + str(self.__to_list())
 
     # Method overrides:
 
@@ -384,3 +384,6 @@ class RedisList(Base, collections.abc.MutableSequence):
         encoded = self.redis.lrange(self.key, 0, -1)
         values = [self._decode(value) for value in encoded]
         return values
+
+    __to_list = to_list
+    
