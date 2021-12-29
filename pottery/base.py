@@ -321,6 +321,11 @@ class Iterable_(metaclass=abc.ABCMeta):
 class Primitive(metaclass=abc.ABCMeta):
     'Base class for Redis-backed distributed primitives.'
 
+    @property
+    @abc.abstractmethod
+    def KEY_PREFIX(self) -> str:
+        'Redis key prefix/namespace.'
+
     __slots__ = ('_key', 'masters', 'raise_on_redis_errors')
 
     _DEFAULT_MASTERS: ClassVar[FrozenSet[Redis]] = frozenset({_default_redis})
@@ -334,11 +339,6 @@ class Primitive(metaclass=abc.ABCMeta):
         self.key = key
         self.masters = frozenset(masters) or self._DEFAULT_MASTERS
         self.raise_on_redis_errors = raise_on_redis_errors
-
-    @property
-    @abc.abstractmethod
-    def KEY_PREFIX(self) -> str:
-        'Redis key prefix/namespace.'
 
     @property
     def key(self) -> str:
