@@ -75,10 +75,7 @@ class RedisCounter(RedisDict, collections.Counter):
             dict_[key] = original + sign * value
 
         dict_ = {key: self[key] + value for key, value in dict_.items()}
-        encoded_dict = {
-            self._encode(key): self._encode(value)
-            for key, value in dict_.items()
-        }
+        encoded_dict = self._encode_dict(dict_)
         if encoded_dict:
             pipeline.multi()
             pipeline.hset(self.key, mapping=encoded_dict)  # type: ignore
