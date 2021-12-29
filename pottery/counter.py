@@ -57,29 +57,27 @@ class RedisCounter(RedisDict, collections.Counter):
                   sign: int = +1,
                   **kwargs: int,
                   ) -> None:
-        decoded_dict = {}
+        dict_ = {}
         try:
-            decoded_items = cast(Counter[JSONTypes], arg).items()
-            for decoded_key, decoded_value in decoded_items:
-                decoded_dict[decoded_key] = sign * decoded_value
+            items = cast(Counter[JSONTypes], arg).items()
+            for key, value in items:
+                dict_[key] = sign * value
         except AttributeError:
-            for decoded_key in arg:
-                decoded_value = decoded_dict.get(decoded_key, self[decoded_key]) + sign
-                decoded_dict[decoded_key] = decoded_value
+            for key in arg:
+                value = dict_.get(key, self[key])
+                dict_[key] = value + sign
 
-        for decoded_key, decoded_value in kwargs.items():
-            if decoded_dict.get(decoded_key, 0) == 0:
-                original = self[decoded_key]
+        for key, value in kwargs.items():
+            if dict_.get(key, 0) == 0:
+                original = self[key]
             else:
-                original = decoded_dict[decoded_key]
-            decoded_dict[decoded_key] = original + sign * decoded_value
+                original = dict_[key]
+            dict_[key] = original + sign * value
 
-        decoded_dict = {
-            key: self[key] + value for key, value in decoded_dict.items()
-        }
+        dict_ = {key: self[key] + value for key, value in dict_.items()}
         encoded_dict = {
             self._encode(key): self._encode(value)
-            for key, value in decoded_dict.items()
+            for key, value in dict_.items()
         }
         if encoded_dict:
             pipeline.multi()
