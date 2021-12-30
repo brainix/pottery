@@ -122,10 +122,10 @@ class RedisList(Base, collections.abc.MutableSequence):
                     start, stop = indices.stop+1, indices.start
                 pipeline.multi()
                 pipeline.lrange(self.key, start, stop)
-                encoded = pipeline.execute()[0]
-                encoded = encoded[::index.step]
+                encoded_values = pipeline.execute()[0]
+                encoded_values = encoded_values[::index.step]
                 value: Union[List[JSONTypes], JSONTypes] = [
-                    self._decode(value) for value in encoded
+                    self._decode(value) for value in encoded_values
                 ]
             else:
                 index = self.__slice_to_indices(index).start
@@ -135,10 +135,10 @@ class RedisList(Base, collections.abc.MutableSequence):
                         cast(str, InefficientAccessWarning.__doc__),
                         InefficientAccessWarning,
                     )
-                encoded = pipeline.lindex(self.key, index)
-                if encoded is None:
+                encoded_value = pipeline.lindex(self.key, index)
+                if encoded_value is None:
                     raise IndexError('list index out of range')
-                value = self._decode(encoded)
+                value = self._decode(cast(bytes, encoded_value))
         return value
 
     @_raise_on_error
@@ -170,7 +170,8 @@ class RedisList(Base, collections.abc.MutableSequence):
                         InefficientAccessWarning,
                     )
                 pipeline.multi()
-                pipeline.lset(self.key, index, self._encode(value))
+                encoded_value = self._encode(value)
+                pipeline.lset(self.key, index, encoded_value)
 
     @_raise_on_error
     def __delitem__(self, index: Union[slice, int]) -> None:  # type: ignore
@@ -265,7 +266,7 @@ class RedisList(Base, collections.abc.MutableSequence):
 
         with self._watch(other) as pipeline:
             len_xs = cast(int, pipeline.llen(self.key))
-            if isinstance(other, RedisList):
+            if isinstance(other, RedisList) and self._same_redis(other):
                 len_ys = cast(int, pipeline.llen(other.key))
             else:
                 try:
@@ -290,7 +291,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                     pipeline.lrange(self.key, 0, -1),
                 )
                 decoded_xs = (self._decode(x) for x in encoded_xs)
-                if isinstance(other, RedisList):
+                if isinstance(other, RedisList) and self._same_redis(other):
                     encoded_ys = cast(
                         List[bytes],
                         pipeline.lrange(other.key, 0, -1),

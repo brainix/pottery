@@ -16,11 +16,11 @@
 # --------------------------------------------------------------------------- #
 '''Redis for Humans.
 
-Redis is awesome, but Redis commands are not always fun.  Pottery is a Pythonic
-way to access Redis.  If you know how to use Python dicts, then you already
-know how to use Pottery.  Pottery is useful for accessing Redis more easily,
-and also for implementing microservice resilience patterns; and it has been
-battle tested in production at scale.
+Redis is awesome, but Redis commands are not always intuitive.  Pottery is a
+Pythonic way to access Redis.  If you know how to use Python dicts, then you
+already know how to use Pottery.  Pottery is useful for accessing Redis more
+easily, and also for implementing microservice resilience patterns; and it has
+been battle tested in production at scale.
 '''
 
 
@@ -32,7 +32,7 @@ from typing_extensions import Final
 
 
 __title__: Final[str] = 'pottery'
-__version__: Final[str] = '2.3.1'
+__version__: Final[str] = '2.3.2'
 __description__: Final[str] = __doc__.split(sep='\n\n', maxsplit=1)[0]
 __url__: Final[str] = 'https://github.com/brainix/pottery'
 __author__: Final[str] = 'Rajiv Bakulesh Shah'

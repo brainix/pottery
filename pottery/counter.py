@@ -70,7 +70,7 @@ class RedisCounter(RedisDict, collections.Counter):
         for key, value in kwargs.items():
             if dict_.get(key, 0) == 0:
                 original = self[key]
-            else:
+            else:  # pragma: no cover
                 original = dict_[key]
             dict_[key] = original + sign * value
 
