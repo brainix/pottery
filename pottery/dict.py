@@ -83,7 +83,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
     #   https://stackoverflow.com/a/38534939
     __populate = _populate
 
-    def _encode_dict(self, dict_):
+    def _encode_dict(self, dict_: Mapping[JSONTypes, JSONTypes]) -> Dict[str, str]:
         encoded_dict = {
             self._encode(key): self._encode(value)
             for key, value in dict_.items()
@@ -100,8 +100,8 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
         encoded_value = self.redis.hget(self.key, encoded_key)
         if encoded_value is None:
             raise KeyError(key)
-        decoded_value = self._decode(encoded_value)
-        return decoded_value
+        value = self._decode(encoded_value)
+        return value
 
     def __setitem__(self, key: JSONTypes, value: JSONTypes) -> None:
         'd.__setitem__(key, value) <==> d[key] = value.  O(1)'

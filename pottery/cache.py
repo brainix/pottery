@@ -123,7 +123,8 @@ def redis_cache(*,  # NoQA: C901
     on each call.
     '''
 
-    redis = _default_redis if redis is None else redis
+    if redis is None:
+        redis = _default_redis
 
     def decorator(func: F) -> F:
         nonlocal redis, key
@@ -308,7 +309,7 @@ class CachedOrderedDict(collections.OrderedDict):
                     self._cache._encode(default),
                 )
 
-    def __retry(self, callable: Callable[[], Any], try_num: int = 0) -> Any:
+    def __retry(self, callable: Callable[[], Any], *, try_num: int = 0) -> Any:
         try:
             return callable()
         except WatchError:  # pragma: no cover
@@ -331,7 +332,8 @@ class CachedOrderedDict(collections.OrderedDict):
         to_cache = {}
         with contextlib.suppress(AttributeError):
             arg = cast(InitMap, arg).items()
-        for dict_key, value in itertools.chain(cast(InitIter, arg), kwargs.items()):
+        items = itertools.chain(cast(InitIter, arg), kwargs.items())
+        for dict_key, value in items:
             if value is not self._SENTINEL:
                 to_cache[dict_key] = value
                 self._misses.discard(dict_key)

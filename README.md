@@ -1,11 +1,11 @@
 # Pottery: Redis for Humans 🌎🌍🌏
 
 [Redis](http://redis.io/) is awesome, but [Redis
-commands](http://redis.io/commands) are not always fun.  Pottery is a Pythonic
-way to access Redis.  If you know how to use Python dicts, then you already
-know how to use Pottery.  Pottery is useful for accessing Redis more easily,
-and also for implementing microservice resilience patterns; and it has been
-battle tested in production at scale.
+commands](http://redis.io/commands) are not always intuitive.  Pottery is a
+Pythonic way to access Redis.  If you know how to use Python dicts, then you
+already know how to use Pottery.  Pottery is useful for accessing Redis more
+easily, and also for implementing microservice resilience patterns; and it has
+been battle tested in production at scale.
 
 [![Build status](https://img.shields.io/github/workflow/status/brainix/pottery/Python%20package/master)](https://github.com/brainix/pottery/actions?query=branch%3Amaster)
 [![Latest released version](https://badge.fury.io/py/pottery.svg)](https://badge.fury.io/py/pottery)
