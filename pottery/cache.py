@@ -123,7 +123,7 @@ def redis_cache(*,  # NoQA: C901
     on each call.
     '''
 
-    if redis is None:
+    if redis is None:  # pragma: no cover
         redis = _default_redis
 
     def decorator(func: F) -> F:
