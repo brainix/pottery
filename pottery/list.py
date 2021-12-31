@@ -261,10 +261,10 @@ class RedisList(Base, collections.abc.MutableSequence):
         self.redis.sort(self.key, desc=reverse, store=self.key)
 
     def __eq__(self, other: Any) -> bool:
-        if self is other:
-            return True
         if type(other) not in {self.__class__, self._ALLOWED_TO_EQUAL}:
             return False
+        if self is other:
+            return True
         if self._same_redis(other) and self.key == other.key:
             return True
 
