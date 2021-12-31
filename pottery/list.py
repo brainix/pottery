@@ -280,7 +280,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                 InefficientAccessWarning,
             )
             self_as_list = self.__to_list()
-            if isinstance(other, RedisList):
+            if isinstance(other, self.__class__):
                 other_as_list = other.to_list()
             else:
                 other_as_list = list(other)
