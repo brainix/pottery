@@ -23,6 +23,7 @@ import json
 import logging
 import os
 import uuid
+import warnings
 from typing import Any
 from typing import AnyStr
 from typing import ClassVar
@@ -48,6 +49,7 @@ from typing_extensions import final
 
 from . import monkey
 from .annotations import JSONTypes
+from .exceptions import InefficientAccessWarning
 from .exceptions import QuorumIsImpossible
 from .exceptions import RandomKeyError
 
@@ -272,10 +274,13 @@ class _Comparable(metaclass=abc.ABCMeta):
     def __eq__(self, other: Any) -> bool:
         if self is other:
             return True
-
         if self._same_redis(other) and self.key == other.key:
             return True
 
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
         with self._watch(other):
             equals = super().__eq__(other)
         if equals is NotImplemented:
