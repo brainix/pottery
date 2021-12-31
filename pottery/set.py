@@ -54,12 +54,15 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             with self._watch(iterable) as pipeline:
                 if pipeline.exists(self.key):
                     raise KeyExistsError(self.redis, self.key)
-                self._populate(pipeline, iterable)
+                self.__populate(pipeline, iterable)
 
-    def _populate(self,
-                  pipeline: Pipeline,
-                  iterable: Iterable[JSONTypes] = tuple(),
-                  ) -> None:
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    def __populate(self,
+                   pipeline: Pipeline,
+                   iterable: Iterable[JSONTypes] = tuple(),
+                   ) -> None:
         encoded_values = {self._encode(value) for value in iterable}
         if encoded_values:  # pragma: no cover
             pipeline.multi()
@@ -150,9 +153,6 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             set_method='intersection',
         )
 
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
     __intersection = intersection
 
     # Where does this method come from?
