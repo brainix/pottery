@@ -19,6 +19,7 @@
 import json
 
 from pottery import KeyExistsError
+from pottery import RedisDeque
 from pottery import RedisList
 from tests.base import TestCase
 
@@ -166,6 +167,12 @@ class ListTests(TestCase):
 
         with self.assertRaises(NotImplementedError):
             squares.sort(key=str)
+
+    def test_eq_redisdeque_same_redis_key(self):
+        list_ = RedisList([1, 4, 9, 16, 25], redis=self.redis, key=self._KEY)
+        deque = RedisDeque(redis=self.redis, key=self._KEY)
+        assert not list_ == deque
+        assert list_ != deque
 
     def test_eq_same_object(self):
         squares = RedisList([1, 4, 9, 16, 25], redis=self.redis, key=self._KEY)

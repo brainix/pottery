@@ -39,6 +39,9 @@ from typing import cast
 from redis import Redis
 from redis import ResponseError
 from redis.client import Pipeline
+# TODO: When we drop support for Python 3.7, change the following import to:
+#   from typing import final
+from typing_extensions import final
 
 from .annotations import F
 from .base import Base
@@ -258,13 +261,13 @@ class RedisList(Base, collections.abc.MutableSequence):
         self.redis.sort(self.key, desc=reverse, store=self.key)
 
     def __eq__(self, other: Any) -> bool:
+        if type(other) not in {self.__class__, self._ALLOWED_TO_EQUAL}:
+            return False
         if self is other:
             return True
         if self._same_redis(other) and self.key == other.key:
             return True
 
-        if type(other) not in {self.__class__, self._ALLOWED_TO_EQUAL}:
-            return False
         with self._watch(other):
             if len(self) != len(other):
                 return False
@@ -277,9 +280,9 @@ class RedisList(Base, collections.abc.MutableSequence):
                 InefficientAccessWarning,
             )
             self_as_list = self.__to_list()
-            try:
-                other_as_list = cast('RedisList', other).to_list()
-            except AttributeError:
+            if isinstance(other, self.__class__):
+                other_as_list = other.to_list()
+            else:
                 other_as_list = list(other)
             return self_as_list == other_as_list
 
@@ -352,6 +355,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         class_name = self.__class__.__name__
         raise ValueError(f'{class_name}.remove(x): x not in {class_name}')
 
+    @final
     def to_list(self) -> List[JSONTypes]:
         'Convert the RedisList to a Python list.  O(n)'
         warnings.warn(
