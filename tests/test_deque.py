@@ -16,6 +16,7 @@
 # --------------------------------------------------------------------------- #
 
 
+import collections
 import itertools
 import unittest.mock
 
@@ -31,34 +32,34 @@ class DequeTests(TestCase):
 
     def test_basic_usage(self):
         d = RedisDeque('ghi', redis=self.redis)
-        assert d == ['g', 'h', 'i']
+        assert d == collections.deque(['g', 'h', 'i'])
 
         d.append('j')
         d.appendleft('f')
-        assert d == ['f', 'g', 'h', 'i', 'j']
+        assert d == collections.deque(['f', 'g', 'h', 'i', 'j'])
 
         assert d.pop() == 'j'
         assert d.popleft() == 'f'
-        assert d == ['g', 'h', 'i']
+        assert d == collections.deque(['g', 'h', 'i'])
         assert d[0] == 'g'
         assert d[-1] == 'i'
 
         assert list(reversed(d)) == ['i', 'h', 'g']
         assert 'h' in d
         d.extend('jkl')
-        assert d == ['g', 'h', 'i', 'j', 'k', 'l']
+        assert d == collections.deque(['g', 'h', 'i', 'j', 'k', 'l'])
         d.rotate(1)
-        assert d == ['l', 'g', 'h', 'i', 'j', 'k']
+        assert d == collections.deque(['l', 'g', 'h', 'i', 'j', 'k'])
         d.rotate(-1)
-        assert d == ['g', 'h', 'i', 'j', 'k', 'l']
+        assert d == collections.deque(['g', 'h', 'i', 'j', 'k', 'l'])
 
-        assert RedisDeque(reversed(d), redis=self.redis) == ['l', 'k', 'j', 'i', 'h', 'g']
+        assert RedisDeque(reversed(d), redis=self.redis) == collections.deque(['l', 'k', 'j', 'i', 'h', 'g'])
         d.clear()
         with self.assertRaises(IndexError):
             d.pop()
 
         d.extendleft('abc')
-        assert d == ['c', 'b', 'a']
+        assert d == collections.deque(['c', 'b', 'a'])
 
     def test_init_with_wrong_type_maxlen(self):
         with unittest.mock.patch.object(Base, '__del__') as delete, \
@@ -68,10 +69,10 @@ class DequeTests(TestCase):
 
     def test_init_with_maxlen(self):
         d = RedisDeque([1, 2, 3, 4, 5, 6], redis=self.redis, maxlen=3)
-        assert d == [4, 5, 6]
+        assert d == collections.deque([4, 5, 6])
 
         d = RedisDeque([1, 2, 3, 4, 5, 6], redis=self.redis, maxlen=0)
-        assert d == []
+        assert d == collections.deque()
 
     def test_persistent_deque_bigger_than_maxlen(self):
         d1 = RedisDeque('ghi', redis=self.redis)
@@ -87,7 +88,7 @@ class DequeTests(TestCase):
     def test_insert_into_full(self):
         d = RedisDeque('gh', redis=self.redis, maxlen=3)
         d.insert(len(d), 'i')
-        assert d == ['g', 'h', 'i']
+        assert d == collections.deque(['g', 'h', 'i'])
 
         with self.assertRaises(IndexError):
             d.insert(len(d), 'j')
@@ -95,18 +96,18 @@ class DequeTests(TestCase):
     def test_append_trims_when_full(self):
         d = RedisDeque('gh', redis=self.redis, maxlen=3)
         d.append('i')
-        assert d == ['g', 'h', 'i']
+        assert d == collections.deque(['g', 'h', 'i'])
         d.append('j')
-        assert d == ['h', 'i', 'j']
+        assert d == collections.deque(['h', 'i', 'j'])
         d.appendleft('g')
-        assert d == ['g', 'h', 'i']
+        assert d == collections.deque(['g', 'h', 'i'])
 
     def test_extend(self):
         d = RedisDeque('ghi', redis=self.redis, maxlen=4)
         d.extend('jkl')
-        assert d == ['i', 'j', 'k', 'l']
+        assert d == collections.deque(['i', 'j', 'k', 'l'])
         d.extendleft('hg')
-        assert d == ['g', 'h', 'i', 'j']
+        assert d == collections.deque(['g', 'h', 'i', 'j'])
 
     def test_popleft_from_empty(self):
         d = RedisDeque(redis=self.redis)
@@ -124,13 +125,13 @@ class DequeTests(TestCase):
         'Rotating 0 steps is a no-op'
         d = RedisDeque(('g', 'h', 'i', 'j', 'k', 'l'), redis=self.redis)
         d.rotate(0)
-        assert d == ['g', 'h', 'i', 'j', 'k', 'l']
+        assert d == collections.deque(['g', 'h', 'i', 'j', 'k', 'l'])
 
     def test_rotate_empty_deque(self):
         'Rotating an empty RedisDeque is a no-op'
         d = RedisDeque(redis=self.redis)
         d.rotate(2)
-        assert d == []
+        assert d == collections.deque()
 
     def test_rotate_right(self):
         'A positive number rotates a RedisDeque right'
@@ -138,7 +139,7 @@ class DequeTests(TestCase):
         #   https://pymotw.com/2/collections/deque.html#rotating
         d = RedisDeque(range(10), redis=self.redis)
         d.rotate(2)
-        assert d == [8, 9, 0, 1, 2, 3, 4, 5, 6, 7]
+        assert d == collections.deque([8, 9, 0, 1, 2, 3, 4, 5, 6, 7])
 
     def test_rotate_left(self):
         'A negative number rotates a RedisDeque left'
@@ -146,7 +147,7 @@ class DequeTests(TestCase):
         #   https://pymotw.com/2/collections/deque.html#rotating
         d = RedisDeque(range(10), redis=self.redis)
         d.rotate(-2)
-        assert d == [2, 3, 4, 5, 6, 7, 8, 9, 0, 1]
+        assert d == collections.deque([2, 3, 4, 5, 6, 7, 8, 9, 0, 1])
 
     def test_moving_average(self):
         'Test RedisDeque-based moving average'
@@ -177,7 +178,7 @@ class DequeTests(TestCase):
         e = d.popleft()
         d.rotate(3)
         assert e == 'j'
-        assert d == ['g', 'h', 'i', 'k', 'l']
+        assert d == collections.deque(['g', 'h', 'i', 'k', 'l'])
 
     def test_truthiness(self):
         d = RedisDeque('ghi', redis=self.redis)

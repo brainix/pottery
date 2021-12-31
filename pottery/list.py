@@ -60,6 +60,8 @@ def _raise_on_error(func: F) -> Callable[[F], F]:
 class RedisList(Base, collections.abc.MutableSequence):
     'Redis-backed container compatible with Python lists.'
 
+    _ALLOWED_TO_EQUAL = list
+
     def __slice_to_indices(self, slice_or_index: Union[slice, int]) -> range:
         if isinstance(slice_or_index, slice):
             start, stop, step = cast(slice, slice_or_index).indices(len(self))
@@ -261,13 +263,13 @@ class RedisList(Base, collections.abc.MutableSequence):
         if self._same_redis(other) and self.key == other.key:
             return True
 
-        if type(other) not in {list, self.__class__}:
+        if type(other) not in {self.__class__, self._ALLOWED_TO_EQUAL}:
             return False
         with self._watch(other):
             if len(self) != len(other):
                 return False
 
-            # other is a mutable sequence too, and self and other are the same
+            # other is a list or RedisList too, and self and other are the same
             # length.  Make Python lists out of self and other, and compare
             # those lists.
             warnings.warn(

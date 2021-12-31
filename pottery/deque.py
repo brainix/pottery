@@ -35,7 +35,9 @@ from .list import RedisList
 class RedisDeque(RedisList, collections.deque):  # type: ignore
     'Redis-backed container compatible with collections.deque.'
 
-    # Method overrides:
+    # Overrides:
+
+    _ALLOWED_TO_EQUAL = collections.deque  # type: ignore
 
     def __init__(self,
                  iterable: Iterable[JSONTypes] = tuple(),
