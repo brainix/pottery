@@ -32,6 +32,13 @@ Lua scripting:
 '''
 
 
+# TODO: Remove the following import after deferred evaluation of annotations
+# because the default.
+#   1. https://docs.python.org/3/whatsnew/3.7.html#whatsnew37-pep563
+#   2. https://www.python.org/dev/peps/pep-0563/
+#   3. https://www.python.org/dev/peps/pep-0649/
+from __future__ import annotations
+
 import concurrent.futures
 import contextlib
 import functools
@@ -584,7 +591,7 @@ class Redlock(_Scripts, Primitive):
 
     __release = release
 
-    def __enter__(self) -> 'Redlock':
+    def __enter__(self) -> Redlock:
         '''You can use a Redlock as a context manager.
 
         Usage:

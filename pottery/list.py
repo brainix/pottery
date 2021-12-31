@@ -39,6 +39,9 @@ from typing import cast
 from redis import Redis
 from redis import ResponseError
 from redis.client import Pipeline
+# TODO: When we drop support for Python 3.7, change the following import to:
+#   from typing import final
+from typing_extensions import final
 
 from .annotations import F
 from .base import Base
@@ -277,9 +280,9 @@ class RedisList(Base, collections.abc.MutableSequence):
                 InefficientAccessWarning,
             )
             self_as_list = self.__to_list()
-            try:
-                other_as_list = cast('RedisList', other).to_list()
-            except AttributeError:
+            if isinstance(other, RedisList):
+                other_as_list = other.to_list()
+            else:
                 other_as_list = list(other)
             return self_as_list == other_as_list
 
@@ -352,6 +355,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         class_name = self.__class__.__name__
         raise ValueError(f'{class_name}.remove(x): x not in {class_name}')
 
+    @final
     def to_list(self) -> List[JSONTypes]:
         'Convert the RedisList to a Python list.  O(n)'
         warnings.warn(
