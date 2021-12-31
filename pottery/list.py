@@ -268,12 +268,18 @@ class RedisList(Base, collections.abc.MutableSequence):
                 return False
 
             # other is a mutable sequence too, and self and other are the same
-            # length.  Compare self's and other's elements, pair by pair.
+            # length.  Make Python lists out of self and other, and compare
+            # those lists.
             warnings.warn(
                 cast(str, InefficientAccessWarning.__doc__),
                 InefficientAccessWarning,
             )
-            return all(x == y for x, y in zip(self, other))
+            self_as_list = self.__to_list()
+            try:
+                other_as_list = cast('RedisList', other).to_list()
+            except AttributeError:
+                other_as_list = list(other)
+            return self_as_list == other_as_list
 
     def __add__(self, other: List[JSONTypes]) -> RedisList:
         'Append the items in other to the RedisList.  O(n)'
