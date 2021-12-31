@@ -21,6 +21,7 @@ import itertools
 import unittest.mock
 
 from pottery import RedisDeque
+from pottery import RedisList
 from pottery.base import Base
 from tests.base import TestCase
 
@@ -198,3 +199,9 @@ class DequeTests(TestCase):
 
         d = RedisDeque('ghi', redis=self.redis, maxlen=2)
         assert repr(d) == "RedisDeque(['h', 'i'], maxlen=2)"
+
+    def test_eq_redislist_same_items(self):
+        deque = RedisDeque('ghi', redis=self.redis)
+        list_ = RedisList(redis=self.redis, key=deque.key)
+        assert not deque == list_
+        assert deque != list_
