@@ -263,11 +263,11 @@ class RedisList(Base, collections.abc.MutableSequence):
     def __eq__(self, other: Any) -> bool:
         if self is other:
             return True
+        if type(other) not in {self.__class__, self._ALLOWED_TO_EQUAL}:
+            return False
         if self._same_redis(other) and self.key == other.key:
             return True
 
-        if type(other) not in {self.__class__, self._ALLOWED_TO_EQUAL}:
-            return False
         with self._watch(other):
             if len(self) != len(other):
                 return False
