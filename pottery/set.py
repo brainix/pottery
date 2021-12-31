@@ -54,12 +54,15 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             with self._watch(iterable) as pipeline:
                 if pipeline.exists(self.key):
                     raise KeyExistsError(self.redis, self.key)
-                self._populate(pipeline, iterable)
+                self.__populate(pipeline, iterable)
 
-    def _populate(self,
-                  pipeline: Pipeline,
-                  iterable: Iterable[JSONTypes] = tuple(),
-                  ) -> None:
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    def __populate(self,
+                   pipeline: Pipeline,
+                   iterable: Iterable[JSONTypes] = tuple(),
+                   ) -> None:
         encoded_values = {self._encode(value) for value in iterable}
         if encoded_values:  # pragma: no cover
             pipeline.multi()
@@ -92,8 +95,8 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             InefficientAccessWarning,
         )
         encoded_values = self.redis.sscan_iter(self.key)
-        decoded_values = (self._decode(value) for value in encoded_values)
-        yield from decoded_values
+        values = (self._decode(value) for value in encoded_values)
+        yield from values
 
     def __len__(self) -> int:
         'Return the number of elements in the RedisSet.  O(1)'
@@ -127,7 +130,8 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         encoded_value = self.redis.spop(self.key)
         if encoded_value is None:
             raise KeyError('pop from an empty set')
-        return self._decode(cast(bytes, encoded_value))
+        value = self._decode(cast(bytes, encoded_value))
+        return value
 
     # From collections.abc.MutableSet:
     def remove(self, value: JSONTypes) -> None:
@@ -150,9 +154,6 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             set_method='intersection',
         )
 
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
     __intersection = intersection
 
     # Where does this method come from?
@@ -186,10 +187,8 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             method = getattr(self.redis, redis_method)
             keys = (self.key, *(cast(RedisSet, other).key for other in others))
             encoded_values = method(*keys)
-            decoded_values = {
-                self._decode(cast(bytes, value)) for value in encoded_values
-            }
-            return decoded_values
+            values = {self._decode(cast(bytes, v)) for v in encoded_values}
+            return values
         with self._watch(*others):
             set_ = self.__to_set()
             method = getattr(set_, set_method)
