@@ -261,7 +261,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         if self._same_redis(other) and self.key == other.key:
             return True
 
-        if not isinstance(other, collections.abc.MutableSequence):
+        if type(other) not in {list, self.__class__}:
             return False
         with self._watch(other):
             if len(self) != len(other):
