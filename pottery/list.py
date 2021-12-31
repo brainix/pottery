@@ -258,54 +258,28 @@ class RedisList(Base, collections.abc.MutableSequence):
     def __eq__(self, other: Any) -> bool:
         if self is other:
             return True
-
         if self._same_redis(other) and self.key == other.key:
-            # self and other are both RedisLists on the same Redis database and
-            # with the same key.  No need to compare element by element.
             return True
 
-        with self._watch(other) as pipeline:
-            len_xs = cast(int, pipeline.llen(self.key))
-            if isinstance(other, RedisList) and self._same_redis(other):
-                len_ys = cast(int, pipeline.llen(other.key))
-            else:
-                try:
-                    len_ys = len(other)
-                except TypeError:
-                    # TypeError: other has no len()
-                    return False
-            if len_xs != len_ys:
-                # self and other are different lengths.
+        if type(other) not in {list, self.__class__}:
+            return False
+        with self._watch(other):
+            if len(self) != len(other):
                 return False
 
-            if isinstance(other, collections.abc.MutableSequence):
-                # self and other are the same length, and other is a mutable
-                # sequence too.  Compare self's and other's elements, pair by
-                # pair.
-                warnings.warn(
-                    cast(str, InefficientAccessWarning.__doc__),
-                    InefficientAccessWarning,
-                )
-                encoded_xs = cast(
-                    List[bytes],
-                    pipeline.lrange(self.key, 0, -1),
-                )
-                decoded_xs = (self._decode(x) for x in encoded_xs)
-                if isinstance(other, RedisList) and self._same_redis(other):
-                    encoded_ys = cast(
-                        List[bytes],
-                        pipeline.lrange(other.key, 0, -1),
-                    )
-                    decoded_ys: collections.abc.Iterable[Any] = (  # pragma: no cover
-                        self._decode(y) for y in encoded_ys
-                    )
-                else:
-                    decoded_ys = other
-                return all(x == y for x, y in zip(decoded_xs, decoded_ys))
-
-        # self and other are the same length, but other is an unordered
-        # collection.
-        return False
+            # other is a mutable sequence too, and self and other are the same
+            # length.  Make Python lists out of self and other, and compare
+            # those lists.
+            warnings.warn(
+                cast(str, InefficientAccessWarning.__doc__),
+                InefficientAccessWarning,
+            )
+            self_as_list = self.__to_list()
+            try:
+                other_as_list = cast('RedisList', other).to_list()
+            except AttributeError:
+                other_as_list = list(other)
+            return self_as_list == other_as_list
 
     def __add__(self, other: List[JSONTypes]) -> RedisList:
         'Append the items in other to the RedisList.  O(n)'
