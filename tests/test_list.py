@@ -168,7 +168,7 @@ class ListTests(TestCase):
         with self.assertRaises(NotImplementedError):
             squares.sort(key=str)
 
-    def test_eq_redisdeque_same_items(self):
+    def test_eq_redisdeque_same_redis_key(self):
         list_ = RedisList([1, 4, 9, 16, 25], redis=self.redis, key=self._KEY)
         deque = RedisDeque(redis=self.redis, key=self._KEY)
         assert not list_ == deque

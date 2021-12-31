@@ -200,7 +200,7 @@ class DequeTests(TestCase):
         d = RedisDeque('ghi', redis=self.redis, maxlen=2)
         assert repr(d) == "RedisDeque(['h', 'i'], maxlen=2)"
 
-    def test_eq_redislist_same_items(self):
+    def test_eq_redislist_same_redis_key(self):
         deque = RedisDeque('ghi', redis=self.redis)
         list_ = RedisList(redis=self.redis, key=deque.key)
         assert not deque == list_
