@@ -130,7 +130,8 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         encoded_value = self.redis.spop(self.key)
         if encoded_value is None:
             raise KeyError('pop from an empty set')
-        return self._decode(cast(bytes, encoded_value))
+        value = self._decode(cast(bytes, encoded_value))
+        return value
 
     # From collections.abc.MutableSet:
     def remove(self, value: JSONTypes) -> None:
@@ -186,9 +187,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             method = getattr(self.redis, redis_method)
             keys = (self.key, *(cast(RedisSet, other).key for other in others))
             encoded_values = method(*keys)
-            values = {
-                self._decode(cast(bytes, value)) for value in encoded_values
-            }
+            values = {self._decode(cast(bytes, v)) for v in encoded_values}
             return values
         with self._watch(*others):
             set_ = self.__to_set()
