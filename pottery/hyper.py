@@ -187,15 +187,15 @@ class HyperLogLog(Base):
         But if .contains_many() yields False, then you *must not* have inserted
         it.
         '''
-        with self._watch() as pipeline:
-            encoded_values = []
-            for value in values:
-                try:
-                    encoded_value = self._encode(value)
-                except TypeError:
-                    encoded_value = str(uuid.uuid4())
-                encoded_values.append(encoded_value)
+        encoded_values = []
+        for value in values:
+            try:
+                encoded_value = self._encode(value)
+            except TypeError:
+                encoded_value = str(uuid.uuid4())
+            encoded_values.append(encoded_value)
 
+        with self._watch() as pipeline:
             tmp_hll_key = random_key(redis=pipeline)
             pipeline.multi()
             for encoded_value in encoded_values:
