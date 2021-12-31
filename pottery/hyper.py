@@ -138,8 +138,8 @@ class HyperLogLog(Base):
                         )
                     other_hll_keys.append(obj.key)
                 else:
-                    for decoded_value in cast(Iterable[JSONTypes], obj):
-                        encoded_value = self._encode(decoded_value)
+                    for value in cast(Iterable[JSONTypes], obj):
+                        encoded_value = self._encode(value)
                         encoded_values.append(encoded_value)
             pipeline.multi()
             pipeline.pfmerge(self.key, *other_hll_keys)

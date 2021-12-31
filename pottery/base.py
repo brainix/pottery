@@ -149,19 +149,19 @@ class _Encodable:
 
     @final
     @staticmethod
-    def _encode(value: JSONTypes) -> str:
-        encoded = json.dumps(value, sort_keys=True)
-        return encoded
+    def _encode(decoded_value: JSONTypes) -> str:
+        encoded_value = json.dumps(decoded_value, sort_keys=True)
+        return encoded_value
 
     @final
     @staticmethod
-    def _decode(value: AnyStr) -> JSONTypes:
+    def _decode(encoded_value: AnyStr) -> JSONTypes:
         try:
-            string = cast(bytes, value).decode('utf-8')
+            string = cast(bytes, encoded_value).decode('utf-8')
         except AttributeError:
-            string = cast(str, value)
-        decoded: JSONTypes = json.loads(string)
-        return decoded
+            string = cast(str, encoded_value)
+        decoded_value: JSONTypes = json.loads(string)
+        return decoded_value
 
 
 class _Clearable(metaclass=abc.ABCMeta):

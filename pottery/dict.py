@@ -121,8 +121,8 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
             InefficientAccessWarning,
         )
         encoded_items = self.redis.hscan_iter(self.key)
-        decoded_keys = (self._decode(key) for key, _ in encoded_items)
-        yield from decoded_keys
+        keys = (self._decode(key) for key, _ in encoded_items)
+        yield from keys
 
     def __len__(self) -> int:
         'Return the number of items in the RedisDict.  O(1)'
@@ -157,10 +157,10 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
             InefficientAccessWarning,
         )
         encoded_items = self.redis.hgetall(self.key).items()
-        decoded_dict = {
+        dict_ = {
             self._decode(encoded_key): self._decode(encoded_value)
             for encoded_key, encoded_value in encoded_items
         }
-        return decoded_dict
+        return dict_
 
     __to_dict = to_dict

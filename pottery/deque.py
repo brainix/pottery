@@ -159,8 +159,8 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
                 return
 
             push_method_name = 'lpush' if n > 0 else 'rpush'
-            decoded_values = self[-n:][::-1] if n > 0 else self[:-n]
-            encoded_values = (self._encode(value) for value in decoded_values)
+            values = self[-n:][::-1] if n > 0 else self[:-n]
+            encoded_values = (self._encode(value) for value in values)
             trim_indices = (0, len(self)-1) if n > 0 else (-n, len(self)-1-n)
 
             pipeline.multi()
@@ -180,8 +180,8 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        encoded = self.redis.lrange(self.key, 0, -1)
-        values = [self._decode(value) for value in encoded]
+        encoded_values = self.redis.lrange(self.key, 0, -1)
+        values = [self._decode(value) for value in encoded_values]
         repr = self.__class__.__name__ + '(' + str(values)
         if self.maxlen is not None:
             repr += f', maxlen={self.maxlen}'

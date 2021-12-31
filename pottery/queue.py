@@ -69,8 +69,8 @@ class RedisSimpleQueue(Base):
         never blocks.  They are provided for compatibility with the queue.Queue
         class.
         '''
-        encoded_value = self._encode(item)
-        self.redis.xadd(self.key, {'item': encoded_value}, id='*')
+        encoded_item = self._encode(item)
+        self.redis.xadd(self.key, {'item': encoded_item}, id='*')
 
     __put = put
 
@@ -115,14 +115,18 @@ class RedisSimpleQueue(Base):
             # XXX: The following line raises WatchError after the socket timeout
             # if the RedisQueue is empty and we're not blocking.  This feels
             # like a bug in redis-py?
-            returned_value = pipeline.xread({self.key: 0}, count=1, block=redis_block)
+            returned_value = pipeline.xread(
+                {self.key: 0},
+                count=1,
+                block=redis_block,
+            )
             # The following line raises IndexError if the RedisQueue is empty
             # and we're blocking.
             id_, dict_ = cast(Tuple[bytes, dict], returned_value[0][1][0])
             pipeline.multi()
             pipeline.xdel(self.key, id_)
-        encoded_value = dict_[b'item']
-        item = self._decode(encoded_value)
+        encoded_item = dict_[b'item']
+        item = self._decode(encoded_item)
         return item
 
     def get_nowait(self) -> JSONTypes:

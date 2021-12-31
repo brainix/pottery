@@ -92,8 +92,8 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             InefficientAccessWarning,
         )
         encoded_values = self.redis.sscan_iter(self.key)
-        decoded_values = (self._decode(value) for value in encoded_values)
-        yield from decoded_values
+        values = (self._decode(value) for value in encoded_values)
+        yield from values
 
     def __len__(self) -> int:
         'Return the number of elements in the RedisSet.  O(1)'
@@ -186,10 +186,10 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             method = getattr(self.redis, redis_method)
             keys = (self.key, *(cast(RedisSet, other).key for other in others))
             encoded_values = method(*keys)
-            decoded_values = {
+            values = {
                 self._decode(cast(bytes, value)) for value in encoded_values
             }
-            return decoded_values
+            return values
         with self._watch(*others):
             set_ = self.__to_set()
             method = getattr(set_, set_method)
