@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   base.py                                                                   #
 #                                                                             #
-#   Copyright © 2015-2021, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -263,6 +263,7 @@ class _Comparable(metaclass=abc.ABCMeta):
                ) -> Generator[Pipeline, None, None]:
         'Watch self and others, and yield a Redis pipeline.'
 
+    @final
     def _same_redis(self, *others: Any) -> bool:
         for other in others:
             if not isinstance(other, _Comparable):
