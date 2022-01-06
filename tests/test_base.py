@@ -76,17 +76,17 @@ class CommonTests(_BaseTestCase):
         assert not self.redis.exists(key)
 
     def test_del(self):
-        with unittest.mock.patch.object(self.redis, 'delete') as delete:
+        with unittest.mock.patch.object(self.redis, 'unlink') as unlink:
             del self.raj
-            delete.assert_called_with('pottery:raj')
-            delete.reset_mock()
+            unlink.assert_called_with('pottery:raj')
+            unlink.reset_mock()
 
             del self.nilika
-            delete.assert_called_with('pottery:nilika')
-            delete.reset_mock()
+            unlink.assert_called_with('pottery:nilika')
+            unlink.reset_mock()
 
             del self.luvh
-            delete.assert_not_called()
+            unlink.assert_not_called()
 
     def test_eq(self):
         assert self.raj == self.raj
