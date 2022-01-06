@@ -33,7 +33,7 @@ class NextIdTests(TestCase):
 
     def setUp(self):
         super().setUp()
-        self.redis.delete('nextid:current')
+        self.redis.unlink('nextid:current')
         self.ids = NextId(masters={self.redis})
         for master in self.ids.masters:
             master.set(self.ids.key, 0)

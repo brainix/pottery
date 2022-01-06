@@ -106,7 +106,7 @@ class _Common:
 
     def __del__(self) -> None:
         if self.key.startswith(self._RANDOM_KEY_PREFIX):
-            self.redis.delete(self.key)
+            self.redis.unlink(self.key)
             logger.warning(
                 "Deleted tmp <%s key='%s'> (instance is about to be destroyed)",
                 self.__class__.__name__,
@@ -179,7 +179,7 @@ class _Clearable(metaclass=abc.ABCMeta):
 
     def clear(self) -> None:
         'Remove the elements in a Redis-backed container.  O(n)'
-        self.redis.delete(self.key)
+        self.redis.unlink(self.key)
 
 
 class _Pipelined(metaclass=abc.ABCMeta):

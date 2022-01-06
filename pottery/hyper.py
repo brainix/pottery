@@ -201,9 +201,9 @@ class HyperLogLog(Base):
             for encoded_value in encoded_values:
                 pipeline.copy(self.key, tmp_hll_key)  # type: ignore
                 pipeline.pfadd(tmp_hll_key, encoded_value)
-                pipeline.delete(tmp_hll_key)
+                pipeline.unlink(tmp_hll_key)
             # Pluck out the results of the pipeline.pfadd() commands.  Ignore
-            # the results of the enclosing pipeline.copy() and pipeline.delete()
+            # the results of the enclosing pipeline.copy() and pipeline.unlink()
             # commands.
             cardinalities_changed = pipeline.execute()[1::3]
 

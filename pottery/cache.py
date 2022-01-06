@@ -172,7 +172,7 @@ def redis_cache(*,  # NoQA: C901
 
         def cache_clear() -> None:
             nonlocal hits, misses
-            cast(Redis, redis).delete(cast(str, key))
+            cast(Redis, redis).unlink(cast(str, key))
             hits, misses = 0, 0
 
         wrapper.__wrapped__ = func  # type: ignore
