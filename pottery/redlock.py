@@ -115,7 +115,6 @@ class _Scripts:
             class_name = self.__class__.__qualname__
             logger.info('Registering %s._acquired_script', class_name)
             master = next(iter(self.masters))  # type: ignore
-
             # Available since Redis 2.6.0:
             self.__class__._acquired_script = master.register_script('''
                 if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -131,7 +130,6 @@ class _Scripts:
             class_name = self.__class__.__qualname__
             logger.info('Registering %s._extend_script', class_name)
             master = next(iter(self.masters))  # type: ignore
-
             # Available since Redis 2.6.0:
             self.__class__._extend_script = master.register_script('''
                 if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -146,7 +144,6 @@ class _Scripts:
             class_name = self.__class__.__qualname__
             logger.info('Registering %s._release_script', class_name)
             master = next(iter(self.masters))  # type: ignore
-
             # Available since Redis 2.6.0:
             self.__class__._release_script = master.register_script('''
                 if redis.call('get', KEYS[1]) == ARGV[1] then
