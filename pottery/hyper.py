@@ -165,7 +165,7 @@ class HyperLogLog(Base):
         Please note that this method returns an approximation, not an exact
         value, though it's quite accurate.
         '''
-        return self.redis.pfcount(self.key)
+        return self.redis.pfcount(self.key)  # Available since Redis 2.8.9
 
     def __contains__(self, value: JSONTypes) -> bool:
         '''hll.__contains__(element) <==> element in hll.  O(1)

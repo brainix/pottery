@@ -208,7 +208,7 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def __len__(self) -> int:
         'Return the number of items in the RedisList.  O(1)'
-        return self.redis.llen(self.key)
+        return self.redis.llen(self.key)  # Available since Redis 1.0.0
 
     def insert(self, index: int, value: JSONTypes) -> None:
         'Insert an element into the RedisDeque before the given index.  O(n)'
@@ -258,7 +258,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        self.redis.sort(self.key, desc=reverse, store=self.key)
+        self.redis.sort(self.key, desc=reverse, store=self.key)  # Available since Redis 1.0.0
 
     def __eq__(self, other: Any) -> bool:
         if type(other) not in {self.__class__, self._ALLOWED_TO_EQUAL}:
@@ -315,7 +315,7 @@ class RedisList(Base, collections.abc.MutableSequence):
     def extend(self, values: Iterable[JSONTypes]) -> None:
         'Extend the RedisList by appending elements from the iterable.  O(1)'
         encoded_values = (self._encode(value) for value in values)
-        self.redis.rpush(self.key, *encoded_values)
+        self.redis.rpush(self.key, *encoded_values)  # Available since Redis 1.0.0
 
     __extend = extend
 
@@ -362,7 +362,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        encoded = self.redis.lrange(self.key, 0, -1)
+        encoded = self.redis.lrange(self.key, 0, -1)  # Available since Redis 1.0.0
         values = [self._decode(value) for value in encoded]
         return values
 

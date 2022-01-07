@@ -41,7 +41,7 @@ class RedisSimpleQueue(Base):
         Be aware that there's a potential race condition here where the queue
         changes before you use the result of .qsize().
         '''
-        return self.redis.xlen(self.key)
+        return self.redis.xlen(self.key)  # Available since Redis 5.0.0
 
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
@@ -70,7 +70,7 @@ class RedisSimpleQueue(Base):
         class.
         '''
         encoded_item = self._encode(item)
-        self.redis.xadd(self.key, {'item': encoded_item}, id='*')
+        self.redis.xadd(self.key, {'item': encoded_item}, id='*')  # Available since Redis 5.0.0
 
     __put = put
 

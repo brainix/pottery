@@ -314,7 +314,7 @@ class BloomFilter(BloomFilterABC, Base):
         Here, m is the size in bits of the underlying string representing this
         Bloom filter.
         '''
-        return self.redis.bitcount(self.key)
+        return self.redis.bitcount(self.key)  # Available since Redis 2.6.0
 
     def update(self, *iterables: Iterable[JSONTypes]) -> None:
         '''Populate the Bloom filter with the elements in iterables.  O(n * k)

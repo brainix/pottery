@@ -84,6 +84,8 @@ class _Scripts:
             class_name = self.__class__.__qualname__
             logger.info('Registering %s._set_id_script', class_name)
             master = next(iter(self.masters))  # type: ignore
+
+            # Available since Redis 2.6.0:
             self.__class__._set_id_script = master.register_script('''
                 local curr = tonumber(redis.call('get', KEYS[1]))
                 local next = tonumber(ARGV[1])
