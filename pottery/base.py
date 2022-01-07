@@ -199,7 +199,7 @@ class _Pipelined(metaclass=abc.ABCMeta):
                      *keys: str,
                      ) -> Generator[Pipeline, None, None]:
         with self.redis.pipeline() as pipeline:
-            pipeline.watch(*keys)
+            pipeline.watch(*keys)  # Available since Redis 2.2.0
             try:
                 yield pipeline
             except Exception as error:
@@ -214,7 +214,7 @@ class _Pipelined(metaclass=abc.ABCMeta):
                     'Running EXEC on pipeline of %d commands',
                     len(pipeline),
                 )
-                pipeline.execute()
+                pipeline.execute()  # Available since Redis 1.2.0
 
     @final
     def __context_managers(self,

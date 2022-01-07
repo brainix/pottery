@@ -52,7 +52,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         super().__init__(redis=redis, key=key)
         if iterable:
             with self._watch(iterable) as pipeline:
-                if pipeline.exists(self.key):
+                if pipeline.exists(self.key):  # Available since Redis 1.0.0
                     raise KeyExistsError(self.redis, self.key)
                 self.__populate(pipeline, iterable)
 
@@ -65,8 +65,8 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
                    ) -> None:
         encoded_values = {self._encode(value) for value in iterable}
         if encoded_values:  # pragma: no cover
-            pipeline.multi()
-            pipeline.sadd(self.key, *encoded_values)
+            pipeline.multi()  # Available since Redis 1.2.0
+            pipeline.sadd(self.key, *encoded_values)  # Available since Redis 1.0.0
 
     # Methods required by collections.abc.MutableSet:
 
@@ -271,7 +271,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
                 for value in itertools.chain(*others):
                     encoded_values.add(self._encode(value))
                 if encoded_values:
-                    pipeline.multi()
+                    pipeline.multi()  # Available since Redis 1.2.0
                     method = getattr(pipeline, pipeline_method)
                     method(self.key, *encoded_values)
 

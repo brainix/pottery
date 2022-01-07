@@ -115,7 +115,7 @@ class RedisSimpleQueue(Base):
             # XXX: The following line raises WatchError after the socket timeout
             # if the RedisQueue is empty and we're not blocking.  This feels
             # like a bug in redis-py?
-            returned_value = pipeline.xread(
+            returned_value = pipeline.xread(  # Available since Redis 5.0.0
                 {self.key: 0},
                 count=1,
                 block=redis_block,
@@ -123,8 +123,8 @@ class RedisSimpleQueue(Base):
             # The following line raises IndexError if the RedisQueue is empty
             # and we're blocking.
             id_, dict_ = cast(Tuple[bytes, dict], returned_value[0][1][0])
-            pipeline.multi()
-            pipeline.xdel(self.key, id_)
+            pipeline.multi()  # Available since Redis 1.2.0
+            pipeline.xdel(self.key, id_)  # Available since Redis 5.0.0
         encoded_item = dict_[b'item']
         item = self._decode(encoded_item)
         return item

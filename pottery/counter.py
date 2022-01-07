@@ -77,7 +77,8 @@ class RedisCounter(RedisDict, collections.Counter):
         dict_ = {key: self[key] + value for key, value in dict_.items()}
         encoded_dict = self._encode_dict(dict_)
         if encoded_dict:
-            pipeline.multi()
+            pipeline.multi()  # Available since Redis 1.2.0
+            # Available since Redis 2.0.0:
             pipeline.hset(self.key, mapping=encoded_dict)  # type: ignore
 
     # Preserve the Open-Closed Principle with name mangling.
@@ -192,11 +193,12 @@ class RedisCounter(RedisDict, collections.Counter):
             }
             encoded_to_del = {self._encode(k) for k in to_del}
             if encoded_to_set or encoded_to_del:
-                pipeline.multi()
+                pipeline.multi()  # Available since Redis 1.2.0
                 if encoded_to_set:
+                    # Available since Redis 2.0.0:
                     pipeline.hset(self.key, mapping=encoded_to_set)  # type: ignore
                 if encoded_to_del:
-                    pipeline.hdel(self.key, *encoded_to_del)
+                    pipeline.hdel(self.key, *encoded_to_del)  # Available since Redis 2.0.0
             return self
 
     def __iadd__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
@@ -228,15 +230,16 @@ class RedisCounter(RedisDict, collections.Counter):
                     del to_set[k]
                     to_del.add(k)
             if to_set or to_del:
-                pipeline.multi()
+                pipeline.multi()  # Available since Redis 1.2.0
             if to_set:
                 encoded_to_set = {
                     self._encode(k): self._encode(v) for k, v in to_set.items()
                 }
+                # Available since Redis 2.0.0:
                 pipeline.hset(self.key, mapping=encoded_to_set)  # type: ignore
             if to_del:
                 encoded_to_del = {self._encode(k) for k in to_del}
-                pipeline.hdel(self.key, *encoded_to_del)
+                pipeline.hdel(self.key, *encoded_to_del)  # Available since Redis 2.0.0
         return self
 
     def __ior__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:  # type: ignore

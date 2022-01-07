@@ -60,7 +60,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
         super().__init__(redis=redis, key=key)
         if arg or kwargs:
             with self._watch(arg) as pipeline:
-                if pipeline.exists(self.key):
+                if pipeline.exists(self.key):  # Available since Redis 1.0.0
                     raise KeyExistsError(self.redis, self.key)
                 self._populate(pipeline, arg, **kwargs)
 
@@ -75,7 +75,8 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
         dict_ = dict(items)
         encoded_dict = self.__encode_dict(dict_)
         if encoded_dict:
-            pipeline.multi()
+            pipeline.multi()  # Available since Redis 1.2.0
+            # Available since Redis 2.0.0:
             pipeline.hset(self.key, mapping=encoded_dict)  # type: ignore
 
     # Preserve the Open-Closed Principle with name mangling.

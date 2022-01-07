@@ -328,9 +328,9 @@ class BloomFilter(BloomFilterABC, Base):
             for value in itertools.chain(*iterables):
                 bit_offsets.update(self._bit_offsets(value))
 
-            pipeline.multi()
+            pipeline.multi()  # Available since Redis 1.2.0
             for bit_offset in bit_offsets:
-                pipeline.setbit(self.key, bit_offset, 1)
+                pipeline.setbit(self.key, bit_offset, 1)  # Available since Redis 2.2.0
 
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         '''Yield whether this Bloom filter contains multiple elements.  O(n)
@@ -342,10 +342,10 @@ class BloomFilter(BloomFilterABC, Base):
         it.
         '''
         with self._watch() as pipeline:
-            pipeline.multi()
+            pipeline.multi()  # Available since Redis 1.2.0
             for bit_offset in self._bit_offsets_many(*values):
-                pipeline.getbit(self.key, bit_offset)
-            bits = iter(pipeline.execute())
+                pipeline.getbit(self.key, bit_offset)  # Available since Redis 2.2.0
+            bits = iter(pipeline.execute())  # Available since Redis 1.2.0
 
         # I stole this recipe from here:
         #   https://stackoverflow.com/a/61435714
