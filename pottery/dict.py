@@ -60,7 +60,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
         super().__init__(redis=redis, key=key)
         if arg or kwargs:
             with self._watch(arg) as pipeline:
-                if pipeline.exists(self.key):
+                if pipeline.exists(self.key):  # Available since Redis 1.0.0
                     raise KeyExistsError(self.redis, self.key)
                 self._populate(pipeline, arg, **kwargs)
 
@@ -75,7 +75,8 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
         dict_ = dict(items)
         encoded_dict = self.__encode_dict(dict_)
         if encoded_dict:
-            pipeline.multi()
+            pipeline.multi()  # Available since Redis 1.2.0
+            # Available since Redis 2.0.0:
             pipeline.hset(self.key, mapping=encoded_dict)  # type: ignore
 
     # Preserve the Open-Closed Principle with name mangling.
@@ -97,7 +98,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
     def __getitem__(self, key: JSONTypes) -> JSONTypes:
         'd.__getitem__(key) <==> d[key].  O(1)'
         encoded_key = self._encode(key)
-        encoded_value = self.redis.hget(self.key, encoded_key)
+        encoded_value = self.redis.hget(self.key, encoded_key)  # Available since Redis 2.0.0
         if encoded_value is None:
             raise KeyError(key)
         value = self._decode(encoded_value)
@@ -107,12 +108,12 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
         'd.__setitem__(key, value) <==> d[key] = value.  O(1)'
         encoded_key = self._encode(key)
         encoded_value = self._encode(value)
-        self.redis.hset(self.key, encoded_key, encoded_value)
+        self.redis.hset(self.key, encoded_key, encoded_value)  # Available since Redis 2.0.0
 
     def __delitem__(self, key: JSONTypes) -> None:
         'd.__delitem__(key) <==> del d[key].  O(1)'
         encoded_key = self._encode(key)
-        if not self.redis.hdel(self.key, encoded_key):
+        if not self.redis.hdel(self.key, encoded_key):  # Available since Redis 2.0.0
             raise KeyError(key)
 
     def __iter__(self) -> Generator[JSONTypes, None, None]:
@@ -120,13 +121,13 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        encoded_items = self.redis.hscan_iter(self.key)
+        encoded_items = self.redis.hscan_iter(self.key)  # Available since Redis 2.8.0
         keys = (self._decode(key) for key, _ in encoded_items)
         yield from keys
 
     def __len__(self) -> int:
         'Return the number of items in the RedisDict.  O(1)'
-        return self.redis.hlen(self.key)
+        return self.redis.hlen(self.key)  # Available since Redis 2.0.0
 
     # Methods required for Raj's sanity:
 
@@ -148,7 +149,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
             encoded_key = self._encode(key)
         except TypeError:
             return False
-        return self.redis.hexists(self.key, encoded_key)
+        return self.redis.hexists(self.key, encoded_key)  # Available since Redis 2.0.0
 
     def to_dict(self) -> Dict[JSONTypes, JSONTypes]:
         'Convert a RedisDict into a plain Python dict.'
@@ -156,7 +157,7 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        encoded_items = self.redis.hgetall(self.key).items()
+        encoded_items = self.redis.hgetall(self.key).items()  # Available since Redis 2.0.0
         dict_ = {
             self._decode(encoded_key): self._decode(encoded_value)
             for encoded_key, encoded_value in encoded_items

@@ -41,7 +41,7 @@ class RedisSimpleQueue(Base):
         Be aware that there's a potential race condition here where the queue
         changes before you use the result of .qsize().
         '''
-        return self.redis.xlen(self.key)
+        return self.redis.xlen(self.key)  # Available since Redis 5.0.0
 
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
@@ -70,7 +70,7 @@ class RedisSimpleQueue(Base):
         class.
         '''
         encoded_item = self._encode(item)
-        self.redis.xadd(self.key, {'item': encoded_item}, id='*')
+        self.redis.xadd(self.key, {'item': encoded_item}, id='*')  # Available since Redis 5.0.0
 
     __put = put
 
@@ -115,7 +115,7 @@ class RedisSimpleQueue(Base):
             # XXX: The following line raises WatchError after the socket timeout
             # if the RedisQueue is empty and we're not blocking.  This feels
             # like a bug in redis-py?
-            returned_value = pipeline.xread(
+            returned_value = pipeline.xread(  # Available since Redis 5.0.0
                 {self.key: 0},
                 count=1,
                 block=redis_block,
@@ -123,8 +123,8 @@ class RedisSimpleQueue(Base):
             # The following line raises IndexError if the RedisQueue is empty
             # and we're blocking.
             id_, dict_ = cast(Tuple[bytes, dict], returned_value[0][1][0])
-            pipeline.multi()
-            pipeline.xdel(self.key, id_)
+            pipeline.multi()  # Available since Redis 1.2.0
+            pipeline.xdel(self.key, id_)  # Available since Redis 5.0.0
         encoded_item = dict_[b'item']
         item = self._decode(encoded_item)
         return item

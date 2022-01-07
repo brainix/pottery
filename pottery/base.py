@@ -74,7 +74,7 @@ def random_key(*,
 
     uuid4 = str(uuid.uuid4())
     key = prefix + uuid4
-    if redis.exists(key):
+    if redis.exists(key):  # Available since Redis 1.0.0
         key = random_key(
             redis=redis,
             prefix=prefix,
@@ -106,7 +106,7 @@ class _Common:
 
     def __del__(self) -> None:
         if self.key.startswith(self._RANDOM_KEY_PREFIX):
-            self.redis.unlink(self.key)
+            self.redis.unlink(self.key)  # Available since Redis 4.0.0
             logger.warning(
                 "Deleted tmp <%s key='%s'> (instance is about to be destroyed)",
                 self.__class__.__name__,
@@ -179,7 +179,7 @@ class _Clearable(metaclass=abc.ABCMeta):
 
     def clear(self) -> None:
         'Remove the elements in a Redis-backed container.  O(n)'
-        self.redis.unlink(self.key)
+        self.redis.unlink(self.key)  # Available since Redis 4.0.0
 
 
 class _Pipelined(metaclass=abc.ABCMeta):
@@ -199,7 +199,7 @@ class _Pipelined(metaclass=abc.ABCMeta):
                      *keys: str,
                      ) -> Generator[Pipeline, None, None]:
         with self.redis.pipeline() as pipeline:
-            pipeline.watch(*keys)
+            pipeline.watch(*keys)  # Available since Redis 2.2.0
             try:
                 yield pipeline
             except Exception as error:
@@ -214,7 +214,7 @@ class _Pipelined(metaclass=abc.ABCMeta):
                     'Running EXEC on pipeline of %d commands',
                     len(pipeline),
                 )
-                pipeline.execute()
+                pipeline.execute()  # Available since Redis 1.2.0
 
     @final
     def __context_managers(self,

@@ -141,9 +141,9 @@ class HyperLogLog(Base):
                     for value in cast(Iterable[JSONTypes], obj):
                         encoded_value = self._encode(value)
                         encoded_values.append(encoded_value)
-            pipeline.multi()
-            pipeline.pfmerge(self.key, *other_hll_keys)
-            pipeline.pfadd(self.key, *encoded_values)
+            pipeline.multi()  # Available since Redis 1.2.0
+            pipeline.pfmerge(self.key, *other_hll_keys)  # Available since Redis 2.8.9
+            pipeline.pfadd(self.key, *encoded_values)  # Available since Redis 2.8.9
 
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
@@ -165,7 +165,7 @@ class HyperLogLog(Base):
         Please note that this method returns an approximation, not an exact
         value, though it's quite accurate.
         '''
-        return self.redis.pfcount(self.key)
+        return self.redis.pfcount(self.key)  # Available since Redis 2.8.9
 
     def __contains__(self, value: JSONTypes) -> bool:
         '''hll.__contains__(element) <==> element in hll.  O(1)
@@ -197,15 +197,16 @@ class HyperLogLog(Base):
 
         with self._watch() as pipeline:
             tmp_hll_key = random_key(redis=pipeline)
-            pipeline.multi()
+            pipeline.multi()  # Available since Redis 1.2.0
             for encoded_value in encoded_values:
+                # Available since Redis 6.2.0:
                 pipeline.copy(self.key, tmp_hll_key)  # type: ignore
                 pipeline.pfadd(tmp_hll_key, encoded_value)
-                pipeline.unlink(tmp_hll_key)
+                pipeline.unlink(tmp_hll_key)  # Available since Redis 4.0.0
             # Pluck out the results of the pipeline.pfadd() commands.  Ignore
             # the results of the enclosing pipeline.copy() and pipeline.unlink()
             # commands.
-            cardinalities_changed = pipeline.execute()[1::3]
+            cardinalities_changed = pipeline.execute()[1::3]  # Available since Redis 1.2.0
 
         for cardinality_changed in cardinalities_changed:
             yield not cardinality_changed

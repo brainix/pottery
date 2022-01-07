@@ -90,7 +90,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         super().__init__(redis=redis, key=key)
         if iterable:
             with self._watch(iterable) as pipeline:
-                if pipeline.exists(self.key):
+                if pipeline.exists(self.key):  # Available since Redis 1.0.0
                     raise KeyExistsError(pipeline, self.key)
                 self._populate(pipeline, iterable)
 
@@ -100,8 +100,8 @@ class RedisList(Base, collections.abc.MutableSequence):
                   ) -> None:
         encoded_values = [self._encode(value) for value in iterable]
         if encoded_values:
-            pipeline.multi()
-            pipeline.rpush(self.key, *encoded_values)
+            pipeline.multi()  # Available since Redis 1.2.0
+            pipeline.rpush(self.key, *encoded_values)  # Available since Redis 1.0.0
 
     # Methods required by collections.abc.MutableSequence:
 
@@ -125,22 +125,22 @@ class RedisList(Base, collections.abc.MutableSequence):
                     start, stop = indices.start, indices.stop-1
                 else:
                     start, stop = indices.stop+1, indices.start
-                pipeline.multi()
-                pipeline.lrange(self.key, start, stop)
-                encoded_values = pipeline.execute()[0]
+                pipeline.multi()  # Available since Redis 1.2.0
+                pipeline.lrange(self.key, start, stop)  # Available since Redis 1.0.0
+                encoded_values = pipeline.execute()[0]  # Available since Redis 1.2.0
                 encoded_values = encoded_values[::index.step]
                 value: Union[List[JSONTypes], JSONTypes] = [
                     self._decode(value) for value in encoded_values
                 ]
             else:
                 index = self.__slice_to_indices(index).start
-                len_ = cast(int, pipeline.llen(self.key))
+                len_ = cast(int, pipeline.llen(self.key))  # Available since Redis 1.0.0
                 if index not in {-1, 0, len_-1}:
                     warnings.warn(
                         cast(str, InefficientAccessWarning.__doc__),
                         InefficientAccessWarning,
                     )
-                encoded_value = pipeline.lindex(self.key, index)
+                encoded_value = pipeline.lindex(self.key, index)  # Available since Redis 1.0.0
                 if encoded_value is None:
                     raise IndexError('list index out of range')
                 value = self._decode(cast(bytes, encoded_value))
@@ -157,26 +157,26 @@ class RedisList(Base, collections.abc.MutableSequence):
                 )
                 encoded_values = [self._encode(value) for value in value]
                 indices = self.__slice_to_indices(index)
-                pipeline.multi()
+                pipeline.multi()  # Available since Redis 1.2.0
                 for index, encoded_value in zip(indices, encoded_values):
-                    pipeline.lset(self.key, index, encoded_value)
+                    pipeline.lset(self.key, index, encoded_value)  # Available since Redis 1.0.0
                 indices, num = indices[len(encoded_values):], 0
                 for index in indices:
-                    pipeline.lset(self.key, index, 0)
+                    pipeline.lset(self.key, index, 0)  # Available since Redis 1.0.0
                     num += 1
                 if num:
-                    pipeline.lrem(self.key, num, 0)
+                    pipeline.lrem(self.key, num, 0)  # Available since Redis 1.0.0
             else:
                 index = self.__slice_to_indices(index).start
-                len_ = cast(int, pipeline.llen(self.key))
+                len_ = cast(int, pipeline.llen(self.key))  # Available since Redis 1.0.0
                 if index not in {-1, 0, len_-1}:
                     warnings.warn(
                         cast(str, InefficientAccessWarning.__doc__),
                         InefficientAccessWarning,
                     )
-                pipeline.multi()
+                pipeline.multi()  # Available since Redis 1.2.0
                 encoded_value = self._encode(value)
-                pipeline.lset(self.key, index, encoded_value)
+                pipeline.lset(self.key, index, encoded_value)  # Available since Redis 1.0.0
 
     @_raise_on_error
     def __delitem__(self, index: Union[slice, int]) -> None:  # type: ignore
@@ -199,16 +199,16 @@ class RedisList(Base, collections.abc.MutableSequence):
         )
         indices, num = self.__slice_to_indices(index), 0
         uuid4 = str(uuid.uuid4())
-        pipeline.multi()
+        pipeline.multi()  # Available since Redis 1.2.0
         for index in indices:
-            pipeline.lset(self.key, index, uuid4)
+            pipeline.lset(self.key, index, uuid4)  # Available since Redis 1.0.0
             num += 1
         if num:
-            pipeline.lrem(self.key, num, uuid4)
+            pipeline.lrem(self.key, num, uuid4)  # Available since Redis 1.0.0
 
     def __len__(self) -> int:
         'Return the number of items in the RedisList.  O(1)'
-        return self.redis.llen(self.key)
+        return self.redis.llen(self.key)  # Available since Redis 1.0.0
 
     def insert(self, index: int, value: JSONTypes) -> None:
         'Insert an element into the RedisDeque before the given index.  O(n)'
@@ -222,7 +222,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                 pipeline: Pipeline,
                 ) -> None:
         encoded_value = self._encode(value)
-        current_length = cast(int, pipeline.llen(self.key))
+        current_length = cast(int, pipeline.llen(self.key))  # Available since Redis 1.0.0
         if 0 < index < current_length:
             # Python's list API requires us to insert an element before the
             # given *index.*  Redis supports only inserting an element before a
@@ -237,13 +237,13 @@ class RedisList(Base, collections.abc.MutableSequence):
             )
             uuid4 = str(uuid.uuid4())
             pivot = cast(bytes, pipeline.lindex(self.key, index))
-            pipeline.multi()
-            pipeline.lset(self.key, index, uuid4)
+            pipeline.multi()  # Available since Redis 1.2.0
+            pipeline.lset(self.key, index, uuid4)  # Available since Redis 1.0.0
             pipeline.linsert(self.key, 'BEFORE', uuid4, encoded_value)
-            pipeline.lset(self.key, index+1, pivot)
+            pipeline.lset(self.key, index+1, pivot)  # Available since Redis 1.0.0
         else:
-            pipeline.multi()
-            push_method = pipeline.lpush if index <= 0 else pipeline.rpush
+            pipeline.multi()  # Available since Redis 1.2.0
+            push_method = pipeline.lpush if index <= 0 else pipeline.rpush  # Available since Redis 1.0.0
             push_method(self.key, encoded_value)
 
     __insert = _insert
@@ -258,7 +258,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        self.redis.sort(self.key, desc=reverse, store=self.key)
+        self.redis.sort(self.key, desc=reverse, store=self.key)  # Available since Redis 1.0.0
 
     def __eq__(self, other: Any) -> bool:
         if type(other) not in {self.__class__, self._ALLOWED_TO_EQUAL}:
@@ -315,7 +315,7 @@ class RedisList(Base, collections.abc.MutableSequence):
     def extend(self, values: Iterable[JSONTypes]) -> None:
         'Extend the RedisList by appending elements from the iterable.  O(1)'
         encoded_values = (self._encode(value) for value in values)
-        self.redis.rpush(self.key, *encoded_values)
+        self.redis.rpush(self.key, *encoded_values)  # Available since Redis 1.0.0
 
     __extend = extend
 
@@ -327,9 +327,9 @@ class RedisList(Base, collections.abc.MutableSequence):
                 raise IndexError('pop index out of range')
             elif index in {0, None, len_-1, -1}:
                 pop_method = 'lpop' if index == 0 else 'rpop'
-                pipeline.multi()
+                pipeline.multi()  # Available since Redis 1.2.0
                 getattr(pipeline, pop_method)(self.key)
-                encoded_value = pipeline.execute()[0]
+                encoded_value = pipeline.execute()[0]  # Available since Redis 1.2.0
                 if encoded_value is None:
                     raise IndexError(
                         f'pop from an empty {self.__class__.__name__}'
@@ -362,7 +362,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        encoded = self.redis.lrange(self.key, 0, -1)
+        encoded = self.redis.lrange(self.key, 0, -1)  # Available since Redis 1.0.0
         values = [self._decode(value) for value in encoded]
         return values
 

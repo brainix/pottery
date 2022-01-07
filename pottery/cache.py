@@ -188,7 +188,7 @@ def _set_expiration(func: F) -> F:
     def wrapper(self, *args: Any, **kwargs: Any) -> Any:
         value = func(self, *args, **kwargs)
         if self._timeout:
-            self._cache.redis.expire(self._cache.key, self._timeout)
+            self._cache.redis.expire(self._cache.key, self._timeout)  # Available since Redis 1.0.0
         return value
     return cast(F, wrapper)
 
@@ -242,7 +242,7 @@ class CachedOrderedDict(collections.OrderedDict):
             encoded_keys = (
                 self._cache._encode(dict_key) for dict_key in dict_keys
             )
-            encoded_values = self._cache.redis.hmget(
+            encoded_values = self._cache.redis.hmget(  # Available since Redis 2.0.0
                 self._cache.key,
                 *encoded_keys,
             )
@@ -301,9 +301,9 @@ class CachedOrderedDict(collections.OrderedDict):
                                ) -> None:
         with self._cache._watch() as pipeline:
             if dict_key not in self._cache:
-                pipeline.multi()
+                pipeline.multi()  # Available since Redis 1.2.0
                 # The following line is equivalent to: self._cache[dict_key] = default
-                pipeline.hset(
+                pipeline.hset(  # Available since Redis 2.0.0
                     self._cache.key,
                     self._cache._encode(dict_key),
                     self._cache._encode(default),

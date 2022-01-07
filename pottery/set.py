@@ -52,7 +52,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         super().__init__(redis=redis, key=key)
         if iterable:
             with self._watch(iterable) as pipeline:
-                if pipeline.exists(self.key):
+                if pipeline.exists(self.key):  # Available since Redis 1.0.0
                     raise KeyExistsError(self.redis, self.key)
                 self.__populate(pipeline, iterable)
 
@@ -65,8 +65,8 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
                    ) -> None:
         encoded_values = {self._encode(value) for value in iterable}
         if encoded_values:  # pragma: no cover
-            pipeline.multi()
-            pipeline.sadd(self.key, *encoded_values)
+            pipeline.multi()  # Available since Redis 1.2.0
+            pipeline.sadd(self.key, *encoded_values)  # Available since Redis 1.0.0
 
     # Methods required by collections.abc.MutableSet:
 
@@ -86,6 +86,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
                 encoded_value = str(uuid.uuid4())
             encoded_values.append(encoded_value)
 
+        # Available since Redis 6.2.0:
         for is_member in self.redis.smismember(self.key, encoded_values):  # type: ignore
             yield bool(is_member)
 
@@ -94,23 +95,23 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        encoded_values = self.redis.sscan_iter(self.key)
+        encoded_values = self.redis.sscan_iter(self.key)  # Available since Redis 2.8.0
         values = (self._decode(value) for value in encoded_values)
         yield from values
 
     def __len__(self) -> int:
         'Return the number of elements in the RedisSet.  O(1)'
-        return self.redis.scard(self.key)
+        return self.redis.scard(self.key)  # Available since Redis 1.0.0
 
     def add(self, value: JSONTypes) -> None:
         'Add an element to the RedisSet.  O(1)'
         encoded_value = self._encode(value)
-        self.redis.sadd(self.key, encoded_value)
+        self.redis.sadd(self.key, encoded_value)  # Available since Redis 1.0.0
 
     def discard(self, value: JSONTypes) -> None:
         'Remove an element from the RedisSet.  O(1)'
         encoded_value = self._encode(value)
-        self.redis.srem(self.key, encoded_value)
+        self.redis.srem(self.key, encoded_value)  # Available since Redis 1.0.0
 
     # Methods required for Raj's sanity:
 
@@ -127,7 +128,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     # From collections.abc.MutableSet:
     def pop(self) -> JSONTypes:
         'Remove and return an element from the RedisSet().  O(1)'
-        encoded_value = self.redis.spop(self.key)
+        encoded_value = self.redis.spop(self.key)  # Available since Redis 1.0.0
         if encoded_value is None:
             raise KeyError('pop from an empty set')
         value = self._decode(cast(bytes, encoded_value))
@@ -137,7 +138,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     def remove(self, value: JSONTypes) -> None:
         'Remove an element from the RedisSet().  O(1)'
         encoded_value = self._encode(value)
-        if not self.redis.srem(self.key, encoded_value):
+        if not self.redis.srem(self.key, encoded_value):  # Available since Redis 1.0.0
             raise KeyError(value)
 
     # From collections.abc.Set:
@@ -270,7 +271,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
                 for value in itertools.chain(*others):
                     encoded_values.add(self._encode(value))
                 if encoded_values:
-                    pipeline.multi()
+                    pipeline.multi()  # Available since Redis 1.2.0
                     method = getattr(pipeline, pipeline_method)
                     method(self.key, *encoded_values)
 
