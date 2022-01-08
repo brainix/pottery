@@ -115,19 +115,22 @@ class _Common:
 
     @property
     def redis(self) -> Redis:
-        return self._redis
+        # Preserve the Open-Closed Principle with name mangling.
+        #   https://youtu.be/miGolgp9xq8?t=2086
+        #   https://stackoverflow.com/a/38534939
+        return self.__redis
 
     @redis.setter
     def redis(self, value: Optional[Redis]) -> None:
-        self._redis = _default_redis if value is None else value
+        self.__redis = _default_redis if value is None else value
 
     @property
     def key(self) -> str:
-        return self._key  # type: ignore
+        return self.__key  # type: ignore
 
     @key.setter
     def key(self, value: str) -> None:
-        self._key = value or self.__random_key()
+        self.__key = value or self.__random_key()
 
     def _random_key(self) -> str:
         key = random_key(redis=self.redis, prefix=self._RANDOM_KEY_PREFIX)
@@ -138,9 +141,6 @@ class _Common:
         )
         return key
 
-    # Preserve the Open-Closed Principle with name mangling.
-    #   https://youtu.be/miGolgp9xq8?t=2086
-    #   https://stackoverflow.com/a/38534939
     __random_key = _random_key
 
 
@@ -309,7 +309,7 @@ class Primitive(metaclass=abc.ABCMeta):
     def KEY_PREFIX(self) -> str:
         'Redis key prefix/namespace.'
 
-    __slots__ = ('_key', 'masters', 'raise_on_redis_errors')
+    __slots__ = ('__key', 'masters', 'raise_on_redis_errors')
 
     _DEFAULT_MASTERS: ClassVar[FrozenSet[Redis]] = frozenset({_default_redis})
 
@@ -325,11 +325,11 @@ class Primitive(metaclass=abc.ABCMeta):
 
     @property
     def key(self) -> str:
-        return self._key
+        return self.__key
 
     @key.setter
     def key(self, value: str) -> None:
-        self._key = f'{self.KEY_PREFIX}:{value}'
+        self.__key = f'{self.KEY_PREFIX}:{value}'
 
     def _check_enough_masters_up(self,
                                  raise_on_redis_errors: Optional[bool],
