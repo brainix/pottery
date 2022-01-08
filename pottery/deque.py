@@ -37,7 +37,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
 
     # Overrides:
 
-    _ALLOWED_TO_EQUAL = collections.deque  # type: ignore
+    _ALLOWED_TO_EQUAL = collections.deque
 
     def __init__(self,
                  iterable: Iterable[JSONTypes] = tuple(),

@@ -63,7 +63,7 @@ def _raise_on_error(func: F) -> Callable[[F], F]:
 class RedisList(Base, collections.abc.MutableSequence):
     'Redis-backed container compatible with Python lists.'
 
-    _ALLOWED_TO_EQUAL = list
+    _ALLOWED_TO_EQUAL: type = list
 
     def __slice_to_indices(self, slice_or_index: Union[slice, int]) -> range:
         if isinstance(slice_or_index, slice):

@@ -87,7 +87,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             encoded_values.append(encoded_value)
 
         # Available since Redis 6.2.0:
-        for is_member in self.redis.smismember(self.key, encoded_values):  # type: ignore
+        for is_member in self.redis.smismember(self.key, encoded_values):
             yield bool(is_member)
 
     def __iter__(self) -> Generator[JSONTypes, None, None]:

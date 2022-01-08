@@ -23,7 +23,7 @@ import os
 import time
 import unittest.mock
 
-from redis.commands.core import Script  # type: ignore
+from redis.commands.core import Script
 from redis.exceptions import TimeoutError
 
 from pottery import ContextTimer
