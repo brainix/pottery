@@ -95,7 +95,7 @@ class BloomFilterABC(metaclass=abc.ABCMeta):
         into this Bloom filter, and k is the number of times to run our hash
         functions on each element.
         '''
-        super().__init__(*args, **kwargs)  # type: ignore
+        super().__init__(*args, **kwargs)
         self.num_elements = num_elements
         self.false_positives = false_positives
         self.update(iterable)

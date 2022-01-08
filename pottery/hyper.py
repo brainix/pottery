@@ -200,7 +200,7 @@ class HyperLogLog(Base):
             pipeline.multi()  # Available since Redis 1.2.0
             for encoded_value in encoded_values:
                 # Available since Redis 6.2.0:
-                pipeline.copy(self.key, tmp_hll_key)  # type: ignore
+                pipeline.copy(self.key, tmp_hll_key)
                 pipeline.pfadd(tmp_hll_key, encoded_value)
                 pipeline.unlink(tmp_hll_key)  # Available since Redis 4.0.0
             # Pluck out the results of the pipeline.pfadd() commands.  Ignore
