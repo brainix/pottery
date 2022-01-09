@@ -21,6 +21,11 @@ import unittest.mock
 
 from pottery import RandomKeyError
 from pottery import RedisDict
+from pottery.base import Iterable_
+from pottery.base import Primitive
+from pottery.base import _Clearable
+from pottery.base import _Comparable
+from pottery.base import _Pipelined
 from pottery.base import random_key
 from tests.base import TestCase
 
@@ -152,9 +157,37 @@ class EncodableTests(TestCase):
         repr(tel)
 
 
+class ClearableTests(TestCase):
+    def test_abc_cant_be_instantiated(self):
+        with self.assertRaises(TypeError):
+            _Clearable()
+
+
+class PipelinedTests(TestCase):
+    def test_abc_cant_be_instantiated(self):
+        with self.assertRaises(TypeError):
+            _Pipelined()
+
+
+class ComparableTests(TestCase):
+    def test_abc_cant_be_instantiated(self):
+        with self.assertRaises(TypeError):
+            _Comparable()
+
+
 class IterableTests(TestCase):
+    def test_abc_cant_be_instantiated(self):
+        with self.assertRaises(TypeError):
+            Iterable_()
+
     def test_iter(self):
         garbage = RedisDict()
         for num in range(1024):
             garbage[num] = num
         assert set(iter(garbage)) == set(range(1024))
+
+
+class PrimitiveTests(TestCase):
+    def test_abc_cant_be_instantiated(self):
+        with self.assertRaises(TypeError):
+            Primitive()
