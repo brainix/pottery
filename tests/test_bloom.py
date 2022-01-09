@@ -22,6 +22,7 @@ import string
 import uuid
 
 from pottery import BloomFilter
+from pottery.bloom import BloomFilterABC
 from pottery.bloom import _store_on_self
 from tests.base import TestCase
 
@@ -39,6 +40,12 @@ class StoreOnSelfTests(TestCase):
     def test_store_on_self(self):
         assert self.expensive_method_call_count() == 1
         assert self.expensive_method_call_count() == 1
+
+
+class BloomFilterABCTests(TestCase):
+    def test_abc_cant_be_instantiated(self):
+        with self.assertRaises(TypeError):
+            BloomFilterABC()
 
 
 class BloomFilterTests(TestCase):
