@@ -21,11 +21,11 @@ import unittest.mock
 
 from pottery import RandomKeyError
 from pottery import RedisDict
+from pottery.base import Iterable_
+from pottery.base import Primitive
 from pottery.base import _Clearable
 from pottery.base import _Comparable
 from pottery.base import _Pipelined
-from pottery.base import Iterable_
-from pottery.base import Primitive
 from pottery.base import random_key
 from tests.base import TestCase
 
