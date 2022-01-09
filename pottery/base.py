@@ -164,7 +164,7 @@ class _Encodable:
         return decoded_value
 
 
-class _Clearable(metaclass=abc.ABCMeta):
+class _Clearable(abc.ABC):
     'Mixin class that implements clearing (emptying) a Redis-backed collection.'
 
     @property
@@ -182,7 +182,7 @@ class _Clearable(metaclass=abc.ABCMeta):
         self.redis.unlink(self.key)  # Available since Redis 4.0.0
 
 
-class _Pipelined(metaclass=abc.ABCMeta):
+class _Pipelined(abc.ABC):
     @property
     @abc.abstractmethod
     def redis(self) -> Redis:
@@ -243,7 +243,7 @@ class _Pipelined(metaclass=abc.ABCMeta):
             yield pipelines[0]
 
 
-class _Comparable(metaclass=abc.ABCMeta):
+class _Comparable(abc.ABC):
     'Mixin class that implements equality testing for Redis-backed collections.'
 
     @property
@@ -293,7 +293,7 @@ class Base(_Common, _Encodable, _Clearable, _Pipelined, _Comparable):
     'Base class for Redis-backed collections.'
 
 
-class Iterable_(metaclass=abc.ABCMeta):
+class Iterable_(abc.ABC):
     'Mixin class that implements iterating over a Redis-backed collection.'
 
     @abc.abstractmethod
@@ -301,7 +301,7 @@ class Iterable_(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
-class Primitive(metaclass=abc.ABCMeta):
+class Primitive(abc.ABC):
     'Base class for Redis-backed distributed primitives.'
 
     @property
