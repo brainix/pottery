@@ -53,7 +53,7 @@ def _store_on_self(*, attr: str) -> Callable[[F], F]:
     return decorator
 
 
-class BloomFilterABC(metaclass=abc.ABCMeta):
+class BloomFilterABC(abc.ABC):
     '''Bloom filter abstract base class.
 
     This abstract base class:
