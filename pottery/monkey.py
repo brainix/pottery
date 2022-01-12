@@ -29,6 +29,7 @@ from typing_extensions import Final
 
 
 _logger: Final[logging.Logger] = logging.getLogger('pottery')
+_logger.addHandler(logging.NullHandler())
 
 
 # Monkey patch the JSON encoder to be able to JSONify any instance of any class
