@@ -17,7 +17,6 @@
 
 
 import collections
-import contextlib
 import functools
 import itertools
 from typing import Any
@@ -44,7 +43,6 @@ from .base import logger
 from .base import random_key
 from .dict import InitArg
 from .dict import InitIter
-from .dict import InitMap
 from .dict import RedisDict
 
 
@@ -330,8 +328,8 @@ class CachedOrderedDict(collections.OrderedDict):
         makes a single bulk call to Redis.
         '''
         to_cache = {}
-        with contextlib.suppress(AttributeError):
-            arg = cast(InitMap, arg).items()
+        if isinstance(arg, collections.abc.Mapping):
+            arg = arg.items()
         items = itertools.chain(cast(InitIter, arg), kwargs.items())
         for dict_key, value in items:
             if value is not self._SENTINEL:

@@ -58,11 +58,11 @@ class RedisCounter(RedisDict, collections.Counter):
                   **kwargs: int,
                   ) -> None:
         dict_ = {}
-        try:
-            items = cast(Counter[JSONTypes], arg).items()
+        if isinstance(arg, collections.abc.Mapping):
+            items = arg.items()
             for key, value in items:
                 dict_[key] = sign * value
-        except AttributeError:
+        else:
             for key in arg:
                 value = dict_.get(key, self[key])
                 dict_[key] = value + sign
@@ -180,7 +180,7 @@ class RedisCounter(RedisDict, collections.Counter):
                    ) -> RedisCounter:
         with self._watch(other) as pipeline:
             try:
-                other_items = cast('RedisCounter', other).to_counter().items()
+                other_items = cast(RedisCounter, other).to_counter().items()
             except AttributeError:
                 other_items = other.items()
             to_set = {k: self[k] + sign * v for k, v in other_items}
@@ -217,7 +217,7 @@ class RedisCounter(RedisDict, collections.Counter):
         with self._watch(other) as pipeline:
             self_counter = self.__to_counter()
             try:
-                other_counter = cast('RedisCounter', other).to_counter()
+                other_counter = cast(RedisCounter, other).to_counter()
             except AttributeError:
                 other_counter = other
             to_set, to_del = {}, set()
