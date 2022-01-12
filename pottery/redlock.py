@@ -255,6 +255,25 @@ class Redlock(_Scripts):
                  context_manager_blocking: bool = True,
                  context_manager_timeout: float = -1,
                  ) -> None:
+        '''Initialize a Redlock.
+
+        Keyword arguments:
+            key -- a string that identifies your resource
+            masters -- the Redis clients used to achieve quorum for this
+                Redlock's state
+            raise_on_redis_errors -- whether to raise the QuorumIsImplssible
+                exception when too many Redis masters throw errors
+            auto_release_time -- the timeout in milliseconds by which to
+                automatically release this Redlock, unless it's already been
+                released
+            num_extensions -- the number of times that this Redlock's lease can
+                be extended
+            context_manager_blocking -- when using this Redlock as a context
+                manager, whether to block when acquiring
+            context_manager_timeout -- if context_manager_blocking, how long to
+                wait when acquiring before giving up and raising the
+                QuorumNotAchieved exception
+        '''
         if not context_manager_blocking and context_manager_timeout != -1:
             raise ValueError("can't specify a timeout for a non-blocking call")
 
@@ -688,6 +707,23 @@ def synchronize(*,
     synchronize() is a decorator that allows only one thread to execute a
     function at a time.  Under the hood, synchronize() uses a Redlock.  See
     help(Redlock) for more details.
+
+    Keyword arguments:
+        key -- a string that identifies your resource
+        masters -- the Redis clients used to achieve quorum for this Redlock's
+            state
+        raise_on_redis_errors -- whether to raise the QuorumIsImplssible
+            exception when too many Redis masters throw errors
+        auto_release_time -- the timeout in milliseconds by which to
+            automatically release this Redlock, unless it's already been
+            released
+        num_extensions -- the number of times that this Redlock's lease can be
+            extended
+        context_manager_blocking -- when using this Redlock as a context
+            manager, whether to block when acquiring
+        context_manager_timeout -- if context_manager_blocking, how long to wait
+            when acquiring before giving up and raising the QuorumNotAchieved
+            exception
 
     Usage:
 
