@@ -55,6 +55,8 @@ from .exceptions import RandomKeyError
 
 
 logger: Final[logging.Logger] = logging.getLogger('pottery')
+logger.addHandler(logging.NullHandler())
+
 _default_url: Final[str] = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 _default_redis: Final[Redis] = Redis.from_url(_default_url, socket_timeout=1)
 
