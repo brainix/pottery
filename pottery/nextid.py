@@ -180,7 +180,7 @@ class NextId(_Scripts):
             current_ids, redis_errors = [], []
             for future in concurrent.futures.as_completed(futures):
                 try:
-                    current_id = int(cast(bytes, future.result() or b'0'))
+                    current_id = int(future.result() or b'0')
                 except RedisError as error:
                     redis_errors.append(error)
                     logger.exception(

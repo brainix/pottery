@@ -156,10 +156,10 @@ class _Encodable:
     @final
     @staticmethod
     def _decode(encoded_value: AnyStr) -> JSONTypes:
-        try:
-            string = cast(bytes, encoded_value).decode('utf-8')
-        except AttributeError:
-            string = cast(str, encoded_value)
+        if isinstance(encoded_value, bytes):
+            string = encoded_value.decode('utf-8')
+        else:
+            string = encoded_value
         decoded_value: JSONTypes = json.loads(string)
         return decoded_value
 

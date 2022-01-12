@@ -17,7 +17,6 @@
 
 
 import collections.abc
-import contextlib
 import itertools
 import warnings
 from typing import Any
@@ -69,9 +68,9 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
                   arg: InitArg = tuple(),
                   **kwargs: JSONTypes,
                   ) -> None:
-        with contextlib.suppress(AttributeError):
-            arg = cast(InitMap, arg).items()
-        items = itertools.chain(cast(InitIter, arg), kwargs.items())
+        if isinstance(arg, collections.abc.Mapping):
+            arg = arg.items()
+        items = itertools.chain(arg, kwargs.items())
         dict_ = dict(items)
         encoded_dict = self.__encode_dict(dict_)
         if encoded_dict:
