@@ -157,7 +157,7 @@ class _Encodable:
     @staticmethod
     def _decode(encoded_value: AnyStr) -> JSONTypes:
         if isinstance(encoded_value, bytes):
-            string = encoded_value.decode('utf-8')
+            string = encoded_value.decode()
         else:
             string = encoded_value
         decoded_value: JSONTypes = json.loads(string)
