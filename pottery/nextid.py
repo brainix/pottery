@@ -148,6 +148,17 @@ class NextId(_Scripts):
                  raise_on_redis_errors: bool = False,
                  num_tries: int = NUM_TRIES,
                  ) -> None:
+        '''Initialize a NextId ID generator.
+
+        Keyword arguments:
+            key -- a string that identifies your ID sequence (e.g., 'tweets')
+            masters -- the Redis clients used to achieve quorum for this ID
+                generator
+            raise_on_redis_errors -- whether to raise the QuorumIsImplssible
+                exception when too many Redis masters throw errors
+            num_tries -- the number of times to try to achieve quorum before
+                giving up and raising the QuorumNotAchieved exception
+        '''
         super().__init__(
             key=key,
             masters=masters,
@@ -236,7 +247,7 @@ class NextId(_Scripts):
         )
 
     def reset(self) -> None:
-        'Reset the ID counter to 0.'
+        'Reset the ID generator to 0.'
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = set()
             for master in self.masters:
