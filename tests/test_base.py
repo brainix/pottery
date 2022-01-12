@@ -152,7 +152,7 @@ class EncodableTests(TestCase):
         #   File "/Users/rajiv.shah/Documents/Code/pottery/pottery/dict.py", line 116, in <dictcomp>
         #     dict_ = {self._decode(key): self._decode(value) for key, value in items}
         #   File "/Users/rajiv.shah/Documents/Code/pottery/pottery/base.py", line 154, in _decode
-        #     decoded: JSONTypes = json.loads(value.decode('utf-8'))
+        #     decoded: JSONTypes = json.loads(value.decode())
         # AttributeError: 'str' object has no attribute 'decode'
         repr(tel)
 
