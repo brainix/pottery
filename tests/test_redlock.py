@@ -133,18 +133,8 @@ class RedlockTests(TestCase):
         except ReleaseUnlockedLock as wtf:
             assert repr(wtf) == (
                 "ReleaseUnlockedLock(key='redlock:printer', "
-                f"masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>], "
+                f"masters=frozenset({{Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>}}), "
                 "redis_errors=[])"
-            )
-
-    def test_releaseunlockedlock_str(self):
-        try:
-            self.redlock.release()
-        except ReleaseUnlockedLock as wtf:
-            assert str(wtf) == (
-                "key='redlock:printer', "
-                f"masters=[Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>], "
-                "redis_errors=[]"
             )
 
     def test_release_same_lock_twice(self):
