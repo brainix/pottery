@@ -28,8 +28,8 @@ from typing import Union
 from typing_extensions import Final
 
 
-_logger: Final[logging.Logger] = logging.getLogger('pottery')
-_logger.addHandler(logging.NullHandler())
+logger: Final[logging.Logger] = logging.getLogger('pottery')
+logger.addHandler(logging.NullHandler())
 
 
 # Monkey patch the JSON encoder to be able to JSONify any instance of any class
@@ -49,7 +49,7 @@ import json  # isort: skip
 _default.default = json.JSONEncoder().default  # type: ignore
 json.JSONEncoder.default = _default  # type: ignore
 
-_logger.info(
+logger.info(
     'Monkey patched json.JSONEncoder.default() to be able to JSONify any '
     'instance of any class that defines a .to_dict(), .to_list(), or .to_str() '
     'method'

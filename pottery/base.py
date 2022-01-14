@@ -20,7 +20,6 @@ import abc
 import collections
 import contextlib
 import json
-import logging
 import os
 import uuid
 import warnings
@@ -47,15 +46,12 @@ from redis.client import Pipeline
 from typing_extensions import Final
 from typing_extensions import final
 
-from . import monkey
 from .annotations import JSONTypes
 from .exceptions import InefficientAccessWarning
 from .exceptions import QuorumIsImpossible
 from .exceptions import RandomKeyError
+from .monkey import logger
 
-
-logger: Final[logging.Logger] = logging.getLogger('pottery')
-logger.addHandler(logging.NullHandler())
 
 _default_url: Final[str] = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 _default_redis: Final[Redis] = Redis.from_url(_default_url, socket_timeout=1)
