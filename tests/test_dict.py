@@ -72,31 +72,6 @@ class DictTests(TestCase):
         else:  # pragma: no cover
             self.fail(msg='KeyExistsError not raised')
 
-    def test_keyexistserror_str(self):
-        d = RedisDict(
-            redis=self.redis,
-            key='pottery:tel',
-            sape=4139,
-            guido=4127,
-            jack=4098,
-        )
-        d   # Workaround for Pyflakes.  :-(
-        try:
-            RedisDict(
-                redis=self.redis,
-                key='pottery:tel',
-                sape=4139,
-                guido=4127,
-                jack=4098,
-            )
-        except KeyExistsError as wtf:
-            assert str(wtf) == (
-                f"redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>> "
-                "key='pottery:tel'"
-            )
-        else:  # pragma: no cover
-            self.fail(msg='KeyExistsError not raised')
-
     def test_basic_usage(self):
         tel = RedisDict(redis=self.redis, jack=4098, sape=4139)
         tel['guido'] = 4127

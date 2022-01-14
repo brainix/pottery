@@ -119,17 +119,7 @@ class CommonTests(_BaseTestCase):
             try:
                 self.raj._random_key()
             except RandomKeyError as wtf:
-                assert repr(wtf) == f'RandomKeyError(redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>)'
-            else:  # pragma: no cover
-                self.fail(msg='RandomKeyError not raised')
-
-    def test_randomkeyerror_str(self):
-        with unittest.mock.patch.object(self.raj.redis, 'exists') as exists:
-            exists.return_value = True
-            try:
-                self.raj._random_key()
-            except RandomKeyError as wtf:
-                assert str(wtf) == f"redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>"
+                assert repr(wtf) == f'RandomKeyError(redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>, key=None)'
             else:  # pragma: no cover
                 self.fail(msg='RandomKeyError not raised')
 
