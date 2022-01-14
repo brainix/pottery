@@ -199,9 +199,8 @@ class HyperLogLog(Base):
             tmp_hll_key = random_key(redis=pipeline)
             pipeline.multi()  # Available since Redis 1.2.0
             for encoded_value in encoded_values:
-                # Available since Redis 6.2.0:
-                pipeline.copy(self.key, tmp_hll_key)
-                pipeline.pfadd(tmp_hll_key, encoded_value)
+                pipeline.copy(self.key, tmp_hll_key)  # Available since Redis 6.2.0
+                pipeline.pfadd(tmp_hll_key, encoded_value)  # Available since Redis 2.8.9
                 pipeline.unlink(tmp_hll_key)  # Available since Redis 4.0.0
             # Pluck out the results of the pipeline.pfadd() commands.  Ignore
             # the results of the enclosing pipeline.copy() and pipeline.unlink()

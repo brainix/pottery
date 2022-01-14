@@ -328,7 +328,7 @@ class RedisList(Base, collections.abc.MutableSequence):
             elif index in {0, None, len_-1, -1}:
                 pop_method = 'lpop' if index == 0 else 'rpop'
                 pipeline.multi()  # Available since Redis 1.2.0
-                getattr(pipeline, pop_method)(self.key)
+                getattr(pipeline, pop_method)(self.key)  # Available since Redis 1.0.0
                 encoded_value = pipeline.execute()[0]  # Available since Redis 1.2.0
                 if encoded_value is None:
                     raise IndexError(
