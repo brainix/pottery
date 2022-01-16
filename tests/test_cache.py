@@ -51,8 +51,11 @@ class CacheDecoratorTests(TestCase):
             timeout=None,
         )(expensive_method)
 
+        self.expensive_method_no_cache_kwargs = redis_cache()(expensive_method)
+
         self.expensive_method_expiration.cache_clear()
         self.expensive_method_no_expiration.cache_clear()
+        self.expensive_method_no_cache_kwargs.cache_clear()
 
     def test_cache(self):
         assert self.expensive_method_expiration.cache_info() == CacheInfo(
@@ -280,6 +283,14 @@ class CacheDecoratorTests(TestCase):
 
         self.expensive_method_expiration.cache_clear()
         assert self.expensive_method_expiration.cache_info() == CacheInfo(
+            hits=0,
+            misses=0,
+            maxsize=None,
+            currsize=0,
+        )
+
+    def test_no_cache_kwargs(self):
+        assert self.expensive_method_no_cache_kwargs.cache_info() == CacheInfo(
             hits=0,
             misses=0,
             maxsize=None,

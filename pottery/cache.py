@@ -121,12 +121,12 @@ def redis_cache(*,  # NoQA: C901
     on each call.
     '''
 
-    if redis is None:  # pragma: no cover
+    if redis is None:
         redis = _default_redis
 
     def decorator(func: F) -> F:
         nonlocal redis, key
-        if key is None:  # pragma: no cover
+        if key is None:
             key = random_key(redis=cast(Redis, redis))
             logger.warning(
                 "Self-assigning key redis_cache(key='%s') for function %s",

@@ -221,7 +221,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             return method(other)
 
     # Where does this method come from?
-    def symmetric_difference(self, other: Iterable[Any]) -> NoReturn:  # pragma: no cover
+    def symmetric_difference(self, other: Iterable[Any]) -> NoReturn:
         raise NotImplementedError
 
     # Where does this method come from?
@@ -234,7 +234,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         )
 
     # Where does this method come from?
-    def intersection_update(self, *others: Iterable[JSONTypes]) -> NoReturn:  # pragma: no cover
+    def intersection_update(self, *others: Iterable[JSONTypes]) -> NoReturn:
         raise NotImplementedError
 
     # Where does this method come from?
@@ -276,7 +276,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
                     method(self.key, *encoded_values)
 
     # Where does this method come from?
-    def symmetric_difference_update(self, other: Iterable[JSONTypes]) -> NoReturn:  # pragma: no cover
+    def symmetric_difference_update(self, other: Iterable[JSONTypes]) -> NoReturn:
         raise NotImplementedError
 
     def to_set(self):
