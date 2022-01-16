@@ -16,7 +16,7 @@
 # --------------------------------------------------------------------------- #
 
 
-import dataclasses
+from dataclasses import dataclass
 from queue import Empty
 from typing import Iterable
 from typing import Optional
@@ -25,7 +25,7 @@ from redis import Redis
 from redis import RedisError
 
 
-@dataclasses.dataclass
+@dataclass
 class PotteryError(Exception):
     'Base exception class for Pottery containers.'
 
@@ -42,7 +42,7 @@ class QueueEmptyError(PotteryError, Empty):
     'Non-blocking .get() or .get_nowait() called on RedisQueue which is empty.'
 
 
-@dataclasses.dataclass
+@dataclass
 class PrimitiveError(Exception):
     'Base exception class for distributed primitives.'
 
