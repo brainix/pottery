@@ -105,7 +105,7 @@ class RedisSimpleQueue(Base):
                 except (WatchError, IndexError):
                     if not block or timer.elapsed() / 1000 >= (timeout or 0):
                         raise QueueEmptyError(redis=self.redis, key=self.key)
-                    delay = random.uniform(0, self.RETRY_DELAY/1000)
+                    delay = random.uniform(0, self.RETRY_DELAY/1000)  # nosec
                     time.sleep(delay)
 
     __get = get

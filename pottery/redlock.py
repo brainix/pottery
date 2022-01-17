@@ -441,7 +441,7 @@ class Redlock(_Scripts):
                             log_time_enqueued(timer, True)
                         return True
                     enqueued = True
-                    delay = random.uniform(0, self.RETRY_DELAY/1000)
+                    delay = random.uniform(0, self.RETRY_DELAY/1000)  # nosec
                     time.sleep(delay)
             if enqueued:
                 log_time_enqueued(timer, False)

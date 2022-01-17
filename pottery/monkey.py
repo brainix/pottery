@@ -19,9 +19,11 @@
 
 import logging
 from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Union
+from typing import cast
 
 # TODO: When we drop support for Python 3.7, change the following import to:
 #   from typing import Final
@@ -40,7 +42,14 @@ def _default(self: Any, obj: Any) -> Union[Dict[str, Any], List[Any], str]:
     func_names = {'to_dict', 'to_list', 'to_str'}
     funcs = {getattr(obj.__class__, name, None) for name in func_names}
     funcs.discard(None)
-    assert len(funcs) <= 1
+    if len(funcs) > 1:
+        funcs_defined = ' '.join(
+            cast(Callable, func).__qualname__ for func in funcs
+        )
+        raise TypeError(
+            f"{self.__class__.__name__} defines {funcs_defined}; "
+            "don't know how to JSONify"
+        )
     func = funcs.pop() if any(funcs) else _default.default  # type: ignore
     return_value = func(obj)  # type: ignore
     return return_value
