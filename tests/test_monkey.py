@@ -21,9 +21,37 @@ import json
 from tests.base import TestCase
 
 
+class Incorrect:
+    def to_dict(self):
+        return {}
+
+    def to_list(self):
+        return []
+
+
+class Correct:
+    def to_dict(self):
+        return {}
+
+
 class MonkeyPatchTests(TestCase):
-    def test_json_encoder(self):
+    def test_typeerror_not_jsonifyable(self):
         try:
             json.dumps(object())
         except TypeError as error:
             assert str(error) == 'Object of type object is not JSON serializable'
+
+    def test_typeerror_multiple_methods(self):
+        try:
+            json.dumps(Incorrect())
+        except TypeError as error:
+            assert str(error) == (
+                "Incorrect.to_dict(), Incorrect.to_list() defined; "
+                "don't know how to JSONify Incorrect objects"
+            )
+
+    def test_dict(self):
+        assert json.dumps({}) == '{}'
+
+    def test_to_dict(self):
+        assert json.dumps(Correct()) == '{}'
