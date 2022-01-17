@@ -39,19 +39,19 @@ logger.addHandler(logging.NullHandler())
 # already knows how to JSONify dicts, lists, and strings).
 
 def _default(self: Any, obj: Any) -> Union[Dict[str, Any], List[Any], str]:
-    func_names = ('to_dict', 'to_list', 'to_str')
-    funcs = tuple(getattr(obj.__class__, name, None) for name in func_names)
-    funcs = tuple(func for func in funcs if func is not None)
-    if len(funcs) > 1:
-        funcs_defined = ', '.join(
-            cast(Callable, func).__qualname__ + '()' for func in funcs
+    method_names = ('to_dict', 'to_list', 'to_str')
+    methods = tuple(getattr(obj.__class__, name, None) for name in method_names)
+    methods = tuple(method for method in methods if method is not None)
+    if len(methods) > 1:
+        methods_defined = ', '.join(
+            cast(Callable, method).__qualname__ + '()' for method in methods
         )
         raise TypeError(
-            f"{funcs_defined} defined; "
+            f"{methods_defined} defined; "
             f"don't know how to JSONify {obj.__class__.__name__} objects"
         )
-    func = funcs[0] if funcs else _default.default  # type: ignore
-    return_value = func(obj)  # type: ignore
+    method = methods[0] if methods else _default.default  # type: ignore
+    return_value = method(obj)  # type: ignore
     return return_value
 
 import json  # isort: skip
