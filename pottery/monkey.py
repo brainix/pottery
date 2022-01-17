@@ -19,9 +19,11 @@
 
 import logging
 from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Union
+from typing import cast
 
 # TODO: When we drop support for Python 3.7, change the following import to:
 #   from typing import Final
@@ -37,12 +39,19 @@ logger.addHandler(logging.NullHandler())
 # already knows how to JSONify dicts, lists, and strings).
 
 def _default(self: Any, obj: Any) -> Union[Dict[str, Any], List[Any], str]:
-    func_names = {'to_dict', 'to_list', 'to_str'}
-    funcs = {getattr(obj.__class__, name, None) for name in func_names}
-    funcs.discard(None)
-    assert len(funcs) <= 1
-    func = funcs.pop() if any(funcs) else _default.default  # type: ignore
-    return_value = func(obj)  # type: ignore
+    method_names = ('to_dict', 'to_list', 'to_str')
+    methods = tuple(getattr(obj.__class__, name, None) for name in method_names)
+    methods = tuple(method for method in methods if method is not None)
+    if len(methods) > 1:
+        methods_defined = ', '.join(
+            cast(Callable, method).__qualname__ + '()' for method in methods
+        )
+        raise TypeError(
+            f"{methods_defined} defined; "
+            f"don't know how to JSONify {obj.__class__.__name__} objects"
+        )
+    method = methods[0] if methods else _default.default  # type: ignore
+    return_value = method(obj)  # type: ignore
     return return_value
 
 import json  # isort: skip
