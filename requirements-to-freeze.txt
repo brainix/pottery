@@ -30,6 +30,9 @@ types-redis
 flake8
 isort
 
+bandit
+safety
+
 twine
 
 
