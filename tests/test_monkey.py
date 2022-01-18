@@ -22,10 +22,10 @@ from tests.base import TestCase
 
 
 class Incorrect:
-    def to_dict(self):
+    def to_dict(self):  # pragma: no cover
         return {}
 
-    def to_list(self):
+    def to_list(self):  # pragma: no cover
         return []
 
 
