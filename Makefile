@@ -81,7 +81,9 @@ ifeq ($(tests),)
 		echo Running Flake8 on $($@_SOURCE_FILES) && \
 		flake8 $($@_SOURCE_FILES) --count --max-complexity=10 --statistics && \
 		echo Running isort on $($@_SOURCE_FILES) && \
-		isort $($@_SOURCE_FILES) --check-only --diff
+		isort $($@_SOURCE_FILES) --check-only --diff && \
+		bandit -r pottery && \
+		safety check
 else
 	source $(venv)/bin/activate && \
 		python3 -m unittest --verbose $(tests)
