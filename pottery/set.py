@@ -72,7 +72,11 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
 
     def __contains__(self, value: Any) -> bool:
         's.__contains__(element) <==> element in s.  O(1)'
-        return next(self.contains_many(value))
+        try:
+            encoded_value = self._encode(value)
+        except TypeError:
+            return False
+        return self.redis.sismember(self.key, encoded_value)  # Available since Redis 1.0.0
 
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         'Yield whether this RedisSet contains multiple elements.  O(n)'
