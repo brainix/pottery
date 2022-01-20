@@ -35,7 +35,7 @@ logger.addHandler(logging.NullHandler())
 
 
 # Monkey patch the JSON encoder to be able to JSONify any instance of any class
-# that defines a to_dict(), to_list(), or to_str() method (since the encoder
+# that defines a .to_dict(), .to_list(), or .to_str() method (since the encoder
 # already knows how to JSONify dicts, lists, and strings).
 
 def _default(self: Any, obj: Any) -> Union[Dict[str, Any], List[Any], str]:

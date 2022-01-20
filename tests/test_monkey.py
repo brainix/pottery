@@ -22,6 +22,12 @@ from tests.base import TestCase
 
 
 class Incorrect:
+    '''This class defines a .to_dict() and a .to_list() method.
+
+    This means that our monkey patch doesn't know how to JSON serialize
+    Incorrect objects.
+    '''
+
     def to_dict(self):  # pragma: no cover
         return {}
 
@@ -30,18 +36,26 @@ class Incorrect:
 
 
 class Correct:
+    '''This class defines a .to_dict() method.
+
+    This means that our monkey patch knows how to JSON serialize Correct
+    objects.
+    '''
+
     def to_dict(self):
         return {}
 
 
 class MonkeyPatchTests(TestCase):
     def test_typeerror_not_jsonifyable(self):
+        "Ensure json.dumps() raises TypeError for objs that can't be serialized"
         try:
             json.dumps(object())
         except TypeError as error:
             assert str(error) == 'Object of type object is not JSON serializable'
 
     def test_typeerror_multiple_methods(self):
+        "Ensure json.dumps() raises TypeError for objs with multiple .to_* methods"
         try:
             json.dumps(Incorrect())
         except TypeError as error:
@@ -51,7 +65,9 @@ class MonkeyPatchTests(TestCase):
             )
 
     def test_dict(self):
+        "Ensure that json.dumps() can serialize a dict"
         assert json.dumps({}) == '{}'
 
     def test_to_dict(self):
+        "Ensure that json.dumps() can serialize an obj with a .to_dict() method"
         assert json.dumps(Correct()) == '{}'
