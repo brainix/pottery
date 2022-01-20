@@ -50,8 +50,8 @@ class SetTests(TestCase):
 
     def test_contains_many_metasyntactic_variables(self):
         metasyntactic_variables = RedisSet({'foo', 'bar', 'zap', 'a'}, redis=self.redis)
-        contains_many = metasyntactic_variables.contains_many('foo', 'bar', 'baz', 'quz')
-        assert tuple(contains_many) == (True, True, False, False)
+        contains_many = metasyntactic_variables.contains_many('foo', 'bar', object(), 'baz', 'quz')
+        assert tuple(contains_many) == (True, True, False, False, False)
 
     def test_contains_many_uuids(self):
         NUM_ELEMENTS = 5000
