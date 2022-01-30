@@ -26,6 +26,7 @@ from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Union
 from typing import cast
 
 # TODO: When we drop support for Python 3.7, change the following import to:
@@ -55,7 +56,7 @@ def _default(self: Any, obj: Any) -> Dict[str, Any] | List[Any] | str:
         )
     method = methods[0] if methods else _default.default  # type: ignore
     return_value = method(obj)  # type: ignore
-    return return_value
+    return cast(Union[Dict[str, Any], List[Any], str], return_value)
 
 import json  # isort: skip
 _default.default = json.JSONEncoder().default  # type: ignore

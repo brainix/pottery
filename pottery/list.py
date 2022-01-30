@@ -66,10 +66,10 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     def __slice_to_indices(self, slice_or_index: slice | int) -> range:
         if isinstance(slice_or_index, slice):
-            start, stop, step = cast(slice, slice_or_index).indices(len(self))
+            start, stop, step = slice_or_index.indices(len(self))
         elif isinstance(slice_or_index, int):
-            start = cast(int, slice_or_index)
-            stop = cast(int, slice_or_index) + 1
+            start = slice_or_index
+            stop = slice_or_index + 1
             step = 1
         else:
             raise TypeError(
@@ -146,7 +146,7 @@ class RedisList(Base, collections.abc.MutableSequence):
         return value
 
     @_raise_on_error
-    def __setitem__(self, index: int, value: JSONTypes) -> None:  # type: ignore
+    def __setitem__(self, index: slice | int, value: JSONTypes) -> None:  # type: ignore
         'l.__setitem__(index, value) <==> l[index] = value.  O(n)'
         with self._watch() as pipeline:
             if isinstance(index, slice):
@@ -154,6 +154,8 @@ class RedisList(Base, collections.abc.MutableSequence):
                     cast(str, InefficientAccessWarning.__doc__),
                     InefficientAccessWarning,
                 )
+                if not isinstance(value, Iterable):
+                    raise TypeError('can only assign an iterable')
                 encoded_values = [self._encode(value) for value in value]
                 indices = self.__slice_to_indices(index)
                 pipeline.multi()  # Available since Redis 1.2.0

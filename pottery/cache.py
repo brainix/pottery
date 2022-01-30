@@ -186,7 +186,7 @@ def redis_cache(*,  # NoQA: C901
 
 def _set_expiration(func: F) -> F:
     @functools.wraps(func)
-    def wrapper(self, *args: Any, **kwargs: Any) -> Any:
+    def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
         value = func(self, *args, **kwargs)
         if self._timeout:
             self._cache.redis.expire(self._cache.key, self._timeout)  # Available since Redis 1.0.0
