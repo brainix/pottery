@@ -19,6 +19,7 @@
 # TODO: When we drop support for Python 3.9, remove the following import.
 from __future__ import annotations
 
+from types import NoneType
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -31,5 +32,6 @@ from typing import TypeVar
 F = TypeVar('F', bound=Callable[..., Any])
 
 
-JSONTypes = None | bool | int | float | str | List[Any] | Dict[str, Any]
+# TODO: When we drop support for Python 3.9, change NoneType to None.
+JSONTypes = NoneType | bool | int | float | str | List[Any] | Dict[str, Any]
 RedisValues = bytes | str | float | int
