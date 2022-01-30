@@ -31,6 +31,7 @@ from typing import Iterable
 from typing import List
 from typing import Optional
 from typing import Tuple
+from typing import Union
 from typing import cast
 
 from redis.client import Pipeline
@@ -41,7 +42,7 @@ from .dict import RedisDict
 
 
 InitIter = Iterable[JSONTypes]
-InitArg = InitIter | Counter
+InitArg = Union[InitIter, Counter]
 
 
 class RedisCounter(RedisDict, collections.Counter):

@@ -16,9 +16,6 @@
 # --------------------------------------------------------------------------- #
 
 
-# TODO: When we drop support for Python 3.9, remove the following import.
-from __future__ import annotations
-
 import collections.abc
 import itertools
 import warnings
@@ -29,6 +26,7 @@ from typing import Iterable
 from typing import Mapping
 from typing import Optional
 from typing import Tuple
+from typing import Union
 from typing import cast
 
 from redis import Redis
@@ -44,7 +42,7 @@ from .exceptions import KeyExistsError
 InitMap = Mapping[JSONTypes, JSONTypes]
 InitItem = Tuple[JSONTypes, JSONTypes]
 InitIter = Iterable[InitItem]
-InitArg = InitMap | InitIter
+InitArg = Union[InitMap, InitIter]
 
 
 class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
