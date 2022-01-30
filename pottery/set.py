@@ -91,7 +91,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             encoded_values.append(encoded_value)
 
         # Available since Redis 6.2.0:
-        for is_member in self.redis.smismember(self.key, encoded_values):
+        for is_member in self.redis.smismember(self.key, encoded_values):  # type: ignore
             yield bool(is_member)
 
     def __iter__(self) -> Generator[JSONTypes, None, None]:
@@ -197,7 +197,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
         with self._watch(*others):
             set_ = self.__to_set()
             method = getattr(set_, set_method)
-            return method(*others)
+            return cast(Set[Any], method(*others))
 
     # Where does this method come from?
     def issubset(self, other: Iterable[Any]) -> bool:
@@ -222,7 +222,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
             if not isinstance(other, collections.abc.Set):
                 other = frozenset(other)
             method = getattr(self, set_method)
-            return method(other)
+            return cast(bool, method(other))
 
     # Where does this method come from?
     def symmetric_difference(self, other: Iterable[Any]) -> NoReturn:
@@ -283,7 +283,7 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     def symmetric_difference_update(self, other: Iterable[JSONTypes]) -> NoReturn:
         raise NotImplementedError
 
-    def to_set(self):
+    def to_set(self) -> Set[JSONTypes]:
         'Convert a RedisSet into a plain Python set.'
         return set(self)
 

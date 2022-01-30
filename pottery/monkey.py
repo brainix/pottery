@@ -55,7 +55,7 @@ def _default(self: Any, obj: Any) -> Dict[str, Any] | List[Any] | str:
         )
     method = methods[0] if methods else _default.default  # type: ignore
     return_value = method(obj)  # type: ignore
-    return return_value
+    return cast(Dict[str, Any] | List[Any] | str, return_value)
 
 import json  # isort: skip
 _default.default = json.JSONEncoder().default  # type: ignore
