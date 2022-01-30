@@ -16,7 +16,8 @@
 # --------------------------------------------------------------------------- #
 
 
-# TODO: When we drop support for Python 3.9, remove the following import.
+# TODO: When we drop support for Python 3.9, remove the following import.  We
+# only need it for X | Y union type annotations.
 from __future__ import annotations
 
 import collections
