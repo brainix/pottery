@@ -16,15 +16,13 @@
 # --------------------------------------------------------------------------- #
 
 
-# TODO: When we drop support for Python 3.9, remove the following import.
-from __future__ import annotations
-
 from types import NoneType
 from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
 from typing import TypeVar
+from typing import Union
 
 
 # A function that receives *args and **kwargs, and returns anything.  Useful
@@ -33,5 +31,5 @@ F = TypeVar('F', bound=Callable[..., Any])
 
 
 # TODO: When we drop support for Python 3.9, change NoneType to None.
-JSONTypes = NoneType | bool | int | float | str | List[Any] | Dict[str, Any]
-RedisValues = bytes | str | float | int
+JSONTypes = Union[NoneType, bool, int, float, str, List[Any], Dict[str, Any]]
+RedisValues = Union[bytes, str, float, int]
