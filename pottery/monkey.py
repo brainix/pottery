@@ -17,12 +17,15 @@
 'Monkey patches.'
 
 
+# TODO: When we drop support for Python 3.9, remove the following import.  We
+# only need it for X | Y union type annotations as of 2022-01-29.
+from __future__ import annotations
+
 import logging
 from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
-from typing import Union
 from typing import cast
 
 # TODO: When we drop support for Python 3.7, change the following import to:
@@ -38,7 +41,7 @@ logger.addHandler(logging.NullHandler())
 # that defines a .to_dict(), .to_list(), or .to_str() method (since the encoder
 # already knows how to JSONify dicts, lists, and strings).
 
-def _default(self: Any, obj: Any) -> Union[Dict[str, Any], List[Any], str]:
+def _default(self: Any, obj: Any) -> Dict[str, Any] | List[Any] | str:
     method_names = ('to_dict', 'to_list', 'to_str')
     methods = tuple(getattr(obj.__class__, name, None) for name in method_names)
     methods = tuple(method for method in methods if method is not None)

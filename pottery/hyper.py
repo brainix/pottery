@@ -28,7 +28,6 @@ from typing import Generator
 from typing import Iterable
 from typing import List
 from typing import Optional
-from typing import Union
 from typing import cast
 
 from redis import Redis
@@ -123,9 +122,7 @@ class HyperLogLog(Base):
         'Add an element to the HyperLogLog.  O(1)'
         self.__update({value})
 
-    def update(self,
-               *objs: Union[HyperLogLog, Iterable[RedisValues]],
-               ) -> None:
+    def update(self, *objs: HyperLogLog | Iterable[RedisValues]) -> None:
         other_hll_keys: List[str] = []
         encoded_values: List[str] = []
         with self._watch(objs) as pipeline:

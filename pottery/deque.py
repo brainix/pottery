@@ -16,12 +16,15 @@
 # --------------------------------------------------------------------------- #
 
 
+# TODO: When we drop support for Python 3.9, remove the following import.  We
+# only need it for X | Y union type annotations as of 2022-01-29.
+from __future__ import annotations
+
 import collections
 import warnings
 from typing import Iterable
 from typing import Optional
 from typing import Tuple
-from typing import Union
 from typing import cast
 
 from redis import Redis
@@ -123,7 +126,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
             push_method_name = 'rpush' if right else 'lpush'
             encoded_values = [self._encode(value) for value in values]
             len_ = cast(int, pipeline.llen(self.key)) + len(encoded_values)  # Available since Redis 1.0.0
-            trim_indices: Union[Tuple[int, int], Tuple] = tuple()
+            trim_indices: Tuple[int, int] | Tuple = tuple()
             if self.maxlen is not None and len_ >= self.maxlen:
                 trim_indices = (len_-self.maxlen, len_) if right else (0, self.maxlen-1)
 

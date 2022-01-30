@@ -33,7 +33,6 @@ from typing import Callable
 from typing import Iterable
 from typing import List
 from typing import Optional
-from typing import Union
 from typing import cast
 
 from redis import Redis
@@ -65,7 +64,7 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     _ALLOWED_TO_EQUAL: type = list
 
-    def __slice_to_indices(self, slice_or_index: Union[slice, int]) -> range:
+    def __slice_to_indices(self, slice_or_index: slice | int) -> range:
         if isinstance(slice_or_index, slice):
             start, stop, step = cast(slice, slice_or_index).indices(len(self))
         elif isinstance(slice_or_index, int):
@@ -105,7 +104,7 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     # Methods required by collections.abc.MutableSequence:
 
-    def __getitem__(self, index: Union[slice, int]) -> Any:
+    def __getitem__(self, index: slice | int) -> Any:
         'l.__getitem__(index) <==> l[index].  O(n)'
         with self._watch() as pipeline:
             if isinstance(index, slice):
@@ -129,7 +128,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                 pipeline.lrange(self.key, start, stop)  # Available since Redis 1.0.0
                 encoded_values = pipeline.execute()[0]  # Available since Redis 1.2.0
                 encoded_values = encoded_values[::index.step]
-                value: Union[List[JSONTypes], JSONTypes] = [
+                value: List[JSONTypes] | JSONTypes = [
                     self._decode(value) for value in encoded_values
                 ]
             else:
@@ -179,7 +178,7 @@ class RedisList(Base, collections.abc.MutableSequence):
                 pipeline.lset(self.key, index, encoded_value)  # Available since Redis 1.0.0
 
     @_raise_on_error
-    def __delitem__(self, index: Union[slice, int]) -> None:  # type: ignore
+    def __delitem__(self, index: slice | int) -> None:  # type: ignore
         'l.__delitem__(index) <==> del l[index].  O(n)'
         with self._watch() as pipeline:
             self.__delete(pipeline, index)
@@ -187,7 +186,7 @@ class RedisList(Base, collections.abc.MutableSequence):
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
     #   https://stackoverflow.com/a/38534939
-    def __delete(self, pipeline: Pipeline, index: Union[slice, int]) -> None:
+    def __delete(self, pipeline: Pipeline, index: slice | int) -> None:
         # Python's list API requires us to delete an element by *index.*  Redis
         # supports only deleting an element by *value.*  So our workaround is
         # to set l[index] to a UUID4, then to delete the value UUID4.  More

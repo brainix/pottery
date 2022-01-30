@@ -16,6 +16,10 @@
 # --------------------------------------------------------------------------- #
 
 
+# TODO: When we drop support for Python 3.9, remove the following import.  We
+# only need it for X | Y union type annotations as of 2022-01-29.
+from __future__ import annotations
+
 import collections
 import functools
 import itertools
@@ -28,7 +32,6 @@ from typing import Iterable
 from typing import NamedTuple
 from typing import Optional
 from typing import TypeVar
-from typing import Union
 from typing import cast
 
 from redis import Redis
@@ -260,7 +263,7 @@ class CachedOrderedDict(collections.OrderedDict):
     @_set_expiration
     def __setitem__(self,
                     dict_key: JSONTypes,
-                    value: Union[JSONTypes, object]
+                    value: JSONTypes | object,
                     ) -> None:
         'Set self[dict_key] to value.'
         if value is not self._SENTINEL:
