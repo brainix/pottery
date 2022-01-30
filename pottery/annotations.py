@@ -16,12 +16,14 @@
 # --------------------------------------------------------------------------- #
 
 
+# TODO: When we drop support for Python 3.9, remove the following import.
+from __future__ import annotations
+
 from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
 from typing import TypeVar
-from typing import Union
 
 
 # A function that receives *args and **kwargs, and returns anything.  Useful
@@ -29,5 +31,5 @@ from typing import Union
 F = TypeVar('F', bound=Callable[..., Any])
 
 
-JSONTypes = Union[None, bool, int, float, str, List[Any], Dict[str, Any]]
-RedisValues = Union[bytes, str, float, int]
+JSONTypes = None | bool | int | float | str | List[Any] | Dict[str, Any]
+RedisValues = bytes | str | float | int
