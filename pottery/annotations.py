@@ -16,7 +16,6 @@
 # --------------------------------------------------------------------------- #
 
 
-from types import NoneType
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -30,6 +29,5 @@ from typing import Union
 F = TypeVar('F', bound=Callable[..., Any])
 
 
-# TODO: When we drop support for Python 3.9, change NoneType to None.
-JSONTypes = Union[NoneType, bool, int, float, str, List[Any], Dict[str, Any]]
+JSONTypes = Union[None, bool, int, float, str, List[Any], Dict[str, Any]]
 RedisValues = Union[bytes, str, float, int]
