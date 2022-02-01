@@ -32,8 +32,8 @@ been battle tested in production at scale.
 - [NextId 🔢](#nextid)
 - [redis_cache()](#redis_cache)
 - [CachedOrderedDict](#cachedordereddict)
-- [Bloom filters](#bloom-filters)
-- [HyperLogLogs](#hyperloglogs)
+- [Bloom filters 🌸](#bloom-filters)
+- [HyperLogLogs 🪵](#hyperloglogs)
 - [ContextTimer ⏱️](#contexttimer)
 
 
@@ -770,7 +770,7 @@ Now, let&rsquo;s look at a combination of cache hits and misses:
 
 
 
-## Bloom filters
+## <a name="bloom-filters"></a>Bloom filters 🌸
 
 Bloom filters are a powerful data structure that help you to answer the
 questions, _&ldquo;Have I seen this element before?&rdquo;_ and _&ldquo;How
@@ -881,7 +881,7 @@ Remove all of the elements from the `BloomFilter`:
 
 
 
-## HyperLogLogs
+## <a name="hyperloglogs"></a>HyperLogLogs 🪵
 
 HyperLogLogs are an interesting data structure designed to answer the question,
 _&ldquo;How many distinct elements have I seen?&rdquo;_; but not the questions,
