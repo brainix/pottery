@@ -51,7 +51,6 @@ from typing import Any
 from typing import Callable
 from typing import ClassVar
 from typing import Iterable
-from typing import Optional
 from typing import Tuple
 from typing import Type
 from typing import cast
@@ -88,9 +87,9 @@ class _Scripts(Primitive):
 
     __slots__: Tuple[str, ...] = tuple()
 
-    _acquired_script: ClassVar[Optional[Script]] = None
-    _extend_script: ClassVar[Optional[Script]] = None
-    _release_script: ClassVar[Optional[Script]] = None
+    _acquired_script: ClassVar[Script | None] = None
+    _extend_script: ClassVar[Script | None] = None
+    _release_script: ClassVar[Script | None] = None
 
     def __init__(self,
                  *,
@@ -330,7 +329,7 @@ class Redlock(_Scripts):
 
     def __acquire_masters(self,
                           *,
-                          raise_on_redis_errors: Optional[bool] = None,
+                          raise_on_redis_errors: bool | None = None,
                           ) -> bool:
         self._uuid = str(uuid.uuid4())
         self._extension_num = 0
@@ -369,7 +368,7 @@ class Redlock(_Scripts):
                 *,
                 blocking: bool = True,
                 timeout: float = -1,
-                raise_on_redis_errors: Optional[bool] = None,
+                raise_on_redis_errors: bool | None = None,
                 ) -> bool:
         '''Lock the lock.
 
@@ -454,7 +453,7 @@ class Redlock(_Scripts):
 
     __acquire = acquire
 
-    def locked(self, *, raise_on_redis_errors: Optional[bool] = None) -> int:
+    def locked(self, *, raise_on_redis_errors: bool | None = None) -> int:
         '''How much longer we'll hold the lock (unless we extend or release it).
 
         If we don't currently hold the lock, then this method returns 0.
@@ -513,7 +512,7 @@ class Redlock(_Scripts):
 
     __locked = locked
 
-    def extend(self, *, raise_on_redis_errors: Optional[bool] = None) -> None:
+    def extend(self, *, raise_on_redis_errors: bool | None = None) -> None:
         '''Extend our hold on the lock (if we currently hold it).
 
         Usage:
@@ -565,7 +564,7 @@ class Redlock(_Scripts):
             redis_errors=redis_errors,
         )
 
-    def release(self, *, raise_on_redis_errors: Optional[bool] = None) -> None:
+    def release(self, *, raise_on_redis_errors: bool | None = None) -> None:
         '''Unlock the lock.
 
         Usage:
@@ -661,9 +660,9 @@ class Redlock(_Scripts):
         raise NotImplementedError
 
     def __exit__(self,
-                 exc_type: Optional[Type[BaseException]],
-                 exc_value: Optional[BaseException],
-                 traceback: Optional[TracebackType],
+                 exc_type: Type[BaseException] | None,
+                 exc_value: BaseException | None,
+                 traceback: TracebackType | None,
                  ) -> Literal[False]:
         '''You can use a Redlock as a context manager.
 
