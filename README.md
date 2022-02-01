@@ -8,6 +8,7 @@ easily, and also for implementing microservice resilience patterns; and it has
 been battle tested in production at scale.
 
 [![Build status](https://img.shields.io/github/workflow/status/brainix/pottery/Python%20package/master)](https://github.com/brainix/pottery/actions?query=branch%3Amaster)
+[![Security status](https://img.shields.io/badge/security-bandit-dark.svg)](https://github.com/PyCQA/bandit)
 [![Latest released version](https://badge.fury.io/py/pottery.svg)](https://badge.fury.io/py/pottery)
 
 ![Supported Python versions](https://img.shields.io/pypi/pyversions/pottery)

@@ -287,3 +287,8 @@ class ListTests(TestCase):
         assert nums[-2::-1] == [80, 70, 60, 50, 40, 30, 20, 10]
         assert nums[-2:1:-1] == [80, 70, 60, 50, 40, 30]
         assert nums[-2:1:-3] == [80, 50]
+
+    def test_invalid_slice_assignment(self):
+        nums = RedisList([10, 20, 30, 40, 50, 60, 70, 80, 90], redis=self.redis)
+        with self.assertRaises(TypeError):
+            nums[:] = 10
