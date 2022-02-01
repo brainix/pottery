@@ -16,10 +16,13 @@
 # --------------------------------------------------------------------------- #
 
 
+# TODO: When we drop support for Python 3.9, remove the following import.  We
+# only need it for X | Y union type annotations as of 2022-01-29.
+from __future__ import annotations
+
 from dataclasses import dataclass
 from queue import Empty
 from typing import Iterable
-from typing import Optional
 
 from redis import Redis
 from redis import RedisError
@@ -30,7 +33,7 @@ class PotteryError(Exception):
     'Base exception class for Pottery containers.'
 
     redis: Redis
-    key: Optional[str] = None
+    key: str | None = None
 
 class KeyExistsError(PotteryError):
     'Initializing a container on a Redis key that already exists.'

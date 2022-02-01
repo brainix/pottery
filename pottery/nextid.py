@@ -36,7 +36,6 @@ import contextlib
 from typing import ClassVar
 from typing import Iterable
 from typing import List
-from typing import Optional
 from typing import Tuple
 from typing import Type
 from typing import cast
@@ -61,7 +60,7 @@ class _Scripts(Primitive):
 
     __slots__: Tuple[str, ...] = tuple()
 
-    _set_id_script: ClassVar[Optional[Script]] = None
+    _set_id_script: ClassVar[Script | None] = None
 
     def __init__(self,
                  *,

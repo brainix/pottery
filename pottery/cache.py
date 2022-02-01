@@ -30,7 +30,6 @@ from typing import Collection
 from typing import Hashable
 from typing import Iterable
 from typing import NamedTuple
-from typing import Optional
 from typing import TypeVar
 from typing import cast
 
@@ -60,7 +59,7 @@ class CacheInfo(NamedTuple):
     '''
     hits: int = 0
     misses: int = 0
-    maxsize: Optional[int] = None
+    maxsize: int | None = None
     currsize: int = 0
 
 
@@ -73,9 +72,9 @@ F = TypeVar('F', bound=Callable[..., JSONTypes])
 
 
 def redis_cache(*,  # NoQA: C901
-                redis: Optional[Redis] = None,
-                key: Optional[str] = None,
-                timeout: Optional[int] = _DEFAULT_TIMEOUT,
+                redis: Redis | None = None,
+                key: str | None = None,
+                timeout: int | None = _DEFAULT_TIMEOUT,
                 ) -> Callable[[F], F]:
     '''Redis-backed caching decorator with an API like functools.lru_cache().
 
@@ -219,11 +218,11 @@ class CachedOrderedDict(collections.OrderedDict):
     @_set_expiration
     def __init__(self,
                  *,
-                 redis_client: Optional[Redis] = None,
-                 redis_key: Optional[str] = None,
+                 redis_client: Redis | None = None,
+                 redis_key: str | None = None,
                  dict_keys: Iterable[JSONTypes] = tuple(),
                  num_tries: int = _NUM_TRIES,
-                 timeout: Optional[int] = _DEFAULT_TIMEOUT,
+                 timeout: int | None = _DEFAULT_TIMEOUT,
                  ) -> None:
         self._num_tries = num_tries
         self._timeout = timeout

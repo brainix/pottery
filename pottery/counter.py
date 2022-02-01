@@ -29,7 +29,6 @@ import itertools
 from typing import Callable
 from typing import Iterable
 from typing import List
-from typing import Optional
 from typing import Tuple
 from typing import Union
 from typing import cast
@@ -251,7 +250,7 @@ class RedisCounter(RedisDict, collections.Counter):
         return self.__iset_op(other, method=int.__lt__)
 
     def most_common(self,
-                    n: Optional[int] = None,
+                    n: int | None = None,
                     ) -> List[Tuple[JSONTypes, int]]:
         counter = self.__to_counter()
         return counter.most_common(n=n)

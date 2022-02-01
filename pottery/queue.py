@@ -16,11 +16,14 @@
 # --------------------------------------------------------------------------- #
 
 
+# TODO: When we drop support for Python 3.9, remove the following import.  We
+# only need it for X | Y union type annotations as of 2022-01-29.
+from __future__ import annotations
+
 import math
 import random
 import time
 from typing import ClassVar
-from typing import Optional
 from typing import Tuple
 from typing import cast
 
@@ -61,7 +64,7 @@ class RedisSimpleQueue(Base):
     def put(self,
             item: JSONTypes,
             block: bool = True,
-            timeout: Optional[float] = None,
+            timeout: float | None = None,
             ) -> None:
         '''Put the item on the queue.  O(1)
 
@@ -84,7 +87,7 @@ class RedisSimpleQueue(Base):
 
     def get(self,
             block: bool = True,
-            timeout: Optional[float] = None,
+            timeout: float | None = None,
             ) -> JSONTypes:
         '''Remove and return an item from the queue.  O(1)
 

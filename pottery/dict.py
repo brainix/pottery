@@ -16,6 +16,10 @@
 # --------------------------------------------------------------------------- #
 
 
+# TODO: When we drop support for Python 3.9, remove the following import.  We
+# only need it for X | Y union type annotations as of 2022-01-29.
+from __future__ import annotations
+
 import collections.abc
 import itertools
 import warnings
@@ -24,7 +28,6 @@ from typing import Dict
 from typing import Generator
 from typing import Iterable
 from typing import Mapping
-from typing import Optional
 from typing import Tuple
 from typing import Union
 from typing import cast
@@ -51,8 +54,8 @@ class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
     def __init__(self,
                  arg: InitArg = tuple(),
                  *,
-                 redis: Optional[Redis] = None,
-                 key: Optional[str] = None,
+                 redis: Redis | None = None,
+                 key: str | None = None,
                  **kwargs: JSONTypes,
                  ) -> None:
         'Initialize the RedisDict.  O(n)'

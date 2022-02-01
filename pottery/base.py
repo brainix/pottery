@@ -16,6 +16,10 @@
 # --------------------------------------------------------------------------- #
 
 
+# TODO: When we drop support for Python 3.9, remove the following import.  We
+# only need it for X | Y union type annotations as of 2022-01-29.
+from __future__ import annotations
+
 import abc
 import collections
 import contextlib
@@ -31,8 +35,6 @@ from typing import FrozenSet
 from typing import Generator
 from typing import Iterable
 from typing import List
-from typing import Mapping
-from typing import Optional
 from typing import Tuple
 from typing import cast
 
@@ -95,8 +97,8 @@ class _Common:
 
     def __init__(self,
                  *,
-                 redis: Optional[Redis] = None,
-                 key: Optional[str] = None,
+                 redis: Redis | None = None,
+                 key: str | None = None,
                  ) -> None:
         self.redis = cast(Redis, redis)
         self.key = cast(str, key)
@@ -118,7 +120,7 @@ class _Common:
         return self.__redis
 
     @redis.setter
-    def redis(self, value: Optional[Redis]) -> None:
+    def redis(self, value: Redis | None) -> None:
         self.__redis = _default_redis if value is None else value
 
     @property
@@ -329,7 +331,7 @@ class Primitive(abc.ABC):
         self.__key = f'{self.KEY_PREFIX}:{value}'
 
     def _check_enough_masters_up(self,
-                                 raise_on_redis_errors: Optional[bool],
+                                 raise_on_redis_errors: bool | None,
                                  redis_errors: List[RedisError],
                                  ) -> None:
         if raise_on_redis_errors is None:

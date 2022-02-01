@@ -32,7 +32,6 @@ from typing import Any
 from typing import Callable
 from typing import Iterable
 from typing import List
-from typing import Optional
 from typing import cast
 
 from redis import Redis
@@ -82,8 +81,8 @@ class RedisList(Base, collections.abc.MutableSequence):
     def __init__(self,
                  iterable: Iterable[JSONTypes] = tuple(),
                  *,
-                 redis: Optional[Redis] = None,
-                 key: Optional[str] = None,
+                 redis: Redis | None = None,
+                 key: str | None = None,
                  ) -> None:
         'Initialize the RedisList.  O(n)'
         super().__init__(redis=redis, key=key)
@@ -251,7 +250,7 @@ class RedisList(Base, collections.abc.MutableSequence):
 
     # Methods required for Raj's sanity:
 
-    def sort(self, *, key: Optional[str] = None, reverse: bool = False) -> None:
+    def sort(self, *, key: str | None = None, reverse: bool = False) -> None:
         'Sort the RedisList in place.  O(n)'
         if key is not None:
             raise NotImplementedError('sorting by key not implemented')
@@ -321,7 +320,7 @@ class RedisList(Base, collections.abc.MutableSequence):
     __extend = extend
 
     # From collections.abc.MutableSequence:
-    def pop(self, index: Optional[int] = None) -> JSONTypes:
+    def pop(self, index: int | None = None) -> JSONTypes:
         with self._watch() as pipeline:
             len_ = len(self)
             if index and index >= len_:

@@ -16,9 +16,12 @@
 # --------------------------------------------------------------------------- #
 
 
+# TODO: When we drop support for Python 3.9, remove the following import.  We
+# only need it for X | Y union type annotations as of 2022-01-29.
+from __future__ import annotations
+
 import concurrent.futures
 from types import TracebackType
-from typing import Optional
 from typing import Type
 from typing import overload
 
@@ -69,9 +72,9 @@ class BailOutExecutor(concurrent.futures.ThreadPoolExecutor):
         raise NotImplementedError
 
     def __exit__(self,
-                 exc_type: Optional[Type[BaseException]],
-                 exc_value: Optional[BaseException],
-                 exc_traceback: Optional[TracebackType],
+                 exc_type: Type[BaseException] | None,
+                 exc_value: BaseException | None,
+                 exc_traceback: TracebackType | None,
                  ) -> Literal[False]:
         self.shutdown(wait=False)
         return False

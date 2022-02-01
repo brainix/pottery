@@ -27,7 +27,6 @@ import uuid
 from typing import Generator
 from typing import Iterable
 from typing import List
-from typing import Optional
 from typing import cast
 
 from redis import Redis
@@ -107,8 +106,8 @@ class HyperLogLog(Base):
     def __init__(self,
                  iterable: Iterable[RedisValues] = frozenset(),
                  *,
-                 redis: Optional[Redis] = None,
-                 key: Optional[str] = None,
+                 redis: Redis | None = None,
+                 key: str | None = None,
                  ) -> None:
         '''Initialize the HyperLogLog.  O(n)
 
@@ -149,8 +148,8 @@ class HyperLogLog(Base):
 
     def union(self,
               *objs: Iterable[RedisValues],
-              redis: Optional[Redis] = None,
-              key: Optional[str] = None,
+              redis: Redis | None = None,
+              key: str | None = None,
               ) -> HyperLogLog:
         new_hll = self.__class__(redis=redis, key=key)
         new_hll.update(self, *objs)

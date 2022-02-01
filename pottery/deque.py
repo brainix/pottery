@@ -23,7 +23,6 @@ from __future__ import annotations
 import collections
 import warnings
 from typing import Iterable
-from typing import Optional
 from typing import Tuple
 from typing import cast
 
@@ -44,10 +43,10 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
 
     def __init__(self,
                  iterable: Iterable[JSONTypes] = tuple(),
-                 maxlen: Optional[int] = None,
+                 maxlen: int | None = None,
                  *,
-                 redis: Optional[Redis] = None,
-                 key: Optional[str] = None,
+                 redis: Redis | None = None,
+                 key: str | None = None,
                  ) -> None:
         'Initialize the RedisDeque.  O(n)'
         if maxlen is not None and not isinstance(maxlen, int):
@@ -73,7 +72,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
         super()._populate(pipeline, iterable)
 
     @property
-    def maxlen(self) -> Optional[int]:
+    def maxlen(self) -> int | None:
         return self._maxlen
 
     @maxlen.setter
