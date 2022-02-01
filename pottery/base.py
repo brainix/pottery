@@ -43,8 +43,10 @@ from redis import RedisError
 from redis.client import Pipeline
 # TODO: When we drop support for Python 3.7, change the following imports to:
 #   from typing import Final
+#   from typing import Protocol
 #   from typing import final
 from typing_extensions import Final
+from typing_extensions import Protocol
 from typing_extensions import final
 
 from .annotations import JSONTypes
@@ -163,20 +165,19 @@ class _Encodable:
         return decoded_value
 
 
-class _Clearable(abc.ABC):
-    'Mixin class that implements clearing (emptying) a Redis-backed collection.'
-
+class _HasRedisClientAndKey(Protocol):
     @property
-    @abc.abstractmethod
     def redis(self) -> Redis:
-        'Redis client.'
+        ...
 
     @property
-    @abc.abstractmethod
     def key(self) -> str:
-        'Redis key.'
+        ...
 
-    def clear(self) -> None:
+
+class _Clearable:
+    'Mixin class that implements clearing (emptying) a Redis-backed collection.'
+    def clear(self: _HasRedisClientAndKey) -> None:
         'Remove the elements in a Redis-backed container.  O(n)'
         self.redis.unlink(self.key)  # Available since Redis 4.0.0
 
