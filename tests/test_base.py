@@ -23,7 +23,6 @@ from pottery import RandomKeyError
 from pottery import RedisDict
 from pottery.base import Iterable_
 from pottery.base import Primitive
-from pottery.base import _Clearable
 from pottery.base import _Comparable
 from pottery.base import _Pipelined
 from pottery.base import random_key
@@ -145,12 +144,6 @@ class EncodableTests(TestCase):
         #     decoded: JSONTypes = json.loads(value.decode())
         # AttributeError: 'str' object has no attribute 'decode'
         repr(tel)
-
-
-class ClearableTests(TestCase):
-    def test_abc_cant_be_instantiated(self):
-        with self.assertRaises(TypeError):
-            _Clearable()
 
 
 class PipelinedTests(TestCase):
