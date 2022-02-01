@@ -16,6 +16,10 @@
 # --------------------------------------------------------------------------- #
 
 
+# TODO: When we drop support for Python 3.9, remove the following import.  We
+# only need it for X | Y union type annotations as of 2022-01-29.
+from __future__ import annotations
+
 import collections.abc
 import itertools
 import uuid
@@ -24,7 +28,6 @@ from typing import Any
 from typing import Generator
 from typing import Iterable
 from typing import NoReturn
-from typing import Optional
 from typing import Set
 from typing import cast
 
@@ -45,8 +48,8 @@ class RedisSet(Base, Iterable_, collections.abc.MutableSet):
     def __init__(self,
                  iterable: Iterable[JSONTypes] = tuple(),
                  *,
-                 redis: Optional[Redis] = None,
-                 key: Optional[str] = None,
+                 redis: Redis | None = None,
+                 key: str | None = None,
                  ) -> None:
         'Initialize the RedisSet.  O(n)'
         super().__init__(redis=redis, key=key)
