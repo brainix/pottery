@@ -82,7 +82,7 @@ ifeq ($(tests),)
 		flake8 $($@_SOURCE_FILES) --count --max-complexity=10 --statistics && \
 		echo Running isort on $($@_SOURCE_FILES) && \
 		isort $($@_SOURCE_FILES) --check-only --diff && \
-		bandit -r pottery && \
+		bandit --recursive pottery && \
 		safety check
 else
 	source $(venv)/bin/activate && \

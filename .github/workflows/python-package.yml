@@ -49,5 +49,5 @@ jobs:
         isort *\.py pottery/*\.py tests/*\.py --check-only --diff
     - name: Check for security vulnerabilities with Bandit and Safety
       run: |
-        bandit -r pottery
+        bandit --recursive pottery
         safety check
