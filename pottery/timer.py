@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import timeit
 from types import TracebackType
-from typing import Optional
 from typing import Type
 from typing import overload
 
@@ -91,9 +90,9 @@ class ContextTimer:
         raise NotImplementedError
 
     def __exit__(self,
-                 exc_type: Optional[Type[BaseException]],
-                 exc_value: Optional[BaseException],
-                 exc_traceback: Optional[TracebackType],
+                 exc_type: Type[BaseException] | None,
+                 exc_value: BaseException | None,
+                 exc_traceback: TracebackType | None,
                  ) -> Literal[False]:
         self.__stop()
         return False
