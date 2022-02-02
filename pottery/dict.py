@@ -35,7 +35,7 @@ from typing import cast
 from redis import Redis
 from redis.client import Pipeline
 
-from .base import Base
+from .base import Container
 from .base import Iterable_
 from .base import JSONTypes
 from .exceptions import InefficientAccessWarning
@@ -48,7 +48,7 @@ InitIter = Iterable[InitItem]
 InitArg = Union[InitMap, InitIter]
 
 
-class RedisDict(Base, Iterable_, collections.abc.MutableMapping):
+class RedisDict(Container, Iterable_, collections.abc.MutableMapping):
     'Redis-backed container compatible with Python dicts.'
 
     def __init__(self,

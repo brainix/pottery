@@ -29,13 +29,13 @@ from typing import cast
 
 from redis import WatchError
 
-from .base import Base
+from .base import Container
 from .base import JSONTypes
 from .exceptions import QueueEmptyError
 from .timer import ContextTimer
 
 
-class RedisSimpleQueue(Base):
+class RedisSimpleQueue(Container):
     RETRY_DELAY: ClassVar[int] = 200
 
     def qsize(self) -> int:

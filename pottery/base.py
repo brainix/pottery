@@ -289,7 +289,7 @@ class _Comparable(abc.ABC):
         return equals
 
 
-class Base(_Common, _Encodable, _Clearable, _Pipelined, _Comparable):
+class Container(_Common, _Encodable, _Clearable, _Pipelined, _Comparable):
     'Base class for Redis-backed collections.'
 
 

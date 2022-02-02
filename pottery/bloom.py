@@ -34,7 +34,7 @@ import mmh3
 from typing_extensions import final
 
 from .annotations import F
-from .base import Base
+from .base import Container
 from .base import JSONTypes
 
 
@@ -201,7 +201,7 @@ class BloomFilterABC(abc.ABC):
         return next(self.contains_many(value))
 
 
-class BloomFilter(BloomFilterABC, Base):
+class BloomFilter(BloomFilterABC, Container):
     '''Redis-backed Bloom filter with an API similar to Python sets.
 
     Bloom filters are a powerful data structure that help you to answer the
