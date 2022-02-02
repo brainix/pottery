@@ -167,11 +167,11 @@ class _Encodable:
 
 class _HasRedisClientAndKey(Protocol):
     @property
-    def redis(self) -> Redis:
+    def redis(self) -> Redis:  # pragma: no cover
         ...
 
     @property
-    def key(self) -> str:
+    def key(self) -> str:  # pragma: no cover
         ...
 
 
