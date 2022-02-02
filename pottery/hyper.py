@@ -32,12 +32,12 @@ from typing import cast
 from redis import Redis
 
 from .annotations import RedisValues
-from .base import Base
+from .base import Container
 from .base import JSONTypes
 from .base import random_key
 
 
-class HyperLogLog(Base):
+class HyperLogLog(Container):
     '''Redis-backed HyperLogLog with a Pythonic API.
 
     HyperLogLogs are an interesting data structure designed to answer the

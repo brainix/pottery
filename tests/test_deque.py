@@ -22,7 +22,7 @@ import unittest.mock
 
 from pottery import RedisDeque
 from pottery import RedisList
-from pottery.base import Base
+from pottery.base import Container
 from tests.base import TestCase
 
 
@@ -63,7 +63,7 @@ class DequeTests(TestCase):
         assert d == collections.deque(['c', 'b', 'a'])
 
     def test_init_with_wrong_type_maxlen(self):
-        with unittest.mock.patch.object(Base, '__del__') as delete, \
+        with unittest.mock.patch.object(Container, '__del__') as delete, \
              self.assertRaises(TypeError):
             delete.return_value = None
             RedisDeque(redis=self.redis, maxlen='2')

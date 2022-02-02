@@ -35,14 +35,14 @@ from redis import Redis
 from redis.client import Pipeline
 from typing_extensions import Literal
 
-from .base import Base
+from .base import Container
 from .base import Iterable_
 from .base import JSONTypes
 from .exceptions import InefficientAccessWarning
 from .exceptions import KeyExistsError
 
 
-class RedisSet(Base, Iterable_, collections.abc.MutableSet):
+class RedisSet(Container, Iterable_, collections.abc.MutableSet):
     'Redis-backed container compatible with Python sets.'
 
     def __init__(self,

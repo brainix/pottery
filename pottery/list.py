@@ -42,7 +42,7 @@ from redis.client import Pipeline
 from typing_extensions import final
 
 from .annotations import F
-from .base import Base
+from .base import Container
 from .base import JSONTypes
 from .exceptions import InefficientAccessWarning
 from .exceptions import KeyExistsError
@@ -58,7 +58,7 @@ def _raise_on_error(func: F) -> Callable[[F], F]:
     return wrapper
 
 
-class RedisList(Base, collections.abc.MutableSequence):
+class RedisList(Container, collections.abc.MutableSequence):
     'Redis-backed container compatible with Python lists.'
 
     _ALLOWED_TO_EQUAL: type = list
