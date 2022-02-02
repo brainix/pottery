@@ -49,7 +49,7 @@ class RedisSet(Container, Iterable_, collections.abc.MutableSet):
                  iterable: Iterable[JSONTypes] = tuple(),
                  *,
                  redis: Redis | None = None,
-                 key: str | None = None,
+                 key: str = '',
                  ) -> None:
         'Initialize the RedisSet.  O(n)'
         super().__init__(redis=redis, key=key)

@@ -46,7 +46,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
                  maxlen: int | None = None,
                  *,
                  redis: Redis | None = None,
-                 key: str | None = None,
+                 key: str = '',
                  ) -> None:
         'Initialize the RedisDeque.  O(n)'
         if maxlen is not None and not isinstance(maxlen, int):
