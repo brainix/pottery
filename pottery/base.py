@@ -191,9 +191,7 @@ class _Pipelined(abc.ABC):
 
     @final
     @contextlib.contextmanager
-    def __watch_keys(self,
-                     *keys: str,
-                     ) -> Generator[Pipeline, None, None]:
+    def __watch_keys(self, *keys: str) -> Generator[Pipeline, None, None]:
         with self.redis.pipeline() as pipeline:
             pipeline.watch(*keys)  # Available since Redis 2.2.0
             try:
@@ -227,9 +225,7 @@ class _Pipelined(abc.ABC):
 
     @final
     @contextlib.contextmanager
-    def _watch(self,
-               *others: Any,
-               ) -> Generator[Pipeline, None, None]:
+    def _watch(self, *others: Any) -> Generator[Pipeline, None, None]:
         'Watch self and others, and yield a Redis pipeline.'
         pipelines = []
         with contextlib.ExitStack() as stack:
@@ -254,9 +250,7 @@ class _Comparable(abc.ABC):
 
     @abc.abstractmethod
     @contextlib.contextmanager
-    def _watch(self,
-               *others: Any,
-               ) -> Generator[Pipeline, None, None]:
+    def _watch(self, *others: Any) -> Generator[Pipeline, None, None]:
         'Watch self and others, and yield a Redis pipeline.'
 
     @final
