@@ -82,7 +82,7 @@ class RedisList(Container, collections.abc.MutableSequence):
                  iterable: Iterable[JSONTypes] = tuple(),
                  *,
                  redis: Redis | None = None,
-                 key: str | None = None,
+                 key: str = '',
                  ) -> None:
         'Initialize the RedisList.  O(n)'
         super().__init__(redis=redis, key=key)

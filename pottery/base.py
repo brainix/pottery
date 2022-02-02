@@ -100,7 +100,7 @@ class _Common:
     def __init__(self,
                  *,
                  redis: Redis | None = None,
-                 key: str | None = None,
+                 key: str = '',
                  ) -> None:
         self.redis = redis or _default_redis
         self.key = key or self.__random_key()
@@ -130,7 +130,7 @@ class _Common:
         return self.__key  # type: ignore
 
     @key.setter
-    def key(self, value: str | None) -> None:
+    def key(self, value: str) -> None:
         self.__key = value or self.__random_key()
 
     def _random_key(self) -> str:

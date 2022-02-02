@@ -107,7 +107,7 @@ class HyperLogLog(Container):
                  iterable: Iterable[RedisValues] = frozenset(),
                  *,
                  redis: Redis | None = None,
-                 key: str | None = None,
+                 key: str = '',
                  ) -> None:
         '''Initialize the HyperLogLog.  O(n)
 
@@ -149,7 +149,7 @@ class HyperLogLog(Container):
     def union(self,
               *objs: Iterable[RedisValues],
               redis: Redis | None = None,
-              key: str | None = None,
+              key: str = '',
               ) -> HyperLogLog:
         new_hll = self.__class__(redis=redis, key=key)
         new_hll.update(self, *objs)

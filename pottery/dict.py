@@ -55,7 +55,7 @@ class RedisDict(Container, Iterable_, collections.abc.MutableMapping):
                  arg: InitArg = tuple(),
                  *,
                  redis: Redis | None = None,
-                 key: str | None = None,
+                 key: str = '',
                  **kwargs: JSONTypes,
                  ) -> None:
         'Initialize the RedisDict.  O(n)'
