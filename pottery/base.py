@@ -97,11 +97,7 @@ class _Common:
 
     _RANDOM_KEY_PREFIX: ClassVar[str] = 'pottery:'
 
-    def __init__(self,
-                 *,
-                 redis: Redis | None = None,
-                 key: str = '',
-                 ) -> None:
+    def __init__(self, *, redis: Redis | None = None, key: str = '') -> None:
         self.redis = redis or _default_redis
         self.key = key or self.__random_key()
 
