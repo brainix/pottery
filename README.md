@@ -396,10 +396,11 @@ access to your resource:
 ```python
 >>> printer_lock.acquire()
 True
->>> bool(printer_lock.locked())
-True
->>> # Critical section - print stuff here.
->>> printer_lock.release()
+>>> if printer_lock.locked():
+...     print('printer_lock is locked')
+...     # Critical section - print stuff here.
+...     printer_lock.release()
+printer_lock is locked
 >>> bool(printer_lock.locked())
 False
 >>>
@@ -435,10 +436,9 @@ section before it releases its lock).
 >>> import time
 >>> printer_lock.acquire()
 True
->>> bool(printer_lock.locked())
-True
->>> # Critical section - print stuff here.
->>> time.sleep(10)
+>>> if printer_lock.locked():
+...     # Critical section - print stuff here.
+...     time.sleep(10)
 >>> bool(printer_lock.locked())
 False
 >>>
@@ -451,10 +451,9 @@ then you can specify your own auto release time (in milliseconds):
 >>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=15*1000)
 >>> printer_lock.acquire()
 True
->>> bool(printer_lock.locked())
-True
->>> # Critical section - print stuff here.
->>> time.sleep(10)
+>>> if printer_lock.locked():
+...     # Critical section - print stuff here.
+...     time.sleep(10)
 >>> bool(printer_lock.locked())
 True
 >>> time.sleep(5)
