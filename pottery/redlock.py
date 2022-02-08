@@ -610,14 +610,18 @@ class Redlock(_Scripts):
             >>> from redis import Redis
             >>> redis = Redis(socket_timeout=1)
             >>> with Redlock(key='printer', masters={redis}) as printer_lock:
-            ...     assert printer_lock.locked()
+            ...     print('printer_lock is locked')
             ...     # Critical section - print stuff here.
-            >>> assert not printer_lock.locked()
+            printer_lock is locked
+            >>> bool(printer_lock.locked())
+            False
 
             >>> with printer_lock:
-            ...     assert printer_lock.locked()
+            ...     print('printer_lock is locked')
             ...     # Critical section - print stuff here.
-            >>> assert not printer_lock.locked()
+            printer_lock is locked
+            >>> bool(printer_lock.locked())
+            False
         '''
         acquired = self.__acquire(
             blocking=self.context_manager_blocking,
