@@ -170,9 +170,7 @@ class Redlock(_Scripts):
         >>> printer_lock = Redlock(key='printer', masters={redis})
         >>> bool(printer_lock.locked())
         False
-        >>> printer_lock.acquire()
-        True
-        >>> if printer_lock.locked():
+        >>> if printer_lock.acquire():
         ...     print('printer_lock is locked')
         ...     # Critical section - print stuff here.
         printer_lock is locked
@@ -187,9 +185,7 @@ class Redlock(_Scripts):
     (in the event that a process dies inside a critical section before it
     releases its lock).
 
-        >>> printer_lock.acquire()
-        True
-        >>> if printer_lock.locked():
+        >>> if printer_lock.acquire():
         ...     # Critical section - print stuff here.
         ...     time.sleep(10)
         >>> time.sleep(10)
@@ -200,9 +196,7 @@ class Redlock(_Scripts):
     then you can specify your own timeout:
 
         >>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=15*1000)
-        >>> printer_lock.acquire()
-        True
-        >>> if printer_lock.locked():
+        >>> if printer_lock.acquire():
         ...     # Critical section - print stuff here.
         ...     time.sleep(10)
         >>> bool(printer_lock.locked())

@@ -394,9 +394,7 @@ your `Redlock` will remain available and performant.  Now you can protect
 access to your resource:
 
 ```python
->>> printer_lock.acquire()
-True
->>> if printer_lock.locked():
+>>> if printer_lock.acquire():
 ...     print('printer_lock is locked')
 ...     # Critical section - print stuff here.
 ...     printer_lock.release()
@@ -434,9 +432,7 @@ section before it releases its lock).
 
 ```python
 >>> import time
->>> printer_lock.acquire()
-True
->>> if printer_lock.locked():
+>>> if printer_lock.acquire():
 ...     # Critical section - print stuff here.
 ...     time.sleep(10)
 >>> bool(printer_lock.locked())
@@ -449,9 +445,7 @@ then you can specify your own auto release time (in milliseconds):
 
 ```python
 >>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=15*1000)
->>> printer_lock.acquire()
-True
->>> if printer_lock.locked():
+>>> if printer_lock.acquire():
 ...     # Critical section - print stuff here.
 ...     time.sleep(10)
 >>> bool(printer_lock.locked())
