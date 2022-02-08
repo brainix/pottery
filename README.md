@@ -411,7 +411,8 @@ Or you can protect access to your resource inside a context manager:
 ...     print('printer_lock is locked')
 ...     # Critical section - print stuff here.
 printer_lock is locked
->>> assert not printer_lock.locked()
+>>> bool(printer_lock.locked())
+False
 >>>
 ```
 
@@ -497,8 +498,10 @@ manager fails to acquire the lock, it raises the `QuorumNotAchieved` exception.
 ...     with contextlib.suppress(QuorumNotAchieved):
 ...         with printer_lock_2:  # Waits 0.2 seconds; raises QuorumNotAchieved.
 ...             pass
-...     assert printer_lock_1.locked()
-...     assert not printer_lock_2.locked()
+...     print(f"printer_lock_1 is {'locked' if printer_lock_1.locked() else 'unlocked'}")
+...     print(f"printer_lock_2 is {'locked' if printer_lock_2.locked() else 'unlocked'}")
+printer_lock_1 is locked
+printer_lock_2 is unlocked
 >>>
 ```
 

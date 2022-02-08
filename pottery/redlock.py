@@ -211,13 +211,15 @@ class Redlock(_Scripts):
         ...     print('printer_lock is locked')
         ...     # Critical section - print stuff here.
         printer_lock is locked
-        >>> assert not printer_lock.locked()
+        >>> bool(printer_lock.locked())
+        False
 
         >>> with printer_lock:
         ...     print('printer_lock is locked')
         ...     # Critical section - print stuff here.
         printer_lock is locked
-        >>> assert not printer_lock.locked()
+        >>> bool(printer_lock.locked())
+        False
     '''
 
     __slots__ = (
@@ -659,14 +661,18 @@ class Redlock(_Scripts):
             >>> from redis import Redis
             >>> redis = Redis(socket_timeout=1)
             >>> with Redlock(key='printer', masters={redis}) as printer_lock:
-            ...     assert printer_lock.locked()
+            ...     print('printer_lock is locked')
             ...     # Critical section - print stuff here.
-            >>> assert not printer_lock.locked()
+            printer_lock is locked
+            >>> bool(printer_lock.locked())
+            False
 
             >>> with printer_lock:
-            ...     assert printer_lock.locked()
+            ...     print('printer_lock is locked')
             ...     # Critical section - print stuff here.
-            >>> assert not printer_lock.locked()
+            printer_lock is locked
+            >>> bool(printer_lock.locked())
+            False
         '''
         self.__release()
         return False
