@@ -396,8 +396,12 @@ access to your resource:
 ```python
 >>> printer_lock.acquire()
 True
+>>> bool(printer_lock.locked())
+True
 >>> # Critical section - print stuff here.
 >>> printer_lock.release()
+>>> bool(printer_lock.locked())
+False
 >>>
 ```
 
@@ -405,8 +409,9 @@ Or you can protect access to your resource inside a context manager:
 
 ```python
 >>> with printer_lock:
+...     assert printer_lock.locked()
 ...     # Critical section - print stuff here.
-...     pass
+>>> assert not printer_lock.locked()
 >>>
 ```
 

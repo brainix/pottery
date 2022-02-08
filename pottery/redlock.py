@@ -213,21 +213,15 @@ class Redlock(_Scripts):
 
     You can use a Redlock as a context manager:
 
-        >>> states = []
         >>> with Redlock(key='printer', masters={redis}) as printer_lock:
-        ...     states.append(bool(printer_lock.locked()))
+        ...     assert printer_lock.locked()
         ...     # Critical section - print stuff here.
-        >>> states.append(bool(printer_lock.locked()))
-        >>> states
-        [True, False]
+        >>> assert not printer_lock.locked()
 
-        >>> states = []
         >>> with printer_lock:
-        ...     states.append(bool(printer_lock.locked()))
+        ...     assert printer_lock.locked()
         ...     # Critical section - print stuff here.
-        >>> states.append(bool(printer_lock.locked()))
-        >>> states
-        [True, False]
+        >>> assert not printer_lock.locked()
     '''
 
     __slots__ = (
