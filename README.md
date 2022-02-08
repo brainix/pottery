@@ -394,10 +394,13 @@ your `Redlock` will remain available and performant.  Now you can protect
 access to your resource:
 
 ```python
->>> printer_lock.acquire()
-True
->>> # Critical section - print stuff here.
->>> printer_lock.release()
+>>> if printer_lock.acquire():
+...     print('printer_lock is locked')
+...     # Critical section - print stuff here.
+...     printer_lock.release()
+printer_lock is locked
+>>> bool(printer_lock.locked())
+False
 >>>
 ```
 
@@ -405,8 +408,11 @@ Or you can protect access to your resource inside a context manager:
 
 ```python
 >>> with printer_lock:
+...     print('printer_lock is locked')
 ...     # Critical section - print stuff here.
-...     pass
+printer_lock is locked
+>>> bool(printer_lock.locked())
+False
 >>>
 ```
 
@@ -428,12 +434,9 @@ section before it releases its lock).
 
 ```python
 >>> import time
->>> printer_lock.acquire()
-True
->>> bool(printer_lock.locked())
-True
->>> # Critical section - print stuff here.
->>> time.sleep(10)
+>>> if printer_lock.acquire():
+...     # Critical section - print stuff here.
+...     time.sleep(10)
 >>> bool(printer_lock.locked())
 False
 >>>
@@ -444,12 +447,9 @@ then you can specify your own auto release time (in milliseconds):
 
 ```python
 >>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=15*1000)
->>> printer_lock.acquire()
-True
->>> bool(printer_lock.locked())
-True
->>> # Critical section - print stuff here.
->>> time.sleep(10)
+>>> if printer_lock.acquire():
+...     # Critical section - print stuff here.
+...     time.sleep(10)
 >>> bool(printer_lock.locked())
 True
 >>> time.sleep(5)
@@ -498,8 +498,10 @@ manager fails to acquire the lock, it raises the `QuorumNotAchieved` exception.
 ...     with contextlib.suppress(QuorumNotAchieved):
 ...         with printer_lock_2:  # Waits 0.2 seconds; raises QuorumNotAchieved.
 ...             pass
-...     assert printer_lock_1.locked()
-...     assert not printer_lock_2.locked()
+...     print(f"printer_lock_1 is {'locked' if printer_lock_1.locked() else 'unlocked'}")
+...     print(f"printer_lock_2 is {'locked' if printer_lock_2.locked() else 'unlocked'}")
+printer_lock_1 is locked
+printer_lock_2 is unlocked
 >>>
 ```
 
