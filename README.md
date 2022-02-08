@@ -408,8 +408,9 @@ Or you can protect access to your resource inside a context manager:
 
 ```python
 >>> with printer_lock:
-...     assert printer_lock.locked()
+...     print('printer_lock is locked')
 ...     # Critical section - print stuff here.
+printer_lock is locked
 >>> assert not printer_lock.locked()
 >>>
 ```

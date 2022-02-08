@@ -208,13 +208,15 @@ class Redlock(_Scripts):
     You can use a Redlock as a context manager:
 
         >>> with Redlock(key='printer', masters={redis}) as printer_lock:
-        ...     assert printer_lock.locked()
+        ...     print('printer_lock is locked')
         ...     # Critical section - print stuff here.
+        printer_lock is locked
         >>> assert not printer_lock.locked()
 
         >>> with printer_lock:
-        ...     assert printer_lock.locked()
+        ...     print('printer_lock is locked')
         ...     # Critical section - print stuff here.
+        printer_lock is locked
         >>> assert not printer_lock.locked()
     '''
 
