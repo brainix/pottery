@@ -18,32 +18,9 @@
 
 import json
 
+from pottery import RedisDict
+from pottery import RedisList
 from tests.base import TestCase
-
-
-class Incorrect:
-    '''This class defines a .to_dict() and a .to_list() method.
-
-    This means that our monkey patch doesn't know how to JSON serialize
-    Incorrect objects.
-    '''
-
-    def to_dict(self):  # pragma: no cover
-        return {}
-
-    def to_list(self):  # pragma: no cover
-        return []
-
-
-class Correct:
-    '''This class defines a .to_dict() method.
-
-    This means that our monkey patch knows how to JSON serialize Correct
-    objects.
-    '''
-
-    def to_dict(self):
-        return {}
 
 
 class MonkeyPatchTests(TestCase):
@@ -54,20 +31,20 @@ class MonkeyPatchTests(TestCase):
         except TypeError as error:
             assert str(error) == 'Object of type object is not JSON serializable'
 
-    def test_typeerror_multiple_methods(self):
-        "Ensure json.dumps() raises TypeError for objs with multiple .to_* methods"
-        try:
-            json.dumps(Incorrect())
-        except TypeError as error:
-            assert str(error) == (
-                "Incorrect.to_dict(), Incorrect.to_list() defined; "
-                "don't know how to JSONify Incorrect objects"
-            )
-
     def test_dict(self):
         "Ensure that json.dumps() can serialize a dict"
         assert json.dumps({}) == '{}'
 
-    def test_to_dict(self):
-        "Ensure that json.dumps() can serialize an obj with a .to_dict() method"
-        assert json.dumps(Correct()) == '{}'
+    def test_redisdict(self):
+        "Ensure that json.dumps() can serialize a RedisDict"
+        dict_ = RedisDict(redis=self.redis)
+        assert json.dumps(dict_) == '{}'
+
+    def test_list(self):
+        "Ensure that json.dumps() can serialize a list"
+        assert json.dumps([]) == '[]'
+
+    def test_redislist(self):
+        "Ensure that json.dumps() can serialize a RedisList"
+        list_ = RedisList(redis=self.redis)
+        assert json.dumps(list_) == '[]'
