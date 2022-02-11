@@ -49,7 +49,7 @@ class PotteryEncoder(json.JSONEncoder):
                 return o.to_list()  # type: ignore
         return super().default(o)
 
-def _dumps_decorator(func: Callable[..., str]) -> Callable[..., str]:
+def _decorate_dumps(func: Callable[..., str]) -> Callable[..., str]:
     'Decorate json.dumps() to use PotteryEncoder by default.'
     @functools.wraps(func)
     def wrapper(*args: Any,
@@ -59,7 +59,7 @@ def _dumps_decorator(func: Callable[..., str]) -> Callable[..., str]:
         return func(*args, cls=cls, **kwargs)
     return wrapper
 
-json.dumps = _dumps_decorator(json.dumps)
+json.dumps = _decorate_dumps(json.dumps)
 
 logger.info(
     'Monkey patched json.dumps() to be able to JSONify Pottery containers by '
