@@ -22,8 +22,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
-from typing import Callable
 
 # TODO: When we drop support for Python 3.7, change the following import to:
 #   from typing import Final
@@ -34,9 +32,14 @@ logger: Final[logging.Logger] = logging.getLogger('pottery')
 logger.addHandler(logging.NullHandler())
 
 
+import functools  # isort: skip
 import json  # isort: skip
+from typing import Any  # isort: skip
+from typing import Callable  # isort: skip
 
 class PotteryEncoder(json.JSONEncoder):
+    'Custom JSON encoder that can serialize Pottery containers.'
+
     def default(self, o: Any) -> Any:
         from pottery.base import Container
         if isinstance(o, Container):
@@ -46,75 +49,17 @@ class PotteryEncoder(json.JSONEncoder):
                 return o.to_list()  # type: ignore
         return super().default(o)
 
-_python_dumps = json.dumps
+def _dumps_decorator(func: Callable[..., str]) -> Callable[..., str]:
+    'Decorate json.dumps() to use PotteryEncoder by default.'
+    @functools.wraps(func)
+    def wrapper(*args: Any,
+                cls: type[json.JSONEncoder] = PotteryEncoder,
+                **kwargs: Any,
+                ) -> str:
+        return func(*args, cls=cls, **kwargs)
+    return wrapper
 
-def _pottery_dumps(obj: Any,
-                   *,
-                   skipkeys: bool = False,
-                   ensure_ascii: bool = True,
-                   check_circular: bool = True,
-                   allow_nan: bool = True,
-                   cls: type[json.JSONEncoder] | None = PotteryEncoder,
-                   indent: None | int | str = None,
-                   separators: tuple[str, str] | None = None,
-                   default: Callable[[Any], Any] = None,
-                   sort_keys: bool = False,
-                   **kwds: Any,
-                   ) -> str:
-    '''Serialize ``obj`` to a JSON formatted ``str``.
-
-    If ``skipkeys`` is true then ``dict`` keys that are not basic types
-    (``str``, ``int``, ``float``, ``bool``, ``None``) will be skipped
-    instead of raising a ``TypeError``.
-
-    If ``ensure_ascii`` is false, then the return value can contain non-ASCII
-    characters if they appear in strings contained in ``obj``. Otherwise, all
-    such characters are escaped in JSON strings.
-
-    If ``check_circular`` is false, then the circular reference check
-    for container types will be skipped and a circular reference will
-    result in an ``RecursionError`` (or worse).
-
-    If ``allow_nan`` is false, then it will be a ``ValueError`` to
-    serialize out of range ``float`` values (``nan``, ``inf``, ``-inf``) in
-    strict compliance of the JSON specification, instead of using the
-    JavaScript equivalents (``NaN``, ``Infinity``, ``-Infinity``).
-
-    If ``indent`` is a non-negative integer, then JSON array elements and
-    object members will be pretty-printed with that indent level. An indent
-    level of 0 will only insert newlines. ``None`` is the most compact
-    representation.
-
-    If specified, ``separators`` should be an ``(item_separator, key_separator)``
-    tuple.  The default is ``(', ', ': ')`` if *indent* is ``None`` and
-    ``(',', ': ')`` otherwise.  To get the most compact JSON representation,
-    you should specify ``(',', ':')`` to eliminate whitespace.
-
-    ``default(obj)`` is a function that should return a serializable version
-    of obj or raise TypeError. The default simply raises TypeError.
-
-    If *sort_keys* is true (default: ``False``), then the output of
-    dictionaries will be sorted by key.
-
-    To use a custom ``JSONEncoder`` subclass (e.g. one that overrides the
-    ``.default()`` method to serialize additional types), specify it with
-    the ``cls`` kwarg; otherwise ``PotteryEncoder`` is used.
-    '''
-    return _python_dumps(
-        obj,
-        skipkeys=skipkeys,
-        ensure_ascii=ensure_ascii,
-        check_circular=check_circular,
-        allow_nan=allow_nan,
-        cls=cls,
-        indent=indent,
-        separators=separators,
-        default=default,
-        sort_keys=sort_keys,
-        **kwds,
-    )
-
-json.dumps = _pottery_dumps
+json.dumps = _dumps_decorator(json.dumps)
 
 logger.info(
     'Monkey patched json.dumps() to be able to JSONify Pottery containers by '
