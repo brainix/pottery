@@ -274,7 +274,7 @@ class CachedOrderedDict(collections.OrderedDict):
         if value is not self._SENTINEL:  # pragma: no cover
             self._cache[dict_key] = value
             self._misses.discard(dict_key)
-        return super().__setitem__(dict_key, value)
+        super().__setitem__(dict_key, value)
 
     @_set_expiration
     def setdefault(self,
