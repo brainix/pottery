@@ -51,8 +51,8 @@ from .dict import RedisDict
 
 F = TypeVar('F', bound=Callable[..., JSONTypes])
 
-UpdateMap = Mapping[JSONTypes, JSONTypes | object]
-UpdateItem = Tuple[JSONTypes, JSONTypes | object]
+UpdateMap = Mapping[JSONTypes, Union[JSONTypes, object]]
+UpdateItem = Tuple[JSONTypes, Union[JSONTypes, object]]
 UpdateIter = Iterable[UpdateItem]
 UpdateArg = Union[UpdateMap, UpdateIter]
 
