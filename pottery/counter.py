@@ -36,7 +36,7 @@ from typing import cast
 from redis.client import Pipeline
 from typing_extensions import Counter
 
-from .base import JSONTypes
+from .annotations import JSONTypes
 from .dict import RedisDict
 
 

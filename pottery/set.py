@@ -35,9 +35,9 @@ from redis import Redis
 from redis.client import Pipeline
 from typing_extensions import Literal
 
+from .annotations import JSONTypes
 from .base import Container
 from .base import Iterable_
-from .base import JSONTypes
 from .exceptions import InefficientAccessWarning
 from .exceptions import KeyExistsError
 

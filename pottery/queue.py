@@ -29,8 +29,8 @@ from typing import cast
 
 from redis import WatchError
 
+from .annotations import JSONTypes
 from .base import Container
-from .base import JSONTypes
 from .exceptions import QueueEmptyError
 from .timer import ContextTimer
 

@@ -34,8 +34,8 @@ import mmh3
 from typing_extensions import final
 
 from .annotations import F
+from .annotations import JSONTypes
 from .base import Container
-from .base import JSONTypes
 
 
 # TODO: When we drop support for Python 3.7, stop using @_store_on_self().  Use

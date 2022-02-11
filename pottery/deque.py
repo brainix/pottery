@@ -29,7 +29,7 @@ from typing import cast
 from redis import Redis
 from redis.client import Pipeline
 
-from .base import JSONTypes
+from .annotations import JSONTypes
 from .exceptions import InefficientAccessWarning
 from .list import RedisList
 
