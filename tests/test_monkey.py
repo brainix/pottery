@@ -32,19 +32,25 @@ class MonkeyPatchTests(TestCase):
             assert str(error) == 'Object of type object is not JSON serializable'
 
     def test_dict(self):
-        "Ensure that json.dumps() can serialize a dict"
+        'Ensure that json.dumps() can serialize a dict'
         assert json.dumps({}) == '{}'
 
     def test_redisdict(self):
-        "Ensure that json.dumps() can serialize a RedisDict"
+        'Ensure that json.dumps() can serialize a RedisDict'
         dict_ = RedisDict(redis=self.redis)
         assert json.dumps(dict_) == '{}'
 
     def test_list(self):
-        "Ensure that json.dumps() can serialize a list"
+        'Ensure that json.dumps() can serialize a list'
         assert json.dumps([]) == '[]'
 
     def test_redislist(self):
-        "Ensure that json.dumps() can serialize a RedisList"
+        'Ensure that json.dumps() can serialize a RedisList'
         list_ = RedisList(redis=self.redis)
         assert json.dumps(list_) == '[]'
+
+    def test_json_encoder(self):
+        'Ensure that we can pass in the cls keyword argument to json.dumps()'
+        dict_ = RedisDict(redis=self.redis)
+        with self.assertRaises(TypeError):
+            json.dumps(dict_, cls=None)
