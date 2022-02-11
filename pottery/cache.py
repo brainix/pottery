@@ -260,7 +260,7 @@ class CachedOrderedDict(collections.OrderedDict):
                 item = (dict_key, value)
                 items.append(item)
         super().__init__()
-        self.update(items)
+        self.__update(items)
 
     def misses(self) -> Collection[JSONTypes]:
         return frozenset(self._misses)
@@ -348,3 +348,5 @@ class CachedOrderedDict(collections.OrderedDict):
                 self._misses.discard(cast(JSONTypes, dict_key))
             super().__setitem__(dict_key, value)
         self._cache.update(to_cache)
+
+    __update = update
