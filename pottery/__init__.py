@@ -42,6 +42,8 @@ __keywords__: Final[str] = 'Redis client persistent storage'
 __copyright__: Final[str] = f'Copyright © 2015-2022, {__author__}, original author.'
 
 
+from .monkey import PotteryEncoder  # isort: skip
+
 from .exceptions import PotteryError  # isort:skip
 from .exceptions import KeyExistsError  # isort:skip
 from .exceptions import RandomKeyError  # isort:skip
@@ -73,6 +75,8 @@ from .set import RedisSet
 
 
 __all__: Final[Tuple[str, ...]] = (
+    'PotteryEncoder',
+
     'PotteryError',
     'KeyExistsError',
     'RandomKeyError',

@@ -24,10 +24,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Union
-from typing import cast
 
 # TODO: When we drop support for Python 3.7, change the following import to:
 #   from typing import Final
@@ -38,32 +34,89 @@ logger: Final[logging.Logger] = logging.getLogger('pottery')
 logger.addHandler(logging.NullHandler())
 
 
-# Monkey patch the JSON encoder to be able to JSONify any instance of any class
-# that defines a .to_dict(), .to_list(), or .to_str() method (since the encoder
-# already knows how to JSONify dicts, lists, and strings).
-
-def _default(self: Any, obj: Any) -> Dict[str, Any] | List[Any] | str:
-    method_names = ('to_dict', 'to_list', 'to_str')
-    methods = tuple(getattr(obj.__class__, name, None) for name in method_names)
-    methods = tuple(method for method in methods if method is not None)
-    if len(methods) > 1:
-        methods_defined = ', '.join(
-            cast(Callable, method).__qualname__ + '()' for method in methods
-        )
-        raise TypeError(
-            f"{methods_defined} defined; "
-            f"don't know how to JSONify {obj.__class__.__name__} objects"
-        )
-    method = methods[0] if methods else _default.default  # type: ignore
-    return_value = method(obj)  # type: ignore
-    return cast(Union[Dict[str, Any], List[Any], str], return_value)
-
 import json  # isort: skip
-_default.default = json.JSONEncoder().default  # type: ignore
-json.JSONEncoder.default = _default  # type: ignore
+
+class PotteryEncoder(json.JSONEncoder):
+    def default(self, o: Any) -> Any:
+        from pottery.base import Container
+        if isinstance(o, Container):
+            if hasattr(o, 'to_dict'):
+                return o.to_dict()  # type: ignore
+            if hasattr(o, 'to_list'):  # pragma: no cover
+                return o.to_list()  # type: ignore
+        return super().default(o)
+
+_python_dumps = json.dumps
+
+def _pottery_dumps(obj: Any,
+                   *,
+                   skipkeys: bool = False,
+                   ensure_ascii: bool = True,
+                   check_circular: bool = True,
+                   allow_nan: bool = True,
+                   cls: type[json.JSONEncoder] | None = PotteryEncoder,
+                   indent: None | int | str = None,
+                   separators: tuple[str, str] | None = None,
+                   default: Callable[[Any], Any] = None,
+                   sort_keys: bool = False,
+                   **kwds: Any,
+                   ) -> str:
+    '''Serialize ``obj`` to a JSON formatted ``str``.
+
+    If ``skipkeys`` is true then ``dict`` keys that are not basic types
+    (``str``, ``int``, ``float``, ``bool``, ``None``) will be skipped
+    instead of raising a ``TypeError``.
+
+    If ``ensure_ascii`` is false, then the return value can contain non-ASCII
+    characters if they appear in strings contained in ``obj``. Otherwise, all
+    such characters are escaped in JSON strings.
+
+    If ``check_circular`` is false, then the circular reference check
+    for container types will be skipped and a circular reference will
+    result in an ``RecursionError`` (or worse).
+
+    If ``allow_nan`` is false, then it will be a ``ValueError`` to
+    serialize out of range ``float`` values (``nan``, ``inf``, ``-inf``) in
+    strict compliance of the JSON specification, instead of using the
+    JavaScript equivalents (``NaN``, ``Infinity``, ``-Infinity``).
+
+    If ``indent`` is a non-negative integer, then JSON array elements and
+    object members will be pretty-printed with that indent level. An indent
+    level of 0 will only insert newlines. ``None`` is the most compact
+    representation.
+
+    If specified, ``separators`` should be an ``(item_separator, key_separator)``
+    tuple.  The default is ``(', ', ': ')`` if *indent* is ``None`` and
+    ``(',', ': ')`` otherwise.  To get the most compact JSON representation,
+    you should specify ``(',', ':')`` to eliminate whitespace.
+
+    ``default(obj)`` is a function that should return a serializable version
+    of obj or raise TypeError. The default simply raises TypeError.
+
+    If *sort_keys* is true (default: ``False``), then the output of
+    dictionaries will be sorted by key.
+
+    To use a custom ``JSONEncoder`` subclass (e.g. one that overrides the
+    ``.default()`` method to serialize additional types), specify it with
+    the ``cls`` kwarg; otherwise ``PotteryEncoder`` is used.
+    '''
+    return _python_dumps(
+        obj,
+        skipkeys=skipkeys,
+        ensure_ascii=ensure_ascii,
+        check_circular=check_circular,
+        allow_nan=allow_nan,
+        cls=cls,
+        indent=indent,
+        separators=separators,
+        default=default,
+        sort_keys=sort_keys,
+        **kwds,
+    )
+
+json.dumps = _pottery_dumps
 
 logger.info(
-    'Monkey patched json.JSONEncoder.default() to be able to JSONify any '
-    'instance of any class that defines a .to_dict(), .to_list(), or .to_str() '
-    'method'
+    'Monkey patched json.dumps() to be able to JSONify Pottery containers by '
+    'default'
 )
