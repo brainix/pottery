@@ -31,9 +31,9 @@ from typing import cast
 
 from redis import Redis
 
+from .annotations import JSONTypes
 from .annotations import RedisValues
 from .base import Container
-from .base import JSONTypes
 from .base import random_key
 
 

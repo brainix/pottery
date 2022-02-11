@@ -42,8 +42,8 @@ from redis.client import Pipeline
 from typing_extensions import final
 
 from .annotations import F
+from .annotations import JSONTypes
 from .base import Container
-from .base import JSONTypes
 from .exceptions import InefficientAccessWarning
 from .exceptions import KeyExistsError
 

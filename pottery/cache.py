@@ -29,8 +29,11 @@ from typing import ClassVar
 from typing import Collection
 from typing import Hashable
 from typing import Iterable
+from typing import Mapping
 from typing import NamedTuple
+from typing import Tuple
 from typing import TypeVar
+from typing import Union
 from typing import cast
 
 from redis import Redis
@@ -39,14 +42,19 @@ from redis.exceptions import WatchError
 #   from typing import Final
 from typing_extensions import Final
 
-from .base import JSONTypes
+from .annotations import JSONTypes
 from .base import _default_redis
 from .base import logger
 from .base import random_key
-from .dict import InitArg
-from .dict import InitIter
 from .dict import RedisDict
 
+
+F = TypeVar('F', bound=Callable[..., JSONTypes])
+
+UpdateMap = Mapping[JSONTypes, Union[JSONTypes, object]]
+UpdateItem = Tuple[JSONTypes, Union[JSONTypes, object]]
+UpdateIter = Iterable[UpdateItem]
+UpdateArg = Union[UpdateMap, UpdateIter]
 
 _DEFAULT_TIMEOUT: Final[int] = 60   # seconds
 
@@ -66,9 +74,6 @@ class CacheInfo(NamedTuple):
 def _arg_hash(*args: Hashable, **kwargs: Hashable) -> int:
     kwargs_items = frozenset(kwargs.items())
     return hash((args, kwargs_items))
-
-
-F = TypeVar('F', bound=Callable[..., JSONTypes])
 
 
 def redis_cache(*,  # NoQA: C901
@@ -248,13 +253,14 @@ class CachedOrderedDict(collections.OrderedDict):
             )
             for dict_key, encoded_value in zip(dict_keys, encoded_values):
                 if encoded_value is None:
-                    value = self._SENTINEL
                     self._misses.add(dict_key)
+                    value = self._SENTINEL
                 else:
                     value = self._cache._decode(encoded_value)
                 item = (dict_key, value)
                 items.append(item)
-        return super().__init__(items)
+        super().__init__()
+        self.__update(items)
 
     def misses(self) -> Collection[JSONTypes]:
         return frozenset(self._misses)
@@ -265,7 +271,7 @@ class CachedOrderedDict(collections.OrderedDict):
                     value: JSONTypes | object,
                     ) -> None:
         'Set self[dict_key] to value.'
-        if value is not self._SENTINEL:
+        if value is not self._SENTINEL:  # pragma: no cover
             self._cache[dict_key] = value
             self._misses.discard(dict_key)
         return super().__setitem__(dict_key, value)
@@ -318,24 +324,29 @@ class CachedOrderedDict(collections.OrderedDict):
             raise
 
     @_set_expiration
-    def update(self, arg: InitArg = tuple(), **kwargs: JSONTypes) -> None:  # type: ignore
+    def update(self,  # type: ignore
+               arg: UpdateArg = tuple(),
+               **kwargs: JSONTypes | object,
+               ) -> None:
         '''D.update([E, ]**F) -> None.  Update D from dict/iterable E and F.
         If E is present and has an .items() method, then does:  for k in E: D[k] = E[k]
         If E is present and lacks an .items() method, then does:  for k, v in E: D[k] = v
         In either case, this is followed by: for k in F:  D[k] = F[k]
 
         The base class, OrderedDict, has an .update() method that works just
-        fine.  The trouble is that it executes multiple calls to .__setitem__()
-        therefore multiple round trips to Redis.  This overridden .update()
-        makes a single bulk call to Redis.
+        fine.  The trouble is that it executes multiple calls to
+        self.__setitem__() therefore multiple round trips to Redis.  This
+        overridden .update() makes a single bulk call to Redis.
         '''
         to_cache = {}
         if isinstance(arg, collections.abc.Mapping):
             arg = arg.items()
-        items = itertools.chain(cast(InitIter, arg), kwargs.items())
+        items = itertools.chain(arg, kwargs.items())
         for dict_key, value in items:
             if value is not self._SENTINEL:
                 to_cache[dict_key] = value
-                self._misses.discard(dict_key)
+                self._misses.discard(cast(JSONTypes, dict_key))
             super().__setitem__(dict_key, value)
         self._cache.update(to_cache)
+
+    __update = update
