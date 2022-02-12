@@ -137,15 +137,15 @@ class NextId(_Scripts):
 
     __slots__ = ('num_tries',)
 
-    KEY_PREFIX: ClassVar[str] = 'nextid'
-    NUM_TRIES: ClassVar[int] = 3
+    _KEY_PREFIX: ClassVar[str] = 'nextid'
+    _NUM_TRIES: ClassVar[int] = 3
 
     def __init__(self,
                  *,
                  key: str = 'current',
                  masters: Iterable[Redis] = frozenset(),
                  raise_on_redis_errors: bool = False,
-                 num_tries: int = NUM_TRIES,
+                 num_tries: int = _NUM_TRIES,
                  ) -> None:
         '''Initialize a NextId ID generator.
 

@@ -296,7 +296,7 @@ class Primitive(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def KEY_PREFIX(self) -> str:
+    def _KEY_PREFIX(self) -> str:
         'Redis key prefix/namespace.'
 
     __slots__ = ('__key', 'masters', 'raise_on_redis_errors')
@@ -319,7 +319,7 @@ class Primitive(abc.ABC):
 
     @key.setter
     def key(self, value: str) -> None:
-        self.__key = f'{self.KEY_PREFIX}:{value}'
+        self.__key = f'{self._KEY_PREFIX}:{value}'
 
     def _check_enough_masters_up(self,
                                  raise_on_redis_errors: bool | None,
