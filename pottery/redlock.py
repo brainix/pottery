@@ -61,7 +61,6 @@ from redis import RedisError
 from redis.commands.core import Script
 # TODO: When we drop support for Python 3.7, change the following import to:
 #   from typing import Final
-from typing_extensions import Final
 from typing_extensions import Literal
 
 from .annotations import F
@@ -73,9 +72,6 @@ from .exceptions import ReleaseUnlockedLock
 from .exceptions import TooManyExtensions
 from .executor import BailOutExecutor
 from .timer import ContextTimer
-
-
-AUTO_RELEASE_TIME: Final[int] = 10 * 1000
 
 
 class _Scripts(Primitive):
@@ -195,7 +191,7 @@ class Redlock(_Scripts):
     If 10 seconds isn't enough to complete executing your critical section,
     then you can specify your own timeout:
 
-        >>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=15*1000)
+        >>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=15)
         >>> if printer_lock.acquire():
         ...     # Critical section - print stuff here.
         ...     time.sleep(10)
@@ -231,18 +227,19 @@ class Redlock(_Scripts):
         '_extension_num',
     )
 
-    KEY_PREFIX: ClassVar[str] = 'redlock'
-    CLOCK_DRIFT_FACTOR: ClassVar[float] = 0.01
-    RETRY_DELAY: ClassVar[int] = 200
-    NUM_EXTENSIONS: ClassVar[int] = 3
+    _KEY_PREFIX: ClassVar[str] = 'redlock'
+    _AUTO_RELEASE_TIME: ClassVar[float] = 10
+    _CLOCK_DRIFT_FACTOR: ClassVar[float] = 0.01
+    _RETRY_DELAY: ClassVar[float] = .2
+    _NUM_EXTENSIONS: ClassVar[int] = 3
 
     def __init__(self,
                  *,
                  key: str,
                  masters: Iterable[Redis] = frozenset(),
                  raise_on_redis_errors: bool = False,
-                 auto_release_time: int = AUTO_RELEASE_TIME,
-                 num_extensions: int = NUM_EXTENSIONS,
+                 auto_release_time: float = _AUTO_RELEASE_TIME,
+                 num_extensions: int = _NUM_EXTENSIONS,
                  context_manager_blocking: bool = True,
                  context_manager_timeout: float = -1,
                  ) -> None:
@@ -254,7 +251,7 @@ class Redlock(_Scripts):
                 Redlock's state
             raise_on_redis_errors -- whether to raise the QuorumIsImplssible
                 exception when too many Redis masters throw errors
-            auto_release_time -- the timeout in milliseconds by which to
+            auto_release_time -- the timeout in seconds by which to
                 automatically release this Redlock, unless it's already been
                 released
             num_extensions -- the number of times that this Redlock's lease can
@@ -284,7 +281,7 @@ class Redlock(_Scripts):
         acquired = master.set(
             self.key,
             self._uuid,
-            px=self.auto_release_time,
+            px=int(self.auto_release_time * 1000),
             nx=True,
         )
         return bool(acquired)
@@ -301,9 +298,10 @@ class Redlock(_Scripts):
         return ttl
 
     def __extend_master(self, master: Redis) -> bool:
+        auto_release_time_ms = int(self.auto_release_time * 1000)
         extended = cast(Script, self._extend_script)(
             keys=(self.key,),
-            args=(self._uuid, self.auto_release_time),
+            args=(self._uuid, auto_release_time_ms),
             client=master,
         )
         return bool(extended)
@@ -317,7 +315,7 @@ class Redlock(_Scripts):
         return bool(released)
 
     def __drift(self) -> float:
-        return self.auto_release_time * self.CLOCK_DRIFT_FACTOR + 2
+        return self.auto_release_time * self._CLOCK_DRIFT_FACTOR + .002
 
     def __acquire_masters(self,
                           *,
@@ -346,8 +344,8 @@ class Redlock(_Scripts):
                 else:
                     if num_masters_acquired > len(self.masters) // 2:
                         validity_time = self.auto_release_time
-                        validity_time -= round(self.__drift())
-                        validity_time -= timer.elapsed()
+                        validity_time -= self.__drift()
+                        validity_time -= timer.elapsed() / 1000
                         if validity_time > 0:  # pragma: no cover
                             return True
 
@@ -432,7 +430,7 @@ class Redlock(_Scripts):
                             log_time_enqueued(timer, True)
                         return True
                     enqueued = True
-                    delay = random.uniform(0, self.RETRY_DELAY/1000)  # nosec
+                    delay = random.uniform(0, self._RETRY_DELAY)  # nosec
                     time.sleep(delay)
             if enqueued:
                 log_time_enqueued(timer, False)
@@ -445,7 +443,7 @@ class Redlock(_Scripts):
 
     __acquire = acquire
 
-    def locked(self, *, raise_on_redis_errors: bool | None = None) -> int:
+    def locked(self, *, raise_on_redis_errors: bool | None = None) -> float:
         '''How much longer we'll hold the lock (unless we extend or release it).
 
         If we don't currently hold the lock, then this method returns 0.
@@ -468,7 +466,7 @@ class Redlock(_Scripts):
 
             >>> printer_lock_1.acquire()
             True
-            >>> 9 * 1000 < printer_lock_1.locked() < 10 * 1000
+            >>> 9 < printer_lock_1.locked() < 10
             True
             >>> printer_lock_1.release()
 
@@ -492,17 +490,15 @@ class Redlock(_Scripts):
                     )
                 else:
                     if ttl:
-                        ttls.append(ttl)
+                        ttls.append(ttl / 1000)
                         if len(ttls) > len(self.masters) // 2:  # pragma: no cover
                             validity_time = min(ttls)
-                            validity_time -= round(self.__drift())
-                            validity_time -= timer.elapsed()
+                            validity_time -= self.__drift()
+                            validity_time -= timer.elapsed() / 1000
                             return max(validity_time, 0)
 
         self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         return 0
-
-    __locked = locked
 
     def extend(self, *, raise_on_redis_errors: bool | None = None) -> None:
         '''Extend our hold on the lock (if we currently hold it).
@@ -514,13 +510,13 @@ class Redlock(_Scripts):
             >>> printer_lock = Redlock(key='printer', masters={redis})
             >>> printer_lock.acquire()
             True
-            >>> 9 * 1000 < printer_lock.locked() < 10 * 1000
+            >>> 9 < printer_lock.locked() < 10
             True
             >>> time.sleep(1)
-            >>> 8 * 1000 < printer_lock.locked() < 9 * 1000
+            >>> 8 < printer_lock.locked() < 9
             True
             >>> printer_lock.extend()
-            >>> 9 * 1000 < printer_lock.locked() < 10 * 1000
+            >>> 9 < printer_lock.locked() < 10
             True
             >>> printer_lock.release()
         '''
@@ -685,7 +681,7 @@ def synchronize(*,
                 key: str,
                 masters: Iterable[Redis] = frozenset(),
                 raise_on_redis_errors: bool = False,
-                auto_release_time: int = AUTO_RELEASE_TIME,
+                auto_release_time: float = Redlock._AUTO_RELEASE_TIME,
                 blocking: bool = True,
                 timeout: float = -1,
                 ) -> Callable[[F], F]:
@@ -701,9 +697,8 @@ def synchronize(*,
             state
         raise_on_redis_errors -- whether to raise the QuorumIsImplssible
             exception when too many Redis masters throw errors
-        auto_release_time -- the timeout in milliseconds by which to
-            automatically release this Redlock, unless it's already been
-            released
+        auto_release_time -- the timeout in seconds by which to automatically
+            release this Redlock, unless it's already been released
         num_extensions -- the number of times that this Redlock's lease can be
             extended
         context_manager_blocking -- when using this Redlock as a context
@@ -714,7 +709,7 @@ def synchronize(*,
 
     Usage:
 
-        >>> @synchronize(key='synchronized-func', auto_release_time=1500)
+        >>> @synchronize(key='synchronized-func', auto_release_time=1.5)
         ... def func():
         ...     # Only one thread can execute this function at a time.
         ...     return True

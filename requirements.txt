@@ -1,7 +1,7 @@
 bandit==1.7.2
 bleach==4.1.0
 certifi==2021.10.8
-charset-normalizer==2.0.11
+charset-normalizer==2.0.12
 click==8.0.3
 colorama==0.4.4
 coverage==6.3.1
@@ -42,7 +42,7 @@ tomli==2.0.1
 tqdm==4.62.3
 twine==3.8.0
 types-redis==4.1.15
-typing_extensions==4.0.1
+typing_extensions==4.1.1
 urllib3==1.26.8
 webencodings==0.5.1
 wrapt==1.13.3

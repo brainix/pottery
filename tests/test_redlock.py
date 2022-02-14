@@ -46,14 +46,14 @@ class RedlockTests(TestCase):
         self.redlock = Redlock(
             masters={self.redis},
             key='printer',
-            auto_release_time=200,
+            auto_release_time=.2,
         )
 
     def test_acquire_and_time_out(self):
         assert not self.redis.exists(self.redlock.key)
         assert self.redlock.acquire()
         assert self.redis.exists(self.redlock.key)
-        time.sleep(self.redlock.auto_release_time / 1000 + 1)
+        time.sleep(self.redlock.auto_release_time + 1)
         assert not self.redis.exists(self.redlock.key)
 
     def test_acquire_same_lock_twice_blocking_without_timeout(self):
@@ -64,7 +64,7 @@ class RedlockTests(TestCase):
             assert self.redis.exists(self.redlock.key)
             assert self.redlock.acquire()
             assert self.redis.exists(self.redlock.key)
-            assert timer.elapsed() >= self.redlock.auto_release_time
+            assert timer.elapsed() / 1000 >= self.redlock.auto_release_time
             assert info.call_count == 1, f'_logger.info() called {info.call_count} times'
 
     @unittest.skipIf('CI' in os.environ, 'this unit test is flaky on CI')
@@ -84,7 +84,7 @@ class RedlockTests(TestCase):
         assert self.redis.exists(self.redlock.key)
         assert not self.redlock.acquire(blocking=False)
         assert self.redis.exists(self.redlock.key)
-        time.sleep(self.redlock.auto_release_time / 1000 + 1)
+        time.sleep(self.redlock.auto_release_time + 1)
         assert not self.redis.exists(self.redlock.key)
 
     def test_acquire_same_lock_twice_non_blocking_with_timeout(self):
@@ -101,7 +101,7 @@ class RedlockTests(TestCase):
         assert self.redlock.acquire()
         assert self.redis.exists(self.redlock.key)
         assert self.redlock.locked()
-        time.sleep(self.redlock.auto_release_time / 1000 + 1)
+        time.sleep(self.redlock.auto_release_time + 1)
         assert not self.redis.exists(self.redlock.key)
         assert not self.redlock.locked()
 
@@ -154,7 +154,7 @@ class RedlockTests(TestCase):
         assert not self.redis.exists(self.redlock.key)
         with self.assertRaises(ReleaseUnlockedLock), self.redlock:
             assert self.redis.exists(self.redlock.key)
-            time.sleep(self.redlock.auto_release_time / 1000 + 1)
+            time.sleep(self.redlock.auto_release_time + 1)
             assert not self.redis.exists(self.redlock.key)
         assert not self.redis.exists(self.redlock.key)
 
@@ -173,7 +173,7 @@ class RedlockTests(TestCase):
         with self.assertRaises(ReleaseUnlockedLock), self.redlock:
             assert self.redis.exists(self.redlock.key)
             assert self.redlock.locked()
-            time.sleep(self.redlock.auto_release_time / 1000 + 1)
+            time.sleep(self.redlock.auto_release_time + 1)
             assert not self.redis.exists(self.redlock.key)
             assert not self.redlock.locked()
         assert not self.redis.exists(self.redlock.key)
@@ -199,7 +199,7 @@ class RedlockTests(TestCase):
         redlock2 = Redlock(
             masters={self.redis},
             key='printer',
-            auto_release_time=200,
+            auto_release_time=.2,
         )
         with contextlib.suppress(ReleaseUnlockedLock), self.redlock:
             assert self.redlock.locked()
@@ -212,7 +212,7 @@ class RedlockTests(TestCase):
         redlock2 = Redlock(
             masters={self.redis},
             key='printer',
-            auto_release_time=200,
+            auto_release_time=.2,
             context_manager_blocking=False,
         )
         with self.redlock, self.assertRaises(QuorumNotAchieved):
@@ -284,7 +284,7 @@ class SynchronizeTests(TestCase):
         @synchronize(
             key='synchronized-func',
             masters={self.redis},
-            auto_release_time=1500,
+            auto_release_time=1.5,
         )
         def func():
             time.sleep(1)

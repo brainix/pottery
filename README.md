@@ -443,10 +443,10 @@ False
 ```
 
 If 10 seconds isn&rsquo;t enough to complete executing your critical section,
-then you can specify your own auto release time (in milliseconds):
+then you can specify your own auto release time (in seconds):
 
 ```python
->>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=15*1000)
+>>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=15)
 >>> if printer_lock.acquire():
 ...     # Critical section - print stuff here.
 ...     time.sleep(10)
@@ -517,7 +517,7 @@ Here&rsquo;s how to use `synchronize()`:
 
 ```python
 >>> from pottery import synchronize
->>> @synchronize(key='synchronized-func', masters={redis}, auto_release_time=500, blocking=True, timeout=-1)
+>>> @synchronize(key='synchronized-func', masters={redis}, auto_release_time=.5, blocking=True, timeout=-1)
 ... def func():
 ...   # Only one thread can execute this function at a time.
 ...   return True
