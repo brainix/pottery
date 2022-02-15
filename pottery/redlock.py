@@ -410,30 +410,19 @@ class Redlock(_Scripts):
             raise_on_redis_errors=raise_on_redis_errors,
         )
 
-        def log_time_enqueued(timer: ContextTimer, acquired: bool) -> None:
-            key_suffix = self.key.split(':', maxsplit=1)[1]
-            time_enqueued = math.ceil(timer.elapsed())
-            logger.info(
-                'source=pottery sample#redlock.enqueued.%s=%dms sample#redlock.acquired.%s=%d',
-                key_suffix,
-                time_enqueued,
-                key_suffix,
-                acquired,
-            )
-
         if blocking:
             enqueued = False
             with ContextTimer() as timer:
                 while timeout == -1 or timer.elapsed() / 1000 < timeout:
                     if acquire_masters():
                         if enqueued:
-                            log_time_enqueued(timer, True)
+                            self.__log_time_enqueued(timer, True)
                         return True
                     enqueued = True
                     delay = random.uniform(0, self._RETRY_DELAY)  # nosec
                     time.sleep(delay)
             if enqueued:
-                log_time_enqueued(timer, False)
+                self.__log_time_enqueued(timer, False)
             return False
 
         if timeout == -1:
@@ -442,6 +431,17 @@ class Redlock(_Scripts):
         raise ValueError("can't specify a timeout for a non-blocking call")
 
     __acquire = acquire
+
+    def __log_time_enqueued(self, timer: ContextTimer, acquired: bool) -> None:
+        key_suffix = self.key.split(':', maxsplit=1)[1]
+        time_enqueued = math.ceil(timer.elapsed())
+        logger.info(
+            'source=pottery sample#redlock.enqueued.%s=%dms sample#redlock.acquired.%s=%d',
+            key_suffix,
+            time_enqueued,
+            key_suffix,
+            acquired,
+        )
 
     def locked(self, *, raise_on_redis_errors: bool | None = None) -> float:
         '''How much longer we'll hold the lock (unless we extend or release it).
