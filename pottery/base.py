@@ -84,7 +84,7 @@ def random_key(*,
     return key
 
 
-def connection_args(redis: Redis) -> Tuple[str, int, int]:
+def _connection_args(redis: Redis) -> Tuple[str, int, int]:
     return (
         redis.connection_pool.connection_kwargs['host'],
         redis.connection_pool.connection_kwargs.get('port', 6379),
@@ -214,11 +214,12 @@ class _Pipelined(abc.ABC):
     def __context_managers(self,
                            *others: Any,
                            ) -> Generator[ContextManager[Pipeline], None, None]:
-        redises = collections.defaultdict(list)
+        redis_clients = collections.defaultdict(list)
         for container in (self, *others):
             if isinstance(container, _Pipelined):
-                redises[connection_args(container.redis)].append(container)
-        for containers in redises.values():
+                connection = _connection_args(container.redis)
+                redis_clients[connection].append(container)
+        for containers in redis_clients.values():
             keys = (container.key for container in containers)
             pipeline = containers[0].__watch_keys(*keys)
             yield pipeline
@@ -258,14 +259,16 @@ class _Comparable(abc.ABC):
         for other in others:
             if not isinstance(other, _Comparable):
                 return False
-            if connection_args(self.redis) != connection_args(other.redis):
+            if _connection_args(self.redis) != _connection_args(other.redis):
                 return False
         return True
+
+    __same_redis = _same_redis
 
     def __eq__(self, other: Any) -> bool:
         if self is other:
             return True
-        if self._same_redis(other) and self.key == other.key:
+        if self.__same_redis(other) and self.key == other.key:
             return True
 
         warnings.warn(
