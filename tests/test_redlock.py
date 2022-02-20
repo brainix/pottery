@@ -302,3 +302,16 @@ class SynchronizeTests(TestCase):
                 delta = result2 - result1
                 assert 1 < delta < 2
             assert info.call_count == 5, f'_logger.info() called {info.call_count} times'
+
+    def test_synchronize_fails(self):
+        @synchronize(
+            key='synchronized-func',
+            masters={self.redis},
+            auto_release_time=.001,
+            blocking=False,
+        )
+        def func():
+            raise NotImplementedError
+
+        with self.assertRaises(QuorumNotAchieved):
+            func()

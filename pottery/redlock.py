@@ -763,7 +763,7 @@ def _log_synchronize(func: F,
             waiting_timer.elapsed(),
             holding_timer.elapsed(),
         )
-    except RuntimeError:  # pragma: no cover
+    except RuntimeError:
         # holding_timer.elapsed() threw a RuntimeError, which means that
         # holding_timer never started, which means that we never acquired the
         # lock / entered the critical section.
