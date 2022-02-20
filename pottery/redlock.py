@@ -317,10 +317,10 @@ class Redlock(_Scripts):
     def __drift(self) -> float:
         return self.auto_release_time * self._CLOCK_DRIFT_FACTOR + .002
 
-    def __acquire_masters(self,
-                          *,
-                          raise_on_redis_errors: bool | None = None,
-                          ) -> bool:
+    def _acquire_masters(self,
+                         *,
+                         raise_on_redis_errors: bool | None = None,
+                         ) -> bool:
         self._uuid = str(uuid.uuid4())
         self._extension_num = 0
 
@@ -346,13 +346,15 @@ class Redlock(_Scripts):
                         validity_time = self.auto_release_time
                         validity_time -= self.__drift()
                         validity_time -= timer.elapsed() / 1000
-                        if validity_time > 0:  # pragma: no cover
+                        if validity_time > 0:
                             return True
 
         with contextlib.suppress(ReleaseUnlockedLock):
-            self.__release(raise_on_redis_errors=False)
+            self.__release(raise_on_redis_errors=raise_on_redis_errors)
         self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         return False
+
+    __acquire_masters = _acquire_masters
 
     def acquire(self,
                 *,
@@ -480,7 +482,7 @@ class Redlock(_Scripts):
             ttls, redis_errors = [], []
             for future in concurrent.futures.as_completed(futures):
                 try:
-                    ttl = future.result()
+                    ttl = future.result() / 1000
                 except RedisError as error:
                     redis_errors.append(error)
                     logger.exception(
@@ -490,7 +492,7 @@ class Redlock(_Scripts):
                     )
                 else:
                     if ttl:
-                        ttls.append(ttl / 1000)
+                        ttls.append(ttl)
                         if len(ttls) > len(self.masters) // 2:  # pragma: no cover
                             validity_time = min(ttls)
                             validity_time -= self.__drift()
