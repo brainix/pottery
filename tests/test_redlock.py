@@ -49,6 +49,10 @@ class RedlockTests(TestCase):
             auto_release_time=.2,
         )
 
+    def test_acquire_fails_within_auto_release_time(self):
+        self.redlock.auto_release_time = .001
+        assert not self.redlock._acquire_masters()
+
     def test_acquire_and_time_out(self):
         assert not self.redis.exists(self.redlock.key)
         assert self.redlock.acquire()
