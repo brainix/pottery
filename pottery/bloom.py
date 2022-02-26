@@ -21,6 +21,7 @@ import functools
 import itertools
 import math
 import uuid
+import warnings
 from typing import Any
 from typing import Callable
 from typing import Generator
@@ -36,6 +37,7 @@ from typing_extensions import final
 from .annotations import F
 from .annotations import JSONTypes
 from .base import Container
+from .exceptions import InefficientAccessWarning
 
 
 # TODO: When we drop support for Python 3.7, stop using @_store_on_self().  Use
@@ -327,8 +329,15 @@ class BloomFilter(BloomFilterABC, Container):
         functions on each element.
         '''
         with self._watch(*iterables) as pipeline:
+            values = tuple(itertools.chain(*iterables))
+            if len(values) > 1:
+                warnings.warn(
+                    cast(str, InefficientAccessWarning.__doc__),
+                    InefficientAccessWarning,
+                )
+
             bit_offsets: Set[int] = set()
-            for value in itertools.chain(*iterables):
+            for value in values:
                 bit_offsets.update(self._bit_offsets(value))
 
             pipeline.multi()  # Available since Redis 1.2.0
@@ -344,6 +353,12 @@ class BloomFilter(BloomFilterABC, Container):
         But if .contains_many() yields False, then you *must not* have inserted
         it.
         '''
+        if len(values) > 1:
+            warnings.warn(
+                cast(str, InefficientAccessWarning.__doc__),
+                InefficientAccessWarning,
+            )
+
         with self._watch() as pipeline:
             pipeline.multi()  # Available since Redis 1.2.0
             for bit_offset in self._bit_offsets_many(*values):
