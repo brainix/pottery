@@ -634,3 +634,11 @@ class CachedOrderedDictTests(TestCase):
             ('hit2', 'value2'),
             ('hit3', 'value3'),
         ))
+        self.cache_expiration['miss2'] = CachedOrderedDict._SENTINEL
+        assert self.cache_expiration == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', CachedOrderedDict._SENTINEL),
+            ('hit2', 'value2'),
+            ('hit3', 'value3'),
+            ('miss2', CachedOrderedDict._SENTINEL),
+        ))
