@@ -24,6 +24,7 @@
 from __future__ import annotations
 
 import uuid
+import warnings
 from typing import Generator
 from typing import Iterable
 from typing import List
@@ -35,6 +36,7 @@ from .annotations import JSONTypes
 from .annotations import RedisValues
 from .base import Container
 from .base import random_key
+from .exceptions import InefficientAccessWarning
 
 
 class HyperLogLog(Container):
@@ -137,6 +139,13 @@ class HyperLogLog(Container):
                     for value in cast(Iterable[JSONTypes], obj):
                         encoded_value = self._encode(value)
                         encoded_values.append(encoded_value)
+
+            if other_hll_keys or len(encoded_values) > 1:
+                warnings.warn(
+                    cast(str, InefficientAccessWarning.__doc__),
+                    InefficientAccessWarning,
+                )
+
             pipeline.multi()  # Available since Redis 1.2.0
             pipeline.pfmerge(self.key, *other_hll_keys)  # Available since Redis 2.8.9
             pipeline.pfadd(self.key, *encoded_values)  # Available since Redis 2.8.9
@@ -183,6 +192,12 @@ class HyperLogLog(Container):
         But if .contains_many() yields False, then you *must not* have inserted
         it.
         '''
+        if len(values) > 1:
+            warnings.warn(
+                cast(str, InefficientAccessWarning.__doc__),
+                InefficientAccessWarning,
+            )
+
         encoded_values = []
         for value in values:
             try:
