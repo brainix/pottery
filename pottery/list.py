@@ -98,6 +98,11 @@ class RedisList(Container, collections.abc.MutableSequence):
                   ) -> None:
         encoded_values = [self._encode(value) for value in iterable]
         if encoded_values:
+            if len(encoded_values) > 1:
+                warnings.warn(
+                    cast(str, InefficientAccessWarning.__doc__),
+                    InefficientAccessWarning,
+                )
             pipeline.multi()  # Available since Redis 1.2.0
             pipeline.rpush(self.key, *encoded_values)  # Available since Redis 1.0.0
 
