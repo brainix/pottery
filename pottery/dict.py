@@ -77,6 +77,11 @@ class RedisDict(Container, Iterable_, collections.abc.MutableMapping):
         dict_ = dict(items)
         encoded_dict = self.__encode_dict(dict_)
         if encoded_dict:
+            if len(encoded_dict) > 1:
+                warnings.warn(
+                    cast(str, InefficientAccessWarning.__doc__),
+                    InefficientAccessWarning,
+                )
             pipeline.multi()  # Available since Redis 1.2.0
             # Available since Redis 2.0.0:
             pipeline.hset(self.key, mapping=encoded_dict)  # type: ignore
@@ -155,11 +160,12 @@ class RedisDict(Container, Iterable_, collections.abc.MutableMapping):
 
     def to_dict(self) -> Dict[JSONTypes, JSONTypes]:
         'Convert a RedisDict into a plain Python dict.'
-        warnings.warn(
-            cast(str, InefficientAccessWarning.__doc__),
-            InefficientAccessWarning,
-        )
         encoded_items = self.redis.hgetall(self.key).items()  # Available since Redis 2.0.0
+        if encoded_items:
+            warnings.warn(
+                cast(str, InefficientAccessWarning.__doc__),
+                InefficientAccessWarning,
+            )
         dict_ = {
             self._decode(encoded_key): self._decode(encoded_value)
             for encoded_key, encoded_value in encoded_items
