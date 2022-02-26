@@ -271,7 +271,7 @@ class CachedOrderedDict(collections.OrderedDict):
                     value: JSONTypes | object,
                     ) -> None:
         'Set self[dict_key] to value.'
-        if value is not self._SENTINEL:  # pragma: no cover
+        if value is not self._SENTINEL:
             self._cache[dict_key] = value
             self._misses.discard(dict_key)
         super().__setitem__(dict_key, value)
