@@ -363,11 +363,12 @@ class RedisList(Container, collections.abc.MutableSequence):
     @final
     def to_list(self) -> List[JSONTypes]:
         'Convert the RedisList to a Python list.  O(n)'
-        warnings.warn(
-            cast(str, InefficientAccessWarning.__doc__),
-            InefficientAccessWarning,
-        )
         encoded = self.redis.lrange(self.key, 0, -1)  # Available since Redis 1.0.0
+        if encoded:
+            warnings.warn(
+                cast(str, InefficientAccessWarning.__doc__),
+                InefficientAccessWarning,
+            )
         values = [self._decode(value) for value in encoded]
         return values
 
