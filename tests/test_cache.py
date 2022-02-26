@@ -614,3 +614,31 @@ class CachedOrderedDictTests(TestCase):
         assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1
         self.cache_no_expiration['hit4'] = 'value4'
         assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1
+
+    def test_set_sentinel(self):
+        self.cache_expiration = CachedOrderedDict(
+            redis_client=self.redis,
+            redis_key=self._KEY_EXPIRATION,
+            dict_keys=('hit1', 'miss1', 'hit2', 'hit3'),
+        )
+        assert self.cache_expiration == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', CachedOrderedDict._SENTINEL),
+            ('hit2', 'value2'),
+            ('hit3', 'value3'),
+        ))
+        self.cache_expiration['miss1'] = CachedOrderedDict._SENTINEL
+        assert self.cache_expiration == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', CachedOrderedDict._SENTINEL),
+            ('hit2', 'value2'),
+            ('hit3', 'value3'),
+        ))
+        self.cache_expiration['miss2'] = CachedOrderedDict._SENTINEL
+        assert self.cache_expiration == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', CachedOrderedDict._SENTINEL),
+            ('hit2', 'value2'),
+            ('hit3', 'value3'),
+            ('miss2', CachedOrderedDict._SENTINEL),
+        ))
