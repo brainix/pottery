@@ -59,17 +59,19 @@ class RedisSet(Container, Iterable_, collections.abc.MutableSet):
                     raise KeyExistsError(self.redis, self.key)
                 self.__populate(pipeline, iterable)
 
+    def _populate(self,
+                  pipeline: Pipeline,
+                  iterable: Iterable[JSONTypes] = tuple(),
+                  ) -> None:
+        encoded_values = {self._encode(value) for value in iterable}
+        if encoded_values:
+            pipeline.multi()  # Available since Redis 1.2.0
+            pipeline.sadd(self.key, *encoded_values)  # Available since Redis 1.0.0
+
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
     #   https://stackoverflow.com/a/38534939
-    def __populate(self,
-                   pipeline: Pipeline,
-                   iterable: Iterable[JSONTypes] = tuple(),
-                   ) -> None:
-        encoded_values = {self._encode(value) for value in iterable}
-        if encoded_values:  # pragma: no cover
-            pipeline.multi()  # Available since Redis 1.2.0
-            pipeline.sadd(self.key, *encoded_values)  # Available since Redis 1.0.0
+    __populate = _populate
 
     # Methods required by collections.abc.MutableSet:
 

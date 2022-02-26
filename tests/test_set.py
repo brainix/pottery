@@ -347,3 +347,8 @@ class SetTests(TestCase):
     def test_membership_for_non_jsonifyable_element(self):
         redis_set = RedisSet(redis=self.redis)
         assert not BaseException in redis_set
+
+    def test_populate_with_empty_iterable(self):
+        redis_set = RedisSet(redis=self.redis)
+        redis_set._populate(tuple())
+        assert redis_set == set()
