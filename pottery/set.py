@@ -85,6 +85,11 @@ class RedisSet(Container, Iterable_, collections.abc.MutableSet):
 
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         'Yield whether this RedisSet contains multiple elements.  O(n)'
+        warnings.warn(
+            cast(str, InefficientAccessWarning.__doc__),
+            InefficientAccessWarning,
+        )
+
         encoded_values = []
         for value in values:
             try:
