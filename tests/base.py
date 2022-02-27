@@ -41,7 +41,7 @@ class TestCase(unittest.TestCase):
         super().setUp()
 
         # Choose a random Redis database for this test.
-        self.redis_db = random.randint(1, 15)
+        self.redis_db = random.randint(1, 15)  # nosec
         url = f'redis://localhost:6379/{self.redis_db}'
 
         # Set up our Redis clients.

@@ -23,6 +23,7 @@ from typing import Iterable
 from redis.asyncio import Redis as AIORedis  # type: ignore
 
 from .base import AIOPrimitive
+from .redlock import Redlock
 
 
 class AIORedlock(AIOPrimitive):
@@ -33,7 +34,7 @@ class AIORedlock(AIOPrimitive):
         '_extension_num',
     )
 
-    _KEY_PREFIX: ClassVar[str] = 'aioredlock'
+    _KEY_PREFIX: ClassVar[str] = Redlock._KEY_PREFIX
     _AUTO_RELEASE_TIME: ClassVar[float] = 10
     _NUM_EXTENSIONS: ClassVar[int] = 3
 
