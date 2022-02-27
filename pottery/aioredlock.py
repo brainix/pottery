@@ -1,5 +1,5 @@
 # --------------------------------------------------------------------------- #
-#   base.py                                                                   #
+#   aioredlock.py                                                             #
 #                                                                             #
 #   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
@@ -14,50 +14,43 @@
 #   See the License for the specific language governing permissions and       #
 #   limitations under the License.                                            #
 # --------------------------------------------------------------------------- #
+'Asynchronous distributed Redis-powered lock.'
 
 
-import doctest
-import logging
-import random
-import sys
-import unittest
-import warnings
-from typing import NoReturn
+from typing import ClassVar
+from typing import Iterable
 
-from redis import Redis
 from redis.asyncio import Redis as AIORedis  # type: ignore
 
-from pottery import PotteryWarning
-from pottery.base import logger
+from .base import AIOPrimitive
 
 
-class TestCase(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        logger.setLevel(logging.CRITICAL)
-        warnings.filterwarnings('ignore', category=PotteryWarning)
+class AIORedlock(AIOPrimitive):
+    __slots__ = (
+        'auto_release_time',
+        'num_extensions',
+        '_uuid',
+        '_extension_num',
+    )
 
-    def setUp(self) -> None:
-        super().setUp()
+    _KEY_PREFIX: ClassVar[str] = 'aioredlock'
+    _AUTO_RELEASE_TIME: ClassVar[float] = 10
+    _NUM_EXTENSIONS: ClassVar[int] = 3
 
-        # Choose a random Redis database for this test.
-        self.redis_db = random.randint(1, 15)
-        url = f'redis://localhost:6379/{self.redis_db}'
-
-        # Set up our Redis clients.
-        self.redis = Redis.from_url(url, socket_timeout=1)
-        self.redis_decoded_responses = Redis.from_url(
-            url,
-            socket_timeout=1,
-            decode_responses=True,
+    def __init__(self,  # type: ignore
+                 *,
+                 key: str,
+                 masters: Iterable[AIORedis] = frozenset(),
+                 raise_on_redis_errors: bool = False,
+                 auto_release_time: float = _AUTO_RELEASE_TIME,
+                 num_extensions: int = _NUM_EXTENSIONS,
+                 ) -> None:
+        super().__init__(
+            key=key,
+            masters=masters,
+            raise_on_redis_errors=raise_on_redis_errors,
         )
-        self.aioredis = AIORedis.from_url(url, socket_timeout=1)
-
-        # Clean up the Redis database before and after the test.
-        self.redis.flushdb()
-        self.addCleanup(self.redis.flushdb)
-
-
-def run_doctests() -> NoReturn:  # pragma: no cover
-    results = doctest.testmod()
-    sys.exit(bool(results.failed))
+        self.auto_release_time = auto_release_time
+        self.num_extensions = num_extensions
+        self._uuid = ''
+        self._extension_num = 0

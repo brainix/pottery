@@ -40,6 +40,7 @@ from typing import cast
 
 from redis import Redis
 from redis import RedisError
+from redis.asyncio import Redis as AIORedis  # type: ignore
 from redis.client import Pipeline
 # TODO: When we drop support for Python 3.7, change the following imports to:
 #   from typing import Final
@@ -58,6 +59,7 @@ from .monkey import logger
 
 _default_url: Final[str] = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 _default_redis: Final[Redis] = Redis.from_url(_default_url, socket_timeout=1)
+_default_aioredis: Final[AIORedis] = AIORedis.from_url(_default_url, socket_timeout=1)  # type: ignore
 
 
 def random_key(*,
@@ -336,3 +338,9 @@ class Primitive(abc.ABC):
                 self.masters,
                 redis_errors=redis_errors,
             )
+
+
+class AIOPrimitive(Primitive):
+    __slots__: Tuple[str, ...] = tuple()
+
+    _DEFAULT_MASTERS: ClassVar[FrozenSet[AIORedis]] = frozenset({_default_aioredis})  # type: ignore
