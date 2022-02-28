@@ -107,8 +107,8 @@ class AIORedlock(Scripts, AIOPrimitive):
         self._extension_num = 0
 
         with ContextTimer() as timer:
-            futures = (self.__acquire_master(master) for master in self.masters)
-            masters_acquired = await asyncio.gather(*futures)
+            coros = (self.__acquire_master(master) for master in self.masters)
+            masters_acquired = await asyncio.gather(*coros)
             num_masters_acquired = sum(masters_acquired)
             if num_masters_acquired > len(self.masters) // 2:
                 validity_time = self.auto_release_time
@@ -123,8 +123,8 @@ class AIORedlock(Scripts, AIOPrimitive):
 
     async def locked(self) -> float:
         with ContextTimer() as timer:
-            futures = (self.__acquired_master(master) for master in self.masters)
-            ttls: list[float] = await asyncio.gather(*futures)
+            coros = (self.__acquired_master(master) for master in self.masters)
+            ttls: list[float] = await asyncio.gather(*coros)
             if len(ttls) > len(self.masters) // 2:
                 validity_time = min(ttls)
                 validity_time -= self.__drift()
@@ -137,8 +137,8 @@ class AIORedlock(Scripts, AIOPrimitive):
         ...
 
     async def release(self) -> None:
-        futures = (self.__release_master(master) for master in self.masters)
-        masters_released = await asyncio.gather(*futures)
+        coros = (self.__release_master(master) for master in self.masters)
+        masters_released = await asyncio.gather(*coros)
         num_masters_released = sum(masters_released)
         if num_masters_released <= len(self.masters) // 2:
             raise ReleaseUnlockedLock(self.key, self.masters)
