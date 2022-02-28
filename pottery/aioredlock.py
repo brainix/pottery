@@ -41,11 +41,11 @@ from .base import AIOPrimitive
 from .exceptions import QuorumNotAchieved
 from .exceptions import ReleaseUnlockedLock
 from .redlock import Redlock
-from .redlock import _Scripts
+from .redlock import Scripts
 from .timer import ContextTimer
 
 
-class AIORedlock(_Scripts, AIOPrimitive):
+class AIORedlock(Scripts, AIOPrimitive):
     __slots__ = (
         'auto_release_time',
         'num_extensions',

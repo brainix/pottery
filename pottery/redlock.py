@@ -74,7 +74,7 @@ from .executor import BailOutExecutor
 from .timer import ContextTimer
 
 
-class _Scripts:
+class Scripts:
     '''Mixin class to define/register Lua scripts for Redis.
 
     Note that we only have to register these Lua scripts once -- so we do it on
@@ -149,7 +149,7 @@ class _Scripts:
             ''')
 
 
-class Redlock(_Scripts, Primitive):
+class Redlock(Scripts, Primitive):
     '''Distributed Redis-powered lock.
 
     This algorithm safely and reliably provides a mutually-exclusive locking
