@@ -27,10 +27,12 @@ from __future__ import annotations
 from types import TracebackType
 from typing import ClassVar
 from typing import Iterable
-from typing import Literal
 from typing import Type
 
 from redis.asyncio import Redis as AIORedis  # type: ignore
+# TODO: When we drop support for Python 3.7, change the following import to:
+#   from typing import Literal
+from typing_extensions import Literal
 
 from .base import AIOPrimitive
 from .redlock import Redlock

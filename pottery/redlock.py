@@ -60,7 +60,7 @@ from redis import Redis
 from redis import RedisError
 from redis.commands.core import Script
 # TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import Final
+#   from typing import Literal
 from typing_extensions import Literal
 
 from .annotations import F
