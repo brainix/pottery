@@ -20,6 +20,7 @@
 from redis.asyncio import Redis as AIORedis  # type: ignore
 
 from pottery import AIORedlock
+from pottery import ReleaseUnlockedLock
 from tests.base import TestCase
 from tests.base import async_test
 
@@ -39,7 +40,7 @@ class AIORedlockTests(TestCase):
             aioredlock.__dict__
 
     @async_test
-    async def test_locked_and_acquire(self):
+    async def test_locked_acquire_and_release(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
         aioredlock = AIORedlock(
             masters={aioredis},
@@ -49,3 +50,7 @@ class AIORedlockTests(TestCase):
         assert not await aioredlock.locked()
         assert await aioredlock.acquire()
         assert await aioredlock.locked()
+        await aioredlock.release()
+        assert not await aioredlock.locked()
+        with self.assertRaises(ReleaseUnlockedLock):
+            await aioredlock.release()

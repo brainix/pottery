@@ -91,6 +91,14 @@ class AIORedlock(Scripts, AIOPrimitive):
             ttl = 0
         return ttl
 
+    async def __release_master(self, master: AIORedis) -> bool:  # type: ignore
+        released: bool = await self._release_script(  # type: ignore
+            keys=(self.key,),
+            args=(self._uuid,),
+            client=master,
+        )
+        return bool(released)
+
     def __drift(self) -> float:
         return self.auto_release_time * Redlock._CLOCK_DRIFT_FACTOR + .002
 
@@ -129,8 +137,12 @@ class AIORedlock(Scripts, AIOPrimitive):
         ...
 
     async def release(self) -> None:
-        # TODO: Fill me in.
-        ...
+        futures = (self.__release_master(master) for master in self.masters)
+        masters_released = await asyncio.gather(*futures)
+        num_masters_released = sum(masters_released)
+        if num_masters_released > len(self.masters) // 2:
+            return
+        raise
 
     __release = release
 
