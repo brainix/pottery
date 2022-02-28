@@ -20,7 +20,9 @@
 from redis.asyncio import Redis as AIORedis  # type: ignore
 
 from pottery import AIORedlock
+from pottery import ExtendUnlockedLock
 from pottery import ReleaseUnlockedLock
+from pottery.exceptions import TooManyExtensions
 from tests.base import TestCase
 from tests.base import async_test
 
@@ -54,3 +56,20 @@ class AIORedlockTests(TestCase):
         assert not await aioredlock.locked()
         with self.assertRaises(ReleaseUnlockedLock):
             await aioredlock.release()
+
+    @async_test
+    async def test_extend(self):
+        aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+        aioredlock = AIORedlock(
+            masters={aioredis},
+            key='printer',
+            auto_release_time=.2,
+        )
+        with self.assertRaises(ExtendUnlockedLock):
+            await aioredlock.extend()
+        assert await aioredlock.acquire()
+        for extension_num in range(3):
+            with self.subTest(extension_num=extension_num):
+                await aioredlock.extend()
+        with self.assertRaises(TooManyExtensions):
+            await aioredlock.extend()

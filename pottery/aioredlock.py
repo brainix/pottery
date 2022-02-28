@@ -38,8 +38,10 @@ from redis.asyncio import Redis as AIORedis  # type: ignore
 from typing_extensions import Literal
 
 from .base import AIOPrimitive
+from .exceptions import ExtendUnlockedLock
 from .exceptions import QuorumNotAchieved
 from .exceptions import ReleaseUnlockedLock
+from .exceptions import TooManyExtensions
 from .redlock import Redlock
 from .redlock import Scripts
 from .timer import ContextTimer
@@ -91,6 +93,15 @@ class AIORedlock(Scripts, AIOPrimitive):
             ttl = 0
         return ttl
 
+    async def __extend_master(self, master: AIORedis) -> bool:  # type: ignore
+        auto_release_time_ms = int(self.auto_release_time * 1000)
+        extended = await self._extend_script(  # type: ignore
+            keys=(self.key,),
+            args=(self._uuid, auto_release_time_ms),
+            client=master,
+        )
+        return bool(extended)
+
     async def __release_master(self, master: AIORedis) -> bool:  # type: ignore
         released: bool = await self._release_script(  # type: ignore
             keys=(self.key,),
@@ -132,8 +143,17 @@ class AIORedlock(Scripts, AIOPrimitive):
             return max(validity_time, 0)
 
     async def extend(self) -> None:
-        # TODO: Fill me in.
-        ...
+        if self._extension_num >= self.num_extensions:
+            raise TooManyExtensions(self.key, self.masters)
+
+        coros = (self.__extend_master(master) for master in self.masters)
+        masters_extended = await asyncio.gather(*coros)
+        num_masters_extended = sum(masters_extended)
+        if num_masters_extended > len(self.masters) // 2:
+            self._extension_num += 1
+            return
+
+        raise ExtendUnlockedLock(self.key, self.masters)
 
     async def release(self) -> None:
         coros = (self.__release_master(master) for master in self.masters)
