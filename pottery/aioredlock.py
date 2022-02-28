@@ -17,8 +17,18 @@
 'Asynchronous distributed Redis-powered lock.'
 
 
+# TODO: Remove the following import after deferred evaluation of annotations
+# because the default.
+#   1. https://docs.python.org/3/whatsnew/3.7.html#whatsnew37-pep563
+#   2. https://www.python.org/dev/peps/pep-0563/
+#   3. https://www.python.org/dev/peps/pep-0649/
+from __future__ import annotations
+
+from types import TracebackType
 from typing import ClassVar
 from typing import Iterable
+from typing import Literal
+from typing import Type
 
 from redis.asyncio import Redis as AIORedis  # type: ignore
 
@@ -35,23 +45,43 @@ class AIORedlock(AIOPrimitive):
     )
 
     _KEY_PREFIX: ClassVar[str] = Redlock._KEY_PREFIX
-    _AUTO_RELEASE_TIME: ClassVar[float] = 10
-    _NUM_EXTENSIONS: ClassVar[int] = 3
 
     def __init__(self,  # type: ignore
                  *,
                  key: str,
                  masters: Iterable[AIORedis] = frozenset(),
-                 raise_on_redis_errors: bool = False,
-                 auto_release_time: float = _AUTO_RELEASE_TIME,
-                 num_extensions: int = _NUM_EXTENSIONS,
+                 auto_release_time: float = Redlock._AUTO_RELEASE_TIME,
+                 num_extensions: int = Redlock._NUM_EXTENSIONS,
                  ) -> None:
-        super().__init__(
-            key=key,
-            masters=masters,
-            raise_on_redis_errors=raise_on_redis_errors,
-        )
+        super().__init__(key=key, masters=masters)
         self.auto_release_time = auto_release_time
         self.num_extensions = num_extensions
         self._uuid = ''
         self._extension_num = 0
+
+    async def acquire(self) -> Literal[True]:
+        # TODO: Fill me in.
+        return True
+
+    async def locked(self) -> float:
+        # TODO: Fill me in.
+        return 0
+
+    async def extend(self) -> None:
+        # TODO: Fill me in.
+        ...
+
+    async def release(self) -> None:
+        # TODO: Fill me in.
+        ...
+
+    async def __aenter__(self) -> AIORedlock:
+        await self.acquire()
+        return self
+
+    async def __aexit__(self,
+                        exc_type: Type[BaseException] | None,
+                        exc_value: BaseException | None,
+                        traceback: TracebackType | None,
+                        ) -> None:
+        await self.release()
