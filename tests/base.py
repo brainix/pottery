@@ -61,20 +61,19 @@ class TestCase(unittest.TestCase):
         self.addCleanup(self.redis.flushdb)
 
 
-def async_test(coro: F) -> F:
+def async_test(func: F) -> F:
     '''Decorator for async unit tests.
 
     I got this recipe from:
         https://stackoverflow.com/a/46324983
+
+    And I simplified it with:
+        https://docs.python.org/3/library/asyncio-task.html#asyncio.run
     '''
-    @functools.wraps(coro)
+    @functools.wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
-        event_loop = asyncio.new_event_loop()
-        scheduled = coro(*args, **kwargs)
-        try:
-            return event_loop.run_until_complete(scheduled)
-        finally:
-            event_loop.close()
+        coro = func(*args, **kwargs)
+        asyncio.run(coro)
     return cast(F, wrapper)
 
 
