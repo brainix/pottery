@@ -17,10 +17,7 @@
 'Asynchronous distributed Redis-powered lock tests.'
 
 
-import contextlib
-
 from pottery import AIORedlock
-from pottery import ReleaseUnlockedLock
 from tests.base import TestCase
 from tests.base import async_test
 
@@ -35,11 +32,6 @@ class AIORedlockTests(TestCase):
             key='printer',
             auto_release_time=.2,
         )
-
-    def tearDown(self) -> None:
-        with contextlib.suppress(ReleaseUnlockedLock):
-            self.aioredlock.release()
-        return super().tearDown()
 
     def test_slots(self):
         with self.assertRaises(AttributeError):
