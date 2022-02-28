@@ -125,12 +125,11 @@ class AIORedlock(Scripts, AIOPrimitive):
         with ContextTimer() as timer:
             coros = (self.__acquired_master(master) for master in self.masters)
             ttls: list[float] = await asyncio.gather(*coros)
-            if len(ttls) > len(self.masters) // 2:
-                validity_time = min(ttls)
-                validity_time -= self.__drift()
-                validity_time -= timer.elapsed() / 1000
-                return max(validity_time, 0)
-        return 0
+            index = (len(ttls) - 1) // 2  # 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, ...
+            validity_time = sorted(ttls)[index]
+            validity_time -= self.__drift()
+            validity_time -= timer.elapsed() / 1000
+            return max(validity_time, 0)
 
     async def extend(self) -> None:
         # TODO: Fill me in.
