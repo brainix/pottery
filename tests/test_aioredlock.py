@@ -17,7 +17,10 @@
 'Asynchronous distributed Redis-powered lock tests.'
 
 
+import contextlib
+
 from pottery import AIORedlock
+from pottery import ReleaseUnlockedLock
 from tests.base import TestCase
 from tests.base import async_test
 
@@ -39,4 +42,8 @@ class AIORedlockTests(TestCase):
 
     @async_test
     async def test_acquire(self):
-        assert await self.aioredlock.acquire()
+        try:
+            assert await self.aioredlock.acquire()
+        finally:
+            with contextlib.suppress(ReleaseUnlockedLock):
+                await self.aioredlock.release()
