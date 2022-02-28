@@ -87,9 +87,10 @@ class AIORedlock(AIOPrimitive):
         self._extension_num = 0
 
         with ContextTimer() as timer:
-            acquire_masters = (
-                self.__acquire_master(master) for master in self.masters
-            )
+            acquire_masters = []
+            for master in self.masters:
+                acquire_master = self.__acquire_master(master)
+                acquire_masters.append(acquire_master)
             masters_acquired = await asyncio.gather(*acquire_masters)
             num_masters_acquired = sum(masters_acquired)
             if num_masters_acquired > len(self.masters) // 2:
