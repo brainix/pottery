@@ -19,6 +19,7 @@
 
 from pottery import AIORedlock
 from tests.base import TestCase
+from tests.base import async_test
 
 
 class AIORedlockTests(TestCase):
@@ -35,3 +36,7 @@ class AIORedlockTests(TestCase):
     def test_slots(self):
         with self.assertRaises(AttributeError):
             self.aioredlock.__dict__
+
+    @async_test
+    async def test_acquire(self):
+        assert await self.aioredlock.acquire()

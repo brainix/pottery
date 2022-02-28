@@ -16,18 +16,23 @@
 # --------------------------------------------------------------------------- #
 
 
+import asyncio
 import doctest
+import functools
 import logging
 import random
 import sys
 import unittest
 import warnings
+from typing import Any
 from typing import NoReturn
+from typing import cast
 
 from redis import Redis
 from redis.asyncio import Redis as AIORedis  # type: ignore
 
 from pottery import PotteryWarning
+from pottery.annotations import F
 from pottery.base import logger
 
 
@@ -56,6 +61,23 @@ class TestCase(unittest.TestCase):
         # Clean up the Redis database before and after the test.
         self.redis.flushdb()
         self.addCleanup(self.redis.flushdb)
+
+
+def async_test(coro: F) -> F:
+    '''Decorator for async unit tests.
+
+    I got this recipe from:
+        https://stackoverflow.com/a/46324983
+    '''
+    @functools.wraps(coro)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        event_loop = asyncio.new_event_loop()
+        scheduled = coro(*args, **kwargs)
+        try:
+            return event_loop.run_until_complete(scheduled)
+        finally:
+            event_loop.close()
+    return cast(F, wrapper)
 
 
 def run_doctests() -> NoReturn:  # pragma: no cover
