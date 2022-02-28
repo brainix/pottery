@@ -80,6 +80,17 @@ class AIORedlock(Scripts, AIOPrimitive):
         )
         return bool(acquired)
 
+    async def __acquired_master(self, master: AIORedis) -> int:  # type: ignore
+        if self._uuid:
+            ttl: int = await self._acquired_script(  # type: ignore
+                keys=(self.key,),
+                args=(self._uuid,),
+                client=master,
+            )
+        else:
+            ttl = 0
+        return ttl
+
     def __drift(self) -> float:
         return self.auto_release_time * Redlock._CLOCK_DRIFT_FACTOR + .002
 
@@ -103,7 +114,14 @@ class AIORedlock(Scripts, AIOPrimitive):
         raise QuorumNotAchieved(self.key, self.masters)
 
     async def locked(self) -> float:
-        # TODO: Fill me in.
+        with ContextTimer() as timer:
+            futures = (self.__acquired_master(master) for master in self.masters)
+            ttls: list[float] = await asyncio.gather(*futures)
+            if len(ttls) > len(self.masters) // 2:
+                validity_time = min(ttls)
+                validity_time -= self.__drift()
+                validity_time -= timer.elapsed() / 1000
+                return max(validity_time, 0)
         return 0
 
     async def extend(self) -> None:

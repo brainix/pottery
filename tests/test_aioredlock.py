@@ -39,11 +39,13 @@ class AIORedlockTests(TestCase):
             aioredlock.__dict__
 
     @async_test
-    async def test_acquire(self):
+    async def test_locked_and_acquire(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
         aioredlock = AIORedlock(
             masters={aioredis},
             key='printer',
             auto_release_time=.2,
         )
+        assert not await aioredlock.locked()
         assert await aioredlock.acquire()
+        assert await aioredlock.locked()
