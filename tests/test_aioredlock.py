@@ -17,10 +17,9 @@
 'Asynchronous distributed Redis-powered lock tests.'
 
 
-import contextlib
+from redis.asyncio import Redis as AIORedis  # type: ignore
 
 from pottery import AIORedlock
-from pottery import ReleaseUnlockedLock
 from tests.base import TestCase
 from tests.base import async_test
 
@@ -28,22 +27,23 @@ from tests.base import async_test
 class AIORedlockTests(TestCase):
     'Asynchronous distributed Redis-powered lock tests.'
 
-    def setUp(self) -> None:
-        super().setUp()
-        self.aioredlock = AIORedlock(
-            masters={self.aioredis},
+    @async_test
+    async def test_slots(self):
+        aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+        aioredlock = AIORedlock(
+            masters={aioredis},
             key='printer',
             auto_release_time=.2,
         )
-
-    def test_slots(self):
         with self.assertRaises(AttributeError):
-            self.aioredlock.__dict__
+            aioredlock.__dict__
 
     @async_test
     async def test_acquire(self):
-        try:
-            assert await self.aioredlock.acquire()
-        finally:
-            with contextlib.suppress(ReleaseUnlockedLock):
-                await self.aioredlock.release()
+        aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+        aioredlock = AIORedlock(
+            masters={aioredis},
+            key='printer',
+            auto_release_time=.2,
+        )
+        assert await aioredlock.acquire()

@@ -29,7 +29,6 @@ from typing import NoReturn
 from typing import cast
 
 from redis import Redis
-from redis.asyncio import Redis as AIORedis  # type: ignore
 
 from pottery import PotteryWarning
 from pottery.annotations import F
@@ -47,16 +46,15 @@ class TestCase(unittest.TestCase):
 
         # Choose a random Redis database for this test.
         self.redis_db = random.randint(1, 15)  # nosec
-        url = f'redis://localhost:6379/{self.redis_db}'
+        self.redis_url = f'redis://localhost:6379/{self.redis_db}'
 
         # Set up our Redis clients.
-        self.redis = Redis.from_url(url, socket_timeout=1)
+        self.redis = Redis.from_url(self.redis_url, socket_timeout=1)
         self.redis_decoded_responses = Redis.from_url(
-            url,
+            self.redis_url,
             socket_timeout=1,
             decode_responses=True,
         )
-        self.aioredis = AIORedis.from_url(url, socket_timeout=1)
 
         # Clean up the Redis database before and after the test.
         self.redis.flushdb()
