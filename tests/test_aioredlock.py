@@ -74,3 +74,16 @@ class AIORedlockTests(TestCase):
                 await aioredlock.extend()
         with self.assertRaises(TooManyExtensions):
             await aioredlock.extend()
+
+    @async_test
+    async def test_context_manager(self):
+        aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+        aioredlock = AIORedlock(
+            masters={aioredis},
+            key='printer',
+            auto_release_time=.2,
+        )
+        assert not await aioredlock.locked()
+        async with aioredlock:
+            assert await aioredlock.locked()
+        assert not await aioredlock.locked()
