@@ -142,7 +142,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         num_masters_released = sum(masters_released)
         if num_masters_released > len(self.masters) // 2:
             return
-        raise
+        raise ReleaseUnlockedLock(self.key, self.masters)
 
     __release = release
 
