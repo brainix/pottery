@@ -140,9 +140,8 @@ class AIORedlock(Scripts, AIOPrimitive):
         futures = (self.__release_master(master) for master in self.masters)
         masters_released = await asyncio.gather(*futures)
         num_masters_released = sum(masters_released)
-        if num_masters_released > len(self.masters) // 2:
-            return
-        raise ReleaseUnlockedLock(self.key, self.masters)
+        if num_masters_released <= len(self.masters) // 2:
+            raise ReleaseUnlockedLock(self.key, self.masters)
 
     __release = release
 
