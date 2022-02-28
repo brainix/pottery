@@ -21,6 +21,7 @@ from redis.asyncio import Redis as AIORedis  # type: ignore
 
 from pottery import AIORedlock
 from pottery import ExtendUnlockedLock
+from pottery import Redlock
 from pottery import ReleaseUnlockedLock
 from pottery.exceptions import TooManyExtensions
 from tests.base import TestCase
@@ -68,7 +69,7 @@ class AIORedlockTests(TestCase):
         with self.assertRaises(ExtendUnlockedLock):
             await aioredlock.extend()
         assert await aioredlock.acquire()
-        for extension_num in range(3):
+        for extension_num in range(Redlock._NUM_EXTENSIONS):
             with self.subTest(extension_num=extension_num):
                 await aioredlock.extend()
         with self.assertRaises(TooManyExtensions):
