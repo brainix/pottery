@@ -99,7 +99,7 @@ class AIORedlock(Scripts, AIOPrimitive):
                     return True
 
         with contextlib.suppress(ReleaseUnlockedLock):
-            await self.release()
+            await self.__release()
         raise QuorumNotAchieved(self.key, self.masters)
 
     async def locked(self) -> float:
@@ -113,6 +113,8 @@ class AIORedlock(Scripts, AIOPrimitive):
     async def release(self) -> None:
         # TODO: Fill me in.
         ...
+
+    __release = release
 
     async def __aenter__(self) -> AIORedlock:
         await self.acquire()
