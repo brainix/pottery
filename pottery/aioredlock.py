@@ -24,6 +24,9 @@
 #   3. https://www.python.org/dev/peps/pep-0649/
 from __future__ import annotations
 
+import asyncio
+import contextlib
+import uuid
 from types import TracebackType
 from typing import ClassVar
 from typing import Iterable
@@ -35,7 +38,10 @@ from redis.asyncio import Redis as AIORedis  # type: ignore
 from typing_extensions import Literal
 
 from .base import AIOPrimitive
+from .exceptions import QuorumNotAchieved
+from .exceptions import ReleaseUnlockedLock
 from .redlock import Redlock
+from .timer import ContextTimer
 
 
 class AIORedlock(AIOPrimitive):
@@ -61,9 +67,41 @@ class AIORedlock(AIOPrimitive):
         self._uuid = ''
         self._extension_num = 0
 
+    # Preserve the Open-Closed Principle with name mangling.
+    #   https://youtu.be/miGolgp9xq8?t=2086
+    #   https://stackoverflow.com/a/38534939
+    async def __acquire_master(self, master: AIORedis) -> bool:  # type: ignore
+        acquired = await master.set(
+            self.key,
+            self._uuid,
+            px=int(self.auto_release_time * 1000),
+            nx=True,
+        )
+        return bool(acquired)
+
+    def __drift(self) -> float:
+        return self.auto_release_time * Redlock._CLOCK_DRIFT_FACTOR + .002
+
     async def acquire(self) -> Literal[True]:
-        # TODO: Fill me in.
-        return True
+        self._uuid = str(uuid.uuid4())
+        self._extension_num = 0
+
+        with ContextTimer() as timer:
+            acquire_masters = (
+                self.__acquire_master(master) for master in self.masters
+            )
+            masters_acquired = await asyncio.gather(*acquire_masters)
+            num_masters_acquired = sum(masters_acquired)
+            if num_masters_acquired > len(self.masters) // 2:
+                validity_time = self.auto_release_time
+                validity_time -= self.__drift()
+                validity_time -= timer.elapsed() / 1000
+                if validity_time > 0:
+                    return True
+
+        with contextlib.suppress(ReleaseUnlockedLock):
+            await self.release()
+        raise QuorumNotAchieved(self.key, self.masters)
 
     async def locked(self) -> float:
         # TODO: Fill me in.
