@@ -18,8 +18,11 @@
 
 
 import asyncio
+import unittest.mock
 
 from redis.asyncio import Redis as AIORedis  # type: ignore
+from redis.commands.core import AsyncScript  # type: ignore
+from redis.exceptions import TimeoutError
 
 from pottery import AIORedlock
 from pottery import ExtendUnlockedLock
@@ -131,7 +134,62 @@ class AIORedlockTests(TestCase):
                 await aioredlock.release()
 
     @async_test
-    async def test_slots(self):
+    async def test_acquire_rediserror(self):
+        aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+        aioredlock = AIORedlock(
+            masters={aioredis},
+            key='printer',
+            auto_release_time=.2,
+        )
+        with unittest.mock.patch.object(aioredis, 'set') as set:
+            set.side_effect = TimeoutError
+            with self.assertRaises(QuorumNotAchieved):
+                await aioredlock.acquire()
+
+    @async_test
+    async def test_locked_rediserror(self):
+        aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+        aioredlock = AIORedlock(
+            masters={aioredis},
+            key='printer',
+            auto_release_time=0.2,
+        )
+        async with aioredlock:
+            assert await aioredlock.locked()
+            with unittest.mock.patch.object(AsyncScript, '__call__') as __call__:
+                __call__.side_effect = TimeoutError
+                assert not await aioredlock.locked()
+
+    @async_test
+    async def test_extend_rediserror(self):
+        aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+        aioredlock = AIORedlock(
+            masters={aioredis},
+            key='printer',
+            auto_release_time=.2,
+        )
+        async with aioredlock:
+            await aioredlock.extend()
+            with unittest.mock.patch.object(AsyncScript, '__call__') as __call__:
+                __call__.side_effect = TimeoutError
+                with self.assertRaises(ExtendUnlockedLock):
+                    await aioredlock.extend()
+
+    @async_test
+    async def test_release_rediserror(self):
+        aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+        aioredlock = AIORedlock(
+            masters={aioredis},
+            key='printer',
+            auto_release_time=.2,
+        )
+        with unittest.mock.patch.object(AsyncScript, '__call__') as __call__:
+            __call__.side_effect = TimeoutError
+            await aioredlock.acquire()
+            with self.assertRaises(ReleaseUnlockedLock):
+                await aioredlock.release()
+
+    def test_slots(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
         aioredlock = AIORedlock(
             masters={aioredis},
