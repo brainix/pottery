@@ -189,7 +189,8 @@ class AIORedlockTests(TestCase):
             with self.assertRaises(ReleaseUnlockedLock):
                 await aioredlock.release()
 
-    def test_slots(self):
+    @async_test
+    async def test_slots(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
         aioredlock = AIORedlock(
             masters={aioredis},
