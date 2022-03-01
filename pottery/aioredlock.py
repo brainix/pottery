@@ -39,6 +39,7 @@ from redis.asyncio import Redis as AIORedis  # type: ignore
 from typing_extensions import Literal
 
 from .base import AIOPrimitive
+from .base import logger
 from .exceptions import ExtendUnlockedLock
 from .exceptions import QuorumNotAchieved
 from .exceptions import ReleaseUnlockedLock
@@ -119,73 +120,104 @@ class AIORedlock(Scripts, AIOPrimitive):
         self._extension_num = 0
 
         with ContextTimer() as timer:
-            coros = (self.__acquire_master(master) for master in self.masters)
-            results = await asyncio.gather(*coros, return_exceptions=True)
             num_masters_acquired, redis_errors = 0, []
-            for result in results:
-                if isinstance(result, RedisError):
-                    redis_errors.append(result)
-                elif isinstance(result, bool):
-                    num_masters_acquired += result
-                    if num_masters_acquired > len(self.masters) // 2:
-                        validity_time = self.auto_release_time
-                        validity_time -= self.__drift()
-                        validity_time -= timer.elapsed() / 1000
-                        if validity_time > 0:
-                            return True
+            coros = [self.__acquire_master(master) for master in self.masters]
+            for coro in asyncio.as_completed(coros):
+                try:
+                    num_masters_acquired += await coro
+                except RedisError as error:
+                    redis_errors.append(error)
+                    logger.exception(
+                        '%s.acquire() caught %s',
+                        self.__class__.__name__,
+                        error.__class__.__name__,
+                    )
+            if num_masters_acquired > len(self.masters) // 2:
+                validity_time = self.auto_release_time
+                validity_time -= self.__drift()
+                validity_time -= timer.elapsed() / 1000
+                if validity_time > 0:
+                    return True
 
         with contextlib.suppress(ReleaseUnlockedLock):
             await self.__release()
-        raise QuorumNotAchieved(self.key, self.masters)
+        raise QuorumNotAchieved(
+            self.key,
+            self.masters,
+            redis_errors=redis_errors,
+        )
 
     async def locked(self) -> float:
         with ContextTimer() as timer:
-            coros = (self.__acquired_master(master) for master in self.masters)
-            results = await asyncio.gather(*coros, return_exceptions=True)
             ttls, redis_errors = [], []
-            for result in results:
-                if isinstance(result, RedisError):
-                    redis_errors.append(result)
-                elif isinstance(result, int):
-                    ttls.append(result)
-                    if len(ttls) > len(self.masters) // 2:
-                        validity_time: float = min(ttls)
-                        validity_time -= self.__drift()
-                        validity_time -= timer.elapsed() / 1000
-                        return max(validity_time, 0)
+            coros = [self.__acquired_master(master) for master in self.masters]
+            for coro in asyncio.as_completed(coros):
+                try:
+                    ttl = await coro / 1000
+                except RedisError as error:
+                    redis_errors.append(error)
+                    logger.exception(
+                        '%s.locked() caught %s',
+                        self.__class__.__name__,
+                        error.__class__.__name__,
+                    )
+                else:
+                    if ttl:
+                        ttls.append(ttl)
+            if len(ttls) > len(self.masters) // 2:  # pragma: no cover
+                validity_time: float = min(ttls)
+                validity_time -= self.__drift()
+                validity_time -= timer.elapsed() / 1000
+                return max(validity_time, 0)
         return 0
 
     async def extend(self) -> None:
         if self._extension_num >= self.num_extensions:
             raise TooManyExtensions(self.key, self.masters)
 
-        coros = (self.__extend_master(master) for master in self.masters)
-        results = await asyncio.gather(*coros, return_exceptions=True)
         num_masters_extended, redis_errors = 0, []
-        for result in results:
-            if isinstance(result, RedisError):
-                redis_errors.append(result)
-            elif isinstance(result, bool):
-                num_masters_extended += result
-                if num_masters_extended > len(self.masters) // 2:
-                    self._extension_num += 1
-                    return
+        coros = [self.__extend_master(master) for master in self.masters]
+        for coro in asyncio.as_completed(coros):
+            try:
+                num_masters_extended += await coro
+            except RedisError as error:
+                redis_errors.append(error)
+                logger.exception(
+                    '%s.extend() caught %s',
+                    self.__class__.__name__,
+                    error.__class__.__name__,
+                )
+        if num_masters_extended > len(self.masters) // 2:
+            self._extension_num += 1
+            return
 
-        raise ExtendUnlockedLock(self.key, self.masters)
+        raise ExtendUnlockedLock(
+            self.key,
+            self.masters,
+            redis_errors=redis_errors,
+        )
 
     async def release(self) -> None:
-        coros = (self.__release_master(master) for master in self.masters)
-        results = await asyncio.gather(*coros, return_exceptions=True)
         num_masters_released, redis_errors = 0, []
-        for result in results:
-            if isinstance(result, RedisError):
-                redis_errors.append(result)
-            elif isinstance(result, bool):
-                num_masters_released += result
-                if num_masters_released > len(self.masters) // 2:
-                    return
+        coros = [self.__release_master(master) for master in self.masters]
+        for coro in asyncio.as_completed(coros):
+            try:
+                num_masters_released += await coro
+            except RedisError as error:
+                redis_errors.append(error)
+                logger.exception(
+                    '%s.release() caught %s',
+                    self.__class__.__name__,
+                    error.__class__.__name__,
+                )
+        if num_masters_released > len(self.masters) // 2:
+            return
 
-        raise ReleaseUnlockedLock(self.key, self.masters)
+        raise ReleaseUnlockedLock(
+            self.key,
+            self.masters,
+            redis_errors=redis_errors,
+        )
 
     __release = release
 
