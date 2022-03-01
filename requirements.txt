@@ -1,3 +1,4 @@
+async-timeout==4.0.2
 bandit==1.7.2
 bleach==4.1.0
 certifi==2021.10.8
@@ -29,7 +30,7 @@ Pygments==2.11.2
 pyparsing==3.0.7
 PyYAML==6.0
 readme-renderer==32.0
-redis==4.1.4
+redis==4.2.0rc1
 requests==2.27.1
 requests-toolbelt==0.9.1
 rfc3986==2.0.0

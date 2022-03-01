@@ -19,7 +19,10 @@
 # There's a bug in redis-py 3.4.0 that prevents connecting to Redis with
 # authentication (a username and password).  For more info:
 #   https://github.com/andymccurdy/redis-py/issues/1278
-redis>=3.4.1
+#
+# We need redis-py 4.2.0rc1 or later for aioredis.  For more info:
+#   https://github.com/aio-libs/aioredis-py/tree/19be499015a8cf32580e937cbfd711fd48489eca#-aioredis-is-now-in-redis-py-420rc1-
+redis>=4.2.0rc1
 hiredis
 mmh3
 typing_extensions

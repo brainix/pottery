@@ -60,7 +60,7 @@ from redis import Redis
 from redis import RedisError
 from redis.commands.core import Script
 # TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import Final
+#   from typing import Literal
 from typing_extensions import Literal
 
 from .annotations import F
@@ -74,8 +74,8 @@ from .executor import BailOutExecutor
 from .timer import ContextTimer
 
 
-class _Scripts(Primitive):
-    '''Parent class to define/register Lua scripts for Redis.
+class Scripts:
+    '''Mixin class to define/register Lua scripts for Redis.
 
     Note that we only have to register these Lua scripts once -- so we do it on
     the first instantiation of Redlock.
@@ -93,7 +93,7 @@ class _Scripts(Primitive):
                  masters: Iterable[Redis] = frozenset(),
                  raise_on_redis_errors: bool = False,
                  ) -> None:
-        super().__init__(
+        super().__init__(  # type: ignore
             key=key,
             masters=masters,
             raise_on_redis_errors=raise_on_redis_errors,
@@ -109,7 +109,7 @@ class _Scripts(Primitive):
         if self._acquired_script is None:
             class_name = self.__class__.__qualname__
             logger.info('Registering %s._acquired_script', class_name)
-            master = next(iter(self.masters))
+            master = next(iter(self.masters))  # type: ignore
             # Available since Redis 2.6.0:
             self.__class__._acquired_script = master.register_script('''
                 if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -124,7 +124,7 @@ class _Scripts(Primitive):
         if self._extend_script is None:
             class_name = self.__class__.__qualname__
             logger.info('Registering %s._extend_script', class_name)
-            master = next(iter(self.masters))
+            master = next(iter(self.masters))  # type: ignore
             # Available since Redis 2.6.0:
             self.__class__._extend_script = master.register_script('''
                 if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -138,7 +138,7 @@ class _Scripts(Primitive):
         if self._release_script is None:
             class_name = self.__class__.__qualname__
             logger.info('Registering %s._release_script', class_name)
-            master = next(iter(self.masters))
+            master = next(iter(self.masters))  # type: ignore
             # Available since Redis 2.6.0:
             self.__class__._release_script = master.register_script('''
                 if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -149,7 +149,7 @@ class _Scripts(Primitive):
             ''')
 
 
-class Redlock(_Scripts):
+class Redlock(Scripts, Primitive):
     '''Distributed Redis-powered lock.
 
     This algorithm safely and reliably provides a mutually-exclusive locking

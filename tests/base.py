@@ -16,17 +16,22 @@
 # --------------------------------------------------------------------------- #
 
 
+import asyncio
 import doctest
+import functools
 import logging
 import random
 import sys
 import unittest
 import warnings
+from typing import Any
 from typing import NoReturn
+from typing import cast
 
 from redis import Redis
 
 from pottery import PotteryWarning
+from pottery.annotations import F
 from pottery.base import logger
 
 
@@ -40,13 +45,13 @@ class TestCase(unittest.TestCase):
         super().setUp()
 
         # Choose a random Redis database for this test.
-        self.redis_db = random.randint(1, 15)
-        url = f'redis://localhost:6379/{self.redis_db}'
+        self.redis_db = random.randint(1, 15)  # nosec
+        self.redis_url = f'redis://localhost:6379/{self.redis_db}'
 
         # Set up our Redis clients.
-        self.redis = Redis.from_url(url, socket_timeout=1)
+        self.redis = Redis.from_url(self.redis_url, socket_timeout=1)
         self.redis_decoded_responses = Redis.from_url(
-            url,
+            self.redis_url,
             socket_timeout=1,
             decode_responses=True,
         )
@@ -54,6 +59,22 @@ class TestCase(unittest.TestCase):
         # Clean up the Redis database before and after the test.
         self.redis.flushdb()
         self.addCleanup(self.redis.flushdb)
+
+
+def async_test(func: F) -> F:
+    '''Decorator for async unit tests.
+
+    I got this recipe from:
+        https://stackoverflow.com/a/46324983
+
+    And I simplified it with:
+        https://docs.python.org/3/library/asyncio-task.html#asyncio.run
+    '''
+    @functools.wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        coro = func(*args, **kwargs)
+        asyncio.run(coro)
+    return cast(F, wrapper)
 
 
 def run_doctests() -> NoReturn:  # pragma: no cover

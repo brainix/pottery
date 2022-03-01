@@ -57,11 +57,10 @@ from .exceptions import ReleaseUnlockedLock  # isort:skip
 from .exceptions import PotteryWarning  # isort:skip
 from .exceptions import InefficientAccessWarning  # isort:skip
 
-from .bloom import BloomFilter  # isort:skip
 from .cache import CachedOrderedDict  # isort:skip
 from .cache import redis_cache  # isort:skip
-from .hyper import HyperLogLog  # isort:skip
 from .nextid import NextId  # isort:skip
+from .aioredlock import AIORedlock  # isort:skip
 from .redlock import Redlock  # isort:skip
 from .redlock import synchronize  # isort:skip
 from .timer import ContextTimer  # isort:skip
@@ -72,6 +71,10 @@ from .dict import RedisDict
 from .list import RedisList
 from .queue import RedisSimpleQueue
 from .set import RedisSet
+
+
+from .bloom import BloomFilter  # isort:skip
+from .hyper import HyperLogLog  # isort:skip
 
 
 __all__: Final[Tuple[str, ...]] = (
@@ -90,11 +93,10 @@ __all__: Final[Tuple[str, ...]] = (
     'PotteryWarning',
     'InefficientAccessWarning',
 
-    'BloomFilter',
     'CachedOrderedDict',
     'redis_cache',
-    'HyperLogLog',
     'NextId',
+    'AIORedlock',
     'Redlock',
     'synchronize',
     'ContextTimer',
@@ -105,4 +107,6 @@ __all__: Final[Tuple[str, ...]] = (
     'RedisList',
     'RedisSimpleQueue',
     'RedisSet',
+    'BloomFilter',
+    'HyperLogLog',
 )
