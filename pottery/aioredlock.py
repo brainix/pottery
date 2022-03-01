@@ -32,6 +32,7 @@ from typing import ClassVar
 from typing import Iterable
 from typing import Type
 
+from redis import RedisError
 from redis.asyncio import Redis as AIORedis  # type: ignore
 # TODO: When we drop support for Python 3.7, change the following import to:
 #   from typing import Literal
@@ -119,14 +120,19 @@ class AIORedlock(Scripts, AIOPrimitive):
 
         with ContextTimer() as timer:
             coros = (self.__acquire_master(master) for master in self.masters)
-            masters_acquired = await asyncio.gather(*coros)
-            num_masters_acquired = sum(masters_acquired)
-            if num_masters_acquired > len(self.masters) // 2:
-                validity_time = self.auto_release_time
-                validity_time -= self.__drift()
-                validity_time -= timer.elapsed() / 1000
-                if validity_time > 0:
-                    return True
+            results = await asyncio.gather(*coros, return_exceptions=True)
+            num_masters_acquired, redis_errors = 0, []
+            for result in results:
+                if isinstance(result, RedisError):
+                    redis_errors.append(result)
+                elif isinstance(result, bool):
+                    num_masters_acquired += result
+                    if num_masters_acquired > len(self.masters) // 2:
+                        validity_time = self.auto_release_time
+                        validity_time -= self.__drift()
+                        validity_time -= timer.elapsed() / 1000
+                        if validity_time > 0:
+                            return True
 
         with contextlib.suppress(ReleaseUnlockedLock):
             await self.__release()
@@ -135,32 +141,51 @@ class AIORedlock(Scripts, AIOPrimitive):
     async def locked(self) -> float:
         with ContextTimer() as timer:
             coros = (self.__acquired_master(master) for master in self.masters)
-            ttls: list[float] = await asyncio.gather(*coros)
-            index = (len(ttls) - 1) // 2  # 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, ...
-            validity_time = sorted(ttls)[index]
-            validity_time -= self.__drift()
-            validity_time -= timer.elapsed() / 1000
-            return max(validity_time, 0)
+            results = await asyncio.gather(*coros, return_exceptions=True)
+            ttls, redis_errors = [], []
+            for result in results:
+                if isinstance(result, RedisError):
+                    redis_errors.append(result)
+                elif isinstance(result, int):
+                    ttls.append(result)
+                    if len(ttls) > len(self.masters) // 2:
+                        validity_time: float = min(ttls)
+                        validity_time -= self.__drift()
+                        validity_time -= timer.elapsed() / 1000
+                        return max(validity_time, 0)
+        return 0
 
     async def extend(self) -> None:
         if self._extension_num >= self.num_extensions:
             raise TooManyExtensions(self.key, self.masters)
 
         coros = (self.__extend_master(master) for master in self.masters)
-        masters_extended = await asyncio.gather(*coros)
-        num_masters_extended = sum(masters_extended)
-        if num_masters_extended > len(self.masters) // 2:
-            self._extension_num += 1
-            return
+        results = await asyncio.gather(*coros, return_exceptions=True)
+        num_masters_extended, redis_errors = 0, []
+        for result in results:
+            if isinstance(result, RedisError):
+                redis_errors.append(result)
+            elif isinstance(result, bool):
+                num_masters_extended += result
+                if num_masters_extended > len(self.masters) // 2:
+                    self._extension_num += 1
+                    return
 
         raise ExtendUnlockedLock(self.key, self.masters)
 
     async def release(self) -> None:
         coros = (self.__release_master(master) for master in self.masters)
-        masters_released = await asyncio.gather(*coros)
-        num_masters_released = sum(masters_released)
-        if num_masters_released <= len(self.masters) // 2:
-            raise ReleaseUnlockedLock(self.key, self.masters)
+        results = await asyncio.gather(*coros, return_exceptions=True)
+        num_masters_released, redis_errors = 0, []
+        for result in results:
+            if isinstance(result, RedisError):
+                redis_errors.append(result)
+            elif isinstance(result, bool):
+                num_masters_released += result
+                if num_masters_released > len(self.masters) // 2:
+                    return
+
+        raise ReleaseUnlockedLock(self.key, self.masters)
 
     __release = release
 
