@@ -37,8 +37,11 @@ from tests.base import async_test
 class AIORedlockTests(TestCase):
     'Asynchronous distributed Redis-powered lock tests.'
 
-    def setUp(self) -> None:
-        super().setUp()
+    # TODO: When we drop support for Python 3.9, change the following method to
+    # setUp().
+    #
+    # https://github.com/brainix/pottery/runs/5384161828?check_suite_focus=true
+    def _setup(self) -> None:
         self.aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
         self.aioredlock = AIORedlock(
             masters={self.aioredis},
@@ -48,6 +51,7 @@ class AIORedlockTests(TestCase):
 
     @async_test
     async def test_locked_acquire_and_release(self):
+        self._setup()
         assert not await self.aioredlock.locked()
         assert await self.aioredlock.acquire()
         assert await self.aioredlock.locked()
@@ -58,6 +62,7 @@ class AIORedlockTests(TestCase):
 
     @async_test
     async def test_extend(self):
+        self._setup()
         with self.assertRaises(ExtendUnlockedLock):
             await self.aioredlock.extend()
         assert await self.aioredlock.acquire()
@@ -69,6 +74,7 @@ class AIORedlockTests(TestCase):
 
     @async_test
     async def test_context_manager(self):
+        self._setup()
         assert not await self.aioredlock.locked()
         async with self.aioredlock:
             assert await self.aioredlock.locked()
@@ -76,12 +82,14 @@ class AIORedlockTests(TestCase):
 
     @async_test
     async def test_acquire_fails_within_auto_release_time(self):
+        self._setup()
         self.aioredlock.auto_release_time = .001
         with self.assertRaises(QuorumNotAchieved):
             await self.aioredlock.acquire()
 
     @async_test
     async def test_acquire_and_time_out(self):
+        self._setup()
         assert not await self.aioredlock.locked()
         assert await self.aioredlock.acquire()
         assert await self.aioredlock.locked()
@@ -90,6 +98,7 @@ class AIORedlockTests(TestCase):
 
     @async_test
     async def test_context_manager_time_out_before_exit(self):
+        self._setup()
         with self.assertRaises(ReleaseUnlockedLock):
             async with self.aioredlock:
                 await asyncio.sleep(self.aioredlock.auto_release_time + 1)
@@ -97,12 +106,14 @@ class AIORedlockTests(TestCase):
 
     @async_test
     async def test_context_manager_release_before_exit(self):
+        self._setup()
         with self.assertRaises(ReleaseUnlockedLock):
             async with self.aioredlock:
                 await self.aioredlock.release()
 
     @async_test
     async def test_acquire_rediserror(self):
+        self._setup()
         with unittest.mock.patch.object(self.aioredis, 'set') as set:
             set.side_effect = TimeoutError
             with self.assertRaises(QuorumNotAchieved):
@@ -110,6 +121,7 @@ class AIORedlockTests(TestCase):
 
     @async_test
     async def test_locked_rediserror(self):
+        self._setup()
         async with self.aioredlock:
             assert await self.aioredlock.locked()
             with unittest.mock.patch.object(AsyncScript, '__call__') as __call__:
@@ -118,6 +130,7 @@ class AIORedlockTests(TestCase):
 
     @async_test
     async def test_extend_rediserror(self):
+        self._setup()
         async with self.aioredlock:
             await self.aioredlock.extend()
             with unittest.mock.patch.object(AsyncScript, '__call__') as __call__:
@@ -127,6 +140,7 @@ class AIORedlockTests(TestCase):
 
     @async_test
     async def test_release_rediserror(self):
+        self._setup()
         with unittest.mock.patch.object(AsyncScript, '__call__') as __call__:
             __call__.side_effect = TimeoutError
             await self.aioredlock.acquire()
@@ -135,5 +149,6 @@ class AIORedlockTests(TestCase):
 
     @async_test
     async def test_slots(self):
+        self._setup()
         with self.assertRaises(AttributeError):
             self.aioredlock.__dict__
