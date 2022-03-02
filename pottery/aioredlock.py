@@ -164,7 +164,7 @@ class AIORedlock(Scripts, AIOPrimitive):
                 else:
                     if ttl:
                         ttls.append(ttl)
-            if len(ttls) > len(self.masters) // 2:  # pragma: no cover
+            if len(ttls) > len(self.masters) // 2:
                 index = len(self.masters) // 2 - (not len(self.masters) % 2)
                 validity_time: float = sorted(ttls)[index]
                 validity_time -= self.__drift()
