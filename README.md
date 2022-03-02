@@ -29,7 +29,8 @@ been battle tested in production at scale.
 - [Queues 🚶‍♂️🚶‍♀️🚶‍♂️](#queues)
 - [Redlock 🔒](#redlock)
     - [synchronize() 👯‍♀️](#synchronize)
-- [NextID 🔢](#nextid)
+- [AIORedlock 🔒](#aioredlock)
+- [NextId 🔢](#nextid)
 - [redis_cache()](#redis_cache)
 - [CachedOrderedDict](#cachedordereddict)
 - [Bloom filters 🌸](#bloom-filters)
@@ -526,17 +527,63 @@ Here&rsquo;s how to use `synchronize()`:
 ```
 
 
-## <a name="nextid"></a>NextID 🔢
 
-`NextID` safely and reliably produces increasing IDs across threads, processes,
+## <a name="aioredlock"></a>AIORedlock 🔒
+
+`AIORedlock` is the asyncio implementation of Redlock, compatible with
+Python&rsquo;s
+[`asyncio.Lock`](https://docs.python.org/3/library/asyncio-sync.html#lock).
+
+Instantiate an `AIORedlock` and protect a resource:
+
+```python
+>>> import asyncio
+>>> from redis.asyncio import Redis as AIORedis
+>>> from pottery import AIORedlock
+>>> aioredis = AIORedis.from_url('redis://localhost:6379/1')
+>>> async def main():
+...     shower = AIORedlock(key='shower', masters={aioredis})
+...     await shower.acquire()
+...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+...     # Critical section - print stuff here.
+...     await shower.release()
+...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+...
+>>> asyncio.run(main())
+shower is occupied
+shower is available
+>>>
+```
+
+Or you can protect access to your resource inside a context manager:
+
+```python
+>>> asyncio.set_event_loop(asyncio.new_event_loop())
+>>> async def main():
+...     shower = AIORedlock(key='shower', masters={aioredis})
+...     async with shower:
+...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+...
+>>> asyncio.run(main())
+shower is occupied
+shower is available
+>>>
+```
+
+
+
+## <a name="nextid"></a>NextId 🔢
+
+`NextId` safely and reliably produces increasing IDs across threads, processes,
 and even machines, without a single point of failure.  [Rationale and algorithm
 description.](http://antirez.com/news/102)
 
 Instantiate an ID generator:
 
 ```python
->>> from pottery import NextID
->>> tweet_ids = NextID(key='tweet-ids', masters={redis})
+>>> from pottery import NextId
+>>> tweet_ids = NextId(key='tweet-ids', masters={redis})
 >>>
 ```
 
