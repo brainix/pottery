@@ -51,7 +51,7 @@ from .exceptions import QuorumNotAchieved
 from .executor import BailOutExecutor
 
 
-class _Scripts(Primitive):
+class Scripts:
     '''Parent class to define/register Lua scripts for Redis.
 
     Note that we only have to register these Lua scripts once -- so we do it on
@@ -68,7 +68,7 @@ class _Scripts(Primitive):
                  masters: Iterable[Redis] = frozenset(),
                  raise_on_redis_errors: bool = False,
                  ) -> None:
-        super().__init__(
+        super().__init__(  # type: ignore
             key=key,
             masters=masters,
             raise_on_redis_errors=raise_on_redis_errors,
@@ -82,7 +82,7 @@ class _Scripts(Primitive):
         if self._set_id_script is None:
             class_name = self.__class__.__qualname__
             logger.info('Registering %s._set_id_script', class_name)
-            master = next(iter(self.masters))
+            master = next(iter(self.masters))  # type: ignore
             # Available since Redis 2.6.0:
             self.__class__._set_id_script = master.register_script('''
                 local curr = tonumber(redis.call('get', KEYS[1]))
@@ -96,7 +96,7 @@ class _Scripts(Primitive):
             ''')
 
 
-class NextId(_Scripts):
+class NextId(Scripts, Primitive):
     '''Distributed Redis-powered monotonically increasing ID generator.
 
     This algorithm safely and reliably produces monotonically increasing IDs
