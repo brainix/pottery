@@ -1,5 +1,5 @@
 async-timeout==4.0.2
-bandit==1.7.2
+bandit==1.7.3
 bleach==4.1.0
 certifi==2021.10.8
 charset-normalizer==2.0.12
@@ -40,7 +40,7 @@ smmap==5.0.0
 stevedore==3.5.0
 toml==0.10.2
 tomli==2.0.1
-tqdm==4.62.3
+tqdm==4.63.0
 twine==3.8.0
 types-redis==4.1.17
 typing_extensions==4.1.1
