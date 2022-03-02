@@ -18,6 +18,7 @@
 
 
 import asyncio
+import sys
 import unittest.mock
 
 from redis.asyncio import Redis as AIORedis  # type: ignore
@@ -37,17 +38,29 @@ from tests.base import async_test
 class AIORedlockTests(TestCase):
     'Asynchronous distributed Redis-powered lock tests.'
 
-    # TODO: When we drop support for Python 3.9, change the following method to
-    # setUp().
+    def setUp(self) -> None:
+        super().setUp()
+        # TODO: When we drop support for Python 3.9, delete the following if
+        # condition.
+        if sys.version_info > (3, 10):
+            self.aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+            self.aioredlock = AIORedlock(
+                masters={self.aioredis},
+                key='printer',
+                auto_release_time=.2,
+            )
+
+    # TODO: When we drop support for Python 3.9, delete the following method.
     #
     # https://github.com/brainix/pottery/runs/5384161828?check_suite_focus=true
     def _setup(self) -> None:
-        self.aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        self.aioredlock = AIORedlock(
-            masters={self.aioredis},
-            key='printer',
-            auto_release_time=.2,
-        )
+        if sys.version_info < (3, 10):
+            self.aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+            self.aioredlock = AIORedlock(
+                masters={self.aioredis},
+                key='printer',
+                auto_release_time=.2,
+            )
 
     @async_test
     async def test_locked_acquire_and_release(self):

@@ -79,4 +79,5 @@ def async_test(func: F) -> F:
 
 def run_doctests() -> NoReturn:  # pragma: no cover
     results = doctest.testmod()
-    sys.exit(bool(results.failed))
+    status = bool(results.failed)
+    sys.exit(status)
