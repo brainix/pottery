@@ -204,7 +204,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         key_suffix = self.key.split(':', maxsplit=1)[1]
         time_enqueued = math.ceil(timer.elapsed())
         logger.info(
-            'source=pottery sample#redlock.enqueued.%s=%dms sample#redlock.acquired.%s=%d',
+            'source=pottery sample#aioredlock.enqueued.%s=%dms sample#aioredlock.acquired.%s=%d',
             key_suffix,
             time_enqueued,
             key_suffix,
