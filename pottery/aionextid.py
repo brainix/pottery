@@ -59,6 +59,17 @@ class AIONextID(Scripts, AIOPrimitive):
         current_id = await master.get(self.key) or b'0'
         return int(current_id)
 
+    async def __set_current_id(self,  # type: ignore
+                               master: AIORedis,
+                               value: int,
+                               ) -> int | None:
+        current_id: int | None = await self._set_id_script(  # type: ignore
+            keys=(self.key,),
+            args=(value,),
+            client=master,
+        )
+        return current_id
+
     async def __get_current_ids(self) -> int:
         current_ids, redis_errors = [], []
         coros = [self.__get_current_id(master) for master in self.masters]
@@ -76,6 +87,27 @@ class AIONextID(Scripts, AIOPrimitive):
                 current_ids.append(current_id)
         if len(current_ids) > len(self.masters) // 2:
             return max(current_ids)
+        raise QuorumNotAchieved(
+            self.key,
+            self.masters,
+            redis_errors=redis_errors,
+        )
+
+    async def __set_current_ids(self, value: int) -> None:
+        num_masters_set, redis_errors = 0, []
+        coros = [self.__set_current_id(master, value) for master in self.masters]
+        for coro in asyncio.as_completed(coros):
+            try:
+                num_masters_set += await coro == value
+            except RedisError as error:
+                redis_errors.append(error)
+                logger.exception(
+                    '%s.__set_current_ids() caught %s',
+                    self.__class__.__name__,
+                    error.__class__.__name__,
+                )
+        if num_masters_set > len(self.masters) // 2:
+            return
         raise QuorumNotAchieved(
             self.key,
             self.masters,
