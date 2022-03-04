@@ -425,7 +425,7 @@ class Redlock(Scripts, Primitive):
                     time.sleep(delay)
             if enqueued:  # pragma: no cover
                 self.__log_time_enqueued(timer, False)
-            return False
+            return False  # pragma: no cover
 
         if timeout == -1:
             return acquire_masters()
