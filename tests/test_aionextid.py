@@ -18,6 +18,7 @@
 
 
 import sys
+import unittest
 
 from redis.asyncio import Redis as AIORedis  # type: ignore
 
@@ -86,6 +87,7 @@ class AIONextIDTests(TestCase):
                 got = await anext(self.aioids)
                 assert got == expected
 
+    @unittest.skipIf(sys.version_info < (3, 10), 'Python 3.10+ required')  # pragma: no cover
     def test_aiter(self):
         self._setup()
         assert aiter(self.aioids) is self.aioids
