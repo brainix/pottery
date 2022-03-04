@@ -423,9 +423,9 @@ class Redlock(Scripts, Primitive):
                     enqueued = True
                     delay = random.uniform(0, self._RETRY_DELAY)  # nosec
                     time.sleep(delay)
-            if enqueued:
+            if enqueued:  # pragma: no cover
                 self.__log_time_enqueued(timer, False)
-            return False
+            return False  # pragma: no cover
 
         if timeout == -1:
             return acquire_masters()

@@ -94,11 +94,31 @@ class AIORedlockTests(TestCase):
         assert not await self.aioredlock.locked()
 
     @async_test
+    async def test_context_manager_extend(self):
+        self._setup()
+        with self.assertRaises(ExtendUnlockedLock):
+            await self.aioredlock.extend()
+        async with self.aioredlock:
+            for extension_num in range(Redlock._NUM_EXTENSIONS):
+                with self.subTest(extension_num=extension_num):
+                    await self.aioredlock.extend()
+            with self.assertRaises(TooManyExtensions):
+                await self.aioredlock.extend()
+
+    @async_test
     async def test_acquire_fails_within_auto_release_time(self):
         self._setup()
         self.aioredlock.auto_release_time = .001
         with self.assertRaises(QuorumNotAchieved):
             await self.aioredlock.acquire()
+
+    @async_test
+    async def test_context_manager_fails_within_auto_release_time(self):
+        self._setup()
+        self.aioredlock.auto_release_time = .001
+        with self.assertRaises(QuorumNotAchieved):
+            async with self.aioredlock:  # pragma: no cover
+                ...
 
     @async_test
     async def test_acquire_and_time_out(self):
