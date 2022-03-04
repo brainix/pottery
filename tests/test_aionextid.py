@@ -31,6 +31,7 @@ class AIONextIDTests(TestCase):
 
     def setUp(self) -> None:
         super().setUp()
+        self.redis.unlink('nextid:current')
         # TODO: When we drop support for Python 3.9, delete the following if
         # condition.
         if sys.version_info > (3, 10):  # pragma: no cover
@@ -44,6 +45,13 @@ class AIONextIDTests(TestCase):
         if sys.version_info < (3, 10):  # pragma: no cover
             self.aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
             self.aioids = AIONextID(masters={self.aioredis})
+
+    @async_test
+    async def test_aionextid(self):
+        for expected in range(1, 10):
+            with self.subTest(expected=expected):
+                got = await anext(self.aioids)
+                assert got == expected
 
     @async_test
     async def test_slots(self):
