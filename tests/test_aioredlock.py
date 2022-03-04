@@ -27,9 +27,9 @@ from redis.exceptions import TimeoutError
 
 from pottery import AIORedlock
 from pottery import ExtendUnlockedLock
+from pottery import QuorumNotAchieved
 from pottery import Redlock
 from pottery import ReleaseUnlockedLock
-from pottery.exceptions import QuorumNotAchieved
 from pottery.exceptions import TooManyExtensions
 from tests.base import TestCase
 from tests.base import async_test
@@ -109,13 +109,13 @@ class AIORedlockTests(TestCase):
     async def test_acquire_fails_within_auto_release_time(self):
         self._setup()
         self.aioredlock.auto_release_time = .001
-        with self.assertRaises(QuorumNotAchieved):
-            await self.aioredlock.acquire()
+        assert not await self.aioredlock.acquire(blocking=False)
 
     @async_test
     async def test_context_manager_fails_within_auto_release_time(self):
         self._setup()
         self.aioredlock.auto_release_time = .001
+        self.aioredlock.context_manager_blocking = False
         with self.assertRaises(QuorumNotAchieved):
             async with self.aioredlock:  # pragma: no cover
                 ...
@@ -149,8 +149,7 @@ class AIORedlockTests(TestCase):
         self._setup()
         with unittest.mock.patch.object(self.aioredis, 'set') as set:
             set.side_effect = TimeoutError
-            with self.assertRaises(QuorumNotAchieved):
-                await self.aioredlock.acquire()
+            assert not await self.aioredlock.acquire(blocking=False)
 
     @async_test
     async def test_locked_rediserror(self):

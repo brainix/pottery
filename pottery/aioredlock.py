@@ -26,6 +26,9 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import functools
+import math
+import random
 import uuid
 from types import TracebackType
 from typing import ClassVar
@@ -34,9 +37,6 @@ from typing import Type
 
 from redis import RedisError
 from redis.asyncio import Redis as AIORedis  # type: ignore
-# TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import Literal
-from typing_extensions import Literal
 
 from .base import AIOPrimitive
 from .base import logger
@@ -53,22 +53,40 @@ class AIORedlock(Scripts, AIOPrimitive):
     __slots__ = (
         'auto_release_time',
         'num_extensions',
+        'context_manager_blocking',
+        'context_manager_timeout',
         '_uuid',
         '_extension_num',
     )
 
     _KEY_PREFIX: ClassVar[str] = Redlock._KEY_PREFIX
+    _AUTO_RELEASE_TIME: ClassVar[float] = Redlock._AUTO_RELEASE_TIME
+    _CLOCK_DRIFT_FACTOR: ClassVar[float] = Redlock._CLOCK_DRIFT_FACTOR
+    _RETRY_DELAY: ClassVar[float] = Redlock._RETRY_DELAY
+    _NUM_EXTENSIONS: ClassVar[int] = Redlock._NUM_EXTENSIONS
 
     def __init__(self,  # type: ignore
                  *,
                  key: str,
                  masters: Iterable[AIORedis] = frozenset(),
-                 auto_release_time: float = Redlock._AUTO_RELEASE_TIME,
-                 num_extensions: int = Redlock._NUM_EXTENSIONS,
+                 raise_on_redis_errors: bool = False,
+                 auto_release_time: float = _AUTO_RELEASE_TIME,
+                 num_extensions: int = _NUM_EXTENSIONS,
+                 context_manager_blocking: bool = True,
+                 context_manager_timeout: float = -1,
                  ) -> None:
-        super().__init__(key=key, masters=masters)
+        if not context_manager_blocking and context_manager_timeout != -1:
+            raise ValueError("can't specify a timeout for a non-blocking call")
+
+        super().__init__(
+            key=key,
+            masters=masters,
+            raise_on_redis_errors=raise_on_redis_errors,
+        )
         self.auto_release_time = auto_release_time
         self.num_extensions = num_extensions
+        self.context_manager_blocking = context_manager_blocking
+        self.context_manager_timeout = context_manager_timeout
         self._uuid = ''
         self._extension_num = 0
 
@@ -113,9 +131,12 @@ class AIORedlock(Scripts, AIOPrimitive):
         return bool(released)
 
     def __drift(self) -> float:
-        return self.auto_release_time * Redlock._CLOCK_DRIFT_FACTOR + .002
+        return self.auto_release_time * self._CLOCK_DRIFT_FACTOR + .002
 
-    async def acquire(self) -> Literal[True]:
+    async def _acquire_masters(self,
+                               *,
+                               raise_on_redis_errors: bool | None = None,
+                               ) -> bool:
         self._uuid = str(uuid.uuid4())
         self._extension_num = 0
 
@@ -128,7 +149,7 @@ class AIORedlock(Scripts, AIOPrimitive):
                 except RedisError as error:
                     redis_errors.append(error)
                     logger.exception(
-                        '%s.acquire() caught %s',
+                        '%s.__acquire_masters() caught %s',
                         self.__class__.__name__,
                         error.__class__.__name__,
                     )
@@ -141,13 +162,59 @@ class AIORedlock(Scripts, AIOPrimitive):
 
         with contextlib.suppress(ReleaseUnlockedLock):
             await self.__release()
-        raise QuorumNotAchieved(
-            self.key,
-            self.masters,
-            redis_errors=redis_errors,
+        self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
+        return False
+
+    __acquire_masters = _acquire_masters
+
+    async def acquire(self,
+                      *,
+                      blocking: bool = True,
+                      timeout: float = -1,
+                      raise_on_redis_errors: bool | None = None,
+                      ) -> bool:
+        acquire_masters = functools.partial(
+            self.__acquire_masters,
+            raise_on_redis_errors=raise_on_redis_errors,
         )
 
-    async def locked(self) -> float:
+        if blocking:
+            enqueued = False
+            with ContextTimer() as timer:
+                while timeout == -1 or timer.elapsed() / 1000 < timeout:
+                    if await acquire_masters():
+                        if enqueued:
+                            self.__log_time_enqueued(timer, True)
+                        return True
+                    enqueued = True
+                    delay = random.uniform(0, self._RETRY_DELAY)  # nosec
+                    await asyncio.sleep(delay)
+            if enqueued:  # pragma: no cover
+                self.__log_time_enqueued(timer, False)
+            return False  # pragma: no cover
+
+        if timeout == -1:
+            return await acquire_masters()
+
+        raise ValueError("can't specify a timeout for a non-blocking call")
+
+    __acquire = acquire
+
+    def __log_time_enqueued(self, timer: ContextTimer, acquired: bool) -> None:
+        key_suffix = self.key.split(':', maxsplit=1)[1]
+        time_enqueued = math.ceil(timer.elapsed())
+        logger.info(
+            'source=pottery sample#aioredlock.enqueued.%s=%dms sample#aioredlock.acquired.%s=%d',
+            key_suffix,
+            time_enqueued,
+            key_suffix,
+            acquired,
+        )
+
+    async def locked(self,
+                     *,
+                     raise_on_redis_errors: bool | None = None,
+                     ) -> float:
         with ContextTimer() as timer:
             ttls, redis_errors = [], []
             coros = [self.__acquired_master(master) for master in self.masters]
@@ -170,9 +237,14 @@ class AIORedlock(Scripts, AIOPrimitive):
                 validity_time -= self.__drift()
                 validity_time -= timer.elapsed() / 1000
                 return max(validity_time, 0)
+
+        self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         return 0
 
-    async def extend(self) -> None:
+    async def extend(self,
+                     *,
+                     raise_on_redis_errors: bool | None = None,
+                     ) -> None:
         if self._extension_num >= self.num_extensions:
             raise TooManyExtensions(self.key, self.masters)
 
@@ -192,13 +264,17 @@ class AIORedlock(Scripts, AIOPrimitive):
             self._extension_num += 1
             return
 
+        self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         raise ExtendUnlockedLock(
             self.key,
             self.masters,
             redis_errors=redis_errors,
         )
 
-    async def release(self) -> None:
+    async def release(self,
+                      *,
+                      raise_on_redis_errors: bool | None = None,
+                      ) -> None:
         num_masters_released, redis_errors = 0, []
         coros = [self.__release_master(master) for master in self.masters]
         for coro in asyncio.as_completed(coros):
@@ -214,6 +290,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         if num_masters_released > len(self.masters) // 2:
             return
 
+        self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         raise ReleaseUnlockedLock(
             self.key,
             self.masters,
@@ -223,8 +300,13 @@ class AIORedlock(Scripts, AIOPrimitive):
     __release = release
 
     async def __aenter__(self) -> AIORedlock:
-        await self.acquire()
-        return self
+        acquired = await self.__acquire(
+            blocking=self.context_manager_blocking,
+            timeout=self.context_manager_timeout,
+        )
+        if acquired:
+            return self
+        raise QuorumNotAchieved(self.key, self.masters)
 
     async def __aexit__(self,
                         exc_type: Type[BaseException] | None,
