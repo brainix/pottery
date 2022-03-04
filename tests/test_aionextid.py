@@ -80,12 +80,14 @@ class AIONextIDTests(TestCase):
 
     @async_test
     async def test_aionextid(self):
+        self._setup()
         for expected in range(1, 10):
             with self.subTest(expected=expected):
                 got = await anext(self.aioids)
                 assert got == expected
 
     def test_aiter(self):
+        self._setup()
         assert aiter(self.aioids) is self.aioids
 
     @async_test
