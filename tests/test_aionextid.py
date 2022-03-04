@@ -27,6 +27,13 @@ from tests.base import async_test
 
 
 # TODO: When we drop support for Python 3.9, delete the following definition of
+# aiter().
+try:
+    aiter
+except NameError:  # pragma: no cover
+    aiter = iter
+
+# TODO: When we drop support for Python 3.9, delete the following definition of
 # anext().
 try:
     anext
@@ -78,7 +85,7 @@ class AIONextIDTests(TestCase):
                 got = await anext(self.aioids)
                 assert got == expected
 
-    def test_iter(self):
+    def test_aiter(self):
         assert aiter(self.aioids) is self.aioids
 
     @async_test
