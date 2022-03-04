@@ -41,6 +41,7 @@ from redis.asyncio import Redis as AIORedis  # type: ignore
 from .base import AIOPrimitive
 from .base import logger
 from .exceptions import ExtendUnlockedLock
+from .exceptions import QuorumNotAchieved
 from .exceptions import ReleaseUnlockedLock
 from .exceptions import TooManyExtensions
 from .redlock import Redlock
@@ -52,6 +53,8 @@ class AIORedlock(Scripts, AIOPrimitive):
     __slots__ = (
         'auto_release_time',
         'num_extensions',
+        'context_manager_blocking',
+        'context_manager_timeout',
         '_uuid',
         '_extension_num',
     )
@@ -69,7 +72,12 @@ class AIORedlock(Scripts, AIOPrimitive):
                  raise_on_redis_errors: bool = False,
                  auto_release_time: float = _AUTO_RELEASE_TIME,
                  num_extensions: int = _NUM_EXTENSIONS,
+                 context_manager_blocking: bool = True,
+                 context_manager_timeout: float = -1,
                  ) -> None:
+        if not context_manager_blocking and context_manager_timeout != -1:
+            raise ValueError("can't specify a timeout for a non-blocking call")
+
         super().__init__(
             key=key,
             masters=masters,
@@ -77,6 +85,8 @@ class AIORedlock(Scripts, AIOPrimitive):
         )
         self.auto_release_time = auto_release_time
         self.num_extensions = num_extensions
+        self.context_manager_blocking = context_manager_blocking
+        self.context_manager_timeout = context_manager_timeout
         self._uuid = ''
         self._extension_num = 0
 
@@ -290,8 +300,13 @@ class AIORedlock(Scripts, AIOPrimitive):
     __release = release
 
     async def __aenter__(self) -> AIORedlock:
-        await self.acquire()
-        return self
+        acquired = await self.__acquire(
+            blocking=self.context_manager_blocking,
+            timeout=self.context_manager_timeout,
+        )
+        if acquired:
+            return self
+        raise QuorumNotAchieved(self.key, self.masters)
 
     async def __aexit__(self,
                         exc_type: Type[BaseException] | None,
