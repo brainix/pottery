@@ -117,7 +117,7 @@ class AIORedlockTests(TestCase):
         self._setup()
         self.aioredlock.auto_release_time = .001
         with self.assertRaises(QuorumNotAchieved):
-            async with self.aioredlock:
+            async with self.aioredlock:  # pragma: no cover
                 ...
 
     @async_test
