@@ -24,12 +24,16 @@
 #   3. https://www.python.org/dev/peps/pep-0649/
 from __future__ import annotations
 
+import asyncio
 from typing import ClassVar
 from typing import Iterable
 
+from redis import RedisError
 from redis.asyncio import Redis as AIORedis  # type: ignore
 
 from .base import AIOPrimitive
+from .base import logger
+from .exceptions import QuorumNotAchieved
 from .nextid import NextID
 from .nextid import Scripts
 
@@ -50,3 +54,30 @@ class AIONextID(Scripts, AIOPrimitive):
         'Initialize an AIONextID ID generator.'
         super().__init__(key=key, masters=masters)
         self.num_tries = num_tries
+
+    async def __get_current_id(self, master: AIORedis) -> int:  # type: ignore
+        current_id = await master.get(self.key) or b'0'
+        return int(current_id)
+
+    async def __get_current_ids(self) -> int:
+        current_ids, redis_errors = [], []
+        coros = [self.__get_current_id(master) for master in self.masters]
+        for coro in asyncio.as_completed(coros):
+            try:
+                current_id = await coro
+            except RedisError as error:
+                redis_errors.append(error)
+                logger.exception(
+                    '%s.__get_current_ids() caught %s',
+                    self.__class__.__name__,
+                    error.__class__.__name__,
+                )
+            else:
+                current_ids.append(current_id)
+        if len(current_ids) > len(self.masters) // 2:
+            return max(current_ids)
+        raise QuorumNotAchieved(
+            self.key,
+            self.masters,
+            redis_errors=redis_errors,
+        )
