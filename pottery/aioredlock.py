@@ -66,10 +66,15 @@ class AIORedlock(Scripts, AIOPrimitive):
                  *,
                  key: str,
                  masters: Iterable[AIORedis] = frozenset(),
+                 raise_on_redis_errors: bool = False,
                  auto_release_time: float = _AUTO_RELEASE_TIME,
                  num_extensions: int = _NUM_EXTENSIONS,
                  ) -> None:
-        super().__init__(key=key, masters=masters)
+        super().__init__(
+            key=key,
+            masters=masters,
+            raise_on_redis_errors=raise_on_redis_errors,
+        )
         self.auto_release_time = auto_release_time
         self.num_extensions = num_extensions
         self._uuid = ''
@@ -196,7 +201,10 @@ class AIORedlock(Scripts, AIOPrimitive):
             acquired,
         )
 
-    async def locked(self) -> float:
+    async def locked(self,
+                     *,
+                     raise_on_redis_errors: bool | None = None,
+                     ) -> float:
         with ContextTimer() as timer:
             ttls, redis_errors = [], []
             coros = [self.__acquired_master(master) for master in self.masters]
@@ -219,9 +227,14 @@ class AIORedlock(Scripts, AIOPrimitive):
                 validity_time -= self.__drift()
                 validity_time -= timer.elapsed() / 1000
                 return max(validity_time, 0)
+
+        self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         return 0
 
-    async def extend(self) -> None:
+    async def extend(self,
+                     *,
+                     raise_on_redis_errors: bool | None = None,
+                     ) -> None:
         if self._extension_num >= self.num_extensions:
             raise TooManyExtensions(self.key, self.masters)
 
@@ -241,13 +254,17 @@ class AIORedlock(Scripts, AIOPrimitive):
             self._extension_num += 1
             return
 
+        self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         raise ExtendUnlockedLock(
             self.key,
             self.masters,
             redis_errors=redis_errors,
         )
 
-    async def release(self) -> None:
+    async def release(self,
+                      *,
+                      raise_on_redis_errors: bool | None = None,
+                      ) -> None:
         num_masters_released, redis_errors = 0, []
         coros = [self.__release_master(master) for master in self.masters]
         for coro in asyncio.as_completed(coros):
@@ -263,6 +280,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         if num_masters_released > len(self.masters) // 2:
             return
 
+        self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         raise ReleaseUnlockedLock(
             self.key,
             self.masters,
