@@ -55,7 +55,7 @@ class Scripts:
     '''Parent class to define/register Lua scripts for Redis.
 
     Note that we only have to register these Lua scripts once -- so we do it on
-    the first instantiation of NextId.
+    the first instantiation of NextID.
     '''
 
     __slots__: Tuple[str, ...] = tuple()
@@ -96,7 +96,7 @@ class Scripts:
             ''')
 
 
-class NextId(Scripts, Primitive):
+class NextID(Scripts, Primitive):
     '''Distributed Redis-powered monotonically increasing ID generator.
 
     This algorithm safely and reliably produces monotonically increasing IDs
@@ -122,8 +122,8 @@ class NextId(Scripts, Primitive):
 
     Usage:
 
-        >>> tweet_ids_1 = NextId(key='tweet-ids', masters={redis})
-        >>> tweet_ids_2 = NextId(key='tweet-ids', masters={redis})
+        >>> tweet_ids_1 = NextID(key='tweet-ids', masters={redis})
+        >>> tweet_ids_2 = NextID(key='tweet-ids', masters={redis})
         >>> next(tweet_ids_1)
         1
         >>> next(tweet_ids_2)
@@ -147,7 +147,7 @@ class NextId(Scripts, Primitive):
                  raise_on_redis_errors: bool = False,
                  num_tries: int = _NUM_TRIES,
                  ) -> None:
-        '''Initialize a NextId ID generator.
+        '''Initialize a NextID ID generator.
 
         Keyword arguments:
             key -- a string that identifies your ID sequence (e.g., 'tweets')
@@ -165,7 +165,7 @@ class NextId(Scripts, Primitive):
         )
         self.num_tries = num_tries
 
-    def __iter__(self) -> NextId:
+    def __iter__(self) -> NextID:
         return self
 
     def __next__(self) -> int:

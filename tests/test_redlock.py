@@ -71,7 +71,7 @@ class RedlockTests(TestCase):
             assert timer.elapsed() / 1000 >= self.redlock.auto_release_time
             assert info.call_count == 1, f'_logger.info() called {info.call_count} times'
 
-    @unittest.skipIf('CI' in os.environ, 'this unit test is flaky on CI')
+    @unittest.skipIf('CI' in os.environ, 'this unit test is flaky on CI')  # pragma: no cover
     def test_acquire_same_lock_twice_blocking_with_timeout(self):
         with unittest.mock.patch.object(logger, 'info') as info:
             assert not self.redis.exists(self.redlock.key)

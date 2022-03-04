@@ -22,19 +22,19 @@ import unittest.mock
 from redis.commands.core import Script
 from redis.exceptions import TimeoutError
 
-from pottery import NextId
+from pottery import NextID
 from pottery import QuorumIsImpossible
 from pottery import QuorumNotAchieved
 from tests.base import TestCase
 
 
-class NextIdTests(TestCase):
+class NextIDTests(TestCase):
     'Distributed Redis-powered monotonically increasing ID generator tests.'
 
     def setUp(self):
         super().setUp()
         self.redis.unlink('nextid:current')
-        self.ids = NextId(masters={self.redis})
+        self.ids = NextID(masters={self.redis})
         for master in self.ids.masters:
             master.set(self.ids.key, 0)
 
@@ -60,7 +60,7 @@ class NextIdTests(TestCase):
         assert self.redis.exists(self.ids.key)
 
     def test_repr(self):
-        assert repr(self.ids) == '<NextId key=nextid:current>'
+        assert repr(self.ids) == '<NextID key=nextid:current>'
 
     def test_slots(self):
         with self.assertRaises(AttributeError):
@@ -81,7 +81,7 @@ class NextIdTests(TestCase):
             next(self.ids)
 
     def test_next_quorumisimpossible(self):
-        self.ids = NextId(masters={self.redis}, raise_on_redis_errors=True)
+        self.ids = NextID(masters={self.redis}, raise_on_redis_errors=True)
 
         with self.assertRaises(QuorumIsImpossible), \
              unittest.mock.patch.object(
@@ -106,7 +106,7 @@ class NextIdTests(TestCase):
             self.ids.reset()
 
     def test_reset_quorumisimpossible(self):
-        self.ids = NextId(masters={self.redis}, raise_on_redis_errors=True)
+        self.ids = NextID(masters={self.redis}, raise_on_redis_errors=True)
 
         with self.assertRaises(QuorumIsImpossible), \
              unittest.mock.patch.object(

@@ -59,7 +59,8 @@ from .exceptions import InefficientAccessWarning  # isort:skip
 
 from .cache import CachedOrderedDict  # isort:skip
 from .cache import redis_cache  # isort:skip
-from .nextid import NextId  # isort:skip
+from .aionextid import AIONextID  # isort:skip
+from .nextid import NextID  # isort:skip
 from .aioredlock import AIORedlock  # isort:skip
 from .redlock import Redlock  # isort:skip
 from .redlock import synchronize  # isort:skip
@@ -95,7 +96,8 @@ __all__: Final[Tuple[str, ...]] = (
 
     'CachedOrderedDict',
     'redis_cache',
-    'NextId',
+    'AIONextID',
+    'NextID',
     'AIORedlock',
     'Redlock',
     'synchronize',

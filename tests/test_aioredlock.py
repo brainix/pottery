@@ -42,7 +42,7 @@ class AIORedlockTests(TestCase):
         super().setUp()
         # TODO: When we drop support for Python 3.9, delete the following if
         # condition.
-        if sys.version_info > (3, 10):
+        if sys.version_info > (3, 10):  # pragma: no cover
             self.aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
             self.aioredlock = AIORedlock(
                 masters={self.aioredis},
@@ -54,7 +54,7 @@ class AIORedlockTests(TestCase):
     #
     # https://github.com/brainix/pottery/runs/5384161828?check_suite_focus=true
     def _setup(self) -> None:
-        if sys.version_info < (3, 10):
+        if sys.version_info < (3, 10):  # pragma: no cover
             self.aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
             self.aioredlock = AIORedlock(
                 masters={self.aioredis},
