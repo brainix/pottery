@@ -25,6 +25,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from typing import ClassVar
 from typing import Iterable
 
@@ -54,6 +55,17 @@ class AIONextID(Scripts, AIOPrimitive):
         'Initialize an AIONextID ID generator.'
         super().__init__(key=key, masters=masters)
         self.num_tries = num_tries
+
+    def __aiter__(self) -> AIONextID:
+        return self
+
+    async def __anext__(self) -> int:
+        for _ in range(self.num_tries):
+            with contextlib.suppress(QuorumNotAchieved):
+                next_id = await self.__get_current_ids() + 1
+                await self.__set_current_ids(next_id)
+                return next_id
+        raise QuorumNotAchieved(self.key, self.masters)
 
     async def __get_current_id(self, master: AIORedis) -> int:  # type: ignore
         current_id = await master.get(self.key) or b'0'
