@@ -64,36 +64,44 @@ class AIONextIDTests(TestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.redis.unlink('nextid:current')
         # TODO: When we drop support for Python 3.9, delete the following if
         # condition.
         if sys.version_info > (3, 10):  # pragma: no cover
             self.aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
             self.aioids = AIONextID(masters={self.aioredis})
 
-    # TODO: When we drop support for Python 3.9, delete the following method.
-    #
-    # https://github.com/brainix/pottery/runs/5384161828?check_suite_focus=true
-    def _setup(self) -> None:
+    async def _setup(self) -> None:
+        # TODO: When we drop support for Python 3.9, delete the following if
+        # condition.
+        #
+        # https://github.com/brainix/pottery/runs/5384161828?check_suite_focus=true
         if sys.version_info < (3, 10):  # pragma: no cover
             self.aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
             self.aioids = AIONextID(masters={self.aioredis})
+        await self.aioids.reset()  # type: ignore
 
     @async_test
     async def test_aionextid(self):
-        self._setup()
+        await self._setup()
         for expected in range(1, 10):
             with self.subTest(expected=expected):
                 got = await anext(self.aioids)
                 assert got == expected
 
+    @async_test
+    async def test_reset(self):
+        await self._setup()
+        assert await anext(self.aioids) == 1
+        await self.aioids.reset()
+        assert await anext(self.aioids) == 1
+
     @unittest.skipIf(sys.version_info < (3, 10), 'Python 3.10+ required')  # pragma: no cover
-    def test_aiter(self):
-        self._setup()
+    async def test_aiter(self):
+        await self._setup()
         assert aiter(self.aioids) is self.aioids
 
     @async_test
     async def test_slots(self):
-        self._setup()
+        await self._setup()
         with self.assertRaises(AttributeError):
             self.aioids.__dict__

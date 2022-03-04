@@ -118,3 +118,26 @@ class AIONextID(Scripts, AIOPrimitive):
             self.masters,
             redis_errors=redis_errors,
         )
+
+    async def reset(self):
+        num_masters_reset, redis_errors = 0, []
+        coros = [master.delete(self.key) for master in self.masters]
+        for coro in asyncio.as_completed(coros):
+            try:
+                await coro
+            except RedisError as error:
+                redis_errors.append(error)
+                logger.exception(
+                    '%s.reset() caught %s',
+                    self.__class__.__name__,
+                    error.__class__.__name__,
+                )
+            else:
+                num_masters_reset += 1
+        if num_masters_reset > len(self.masters) // 2:
+            return
+        raise QuorumNotAchieved(
+            self.key,
+            self.masters,
+            redis_errors=redis_errors,
+        )
