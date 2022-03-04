@@ -26,6 +26,31 @@ from tests.base import TestCase
 from tests.base import async_test
 
 
+# TODO: When we drop support for Python 3.9, delete the following definition of
+# anext().
+try:
+    anext
+except NameError:  # pragma: no cover
+    # I got this anext() definition from here:
+    #     https://github.com/python/cpython/blob/f4c03484da59049eb62a9bf7777b963e2267d187/Lib/test/test_asyncgen.py#L52
+    _NO_DEFAULT = object()
+
+    def anext(iterator, default=_NO_DEFAULT):
+        try:
+            __anext__ = type(iterator).__anext__
+        except AttributeError:
+            raise TypeError(f'{iterator!r} is not an async iterator')
+        if default is _NO_DEFAULT:
+            return __anext__(iterator)
+
+        async def anext_impl():
+            try:
+                return await __anext__(iterator)
+            except StopAsyncIteration:
+                return default
+        return anext_impl()
+
+
 class AIONextIDTests(TestCase):
     'Async distributed Redis-powered monotonically increasing ID gen tests.'
 
