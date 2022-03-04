@@ -53,6 +53,9 @@ class AIONextIDTests(TestCase):
                 got = await anext(self.aioids)
                 assert got == expected
 
+    def test_iter(self):
+        assert aiter(self.aioids) is self.aioids
+
     @async_test
     async def test_slots(self):
         self._setup()
