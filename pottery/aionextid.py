@@ -71,16 +71,13 @@ class AIONextID(Scripts, AIOPrimitive):
         current_id = await master.get(self.key) or b'0'
         return int(current_id)
 
-    async def __set_current_id(self,  # type: ignore
-                               master: AIORedis,
-                               value: int,
-                               ) -> int | None:
+    async def __set_current_id(self, master: AIORedis, value: int) -> bool:  # type: ignore
         current_id: int | None = await self._set_id_script(  # type: ignore
             keys=(self.key,),
             args=(value,),
             client=master,
         )
-        return current_id
+        return current_id == value
 
     async def __get_current_ids(self) -> int:
         current_ids, redis_errors = [], []
@@ -110,7 +107,7 @@ class AIONextID(Scripts, AIOPrimitive):
         coros = [self.__set_current_id(master, value) for master in self.masters]
         for coro in asyncio.as_completed(coros):
             try:
-                num_masters_set += await coro == value
+                num_masters_set += await coro
             except RedisError as error:
                 redis_errors.append(error)
                 logger.exception(
