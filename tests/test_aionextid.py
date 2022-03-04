@@ -30,14 +30,14 @@ from tests.base import async_test
 # TODO: When we drop support for Python 3.9, delete the following definition of
 # aiter().
 try:
-    aiter
+    aiter  # type: ignore
 except NameError:  # pragma: no cover
     aiter = iter
 
 # TODO: When we drop support for Python 3.9, delete the following definition of
 # anext().
 try:
-    anext
+    anext  # type: ignore
 except NameError:  # pragma: no cover
     # I got this anext() definition from here:
     #     https://github.com/python/cpython/blob/f4c03484da59049eb62a9bf7777b963e2267d187/Lib/test/test_asyncgen.py#L52
