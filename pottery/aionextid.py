@@ -45,7 +45,6 @@ class AIONextID(Scripts, AIOPrimitive):
                  *,
                  key: str = 'current',
                  masters: Iterable[AIORedis] = frozenset(),
-                 raise_on_redis_errors: bool = False,
                  num_tries: int = NextID._NUM_TRIES,
                  ) -> None:
         'Initialize an AIONextID ID generator.'
