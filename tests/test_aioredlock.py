@@ -145,6 +145,7 @@ class AIORedlockTests(TestCase):
                 await self.aioredlock.release()
 
     def test_context_manager_nonblocking_with_timeout(self):
+        self._setup()
         with self.assertRaises(ValueError):
             AIORedlock(
                 masters={self.aioredis},
