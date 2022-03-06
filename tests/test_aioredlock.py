@@ -144,7 +144,8 @@ class AIORedlockTests(TestCase):
             async with self.aioredlock:
                 await self.aioredlock.release()
 
-    def test_context_manager_nonblocking_with_timeout(self):
+    @async_test
+    async def test_context_manager_nonblocking_with_timeout(self):
         self._setup()
         with self.assertRaises(ValueError):
             AIORedlock(
