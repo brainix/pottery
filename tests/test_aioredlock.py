@@ -145,6 +145,24 @@ class AIORedlockTests(TestCase):
                 await self.aioredlock.release()
 
     @async_test
+    async def test_context_manager_nonblocking_with_timeout(self):
+        self._setup()
+        with self.assertRaises(ValueError):
+            AIORedlock(
+                masters={self.aioredis},
+                key='printer',
+                auto_release_time=.2,
+                context_manager_blocking=False,
+                context_manager_timeout=.1
+            )
+
+    @async_test
+    async def test_acquire_nonblocking_with_timeout(self):
+        self._setup()
+        with self.assertRaises(ValueError):
+            await self.aioredlock.acquire(blocking=False, timeout=.1)
+
+    @async_test
     async def test_acquire_rediserror(self):
         self._setup()
         with unittest.mock.patch.object(self.aioredis, 'set') as set:
