@@ -198,6 +198,23 @@ class AIORedlockTests(TestCase):
                 await self.aioredlock.release()
 
     @async_test
+    async def test_enqueued(self):
+        self._setup()
+        self.aioredlock2 = AIORedlock(
+            masters={self.aioredis},
+            key='printer',
+            auto_release_time=.2,
+        )
+        await self.aioredlock.acquire()
+        # self.aioredlock2 is enqueued until self.aioredlock is automatically
+        # released:
+        assert await self.aioredlock2.acquire()
+
+        await self.aioredlock.acquire()
+        # self.aioredlock2 is enqueued until the acquire timeout has expired:
+        assert not await self.aioredlock2.acquire(timeout=0.1)
+
+    @async_test
     async def test_slots(self):
         self._setup()
         with self.assertRaises(AttributeError):

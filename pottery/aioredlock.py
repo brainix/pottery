@@ -123,7 +123,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         return bool(extended)
 
     async def __release_master(self, master: AIORedis) -> bool:  # type: ignore
-        released: bool = await self._release_script(  # type: ignore
+        released = await self._release_script(  # type: ignore
             keys=(self.key,),
             args=(self._uuid,),
             client=master,
