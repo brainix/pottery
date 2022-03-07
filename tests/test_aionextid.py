@@ -122,3 +122,11 @@ class AIONextIDTests(TestCase):
              unittest.mock.patch.object(AsyncScript, '__call__') as __call__:
             __call__.side_effect = TimeoutError
             await anext(self.aioids)
+
+    @async_test
+    async def test_reset_quorumnotachieved(self):
+        await self._setup()
+        with self.assertRaises(QuorumNotAchieved), \
+             unittest.mock.patch.object(self.aioredis, 'delete') as delete:
+            delete.side_effect = TimeoutError
+            await self.aioids.reset()

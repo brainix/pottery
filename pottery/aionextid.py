@@ -79,6 +79,9 @@ class AIONextID(Scripts, AIOPrimitive):
         )
         return current_id == value
 
+    async def __reset_current_id(self, master: AIORedis) -> int:  # type: ignore
+        await master.delete(self.key)
+
     async def __get_current_ids(self) -> int:
         current_ids, redis_errors = [], []
         coros = [self.__get_current_id(master) for master in self.masters]
@@ -125,7 +128,7 @@ class AIONextID(Scripts, AIOPrimitive):
 
     async def reset(self):
         num_masters_reset, redis_errors = 0, []
-        coros = [master.delete(self.key) for master in self.masters]
+        coros = [self.__reset_current_id(master) for master in self.masters]
         for coro in asyncio.as_completed(coros):
             try:
                 await coro
