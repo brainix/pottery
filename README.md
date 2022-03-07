@@ -30,7 +30,7 @@ been battle tested in production at scale.
 - [Redlock 🔒](#redlock)
     - [synchronize() 👯‍♀️](#synchronize)
 - [AIORedlock 🔒](#aioredlock)
-- [NextId 🔢](#nextid)
+- [NextID 🔢](#nextid)
 - [redis_cache()](#redis_cache)
 - [CachedOrderedDict](#cachedordereddict)
 - [Bloom filters 🌸](#bloom-filters)
@@ -573,17 +573,17 @@ shower is available
 
 
 
-## <a name="nextid"></a>NextId 🔢
+## <a name="nextid"></a>NextID 🔢
 
-`NextId` safely and reliably produces increasing IDs across threads, processes,
+`NextID` safely and reliably produces increasing IDs across threads, processes,
 and even machines, without a single point of failure.  [Rationale and algorithm
 description.](http://antirez.com/news/102)
 
 Instantiate an ID generator:
 
 ```python
->>> from pottery import NextId
->>> tweet_ids = NextId(key='tweet-ids', masters={redis})
+>>> from pottery import NextID
+>>> tweet_ids = NextID(key='tweet-ids', masters={redis})
 >>>
 ```
 
