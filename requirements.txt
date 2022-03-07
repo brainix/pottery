@@ -1,5 +1,5 @@
 async-timeout==4.0.2
-bandit==1.7.3
+bandit==1.7.4
 bleach==4.1.0
 certifi==2021.10.8
 charset-normalizer==2.0.12
@@ -29,7 +29,7 @@ pyflakes==2.4.0
 Pygments==2.11.2
 pyparsing==3.0.7
 PyYAML==6.0
-readme-renderer==32.0
+readme-renderer==33.0
 redis==4.2.0rc1
 requests==2.27.1
 requests-toolbelt==0.9.1
