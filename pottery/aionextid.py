@@ -67,6 +67,10 @@ class AIONextID(Scripts, AIOPrimitive):
                 return next_id
         raise QuorumNotAchieved(self.key, self.masters)
 
+    async def __get_current_id(self, master: AIORedis) -> int:  # type: ignore
+        current_id: int = await master.get(self.key)
+        return current_id
+
     async def __set_current_id(self, master: AIORedis, value: int) -> bool:  # type: ignore
         current_id: int | None = await self._set_id_script(  # type: ignore
             keys=(self.key,),
@@ -77,7 +81,7 @@ class AIONextID(Scripts, AIOPrimitive):
 
     async def __get_current_ids(self) -> int:
         current_ids, redis_errors = [], []
-        coros = [master.get(self.key) for master in self.masters]
+        coros = [self.__get_current_id(master) for master in self.masters]
         for coro in asyncio.as_completed(coros):  # type: ignore
             try:
                 current_id = int(await coro or b'0')
