@@ -314,3 +314,6 @@ class AIORedlock(Scripts, AIOPrimitive):
                         traceback: TracebackType | None,
                         ) -> None:
         await self.release()
+
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__} key={self.key}>'
