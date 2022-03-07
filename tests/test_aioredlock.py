@@ -219,3 +219,8 @@ class AIORedlockTests(TestCase):
         self._setup()
         with self.assertRaises(AttributeError):
             self.aioredlock.__dict__
+
+    @async_test
+    async def test_repr(self):
+        self._setup()
+        assert repr(self.aioredlock) == "<AIORedlock key=redlock:printer>"

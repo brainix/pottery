@@ -148,3 +148,6 @@ class AIONextID(Scripts, AIOPrimitive):
             self.masters,
             redis_errors=redis_errors,
         )
+
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__} key={self.key}>'

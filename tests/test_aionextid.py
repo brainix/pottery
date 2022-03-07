@@ -130,3 +130,8 @@ class AIONextIDTests(TestCase):
              unittest.mock.patch.object(self.aioredis, 'delete') as delete:
             delete.side_effect = TimeoutError
             await self.aioids.reset()
+
+    @async_test
+    async def test_repr(self):
+        await self._setup()
+        assert repr(self.aioids) == '<AIONextID key=nextid:current>'
