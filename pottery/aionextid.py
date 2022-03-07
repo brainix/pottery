@@ -57,7 +57,7 @@ class AIONextID(Scripts, AIOPrimitive):
         self.num_tries = num_tries
 
     def __aiter__(self) -> AIONextID:
-        return self
+        return self  # pragma: no cover
 
     async def __anext__(self) -> int:
         for _ in range(self.num_tries):
@@ -67,6 +67,10 @@ class AIONextID(Scripts, AIOPrimitive):
                 return next_id
         raise QuorumNotAchieved(self.key, self.masters)
 
+    async def __get_current_id(self, master: AIORedis) -> int:  # type: ignore
+        current_id: int = await master.get(self.key)
+        return current_id
+
     async def __set_current_id(self, master: AIORedis, value: int) -> bool:  # type: ignore
         current_id: int | None = await self._set_id_script(  # type: ignore
             keys=(self.key,),
@@ -75,9 +79,12 @@ class AIONextID(Scripts, AIOPrimitive):
         )
         return current_id == value
 
+    async def __reset_current_id(self, master: AIORedis) -> int:  # type: ignore
+        await master.delete(self.key)
+
     async def __get_current_ids(self) -> int:
         current_ids, redis_errors = [], []
-        coros = [master.get(self.key) for master in self.masters]
+        coros = [self.__get_current_id(master) for master in self.masters]
         for coro in asyncio.as_completed(coros):  # type: ignore
             try:
                 current_id = int(await coro or b'0')
@@ -121,7 +128,7 @@ class AIONextID(Scripts, AIOPrimitive):
 
     async def reset(self):
         num_masters_reset, redis_errors = 0, []
-        coros = [master.delete(self.key) for master in self.masters]
+        coros = [self.__reset_current_id(master) for master in self.masters]
         for coro in asyncio.as_completed(coros):
             try:
                 await coro
