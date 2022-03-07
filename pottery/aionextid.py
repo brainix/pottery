@@ -57,7 +57,7 @@ class AIONextID(Scripts, AIOPrimitive):
         self.num_tries = num_tries
 
     def __aiter__(self) -> AIONextID:
-        return self
+        return self  # pragma: no cover
 
     async def __anext__(self) -> int:
         for _ in range(self.num_tries):

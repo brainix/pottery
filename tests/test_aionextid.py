@@ -18,11 +18,14 @@
 
 
 import sys
-import unittest
+import unittest.mock
 
 from redis.asyncio import Redis as AIORedis  # type: ignore
+from redis.commands.core import AsyncScript  # type: ignore
+from redis.exceptions import TimeoutError
 
 from pottery import AIONextID
+from pottery import QuorumNotAchieved
 from tests.base import TestCase
 from tests.base import async_test
 
@@ -95,13 +98,22 @@ class AIONextIDTests(TestCase):
         await self.aioids.reset()
         assert await anext(self.aioids) == 1
 
-    @unittest.skipIf(sys.version_info < (3, 10), 'Python 3.10+ required')  # pragma: no cover
-    async def test_aiter(self):
-        await self._setup()
-        assert aiter(self.aioids) is self.aioids
-
     @async_test
     async def test_slots(self):
         await self._setup()
         with self.assertRaises(AttributeError):
             self.aioids.__dict__
+
+    @unittest.skipIf(sys.version_info < (3, 10), 'Python 3.10+ required')  # pragma: no cover
+    @async_test
+    async def test_aiter(self):
+        await self._setup()
+        assert aiter(self.aioids) is self.aioids
+
+    @async_test
+    async def test_anext_quorumnotachieved(self):
+        await self._setup()
+        with self.assertRaises(QuorumNotAchieved), \
+             unittest.mock.patch.object(AsyncScript, '__call__') as __call__:
+            __call__.side_effect = TimeoutError
+            await anext(self.aioids)
