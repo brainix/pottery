@@ -30,7 +30,7 @@ Pygments==2.11.2
 pyparsing==3.0.7
 PyYAML==6.0
 readme-renderer==33.0
-redis==4.2.0rc1
+redis==4.2.0rc2
 requests==2.27.1
 requests-toolbelt==0.9.1
 rfc3986==2.0.0
