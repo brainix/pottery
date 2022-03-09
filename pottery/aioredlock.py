@@ -79,7 +79,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         >>> import asyncio
         >>> from redis.asyncio import Redis as AIORedis
         >>> async def main():
-        ...     aioredis = AIORedis.from_url('redis://localhost:6379/1', socket_timeout=1)
+        ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
         ...     shower = AIORedlock(key='shower', masters={aioredis})
         ...     if await shower.acquire():
         ...         # Critical section - no other coroutine can enter while we hold the lock.
@@ -99,7 +99,7 @@ class AIORedlock(Scripts, AIOPrimitive):
     releases its lock).
 
         >>> async def main():
-        ...     aioredis = AIORedis.from_url('redis://localhost:6379/1', socket_timeout=1)
+        ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
         ...     shower = AIORedlock(key='shower', masters={aioredis})
         ...     if await shower.acquire():
         ...         # Critical section - no other coroutine can enter while we hold the lock.
@@ -112,7 +112,7 @@ class AIORedlock(Scripts, AIOPrimitive):
     then you can specify your own timeout:
 
         >>> async def main():
-        ...     aioredis = AIORedis.from_url('redis://localhost:6379/1', socket_timeout=1)
+        ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
         ...     shower = AIORedlock(key='shower', masters={aioredis}, auto_release_time=15)
         ...     if await shower.acquire():
         ...         # Critical section - no other coroutine can enter while we hold the lock.
@@ -128,7 +128,7 @@ class AIORedlock(Scripts, AIOPrimitive):
     You can use an AIORedlock as a context manager:
 
         >>> async def main():
-        ...     aioredis = AIORedis.from_url('redis://localhost:6379/1', socket_timeout=1)
+        ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
         ...     shower = AIORedlock(key='shower', masters={aioredis}, auto_release_time=15)
         ...     async with shower:
         ...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
