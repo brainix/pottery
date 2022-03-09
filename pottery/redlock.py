@@ -162,7 +162,7 @@ class Redlock(Scripts, Primitive):
     Usage:
 
         >>> from redis import Redis
-        >>> redis = Redis(socket_timeout=1)
+        >>> redis = Redis()
         >>> printer_lock = Redlock(key='printer', masters={redis})
         >>> bool(printer_lock.locked())
         False
@@ -368,7 +368,7 @@ class Redlock(Scripts, Primitive):
         necessary to acquire the lock.  Return True.
 
             >>> from redis import Redis
-            >>> redis = Redis(socket_timeout=1)
+            >>> redis = Redis()
             >>> printer_lock_1 = Redlock(key='printer', masters={redis})
             >>> printer_lock_1.acquire()
             True
@@ -451,7 +451,7 @@ class Redlock(Scripts, Primitive):
         If we don't currently hold the lock, then this method returns 0.
 
             >>> from redis import Redis
-            >>> redis = Redis(socket_timeout=1)
+            >>> redis = Redis()
             >>> printer_lock_1 = Redlock(key='printer', masters={redis})
             >>> printer_lock_1.locked()
             0
@@ -508,7 +508,7 @@ class Redlock(Scripts, Primitive):
         Usage:
 
             >>> from redis import Redis
-            >>> redis = Redis(socket_timeout=1)
+            >>> redis = Redis()
             >>> printer_lock = Redlock(key='printer', masters={redis})
             >>> printer_lock.acquire()
             True
@@ -560,7 +560,7 @@ class Redlock(Scripts, Primitive):
         Usage:
 
             >>> from redis import Redis
-            >>> redis = Redis(socket_timeout=1)
+            >>> redis = Redis()
             >>> printer_lock = Redlock(key='printer', masters={redis})
             >>> bool(printer_lock.locked())
             False
@@ -608,7 +608,7 @@ class Redlock(Scripts, Primitive):
         Usage:
 
             >>> from redis import Redis
-            >>> redis = Redis(socket_timeout=1)
+            >>> redis = Redis()
             >>> with Redlock(key='printer', masters={redis}) as printer_lock:
             ...     print('printer_lock is locked')
             ...     # Critical section - print stuff here.
@@ -657,7 +657,7 @@ class Redlock(Scripts, Primitive):
         Usage:
 
             >>> from redis import Redis
-            >>> redis = Redis(socket_timeout=1)
+            >>> redis = Redis()
             >>> with Redlock(key='printer', masters={redis}) as printer_lock:
             ...     print('printer_lock is locked')
             ...     # Critical section - print stuff here.

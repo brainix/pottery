@@ -116,7 +116,7 @@ class NextID(Scripts, Primitive):
     Clean up Redis for the doctest:
 
         >>> from redis import Redis
-        >>> redis = Redis(socket_timeout=1)
+        >>> redis = Redis()
         >>> redis.delete('nextid:tweet-ids') in {0, 1}
         True
 
