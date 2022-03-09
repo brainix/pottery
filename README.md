@@ -482,7 +482,10 @@ You can make `.acquire()` block but not indefinitely by specifying the
 True
 >>> printer_lock_2.acquire(timeout=printer_lock_1.auto_release_time / 2)  # Waits 100 milliseconds.
 False
->>> printer_lock_1.release()
+>>> import contextlib
+>>> from pottery import ReleaseUnlockedLock
+>>> with contextlib.suppress(ReleaseUnlockedLock):
+...     printer_lock_1.release()
 >>>
 ```
 
