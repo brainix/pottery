@@ -227,7 +227,7 @@ class AIORedlockTests(TestCase):
             tasks = {asyncio.create_task(coro) for coro in coros}
             done, _ = await asyncio.wait(tasks)
             results = [task.result() for task in done]
-            assert results.count(True) == 1
+            assert results.count(True) == 1, f'expected 1 lock to be acquired; got {results.count(True)}'
             assert results.count(False) == 4
         finally:
             for lock in locks:
