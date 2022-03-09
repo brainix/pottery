@@ -59,7 +59,6 @@ from .monkey import logger
 
 _default_url: Final[str] = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 _default_redis: Final[Redis] = Redis.from_url(_default_url, socket_timeout=1)
-_default_aioredis: Final[AIORedis] = AIORedis.from_url(_default_url, socket_timeout=1)  # type: ignore
 
 
 def random_key(*,
@@ -343,4 +342,4 @@ class Primitive(abc.ABC):
 class AIOPrimitive(Primitive):
     __slots__: Tuple[str, ...] = tuple()
 
-    _DEFAULT_MASTERS: ClassVar[FrozenSet[AIORedis]] = frozenset({_default_aioredis})  # type: ignore
+    _DEFAULT_MASTERS: ClassVar[FrozenSet[AIORedis]] = frozenset()  # type: ignore

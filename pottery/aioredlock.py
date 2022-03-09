@@ -157,7 +157,7 @@ class AIORedlock(Scripts, AIOPrimitive):
     def __init__(self,  # type: ignore
                  *,
                  key: str,
-                 masters: Iterable[AIORedis] = frozenset(),
+                 masters: Iterable[AIORedis],
                  raise_on_redis_errors: bool = False,
                  auto_release_time: float = _AUTO_RELEASE_TIME,
                  num_extensions: int = _NUM_EXTENSIONS,
