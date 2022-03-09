@@ -23,6 +23,7 @@ import os
 import time
 import unittest.mock
 
+from redis import Redis
 from redis.commands.core import Script
 from redis.exceptions import TimeoutError
 
@@ -281,6 +282,22 @@ class RedlockTests(TestCase):
              self.assertRaises(QuorumIsImpossible):
             __call__.side_effect = TimeoutError
             self.redlock.release(raise_on_redis_errors=True)
+
+    def test_contention(self):
+        dbs = range(1, 6)
+        urls = [f'redis://localhost:6379/{db}' for db in dbs]
+        masters = [Redis.from_url(url, socket_timeout=1) for url in urls]
+        locks = [Redlock(key='printer', masters=masters, auto_release_time=.2) for _ in range(5)]
+
+        try:
+            num_locked = sum(lock.acquire(blocking=False) for lock in locks)
+            assert 0 <= num_locked <= 1
+
+        finally:
+            # Clean up for the next unit test run.
+            with contextlib.suppress(ReleaseUnlockedLock):
+                for lock in locks:  # pragma: no cover
+                    lock.release()
 
 
 class SynchronizeTests(TestCase):
