@@ -216,6 +216,27 @@ class AIORedlockTests(TestCase):
         assert not await aioredlock2.acquire(timeout=0.1)
 
     @async_test
+    async def test_multiple_masters(self):
+        dbs = range(1, 6)
+        urls = {f'redis://localhost:6379/{db}' for db in dbs}
+        masters = {AIORedis.from_url(url, socket_timeout=1) for url in urls}
+        locks = {AIORedlock(key='shower', masters=masters) for _ in range(5)}
+
+        try:
+            coros = {lock.acquire(blocking=False) for lock in locks}
+            tasks = {asyncio.create_task(coro) for coro in coros}
+            done, _ = await asyncio.wait(tasks)
+            results = [task.result() for task in done]
+            assert results.count(True) == 1
+            assert results.count(False) == 4
+        finally:
+            for lock in locks:
+                coros = {lock.release() for lock in locks}
+                tasks = {asyncio.create_task(coro) for coro in coros}
+                done, _ = await asyncio.wait(tasks)
+                [task.exception() for task in done]
+
+    @async_test
     async def test_slots(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
         aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
