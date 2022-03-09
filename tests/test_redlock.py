@@ -224,7 +224,7 @@ class RedlockTests(TestCase):
                 ...  # pragma: no cover
 
     def test_repr(self):
-        assert repr(self.redlock) == "<Redlock key=redlock:printer>"
+        assert repr(self.redlock) == '<Redlock key=redlock:printer>'
 
     def test_slots(self):
         with self.assertRaises(AttributeError):

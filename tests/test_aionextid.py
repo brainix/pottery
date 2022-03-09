@@ -17,7 +17,6 @@
 'Async distributed Redis-powered monotonically increasing ID generator tests.'
 
 
-import sys
 import unittest.mock
 
 from redis.asyncio import Redis as AIORedis  # type: ignore
@@ -35,7 +34,8 @@ from tests.base import async_test
 try:
     aiter  # type: ignore
 except NameError:  # pragma: no cover
-    aiter = iter
+    def aiter(iterable):
+        return iterable.__aiter__()
 
 # TODO: When we drop support for Python 3.9, delete the following definition of
 # anext().
@@ -65,73 +65,68 @@ except NameError:  # pragma: no cover
 class AIONextIDTests(TestCase):
     'Async distributed Redis-powered monotonically increasing ID gen tests.'
 
-    def setUp(self) -> None:
-        super().setUp()
-        # TODO: When we drop support for Python 3.9, delete the following if
-        # condition.
-        if sys.version_info > (3, 10):  # pragma: no cover
-            self.aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-            self.aioids = AIONextID(masters={self.aioredis})
-
-    async def _setup(self) -> None:
-        # TODO: When we drop support for Python 3.9, delete the following if
-        # condition.
-        #
-        # https://github.com/brainix/pottery/runs/5384161828?check_suite_focus=true
-        if sys.version_info < (3, 10):  # pragma: no cover
-            self.aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-            self.aioids = AIONextID(masters={self.aioredis})
-        await self.aioids.reset()  # type: ignore
-
     @async_test
     async def test_aionextid(self):
-        await self._setup()
+        aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+        aioids = AIONextID(masters={aioredis})
+
         for expected in range(1, 10):
             with self.subTest(expected=expected):
-                got = await anext(self.aioids)
+                got = await anext(aioids)
                 assert got == expected
 
     @async_test
     async def test_reset(self):
-        await self._setup()
-        assert await anext(self.aioids) == 1
-        await self.aioids.reset()
-        assert await anext(self.aioids) == 1
+        aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+        aioids = AIONextID(masters={aioredis})
+
+        assert await anext(aioids) == 1
+        await aioids.reset()
+        assert await anext(aioids) == 1
 
     @async_test
     async def test_slots(self):
-        await self._setup()
-        with self.assertRaises(AttributeError):
-            self.aioids.__dict__
+        aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+        aioids = AIONextID(masters={aioredis})
 
-    @unittest.skipIf(sys.version_info < (3, 10), 'Python 3.10+ required')  # pragma: no cover
+        with self.assertRaises(AttributeError):
+            aioids.__dict__
+
     @async_test
     async def test_aiter(self):
-        await self._setup()
-        assert aiter(self.aioids) is self.aioids
+        aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+        aioids = AIONextID(masters={aioredis})
+
+        assert aiter(aioids) is aioids
 
     @async_test
     async def test_anext_quorumnotachieved(self):
-        await self._setup()
+        aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+        aioids = AIONextID(masters={aioredis})
+
         with self.assertRaises(QuorumNotAchieved), \
-             unittest.mock.patch.object(self.aioredis, 'get') as get:
+             unittest.mock.patch.object(aioredis, 'get') as get:
             get.side_effect = TimeoutError
-            await anext(self.aioids)
+            await anext(aioids)
 
         with self.assertRaises(QuorumNotAchieved), \
              unittest.mock.patch.object(AsyncScript, '__call__') as __call__:
             __call__.side_effect = TimeoutError
-            await anext(self.aioids)
+            await anext(aioids)
 
     @async_test
     async def test_reset_quorumnotachieved(self):
-        await self._setup()
+        aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+        aioids = AIONextID(masters={aioredis})
+
         with self.assertRaises(QuorumNotAchieved), \
-             unittest.mock.patch.object(self.aioredis, 'delete') as delete:
+             unittest.mock.patch.object(aioredis, 'delete') as delete:
             delete.side_effect = TimeoutError
-            await self.aioids.reset()
+            await aioids.reset()
 
     @async_test
     async def test_repr(self):
-        await self._setup()
-        assert repr(self.aioids) == '<AIONextID key=nextid:current>'
+        aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
+        aioids = AIONextID(masters={aioredis})
+
+        assert repr(aioids) == '<AIONextID key=nextid:current>'
