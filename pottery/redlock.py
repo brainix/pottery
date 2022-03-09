@@ -471,7 +471,6 @@ class Redlock(Scripts, Primitive):
             >>> 9 < printer_lock_1.locked() < 10
             True
             >>> printer_lock_1.release()
-
         '''
         with ContextTimer() as timer, BailOutExecutor() as executor:
             futures = set()
