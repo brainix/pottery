@@ -281,6 +281,76 @@ class AIORedlock(Scripts, AIOPrimitive):
                       timeout: float = -1,
                       raise_on_redis_errors: bool | None = None,
                       ) -> bool:
+        '''Lock the lock.
+
+        If blocking is True and timeout is -1, then wait for as long as
+        necessary to acquire the lock.  Return True.
+
+            >>> import asyncio
+            >>> from redis.asyncio import Redis as AIORedis
+            >>> async def main():
+            ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
+            ...     shower = AIORedlock(key='shower', masters={aioredis})
+            ...     if await shower.acquire():
+            ...         # Critical section - no other coroutine can enter while we hold the lock.
+            ...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+            ...         await shower.release()
+            ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+            ...
+            >>> asyncio.run(main())
+            shower is occupied
+            shower is available
+
+        If blocking is True and timeout is not -1, then wait for up to timeout
+        seconds to acquire the lock.  Return True if the lock was acquired;
+        False if it wasn't.
+
+            >>> async def main():
+            ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
+            ...     shower_lock_1 = AIORedlock(key='shower', masters={aioredis})
+            ...     shower_lock_2 = AIORedlock(key='shower', masters={aioredis})
+            ...     if await shower_lock_1.acquire():
+            ...         print('shower_lock_1 acquired')
+            ...     if await shower_lock_2.acquire(timeout=15):
+            ...         print('shower_lock_2 acquired')
+            ...         await shower_lock_2.release()
+            ...
+            >>> asyncio.run(main())
+            shower_lock_1 acquired
+            shower_lock_2 acquired
+
+            >>> async def main():
+            ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
+            ...     shower_lock_1 = AIORedlock(key='shower', masters={aioredis})
+            ...     shower_lock_2 = AIORedlock(key='shower', masters={aioredis})
+            ...     if await shower_lock_1.acquire():
+            ...         print('shower_lock_1 acquired')
+            ...     if not await shower_lock_2.acquire(timeout=1):
+            ...         print('shower_lock_2 not acquired')
+            ...     await shower_lock_1.release()
+            ...
+            >>> asyncio.run(main())
+            shower_lock_1 acquired
+            shower_lock_2 not acquired
+
+        If blocking is False and timeout is -1, then try just once right now to
+        acquire the lock.  Return True if the lock was acquired; False if it
+        wasn't.
+
+            >>> async def main():
+            ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
+            ...     shower_lock_1 = AIORedlock(key='shower', masters={aioredis})
+            ...     shower_lock_2 = AIORedlock(key='shower', masters={aioredis})
+            ...     if await shower_lock_1.acquire():
+            ...         print('shower_lock_1 acquired')
+            ...     if not await shower_lock_2.acquire(blocking=False):
+            ...         print('shower_lock_2 not acquired')
+            ...     await shower_lock_1.release()
+            ...
+            >>> asyncio.run(main())
+            shower_lock_1 acquired
+            shower_lock_2 not acquired
+        '''
         acquire_masters = functools.partial(
             self.__acquire_masters,
             raise_on_redis_errors=raise_on_redis_errors,
