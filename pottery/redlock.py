@@ -163,12 +163,12 @@ class Redlock(Scripts, Primitive):
 
         >>> from redis import Redis
         >>> redis = Redis()
-        >>> printer_lock = Redlock(key='printer', masters={redis})
+        >>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=.2)
         >>> bool(printer_lock.locked())
         False
         >>> if printer_lock.acquire():
-        ...     print('printer_lock is locked')
         ...     # Critical section - print stuff here.
+        ...     print('printer_lock is locked')
         printer_lock is locked
         >>> printer_lock.release()
         >>> bool(printer_lock.locked())
@@ -183,36 +183,35 @@ class Redlock(Scripts, Primitive):
 
         >>> if printer_lock.acquire():
         ...     # Critical section - print stuff here.
-        ...     time.sleep(10)
-        >>> time.sleep(10)
+        ...     time.sleep(printer_lock.auto_release_time)
         >>> bool(printer_lock.locked())
         False
 
     If 10 seconds isn't enough to complete executing your critical section,
     then you can specify your own timeout:
 
-        >>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=15)
+        >>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=.2)
         >>> if printer_lock.acquire():
         ...     # Critical section - print stuff here.
-        ...     time.sleep(10)
+        ...     time.sleep(printer_lock.auto_release_time / 2)
         >>> bool(printer_lock.locked())
         True
-        >>> time.sleep(5)
+        >>> time.sleep(printer_lock.auto_release_time / 2)
         >>> bool(printer_lock.locked())
         False
 
     You can use a Redlock as a context manager:
 
         >>> with Redlock(key='printer', masters={redis}) as printer_lock:
-        ...     print('printer_lock is locked')
         ...     # Critical section - print stuff here.
+        ...     print('printer_lock is locked')
         printer_lock is locked
         >>> bool(printer_lock.locked())
         False
 
         >>> with printer_lock:
-        ...     print('printer_lock is locked')
         ...     # Critical section - print stuff here.
+        ...     print('printer_lock is locked')
         printer_lock is locked
         >>> bool(printer_lock.locked())
         False
@@ -369,7 +368,7 @@ class Redlock(Scripts, Primitive):
 
             >>> from redis import Redis
             >>> redis = Redis()
-            >>> printer_lock_1 = Redlock(key='printer', masters={redis})
+            >>> printer_lock_1 = Redlock(key='printer', masters={redis}, auto_release_time=.2)
             >>> printer_lock_1.acquire()
             True
             >>> timer = ContextTimer()
@@ -377,7 +376,7 @@ class Redlock(Scripts, Primitive):
             >>> printer_lock_2 = Redlock(key='printer', masters={redis})
             >>> printer_lock_2.acquire()
             True
-            >>> 10 * 1000 < timer.elapsed() < 11 * 1000
+            >>> timer.elapsed() > printer_lock_1.auto_release_time * 1000
             True
             >>> printer_lock_2.release()
 
@@ -387,15 +386,16 @@ class Redlock(Scripts, Primitive):
 
             >>> printer_lock_1.acquire()
             True
-            >>> printer_lock_2.acquire(timeout=15)
+            >>> printer_lock_2.acquire(timeout=.5)
             True
             >>> printer_lock_2.release()
 
             >>> printer_lock_1.acquire()
             True
-            >>> printer_lock_2.acquire(timeout=1)
+            >>> printer_lock_2.acquire(timeout=.1)
             False
-            >>> printer_lock_1.release()
+            >>> with contextlib.suppress(ReleaseUnlockedLock):
+            ...     printer_lock_1.release()
 
         If blocking is False and timeout is -1, then try just once right now to
         acquire the lock.  Return True if the lock was acquired; False if it
@@ -609,15 +609,15 @@ class Redlock(Scripts, Primitive):
             >>> from redis import Redis
             >>> redis = Redis()
             >>> with Redlock(key='printer', masters={redis}) as printer_lock:
-            ...     print('printer_lock is locked')
             ...     # Critical section - print stuff here.
+            ...     print('printer_lock is locked')
             printer_lock is locked
             >>> bool(printer_lock.locked())
             False
 
             >>> with printer_lock:
-            ...     print('printer_lock is locked')
             ...     # Critical section - print stuff here.
+            ...     print('printer_lock is locked')
             printer_lock is locked
             >>> bool(printer_lock.locked())
             False
@@ -658,15 +658,15 @@ class Redlock(Scripts, Primitive):
             >>> from redis import Redis
             >>> redis = Redis()
             >>> with Redlock(key='printer', masters={redis}) as printer_lock:
-            ...     print('printer_lock is locked')
             ...     # Critical section - print stuff here.
+            ...     print('printer_lock is locked')
             printer_lock is locked
             >>> bool(printer_lock.locked())
             False
 
             >>> with printer_lock:
-            ...     print('printer_lock is locked')
             ...     # Critical section - print stuff here.
+            ...     print('printer_lock is locked')
             printer_lock is locked
             >>> bool(printer_lock.locked())
             False
