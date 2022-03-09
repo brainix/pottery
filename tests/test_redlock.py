@@ -296,7 +296,7 @@ class RedlockTests(TestCase):
         finally:
             # Clean up for the next unit test run.
             with contextlib.suppress(ReleaseUnlockedLock):
-                for lock in locks:
+                for lock in locks:  # pragma: no cover
                     lock.release()
 
 

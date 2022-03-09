@@ -40,7 +40,7 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_locked_acquire_and_release(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         assert not await aioredlock.locked()
         assert await aioredlock.acquire()
@@ -53,7 +53,7 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_extend(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         with self.assertRaises(ExtendUnlockedLock):
             await aioredlock.extend()
@@ -67,7 +67,7 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_context_manager(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         assert not await aioredlock.locked()
         async with aioredlock:
@@ -77,7 +77,7 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_context_manager_extend(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         with self.assertRaises(ExtendUnlockedLock):
             await aioredlock.extend()
@@ -91,7 +91,7 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_acquire_fails_within_auto_release_time(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         aioredlock.auto_release_time = .001
         assert not await aioredlock.acquire(blocking=False)
@@ -99,7 +99,7 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_context_manager_fails_within_auto_release_time(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         aioredlock.auto_release_time = .001
         aioredlock.context_manager_blocking = False
@@ -110,7 +110,7 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_acquire_and_time_out(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         assert not await aioredlock.locked()
         assert await aioredlock.acquire()
@@ -121,7 +121,7 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_context_manager_time_out_before_exit(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         with self.assertRaises(ReleaseUnlockedLock):
             async with aioredlock:
@@ -131,7 +131,7 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_context_manager_release_before_exit(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         with self.assertRaises(ReleaseUnlockedLock):
             async with aioredlock:
@@ -144,7 +144,7 @@ class AIORedlockTests(TestCase):
         with self.assertRaises(ValueError):
             AIORedlock(
                 masters={aioredis},
-                key='printer',
+                key='shower',
                 auto_release_time=.2,
                 context_manager_blocking=False,
                 context_manager_timeout=.1
@@ -153,7 +153,7 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_acquire_nonblocking_with_timeout(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         with self.assertRaises(ValueError):
             await aioredlock.acquire(blocking=False, timeout=.1)
@@ -161,7 +161,7 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_acquire_rediserror(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         with unittest.mock.patch.object(aioredis, 'set') as set:
             set.side_effect = TimeoutError
@@ -170,7 +170,7 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_locked_rediserror(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         async with aioredlock:
             assert await aioredlock.locked()
@@ -181,7 +181,7 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_extend_rediserror(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         async with aioredlock:
             await aioredlock.extend()
@@ -193,7 +193,7 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_release_rediserror(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         with unittest.mock.patch.object(AsyncScript, '__call__') as __call__:
             __call__.side_effect = TimeoutError
@@ -204,8 +204,8 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_enqueued(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
-        aioredlock2 = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
+        aioredlock2 = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         await aioredlock.acquire()
         # aioredlock2 is enqueued until self.aioredlock is automatically released:
@@ -240,7 +240,7 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_slots(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
         with self.assertRaises(AttributeError):
             aioredlock.__dict__
@@ -248,6 +248,6 @@ class AIORedlockTests(TestCase):
     @async_test
     async def test_repr(self):
         aioredis = AIORedis.from_url(self.redis_url, socket_timeout=1)
-        aioredlock = AIORedlock(masters={aioredis}, key='printer', auto_release_time=.2)
+        aioredlock = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
 
-        assert repr(aioredlock) == '<AIORedlock key=redlock:printer>'
+        assert repr(aioredlock) == '<AIORedlock key=redlock:shower>'
