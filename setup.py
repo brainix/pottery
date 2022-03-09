@@ -51,6 +51,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Framework :: AsyncIO',
         'Typing :: Typed',
     ],
     keywords=pottery.__keywords__,
