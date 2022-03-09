@@ -376,7 +376,7 @@ class Redlock(Scripts, Primitive):
             >>> printer_lock_2 = Redlock(key='printer', masters={redis})
             >>> printer_lock_2.acquire()
             True
-            >>> printer_lock_1.auto_release_time * 1000 < timer.elapsed()
+            >>> timer.elapsed() > printer_lock_1.auto_release_time * 1000
             True
             >>> printer_lock_2.release()
 

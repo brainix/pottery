@@ -316,7 +316,7 @@ class SynchronizeTests(TestCase):
         results = sorted(future.result() for future in futures)
         for result1, result2 in zip(results, results[1:]):
             delta = result2 - result1
-            assert .1 < delta
+            assert delta > .1
 
     def test_synchronize_fails(self):
         @synchronize(
