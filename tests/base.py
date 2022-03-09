@@ -28,6 +28,7 @@ from typing import Any
 from typing import NoReturn
 from typing import cast
 
+import uvloop
 from redis import Redis
 
 from pottery import PotteryWarning
@@ -72,6 +73,7 @@ def async_test(func: F) -> F:
     '''
     @functools.wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
+        uvloop.install()
         coro = func(*args, **kwargs)
         asyncio.run(coro)
     return cast(F, wrapper)

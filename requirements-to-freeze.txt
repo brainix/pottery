@@ -25,6 +25,7 @@
 redis>=4.2.0rc1
 hiredis
 mmh3
+uvloop
 typing_extensions
 
 coverage
