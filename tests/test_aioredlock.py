@@ -220,14 +220,14 @@ class AIORedlockTests(TestCase):
         dbs = range(1, 6)
         urls = [f'redis://localhost:6379/{db}' for db in dbs]
         masters = [AIORedis.from_url(url, socket_timeout=1) for url in urls]
-        locks = [AIORedlock(key='shower', masters=masters) for _ in range(5)]
+        locks = [AIORedlock(key='shower', masters=masters, auto_release_time=.2) for _ in range(5)]
 
         try:
             coros = [lock.acquire(blocking=False) for lock in locks]
             tasks = [asyncio.create_task(coro) for coro in coros]
             done, _ = await asyncio.wait(tasks)
             results = [task.result() for task in done]
-            assert results.count(True) in {0, 1}
+            assert 0 <= results.count(True) <= 1
 
         finally:
             # Clean up for the next unit test run.
