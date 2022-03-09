@@ -396,8 +396,8 @@ access to your resource:
 
 ```python
 >>> if printer_lock.acquire():
-...     print('printer_lock is locked')
 ...     # Critical section - print stuff here.
+...     print('printer_lock is locked')
 ...     printer_lock.release()
 printer_lock is locked
 >>> bool(printer_lock.locked())
@@ -409,8 +409,8 @@ Or you can protect access to your resource inside a context manager:
 
 ```python
 >>> with printer_lock:
-...     print('printer_lock is locked')
 ...     # Critical section - print stuff here.
+...     print('printer_lock is locked')
 printer_lock is locked
 >>> bool(printer_lock.locked())
 False
@@ -563,6 +563,7 @@ Or you can protect access to your resource inside a context manager:
 ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
 ...     shower = AIORedlock(key='shower', masters={aioredis})
 ...     async with shower:
+...         # Critical section - no other coroutine can enter while we hold the lock.
 ...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
 ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
 ...
