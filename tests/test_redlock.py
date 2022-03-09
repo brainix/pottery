@@ -58,7 +58,7 @@ class RedlockTests(TestCase):
         assert not self.redis.exists(self.redlock.key)
         assert self.redlock.acquire()
         assert self.redis.exists(self.redlock.key)
-        time.sleep(self.redlock.auto_release_time + 1)
+        time.sleep(self.redlock.auto_release_time * 2)
         assert not self.redis.exists(self.redlock.key)
 
     def test_acquire_same_lock_twice_blocking_without_timeout(self):
@@ -89,7 +89,7 @@ class RedlockTests(TestCase):
         assert self.redis.exists(self.redlock.key)
         assert not self.redlock.acquire(blocking=False)
         assert self.redis.exists(self.redlock.key)
-        time.sleep(self.redlock.auto_release_time + 1)
+        time.sleep(self.redlock.auto_release_time * 2)
         assert not self.redis.exists(self.redlock.key)
 
     def test_acquire_same_lock_twice_non_blocking_with_timeout(self):
@@ -106,7 +106,7 @@ class RedlockTests(TestCase):
         assert self.redlock.acquire()
         assert self.redis.exists(self.redlock.key)
         assert self.redlock.locked()
-        time.sleep(self.redlock.auto_release_time + 1)
+        time.sleep(self.redlock.auto_release_time * 2)
         assert not self.redis.exists(self.redlock.key)
         assert not self.redlock.locked()
 
@@ -159,7 +159,7 @@ class RedlockTests(TestCase):
         assert not self.redis.exists(self.redlock.key)
         with self.assertRaises(ReleaseUnlockedLock), self.redlock:
             assert self.redis.exists(self.redlock.key)
-            time.sleep(self.redlock.auto_release_time + 1)
+            time.sleep(self.redlock.auto_release_time * 2)
             assert not self.redis.exists(self.redlock.key)
         assert not self.redis.exists(self.redlock.key)
 
@@ -178,7 +178,7 @@ class RedlockTests(TestCase):
         with self.assertRaises(ReleaseUnlockedLock), self.redlock:
             assert self.redis.exists(self.redlock.key)
             assert self.redlock.locked()
-            time.sleep(self.redlock.auto_release_time + 1)
+            time.sleep(self.redlock.auto_release_time * 2)
             assert not self.redis.exists(self.redlock.key)
             assert not self.redlock.locked()
         assert not self.redis.exists(self.redlock.key)
@@ -305,20 +305,18 @@ class SynchronizeTests(TestCase):
         @synchronize(
             key='synchronized-func',
             masters={self.redis},
-            auto_release_time=1.5,
+            auto_release_time=.2,
         )
         def func():
-            time.sleep(1)
+            time.sleep(.1)
             return time.time()
 
-        with unittest.mock.patch.object(logger, 'info') as info:
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                futures = {executor.submit(func) for _ in range(3)}
-            results = sorted(future.result() for future in futures)
-            for result1, result2 in zip(results, results[1:]):
-                delta = result2 - result1
-                assert 1 < delta < 2
-            assert info.call_count == 5, f'_logger.info() called {info.call_count} times'
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = {executor.submit(func) for _ in range(3)}
+        results = sorted(future.result() for future in futures)
+        for result1, result2 in zip(results, results[1:]):
+            delta = result2 - result1
+            assert .1 < delta
 
     def test_synchronize_fails(self):
         @synchronize(
