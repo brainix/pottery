@@ -228,7 +228,9 @@ class AIORedlockTests(TestCase):
             done, _ = await asyncio.wait(tasks)
             results = [task.result() for task in done]
             assert results.count(True) in {0, 1}
+
         finally:
+            # Clean up for the next unit test run.
             for lock in locks:
                 coros = [lock.release() for lock in locks]
                 tasks = [asyncio.create_task(coro) for coro in coros]
