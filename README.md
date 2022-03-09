@@ -540,13 +540,13 @@ Instantiate an `AIORedlock` and protect a resource:
 >>> import asyncio
 >>> from redis.asyncio import Redis as AIORedis
 >>> from pottery import AIORedlock
->>> aioredis = AIORedis.from_url('redis://localhost:6379/1')
 >>> async def main():
+...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
 ...     shower = AIORedlock(key='shower', masters={aioredis})
-...     await shower.acquire()
-...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
-...     # Critical section - print stuff here.
-...     await shower.release()
+...     if await shower.acquire():
+...         # Critical section - no other coroutine can enter while we hold the lock.
+...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+...         await shower.release()
 ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
 ...
 >>> asyncio.run(main())
@@ -560,6 +560,7 @@ Or you can protect access to your resource inside a context manager:
 ```python
 >>> asyncio.set_event_loop(asyncio.new_event_loop())
 >>> async def main():
+...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
 ...     shower = AIORedlock(key='shower', masters={aioredis})
 ...     async with shower:
 ...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
