@@ -464,8 +464,8 @@ can make `.acquire()` return immediately with the `blocking` argument.
 `.acquire()` returns `True` if the lock was acquired; `False` if not.
 
 ```python
->>> printer_lock_1 = Redlock(key='printer', masters={redis})
->>> printer_lock_2 = Redlock(key='printer', masters={redis})
+>>> printer_lock_1 = Redlock(key='printer', masters={redis}, auto_release_time=.2)
+>>> printer_lock_2 = Redlock(key='printer', masters={redis}, auto_release_time=.2)
 >>> printer_lock_1.acquire(blocking=False)
 True
 >>> printer_lock_2.acquire(blocking=False)  # Returns immediately.
@@ -478,9 +478,9 @@ You can make `.acquire()` block but not indefinitely by specifying the
 `timeout` argument (in seconds):
 
 ```python
->>> printer_lock_1.acquire(timeout=1)
+>>> printer_lock_1.acquire()
 True
->>> printer_lock_2.acquire(timeout=.1)  # Waits 100 milliseconds.
+>>> printer_lock_2.acquire(timeout=printer_lock_1.auto_release_time / 2)  # Waits 100 milliseconds.
 False
 >>> printer_lock_1.release()
 >>>
@@ -656,7 +656,7 @@ Decorate a function:
 >>> from pottery import redis_cache
 >>> @redis_cache(redis=redis, key='expensive-function-cache')
 ... def expensive_function(n):
-...     time.sleep(1)  # Simulate an expensive computation or database lookup.
+...     time.sleep(.1)  # Simulate an expensive computation or database lookup.
 ...     return n
 ...
 >>>
