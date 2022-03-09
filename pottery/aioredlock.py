@@ -125,7 +125,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         shower is occupied
         shower is available
 
-    You can use a AIORedlock as a context manager:
+    You can use an AIORedlock as a context manager:
 
         >>> async def main():
         ...     aioredis = AIORedis.from_url('redis://localhost:6379/1', socket_timeout=1)
@@ -164,6 +164,25 @@ class AIORedlock(Scripts, AIOPrimitive):
                  context_manager_blocking: bool = True,
                  context_manager_timeout: float = -1,
                  ) -> None:
+        '''Initialize an AIORedlock.
+
+        Keyword arguments:
+            key -- a string that identifies your resource
+            masters -- the asyncio Redis clients used to achieve quorum for this
+                AIORedlock's state
+            raise_on_redis_errors -- whether to raise the QuorumIsImplssible
+                exception when too many Redis masters throw errors
+            auto_release_time -- the timeout in seconds by which to
+                automatically release this AIORedlock, unless it's already been
+                released
+            num_extensions -- the number of times that this AIORedlock's lease
+                can be extended
+            context_manager_blocking -- when using this AIORedlock as a context
+                manager, whether to block when acquiring
+            context_manager_timeout -- if context_manager_blocking, how long to
+                wait when acquiring before giving up and raising the
+                QuorumNotAchieved exception
+        '''
         if not context_manager_blocking and context_manager_timeout != -1:
             raise ValueError("can't specify a timeout for a non-blocking call")
 
