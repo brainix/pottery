@@ -77,6 +77,7 @@ class AIORedlock(Scripts, AIOPrimitive):
     Usage:
 
         >>> import asyncio
+        >>> import uvloop
         >>> from redis.asyncio import Redis as AIORedis
         >>> async def main():
         ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
@@ -86,6 +87,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         ...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
         ...         await shower.release()
         ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+        >>> uvloop.install()
         >>> asyncio.run(main())
         shower is occupied
         shower is available
