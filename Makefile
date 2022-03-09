@@ -90,10 +90,10 @@ else
 endif
 
 .PHONY: doctest
-doctest: clean-redis doctest-readme clean-redis-2 doctest-code
+doctest: clean-redis doctest-readme doctest-code
 
-.PHONY: clean-redis clean-redis-2
-clean-redis clean-redis-2:
+.PHONY: clean-redis
+clean-redis:
 	@source $(venv)/bin/activate && \
 		python3 -c "from redis import Redis; redis = Redis.from_url('redis://localhost:6379/1'); redis.flushdb()"
 
@@ -103,7 +103,7 @@ doctest-readme:
 
 .PHONY: doctest-code
 doctest-code:
-	TEST_DOCTESTS=1 make test tests=tests.test_doctests.DoctestTests.test_doctests
+	make test tests=tests.test_doctests.DoctestTests.test_modules
 
 
 .PHONY: release

@@ -383,7 +383,7 @@ Instantiate a `Redlock`:
 
 ```python
 >>> from pottery import Redlock
->>> printer_lock = Redlock(key='printer', masters={redis})
+>>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=.2)
 >>>
 ```
 
@@ -437,7 +437,7 @@ section before it releases its lock).
 >>> import time
 >>> if printer_lock.acquire():
 ...     # Critical section - print stuff here.
-...     time.sleep(10)
+...     time.sleep(printer_lock.auto_release_time)
 >>> bool(printer_lock.locked())
 False
 >>>
@@ -447,13 +447,13 @@ If 10 seconds isn&rsquo;t enough to complete executing your critical section,
 then you can specify your own auto release time (in seconds):
 
 ```python
->>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=15)
+>>> printer_lock = Redlock(key='printer', masters={redis}, auto_release_time=.2)
 >>> if printer_lock.acquire():
 ...     # Critical section - print stuff here.
-...     time.sleep(10)
+...     time.sleep(printer_lock.auto_release_time / 2)
 >>> bool(printer_lock.locked())
 True
->>> time.sleep(5)
+>>> time.sleep(printer_lock.auto_release_time / 2)
 >>> bool(printer_lock.locked())
 False
 >>>
@@ -480,7 +480,7 @@ You can make `.acquire()` block but not indefinitely by specifying the
 ```python
 >>> printer_lock_1.acquire(timeout=1)
 True
->>> printer_lock_2.acquire(timeout=1)  # Waits 1 second.
+>>> printer_lock_2.acquire(timeout=.1)  # Waits 100 milliseconds.
 False
 >>> printer_lock_1.release()
 >>>
@@ -497,7 +497,7 @@ manager fails to acquire the lock, it raises the `QuorumNotAchieved` exception.
 >>> printer_lock_2 = Redlock(key='printer', masters={redis}, context_manager_blocking=True, context_manager_timeout=0.2)
 >>> with printer_lock_1:
 ...     with contextlib.suppress(QuorumNotAchieved):
-...         with printer_lock_2:  # Waits 0.2 seconds; raises QuorumNotAchieved.
+...         with printer_lock_2:  # Waits 200 milliseconds; raises QuorumNotAchieved.
 ...             pass
 ...     print(f"printer_lock_1 is {'locked' if printer_lock_1.locked() else 'unlocked'}")
 ...     print(f"printer_lock_2 is {'locked' if printer_lock_2.locked() else 'unlocked'}")
@@ -518,11 +518,13 @@ Here&rsquo;s how to use `synchronize()`:
 
 ```python
 >>> from pottery import synchronize
->>> @synchronize(key='synchronized-func', masters={redis}, auto_release_time=.5, blocking=True, timeout=-1)
+>>> @synchronize(key='synchronized-func', masters={redis}, auto_release_time=1.5, blocking=True, timeout=-1)
 ... def func():
 ...   # Only one thread can execute this function at a time.
 ...   return True
 ...
+>>> func()
+True
 >>>
 ```
 
