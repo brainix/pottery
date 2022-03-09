@@ -29,6 +29,7 @@ been battle tested in production at scale.
 - [Queues 🚶‍♂️🚶‍♀️🚶‍♂️](#queues)
 - [Redlock 🔒](#redlock)
     - [synchronize() 👯‍♀️](#synchronize)
+- [AIORedlock 🔒](#aioredlock)
 - [NextID 🔢](#nextid)
 - [redis_cache()](#redis_cache)
 - [CachedOrderedDict](#cachedordereddict)
@@ -395,8 +396,8 @@ access to your resource:
 
 ```python
 >>> if printer_lock.acquire():
-...     print('printer_lock is locked')
 ...     # Critical section - print stuff here.
+...     print('printer_lock is locked')
 ...     printer_lock.release()
 printer_lock is locked
 >>> bool(printer_lock.locked())
@@ -408,8 +409,8 @@ Or you can protect access to your resource inside a context manager:
 
 ```python
 >>> with printer_lock:
-...     print('printer_lock is locked')
 ...     # Critical section - print stuff here.
+...     print('printer_lock is locked')
 printer_lock is locked
 >>> bool(printer_lock.locked())
 False
@@ -524,6 +525,54 @@ Here&rsquo;s how to use `synchronize()`:
 ...
 >>>
 ```
+
+
+
+## <a name="aioredlock"></a>AIORedlock 🔒
+
+`AIORedlock` is the asyncio implementation of Redlock, compatible with
+Python&rsquo;s
+[`asyncio.Lock`](https://docs.python.org/3/library/asyncio-sync.html#lock).
+
+Instantiate an `AIORedlock` and protect a resource:
+
+```python
+>>> import asyncio
+>>> from redis.asyncio import Redis as AIORedis
+>>> from pottery import AIORedlock
+>>> async def main():
+...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
+...     shower = AIORedlock(key='shower', masters={aioredis})
+...     if await shower.acquire():
+...         # Critical section - no other coroutine can enter while we hold the lock.
+...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+...         await shower.release()
+...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+...
+>>> asyncio.run(main())
+shower is occupied
+shower is available
+>>>
+```
+
+Or you can protect access to your resource inside a context manager:
+
+```python
+>>> asyncio.set_event_loop(asyncio.new_event_loop())
+>>> async def main():
+...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
+...     shower = AIORedlock(key='shower', masters={aioredis})
+...     async with shower:
+...         # Critical section - no other coroutine can enter while we hold the lock.
+...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+...
+>>> asyncio.run(main())
+shower is occupied
+shower is available
+>>>
+```
+
 
 
 ## <a name="nextid"></a>NextID 🔢

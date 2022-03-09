@@ -14,7 +14,22 @@
 #   See the License for the specific language governing permissions and       #
 #   limitations under the License.                                            #
 # --------------------------------------------------------------------------- #
-'Asynchronous distributed Redis-powered lock.'
+'''Asynchronous distributed Redis-powered lock.
+
+This algorithm safely and reliably provides a mutually-exclusive locking
+primitive to protect a resource shared across coroutines, threads, processes,
+and even machines, without a single point of failure.
+
+Rationale and algorithm description:
+    http://redis.io/topics/distlock
+
+Reference implementations:
+    https://github.com/antirez/redlock-rb
+    https://github.com/SPSCommerce/redlock-py
+
+Lua scripting:
+    https://github.com/andymccurdy/redis-py#lua-scripting
+'''
 
 
 # TODO: Remove the following import after deferred evaluation of annotations
@@ -50,6 +65,80 @@ from .timer import ContextTimer
 
 
 class AIORedlock(Scripts, AIOPrimitive):
+    '''Asynchronous distributed Redis-powered lock.
+
+    This algorithm safely and reliably provides a mutually-exclusive locking
+    primitive to protect a resource shared across coroutines, threads,
+    processes, and even machines, without a single point of failure.
+
+    Rationale and algorithm description:
+        http://redis.io/topics/distlock
+
+    Usage:
+
+        >>> import asyncio
+        >>> from redis.asyncio import Redis as AIORedis
+        >>> async def main():
+        ...     aioredis = AIORedis.from_url('redis://localhost:6379/1', socket_timeout=1)
+        ...     shower = AIORedlock(key='shower', masters={aioredis})
+        ...     if await shower.acquire():
+        ...         # Critical section - no other coroutine can enter while we hold the lock.
+        ...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+        ...         await shower.release()
+        ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+        ...
+        >>> asyncio.run(main())
+        shower is occupied
+        shower is available
+
+    AIORedlocks time out (by default, after 10 seconds).  You should take care
+    to ensure that your critical section completes well within the timeout.  The
+    reasons that AIORedlocks time out are to preserve "liveness"
+    (http://redis.io/topics/distlock#liveness-arguments) and to avoid deadlocks
+    (in the event that a process dies inside a critical section before it
+    releases its lock).
+
+        >>> async def main():
+        ...     aioredis = AIORedis.from_url('redis://localhost:6379/1', socket_timeout=1)
+        ...     shower = AIORedlock(key='shower', masters={aioredis})
+        ...     if await shower.acquire():
+        ...         # Critical section - no other coroutine can enter while we hold the lock.
+        ...         await asyncio.sleep(10)
+        ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+        >>> asyncio.run(main())
+        shower is available
+
+    If 10 seconds isn't enough to complete executing your critical section,
+    then you can specify your own timeout:
+
+        >>> async def main():
+        ...     aioredis = AIORedis.from_url('redis://localhost:6379/1', socket_timeout=1)
+        ...     shower = AIORedlock(key='shower', masters={aioredis}, auto_release_time=15)
+        ...     if await shower.acquire():
+        ...         # Critical section - no other coroutine can enter while we hold the lock.
+        ...         await asyncio.sleep(10)
+        ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+        ...     await asyncio.sleep(5)
+        ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+        ...
+        >>> asyncio.run(main())
+        shower is occupied
+        shower is available
+
+    You can use a AIORedlock as a context manager:
+
+        >>> async def main():
+        ...     aioredis = AIORedis.from_url('redis://localhost:6379/1', socket_timeout=1)
+        ...     shower = AIORedlock(key='shower', masters={aioredis}, auto_release_time=15)
+        ...     async with shower:
+        ...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+        ...         # Critical section - no other coroutine can enter while we hold the lock.
+        ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+        >>> asyncio.run(main())
+        shower is occupied
+        shower is available
+    '''
+
     __slots__ = (
         'auto_release_time',
         'num_extensions',
@@ -317,3 +406,13 @@ class AIORedlock(Scripts, AIOPrimitive):
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} key={self.key}>'
+
+
+if __name__ == '__main__':
+    # Run the doctests in this module with:
+    #   $ source venv/bin/activate
+    #   $ python3 -m pottery.aioredlock
+    #   $ deactivate
+    with contextlib.suppress(ImportError):
+        from tests.base import run_doctests
+        run_doctests()
