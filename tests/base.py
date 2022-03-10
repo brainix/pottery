@@ -75,7 +75,7 @@ def async_test(func: F) -> F:
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         uvloop.install()
         coro = func(*args, **kwargs)
-        asyncio.run(coro)
+        asyncio.run(coro, debug=True)
     return cast(F, wrapper)
 
 

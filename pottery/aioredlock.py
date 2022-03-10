@@ -88,7 +88,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         ...         await shower.release()
         ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
         >>> uvloop.install()
-        >>> asyncio.run(main())
+        >>> asyncio.run(main(), debug=True)
         shower is occupied
         shower is available
 
@@ -106,7 +106,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         ...         # Critical section - no other coroutine can enter while we hold the lock.
         ...         await asyncio.sleep(shower.auto_release_time)
         ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
-        >>> asyncio.run(main())
+        >>> asyncio.run(main(), debug=True)
         shower is available
 
     If 10 seconds isn't enough to complete executing your critical section,
@@ -121,7 +121,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
         ...     await asyncio.sleep(shower.auto_release_time / 2)
         ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
-        >>> asyncio.run(main())
+        >>> asyncio.run(main(), debug=True)
         shower is occupied
         shower is available
 
@@ -134,7 +134,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         ...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
         ...         # Critical section - no other coroutine can enter while we hold the lock.
         ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
-        >>> asyncio.run(main())
+        >>> asyncio.run(main(), debug=True)
         shower is occupied
         shower is available
     '''
@@ -296,7 +296,7 @@ class AIORedlock(Scripts, AIOPrimitive):
             ...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
             ...         await shower.release()
             ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
-            >>> asyncio.run(main())
+            >>> asyncio.run(main(), debug=True)
             shower is occupied
             shower is available
 
@@ -313,7 +313,7 @@ class AIORedlock(Scripts, AIOPrimitive):
             ...     if await shower_lock_2.acquire(timeout=.5):
             ...         print('shower_lock_2 acquired')
             ...         await shower_lock_2.release()
-            >>> asyncio.run(main())
+            >>> asyncio.run(main(), debug=True)
             shower_lock_1 acquired
             shower_lock_2 acquired
 
@@ -326,7 +326,7 @@ class AIORedlock(Scripts, AIOPrimitive):
             ...     if not await shower_lock_2.acquire(timeout=.2):
             ...         print('shower_lock_2 not acquired')
             ...     await shower_lock_1.release()
-            >>> asyncio.run(main())
+            >>> asyncio.run(main(), debug=True)
             shower_lock_1 acquired
             shower_lock_2 not acquired
 
@@ -343,7 +343,7 @@ class AIORedlock(Scripts, AIOPrimitive):
             ...     if not await shower_lock_2.acquire(blocking=False):
             ...         print('shower_lock_2 not acquired')
             ...     await shower_lock_1.release()
-            >>> asyncio.run(main())
+            >>> asyncio.run(main(), debug=True)
             shower_lock_1 acquired
             shower_lock_2 not acquired
         '''
