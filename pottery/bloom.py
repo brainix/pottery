@@ -380,7 +380,7 @@ class BloomFilter(BloomFilterABC, Container):
 
     def __repr__(self) -> str:
         'Return the string representation of the BloomFilter.  O(1)'
-        return f'<{self.__class__.__name__} key={self.key}>'
+        return f'<{self.__class__.__qualname__} key={self.key}>'
 
 
 if __name__ == '__main__':

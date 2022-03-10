@@ -225,7 +225,7 @@ class HyperLogLog(Container):
 
     def __repr__(self) -> str:
         'Return the string representation of the HyperLogLog.  O(1)'
-        return f'<{self.__class__.__name__} key={self.key} len={len(self)}>'
+        return f'<{self.__class__.__qualname__} key={self.key} len={len(self)}>'
 
 
 if __name__ == '__main__':

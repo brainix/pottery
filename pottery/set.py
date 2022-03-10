@@ -135,7 +135,7 @@ class RedisSet(Container, Iterable_, collections.abc.MutableSet):
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        return f'{self.__class__.__name__}{self.__to_set()}'
+        return f'{self.__class__.__qualname__}{self.__to_set()}'
 
     # Method overrides:
 

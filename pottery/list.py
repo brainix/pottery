@@ -307,7 +307,7 @@ class RedisList(Container, collections.abc.MutableSequence):
             cast(str, InefficientAccessWarning.__doc__),
             InefficientAccessWarning,
         )
-        return self.__class__.__name__ + str(self.__to_list())
+        return self.__class__.__qualname__ + str(self.__to_list())
 
     # Method overrides:
 
