@@ -556,7 +556,7 @@ Instantiate an `AIORedlock` and protect a resource:
 ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
 ...
 >>> uvloop.install()
->>> asyncio.run(main())
+>>> asyncio.run(main(), debug=True)
 shower is occupied
 shower is available
 >>>
@@ -574,7 +574,7 @@ Or you can protect access to your resource inside a context manager:
 ...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
 ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
 ...
->>> asyncio.run(main())
+>>> asyncio.run(main(), debug=True)
 shower is occupied
 shower is available
 >>>
