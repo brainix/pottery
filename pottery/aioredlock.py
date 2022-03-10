@@ -490,7 +490,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         await self.release()
 
     def __repr__(self) -> str:
-        return f'<{self.__class__.__name__} key={self.key}>'
+        return f'<{self.__class__.__qualname__} key={self.key}>'
 
 
 if __name__ == '__main__':

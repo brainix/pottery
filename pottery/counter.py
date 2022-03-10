@@ -113,7 +113,7 @@ class RedisCounter(RedisDict, collections.Counter):
         items = self.__most_common()
         pairs = (f"'{key}': {value}" for key, value in items)
         repr_ = ', '.join(pairs)
-        return self.__class__.__name__ + '{' + repr_ + '}'
+        return self.__class__.__qualname__ + '{' + repr_ + '}'
 
     def to_counter(self) -> Counter[JSONTypes]:
         'Convert a RedisCounter into a plain Python collections.Counter.'

@@ -184,7 +184,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
         )
         encoded_values = self.redis.lrange(self.key, 0, -1)  # Available since Redis 1.0.0
         values = [self._decode(value) for value in encoded_values]
-        repr = self.__class__.__name__ + '(' + str(values)
+        repr = self.__class__.__qualname__ + '(' + str(values)
         if self.maxlen is not None:
             repr += f', maxlen={self.maxlen}'
         repr += ')'
