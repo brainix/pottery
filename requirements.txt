@@ -1,4 +1,5 @@
 async-timeout==4.0.2
+attrs==21.4.0
 bandit==1.7.4
 bleach==4.1.0
 certifi==2021.10.8
@@ -15,6 +16,7 @@ GitPython==3.1.27
 hiredis==2.0.0
 idna==3.3
 importlib-metadata==4.2.0
+iniconfig==1.1.1
 isort==5.10.1
 keyring==23.5.0
 mccabe==0.6.1
@@ -24,10 +26,13 @@ mypy-extensions==0.4.3
 packaging==21.3
 pbr==5.8.1
 pkginfo==1.8.2
+pluggy==1.0.0
+py==1.11.0
 pycodestyle==2.8.0
 pyflakes==2.4.0
 Pygments==2.11.2
 pyparsing==3.0.7
+pytest==7.0.1
 PyYAML==6.0
 readme-renderer==33.0
 redis==4.2.0rc2
@@ -47,5 +52,5 @@ typing_extensions==4.1.1
 urllib3==1.26.8
 uvloop==0.16.0
 webencodings==0.5.1
-wrapt==1.13.3
+wrapt==1.14.0
 zipp==3.7.0
