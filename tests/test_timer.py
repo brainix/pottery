@@ -18,55 +18,55 @@
 
 import time
 
+import pytest
+
 from pottery import ContextTimer
-from tests.base import TestCase
 
 
-class ContextTimerTests(TestCase):
+def _confirm_elapsed(timer, expected):
     _ACCURACY = 50   # in milliseconds
+    elapsed = timer.elapsed()
+    assert elapsed >= expected, f'elapsed ({elapsed}) is not >= expected ({expected})'
+    assert elapsed < expected + _ACCURACY, f'elapsed ({elapsed}) is not < expected ({expected + _ACCURACY})'
 
-    def setUp(self):
-        super().setUp()
-        self.timer = ContextTimer()
 
-    def _confirm_elapsed(self, expected):
-        elapsed = self.timer.elapsed()
-        assert elapsed >= expected, f'elapsed ({elapsed}) is not >= expected ({expected})'
-        assert elapsed < expected + self._ACCURACY, f'elapsed ({elapsed}) is not < expected ({expected + self._ACCURACY})'
+def test_start_stop_and_elapsed():
+    timer = ContextTimer()
 
-    def test_start_stop_and_elapsed(self):
-        # timer hasn't been started
-        with self.assertRaises(RuntimeError):
-            self.timer.elapsed()
-        with self.assertRaises(RuntimeError):
-            self.timer.stop()
+    # timer hasn't been started
+    with pytest.raises(RuntimeError):
+        timer.elapsed()
+    with pytest.raises(RuntimeError):
+        timer.stop()
 
-        # timer has been started but not stopped
-        self.timer.start()
-        with self.assertRaises(RuntimeError):
-            self.timer.start()
-        time.sleep(0.1)
-        self._confirm_elapsed(1*100)
-        self.timer.stop()
+    # timer has been started but not stopped
+    timer.start()
+    with pytest.raises(RuntimeError):
+        timer.start()
+    time.sleep(0.1)
+    _confirm_elapsed(timer, 1*100)
+    timer.stop()
 
-        # timer has been stopped
-        with self.assertRaises(RuntimeError):
-            self.timer.start()
-        time.sleep(0.1)
-        self._confirm_elapsed(1*100)
-        with self.assertRaises(RuntimeError):
-            self.timer.stop()
+    # timer has been stopped
+    with pytest.raises(RuntimeError):
+        timer.start()
+    time.sleep(0.1)
+    _confirm_elapsed(timer, 1*100)
+    with pytest.raises(RuntimeError):
+        timer.stop()
 
-    def test_context_manager(self):
-        with self.timer:
-            self._confirm_elapsed(0)
-            for iteration in range(1, 3):
-                with self.subTest(iteration=iteration):
-                    time.sleep(0.1)
-                    self._confirm_elapsed(iteration*100)
-            self._confirm_elapsed(iteration*100)
-        time.sleep(0.1)
-        self._confirm_elapsed(iteration*100)
 
-        with self.assertRaises(RuntimeError), self.timer:  # pragma: no cover
-            ...
+def test_context_manager():
+    timer = ContextTimer()
+
+    with timer:
+        _confirm_elapsed(timer, 0)
+        for iteration in range(1, 3):
+            time.sleep(0.1)
+            _confirm_elapsed(timer, iteration*100)
+        _confirm_elapsed(timer, iteration*100)
+    time.sleep(0.1)
+    _confirm_elapsed(timer, iteration*100)
+
+    with pytest.raises(RuntimeError), timer:  # pragma: no cover
+        ...
