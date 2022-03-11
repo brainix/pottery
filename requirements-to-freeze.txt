@@ -28,7 +28,7 @@ mmh3
 uvloop
 typing_extensions
 
-pytest
+pytest-cov
 coverage
 mypy
 types-redis

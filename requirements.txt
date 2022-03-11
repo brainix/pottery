@@ -33,6 +33,7 @@ pyflakes==2.4.0
 Pygments==2.11.2
 pyparsing==3.0.7
 pytest==7.0.1
+pytest-cov==3.0.0
 PyYAML==6.0
 readme-renderer==33.0
 redis==4.2.0rc2
