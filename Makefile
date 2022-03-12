@@ -88,22 +88,6 @@ else
 		python3 -m unittest --verbose $(tests)
 endif
 
-.PHONY: doctest
-doctest: clean-redis doctest-readme doctest-code
-
-.PHONY: clean-redis
-clean-redis:
-	@source $(venv)/bin/activate && \
-		python3 -c "from redis import Redis; redis = Redis.from_url('redis://localhost:6379/1'); redis.flushdb()"
-
-.PHONY: doctest-readme
-doctest-readme:
-	source $(venv)/bin/activate && python3 -m doctest README.md
-
-.PHONY: doctest-code
-doctest-code:
-	make test tests=tests.test_doctests.DoctestTests.test_modules
-
 
 .PHONY: release
 release:
@@ -112,6 +96,7 @@ release:
 		python3 setup.py sdist && \
 		python3 setup.py bdist_wheel && \
 		twine upload dist/*
+
 
 # Usage:
 #	make pattern="tmp:*" delete-keys
