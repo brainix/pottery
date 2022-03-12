@@ -17,10 +17,18 @@
 
 
 import random
+import warnings
 from typing import Generator
 
 import pytest
 from redis import Redis
+
+from pottery import PotteryWarning
+
+
+@pytest.fixture(autouse=True)
+def filter_warnings() -> None:
+    warnings.filterwarnings('ignore', category=PotteryWarning)
 
 
 @pytest.fixture
