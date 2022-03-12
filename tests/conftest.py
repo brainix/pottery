@@ -31,7 +31,7 @@ def filter_warnings() -> None:
     warnings.filterwarnings('ignore', category=PotteryWarning)
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def redis_url() -> str:
     redis_db = random.randint(1, 15)  # nosec
     return f'redis://localhost:6379/{redis_db}'
