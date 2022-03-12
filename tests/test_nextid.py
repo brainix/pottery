@@ -18,100 +18,96 @@
 
 
 import unittest.mock
+from typing import Generator
 
+import pytest
+from redis import Redis
 from redis.commands.core import Script
 from redis.exceptions import TimeoutError
 
 from pottery import NextID
 from pottery import QuorumIsImpossible
 from pottery import QuorumNotAchieved
-from tests.base import TestCase
 
 
-class NextIDTests(TestCase):
-    'Distributed Redis-powered monotonically increasing ID generator tests.'
+@pytest.fixture
+def ids(redis: Redis) -> Generator[NextID, None, None]:
+    redis.unlink('nextid:current')
+    yield NextID(masters={redis})
+    redis.unlink('nextid:current')
 
-    def setUp(self):
-        super().setUp()
-        self.redis.unlink('nextid:current')
-        self.ids = NextID(masters={self.redis})
-        for master in self.ids.masters:
-            master.set(self.ids.key, 0)
 
-    def test_nextid(self):
-        for id_ in range(1, 10):
-            with self.subTest(id_=id_):
-                assert next(self.ids) == id_
+def test_nextid(ids: NextID) -> None:
+    for id_ in range(1, 10):
+        assert next(ids) == id_
 
-    def test_iter(self):
-        assert iter(self.ids) is self.ids
 
-    def test_reset(self):
-        self.ids.reset()
-        assert not self.redis.exists(self.ids.key)
+def test_iter(ids: NextID) -> None:
+    assert iter(ids) is ids
 
-        assert next(self.ids) == 1
-        assert self.redis.exists(self.ids.key)
 
-        self.ids.reset()
-        assert not self.redis.exists(self.ids.key)
+def test_reset(ids: NextID) -> None:
+    ids.reset()
+    for redis in ids.masters:
+        assert not redis.exists(ids.key)
 
-        assert next(self.ids) == 1
-        assert self.redis.exists(self.ids.key)
+    assert next(ids) == 1
+    for redis in ids.masters:
+        assert redis.exists(ids.key)
 
-    def test_repr(self):
-        assert repr(self.ids) == '<NextID key=nextid:current>'
+    ids.reset()
+    for redis in ids.masters:
+        assert not redis.exists(ids.key)
 
-    def test_slots(self):
-        with self.assertRaises(AttributeError):
-            self.ids.__dict__
+    assert next(ids) == 1
+    for redis in ids.masters:
+        assert redis.exists(ids.key)
 
-    def test_next_quorumnotachieved(self):
-        with self.assertRaises(QuorumNotAchieved), \
-             unittest.mock.patch.object(
-                 next(iter(self.ids.masters)),
-                 'get',
-             ) as get:
-            get.side_effect = TimeoutError
-            next(self.ids)
 
-        with self.assertRaises(QuorumNotAchieved), \
-             unittest.mock.patch.object(Script, '__call__') as __call__:
-            __call__.side_effect = TimeoutError
-            next(self.ids)
+def test_repr(ids: NextID) -> None:
+    assert repr(ids) == '<NextID key=nextid:current>'
 
-    def test_next_quorumisimpossible(self):
-        self.ids = NextID(masters={self.redis}, raise_on_redis_errors=True)
 
-        with self.assertRaises(QuorumIsImpossible), \
-             unittest.mock.patch.object(
-                 next(iter(self.ids.masters)),
-                 'get',
-             ) as get:
-            get.side_effect = TimeoutError
-            next(self.ids)
+def test_slots(ids: NextID) -> None:
+    with pytest.raises(AttributeError):
+        ids.__dict__
 
-        with self.assertRaises(QuorumIsImpossible), \
-             unittest.mock.patch.object(Script, '__call__') as __call__:
-            __call__.side_effect = TimeoutError
-            next(self.ids)
 
-    def test_reset_quorumnotachieved(self):
-        with self.assertRaises(QuorumNotAchieved), \
-             unittest.mock.patch.object(
-                 next(iter(self.ids.masters)),
-                 'delete',
-             ) as delete:
-            delete.side_effect = TimeoutError
-            self.ids.reset()
+def test_next_quorumnotachieved(ids: NextID) -> None:
+    with pytest.raises(QuorumNotAchieved), \
+         unittest.mock.patch.object(next(iter(ids.masters)), 'get') as get:
+        get.side_effect = TimeoutError
+        next(ids)
 
-    def test_reset_quorumisimpossible(self):
-        self.ids = NextID(masters={self.redis}, raise_on_redis_errors=True)
+    with pytest.raises(QuorumNotAchieved), \
+         unittest.mock.patch.object(Script, '__call__') as __call__:
+        __call__.side_effect = TimeoutError
+        next(ids)
 
-        with self.assertRaises(QuorumIsImpossible), \
-             unittest.mock.patch.object(
-                 next(iter(self.ids.masters)),
-                 'delete',
-             ) as delete:
-            delete.side_effect = TimeoutError
-            self.ids.reset()
+
+def test_next_quorumisimpossible(redis: Redis) -> None:
+    ids = NextID(masters={redis}, raise_on_redis_errors=True)
+    with pytest.raises(QuorumIsImpossible), \
+         unittest.mock.patch.object(next(iter(ids.masters)), 'get') as get:
+        get.side_effect = TimeoutError
+        next(ids)
+
+    with pytest.raises(QuorumIsImpossible), \
+         unittest.mock.patch.object(Script, '__call__') as __call__:
+        __call__.side_effect = TimeoutError
+        next(ids)
+
+
+def test_reset_quorumnotachieved(ids: NextID) -> None:
+    with pytest.raises(QuorumNotAchieved), \
+         unittest.mock.patch.object(next(iter(ids.masters)), 'delete') as delete:
+        delete.side_effect = TimeoutError
+        ids.reset()
+
+
+def test_reset_quorumisimpossible(redis: Redis) -> None:
+    ids = NextID(masters={redis}, raise_on_redis_errors=True)
+    with pytest.raises(QuorumIsImpossible), \
+         unittest.mock.patch.object(next(iter(ids.masters)), 'delete') as delete:
+        delete.side_effect = TimeoutError
+        ids.reset()
