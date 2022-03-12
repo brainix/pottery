@@ -22,7 +22,7 @@ import time
 from pottery.executor import BailOutExecutor
 
 
-def test_threadpoolexecutor():
+def test_threadpoolexecutor() -> None:
     'ThreadPoolExecutor waits for futures to complete on .__exit__()'
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future = executor.submit(time.sleep, 0.1)
@@ -36,7 +36,7 @@ def test_threadpoolexecutor():
     assert not future2.running()
 
 
-def test_bailoutexecutor():
+def test_bailoutexecutor() -> None:
     'BailOutExecutor does not wait for futures to complete on .__exit__()'
     with BailOutExecutor() as executor:
         future = executor.submit(time.sleep, 0.1)

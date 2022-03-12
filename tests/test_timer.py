@@ -23,14 +23,14 @@ import pytest
 from pottery import ContextTimer
 
 
-def _confirm_elapsed(timer, expected):
+def _confirm_elapsed(timer: ContextTimer, expected: int) -> None:
     _ACCURACY = 50   # in milliseconds
     elapsed = timer.elapsed()
     assert elapsed >= expected, f'elapsed ({elapsed}) is not >= expected ({expected})'
     assert elapsed < expected + _ACCURACY, f'elapsed ({elapsed}) is not < expected ({expected + _ACCURACY})'
 
 
-def test_start_stop_and_elapsed():
+def test_start_stop_and_elapsed() -> None:
     timer = ContextTimer()
 
     # timer hasn't been started
@@ -56,7 +56,7 @@ def test_start_stop_and_elapsed():
         timer.stop()
 
 
-def test_context_manager():
+def test_context_manager() -> None:
     timer = ContextTimer()
 
     with timer:
