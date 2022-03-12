@@ -16,23 +16,17 @@
 # --------------------------------------------------------------------------- #
 
 
-import asyncio
 import doctest
-import functools
 import logging
 import random
 import sys
 import unittest
 import warnings
-from typing import Any
 from typing import NoReturn
-from typing import cast
 
-import uvloop
 from redis import Redis
 
 from pottery import PotteryWarning
-from pottery.annotations import F
 from pottery.base import logger
 
 
@@ -60,23 +54,6 @@ class TestCase(unittest.TestCase):
         # Clean up the Redis database before and after the test.
         self.redis.flushdb()
         self.addCleanup(self.redis.flushdb)
-
-
-def async_test(func: F) -> F:
-    '''Decorator for async unit tests.
-
-    I got this recipe from:
-        https://stackoverflow.com/a/46324983
-
-    And I simplified it with:
-        https://docs.python.org/3/library/asyncio-task.html#asyncio.run
-    '''
-    @functools.wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
-        uvloop.install()
-        coro = func(*args, **kwargs)
-        asyncio.run(coro, debug=True)
-    return cast(F, wrapper)
 
 
 def run_doctests() -> NoReturn:  # pragma: no cover
