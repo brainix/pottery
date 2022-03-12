@@ -30,7 +30,6 @@ from pottery.base import Primitive
 from pottery.base import _Comparable
 from pottery.base import _Pipelined
 from pottery.base import random_key
-from tests.base import TestCase
 
 
 class TestRandomKey:
@@ -47,29 +46,6 @@ class TestRandomKey:
              unittest.mock.patch.object(redis, 'exists') as exists:
             exists.return_value = True
             random_key(redis=redis)
-
-
-class _BaseTestCase(TestCase):
-    def setUp(self):
-        super().setUp()
-        self.raj = RedisDict(
-            redis=self.redis,
-            key='pottery:raj',
-            hobby='music',
-            vegetarian=True,
-        )
-        self.nilika = RedisDict(
-            redis=self.redis,
-            key='pottery:nilika',
-            hobby='music',
-            vegetarian=True,
-        )
-        self.luvh = RedisDict(
-            redis=self.redis,
-            key='luvh',
-            hobby='bullying',
-            vegetarian=False,
-        )
 
 
 class TestCommon:
