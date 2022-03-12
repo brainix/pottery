@@ -17,40 +17,58 @@
 
 
 import json
+import random
+from typing import Generator
+
+import pytest
+from redis import Redis
 
 from pottery import RedisDict
 from pottery import RedisList
-from tests.base import TestCase
 
 
-class MonkeyPatchTests(TestCase):
-    def test_typeerror_not_jsonifyable(self):
-        "Ensure json.dumps() raises TypeError for objs that can't be serialized"
-        try:
-            json.dumps(object())
-        except TypeError as error:
-            assert str(error) == 'Object of type object is not JSON serializable'
+@pytest.fixture
+def redis() -> Generator[Redis, None, None]:
+    redis_db = random.randint(1, 15)  # nosec
+    redis_url = f'redis://localhost:6379/{redis_db}'
+    redis_client = Redis.from_url(redis_url, socket_timeout=1)
+    redis_client.flushdb()
+    yield redis_client
+    redis_client.flushdb()
 
-    def test_dict(self):
-        'Ensure that json.dumps() can serialize a dict'
-        assert json.dumps({}) == '{}'
 
-    def test_redisdict(self):
-        'Ensure that json.dumps() can serialize a RedisDict'
-        dict_ = RedisDict(redis=self.redis)
-        assert json.dumps(dict_) == '{}'
+def test_typeerror_not_jsonifyable() -> None:
+    "Ensure json.dumps() raises TypeError for objs that can't be serialized"
+    try:
+        json.dumps(object())
+    except TypeError as error:
+        assert str(error) == 'Object of type object is not JSON serializable'
 
-    def test_list(self):
-        'Ensure that json.dumps() can serialize a list'
-        assert json.dumps([]) == '[]'
 
-    def test_redislist(self):
-        'Ensure that json.dumps() can serialize a RedisList'
-        list_ = RedisList(redis=self.redis)
-        assert json.dumps(list_) == '[]'
+def test_dict() -> None:
+    'Ensure that json.dumps() can serialize a dict'
+    assert json.dumps({}) == '{}'
 
-    def test_json_encoder(self):
-        'Ensure that we can pass in the cls keyword argument to json.dumps()'
-        dict_ = RedisDict(redis=self.redis)
-        with self.assertRaises(TypeError):
-            json.dumps(dict_, cls=None)
+
+def test_redisdict(redis: Redis) -> None:
+    'Ensure that json.dumps() can serialize a RedisDict'
+    dict_ = RedisDict(redis=redis)
+    assert json.dumps(dict_) == '{}'
+
+
+def test_list() -> None:
+    'Ensure that json.dumps() can serialize a list'
+    assert json.dumps([]) == '[]'
+
+
+def test_redislist(redis: Redis) -> None:
+    'Ensure that json.dumps() can serialize a RedisList'
+    list_ = RedisList(redis=redis)
+    assert json.dumps(list_) == '[]'
+
+
+def test_json_encoder(redis: Redis) -> None:
+    'Ensure that we can pass in the cls keyword argument to json.dumps()'
+    dict_ = RedisDict(redis=redis)
+    with pytest.raises(TypeError):
+        json.dumps(dict_, cls=None)
