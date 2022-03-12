@@ -18,10 +18,14 @@
 
 import random
 import warnings
+# TODO: When we drop support for Python 3.9, change the following import to:
+#   from collections.abc import AsyncGenerator
+from typing import AsyncGenerator
 from typing import Generator
 
 import pytest
 from redis import Redis
+from redis.asyncio import Redis as AIORedis  # type: ignore
 
 from pottery import PotteryWarning
 
@@ -43,3 +47,11 @@ def redis(redis_url: str) -> Generator[Redis, None, None]:
     redis_client.flushdb()
     yield redis_client
     redis_client.flushdb()
+
+
+@pytest.fixture
+async def aioredis(redis_url: str) -> AsyncGenerator[AIORedis, None]:  # type: ignore
+    redis_client = AIORedis.from_url(redis_url, socket_timeout=1)
+    await redis_client.flushdb()
+    yield redis_client
+    await redis_client.flushdb()

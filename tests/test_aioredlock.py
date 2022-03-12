@@ -19,9 +19,6 @@
 
 import asyncio
 import unittest.mock
-# TODO: When we drop support for Python 3.9, change the following import to:
-#   from collections.abc import AsyncGenerator
-from typing import AsyncGenerator
 
 import pytest
 from redis.asyncio import Redis as AIORedis  # type: ignore
@@ -37,16 +34,8 @@ from pottery.exceptions import TooManyExtensions
 
 
 @pytest.fixture
-def aioredis(redis_url: str) -> AIORedis:  # type: ignore
-    return AIORedis.from_url(redis_url, socket_timeout=1)
-
-
-@pytest.fixture
-async def aioredlock(aioredis: AIORedis) -> AsyncGenerator[AIORedlock, None]:  # type: ignore
-    aioredlock = AIORedlock(masters={aioredis}, key='shower')
-    await aioredis.flushdb()
-    yield aioredlock
-    await aioredis.flushdb()
+def aioredlock(aioredis: AIORedis) -> AIORedlock:  # type: ignore
+    return AIORedlock(masters={aioredis}, key='shower')
 
 
 async def test_locked_acquire_and_release(aioredlock: AIORedlock) -> None:

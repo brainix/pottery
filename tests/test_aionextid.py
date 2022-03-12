@@ -18,9 +18,6 @@
 
 
 import unittest.mock
-# TODO: When we drop support for Python 3.9, change the following import to:
-#   from collections.abc import AsyncGenerator
-from typing import AsyncGenerator
 
 import pytest
 from redis.asyncio import Redis as AIORedis  # type: ignore
@@ -65,12 +62,8 @@ except NameError:  # pragma: no cover
 
 
 @pytest.fixture
-async def aioids(redis_url: str) -> AsyncGenerator[AIONextID, None]:
-    aioredis = AIORedis.from_url(redis_url, socket_timeout=1)
-    aionextid = AIONextID(masters={aioredis})
-    await aioredis.flushdb()
-    yield aionextid
-    await aioredis.flushdb()
+def aioids(aioredis: AIORedis) -> AIONextID:  # type: ignore
+    return AIONextID(masters={aioredis})
 
 
 async def test_aionextid(aioids: AIONextID) -> None:
