@@ -156,7 +156,7 @@ class HyperLogLog(Container):
     __update = update
 
     def union(self,
-              *objs: Iterable[RedisValues],
+              *objs: HyperLogLog | Iterable[RedisValues],
               redis: Redis | None = None,
               key: str = '',
               ) -> HyperLogLog:
