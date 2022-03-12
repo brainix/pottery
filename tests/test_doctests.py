@@ -26,7 +26,7 @@ import pytest
 from redis import Redis
 
 
-def _modules() -> Generator[ModuleType, None, None]:
+def modules() -> Generator[ModuleType, None, None]:
     tests_dir = pathlib.Path(__file__).parent
     package_dir = tests_dir.parent
     source_dir = package_dir / 'pottery'
@@ -40,7 +40,7 @@ def _modules() -> Generator[ModuleType, None, None]:
         yield module
 
 
-@pytest.mark.parametrize('module', _modules())
+@pytest.mark.parametrize('module', modules())
 def test_modules(module: ModuleType) -> None:
     'Run doctests in modules and confirm that they are not science fiction'
     results = doctest.testmod(m=module)
@@ -48,14 +48,14 @@ def test_modules(module: ModuleType) -> None:
 
 
 @pytest.fixture
-def _flush_redis() -> Generator[None, None, None]:
+def flush_redis() -> Generator[None, None, None]:
     redis = Redis.from_url('redis://localhost:6379/1')
     redis.flushdb()
     yield
     redis.flushdb()
 
 
-@pytest.mark.usefixtures('_flush_redis')
+@pytest.mark.usefixtures('flush_redis')
 def test_readme() -> None:
     'Run doctests in README.md and confirm that they are not fake news'
     tests_dir = pathlib.Path(__file__).parent
