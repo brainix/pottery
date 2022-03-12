@@ -23,16 +23,19 @@ import pytest
 from pottery import ContextTimer
 
 
-def _confirm_elapsed(timer: ContextTimer, expected: int) -> None:
-    _ACCURACY = 50   # in milliseconds
+@pytest.fixture
+def timer() -> ContextTimer:
+    return ContextTimer()
+
+
+def confirm_elapsed(timer: ContextTimer, expected: int) -> None:
+    ACCURACY = 50   # in milliseconds
     elapsed = timer.elapsed()
     assert elapsed >= expected, f'elapsed ({elapsed}) is not >= expected ({expected})'
-    assert elapsed < expected + _ACCURACY, f'elapsed ({elapsed}) is not < expected ({expected + _ACCURACY})'
+    assert elapsed < expected + ACCURACY, f'elapsed ({elapsed}) is not < expected ({expected + ACCURACY})'
 
 
-def test_start_stop_and_elapsed() -> None:
-    timer = ContextTimer()
-
+def test_start_stop_and_elapsed(timer: ContextTimer) -> None:
     # timer hasn't been started
     with pytest.raises(RuntimeError):
         timer.elapsed()
@@ -44,29 +47,27 @@ def test_start_stop_and_elapsed() -> None:
     with pytest.raises(RuntimeError):
         timer.start()
     time.sleep(0.1)
-    _confirm_elapsed(timer, 1*100)
+    confirm_elapsed(timer, 1*100)
     timer.stop()
 
     # timer has been stopped
     with pytest.raises(RuntimeError):
         timer.start()
     time.sleep(0.1)
-    _confirm_elapsed(timer, 1*100)
+    confirm_elapsed(timer, 1*100)
     with pytest.raises(RuntimeError):
         timer.stop()
 
 
-def test_context_manager() -> None:
-    timer = ContextTimer()
-
+def test_context_manager(timer: ContextTimer) -> None:
     with timer:
-        _confirm_elapsed(timer, 0)
+        confirm_elapsed(timer, 0)
         for iteration in range(1, 3):
             time.sleep(0.1)
-            _confirm_elapsed(timer, iteration*100)
-        _confirm_elapsed(timer, iteration*100)
+            confirm_elapsed(timer, iteration*100)
+        confirm_elapsed(timer, iteration*100)
     time.sleep(0.1)
-    _confirm_elapsed(timer, iteration*100)
+    confirm_elapsed(timer, iteration*100)
 
     with pytest.raises(RuntimeError), timer:  # pragma: no cover
         ...
