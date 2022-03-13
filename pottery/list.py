@@ -73,7 +73,7 @@ class RedisList(Container, collections.abc.MutableSequence):
         else:
             raise TypeError(
                 'list indices must be integers or slices, '
-                f'not {slice_or_index.__class__.__name__}'
+                f'not {slice_or_index.__class__.__qualname__}'
             )
         indices = range(start, stop, step)
         return indices
@@ -337,7 +337,7 @@ class RedisList(Container, collections.abc.MutableSequence):
                 encoded_value = pipeline.execute()[0]  # Available since Redis 1.2.0
                 if encoded_value is None:
                     raise IndexError(
-                        f'pop from an empty {self.__class__.__name__}'
+                        f'pop from an empty {self.__class__.__qualname__}'
                     )
                 return self._decode(encoded_value)
             else:
@@ -357,7 +357,7 @@ class RedisList(Container, collections.abc.MutableSequence):
                 if element == value:
                     self.__delete(pipeline, index)
                     return
-        class_name = self.__class__.__name__
+        class_name = self.__class__.__qualname__
         raise ValueError(f'{class_name}.remove(x): x not in {class_name}')
 
     @final

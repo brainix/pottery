@@ -107,7 +107,7 @@ class _Common:
             self.redis.unlink(self.key)  # Available since Redis 4.0.0
             logger.warning(
                 "Deleted tmp <%s key='%s'> (instance is about to be destroyed)",
-                self.__class__.__name__,
+                self.__class__.__qualname__,
                 self.key,
             )
 
@@ -134,7 +134,7 @@ class _Common:
         key = random_key(redis=self.redis, prefix=self._RANDOM_KEY_PREFIX)
         logger.warning(
             "Self-assigning tmp key <%s key='%s'>",
-            self.__class__.__name__,
+            self.__class__.__qualname__,
             key,
         )
         return key
@@ -200,7 +200,7 @@ class _Pipelined(abc.ABC):
             except Exception as error:
                 logger.warning(
                     'Caught %s; aborting pipeline of %d commands',
-                    error.__class__.__name__,
+                    error.__class__.__qualname__,
                     len(pipeline),
                 )
                 raise
