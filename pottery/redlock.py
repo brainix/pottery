@@ -772,13 +772,3 @@ def _log_synchronize(func: F,
             redlock.key,
             waiting_timer.elapsed(),
         )
-
-
-if __name__ == '__main__':
-    # Run the doctests in this module with:
-    #   $ source venv/bin/activate
-    #   $ python3 -m pottery.redlock
-    #   $ deactivate
-    with contextlib.suppress(ImportError):
-        from tests.base import run_doctests
-        run_doctests()

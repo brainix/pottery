@@ -19,10 +19,10 @@
 
 import concurrent.futures
 import contextlib
-import os
 import time
 import unittest.mock
 
+import pytest
 from redis import Redis
 from redis.commands.core import Script
 from redis.exceptions import TimeoutError
@@ -36,254 +36,283 @@ from pottery import ReleaseUnlockedLock
 from pottery import TooManyExtensions
 from pottery import synchronize
 from pottery.base import logger
-from tests.base import TestCase
 
 
-class RedlockTests(TestCase):
+class TestRedlock:
     'Distributed Redis-powered lock tests.'
 
-    def setUp(self):
-        super().setUp()
-        self.redlock = Redlock(
-            masters={self.redis},
-            key='printer',
-            auto_release_time=.2,
-        )
+    @staticmethod
+    @pytest.fixture
+    def redlock(redis: Redis) -> Redlock:
+        return Redlock(masters={redis}, key='printer', auto_release_time=.2)
 
-    def test_acquire_fails_within_auto_release_time(self):
-        self.redlock.auto_release_time = .001
-        assert not self.redlock._acquire_masters()
+    @staticmethod
+    def test_acquire_fails_within_auto_release_time(redlock: Redlock) -> None:
+        redlock.auto_release_time = .001
+        assert not redlock._acquire_masters()
 
-    def test_acquire_and_time_out(self):
-        assert not self.redis.exists(self.redlock.key)
-        assert self.redlock.acquire()
-        assert self.redis.exists(self.redlock.key)
-        time.sleep(self.redlock.auto_release_time * 2)
-        assert not self.redis.exists(self.redlock.key)
+    @staticmethod
+    def test_acquire_and_time_out(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        assert not redis.exists(redlock.key)
+        assert redlock.acquire()
+        assert redis.exists(redlock.key)
+        time.sleep(redlock.auto_release_time * 2)
+        assert not redis.exists(redlock.key)
 
-    def test_acquire_same_lock_twice_blocking_without_timeout(self):
-        assert not self.redis.exists(self.redlock.key)
+    @staticmethod
+    def test_acquire_same_lock_twice_blocking_without_timeout(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        assert not redis.exists(redlock.key)
         with ContextTimer() as timer, \
              unittest.mock.patch.object(logger, 'info') as info:
-            assert self.redlock.acquire()
-            assert self.redis.exists(self.redlock.key)
-            assert self.redlock.acquire()
-            assert self.redis.exists(self.redlock.key)
-            assert timer.elapsed() / 1000 >= self.redlock.auto_release_time
+            assert redlock.acquire()
+            assert redis.exists(redlock.key)
+            assert redlock.acquire()
+            assert redis.exists(redlock.key)
+            assert timer.elapsed() / 1000 >= redlock.auto_release_time
             assert info.call_count == 1, f'_logger.info() called {info.call_count} times'
 
-    @unittest.skipIf('CI' in os.environ, 'this unit test is flaky on CI')  # pragma: no cover
-    def test_acquire_same_lock_twice_blocking_with_timeout(self):
-        with unittest.mock.patch.object(logger, 'info') as info:
-            assert not self.redis.exists(self.redlock.key)
-            assert self.redlock.acquire()
-            assert self.redis.exists(self.redlock.key)
-            assert not self.redlock.acquire(timeout=0)
-            assert not self.redlock.acquire(timeout=0.025)
-            assert self.redis.exists(self.redlock.key)
-            assert info.call_count == 1, f'_logger.info() called {info.call_count} times'
+    @staticmethod
+    def test_acquire_same_lock_twice_non_blocking_without_timeout(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        assert not redis.exists(redlock.key)
+        assert redlock.acquire()
+        assert redis.exists(redlock.key)
+        assert not redlock.acquire(blocking=False)
+        assert redis.exists(redlock.key)
+        time.sleep(redlock.auto_release_time * 2)
+        assert not redis.exists(redlock.key)
 
-    def test_acquire_same_lock_twice_non_blocking_without_timeout(self):
-        assert not self.redis.exists(self.redlock.key)
-        assert self.redlock.acquire()
-        assert self.redis.exists(self.redlock.key)
-        assert not self.redlock.acquire(blocking=False)
-        assert self.redis.exists(self.redlock.key)
-        time.sleep(self.redlock.auto_release_time * 2)
-        assert not self.redis.exists(self.redlock.key)
+    @staticmethod
+    def test_acquire_same_lock_twice_non_blocking_with_timeout(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        assert not redis.exists(redlock.key)
+        assert redlock.acquire()
+        assert redis.exists(redlock.key)
+        with pytest.raises(ValueError):
+            redlock.acquire(blocking=False, timeout=0)
+        assert redis.exists(redlock.key)
 
-    def test_acquire_same_lock_twice_non_blocking_with_timeout(self):
-        assert not self.redis.exists(self.redlock.key)
-        assert self.redlock.acquire()
-        assert self.redis.exists(self.redlock.key)
-        with self.assertRaises(ValueError):
-            self.redlock.acquire(blocking=False, timeout=0)
-        assert self.redis.exists(self.redlock.key)
+    @staticmethod
+    def test_acquired(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        assert not redis.exists(redlock.key)
+        assert not redlock.locked()
+        assert redlock.acquire()
+        assert redis.exists(redlock.key)
+        assert redlock.locked()
+        time.sleep(redlock.auto_release_time * 2)
+        assert not redis.exists(redlock.key)
+        assert not redlock.locked()
 
-    def test_acquired(self):
-        assert not self.redis.exists(self.redlock.key)
-        assert not self.redlock.locked()
-        assert self.redlock.acquire()
-        assert self.redis.exists(self.redlock.key)
-        assert self.redlock.locked()
-        time.sleep(self.redlock.auto_release_time * 2)
-        assert not self.redis.exists(self.redlock.key)
-        assert not self.redlock.locked()
+    @staticmethod
+    def test_extend(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        assert not redis.exists(redlock.key)
+        with pytest.raises(ExtendUnlockedLock):
+            redlock.extend()
+        assert redlock.acquire()
+        for _ in range(Redlock._NUM_EXTENSIONS):
+            redlock.extend()
+        with pytest.raises(TooManyExtensions):
+            redlock.extend()
 
-    def test_extend(self):
-        assert not self.redis.exists(self.redlock.key)
-        with self.assertRaises(ExtendUnlockedLock):
-            self.redlock.extend()
-        assert self.redlock.acquire()
-        for extension_num in range(Redlock._NUM_EXTENSIONS):
-            with self.subTest(extension_num=extension_num):
-                self.redlock.extend()
-        with self.assertRaises(TooManyExtensions):
-            self.redlock.extend()
+    @staticmethod
+    def test_acquire_then_release(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        assert not redis.exists(redlock.key)
+        assert redlock.acquire()
+        assert redis.exists(redlock.key)
+        redlock.release()
+        assert not redis.exists(redlock.key)
 
-    def test_acquire_then_release(self):
-        assert not self.redis.exists(self.redlock.key)
-        assert self.redlock.acquire()
-        assert self.redis.exists(self.redlock.key)
-        self.redlock.release()
-        assert not self.redis.exists(self.redlock.key)
+    @staticmethod
+    def test_release_unlocked_lock(redlock: Redlock) -> None:
+        with pytest.raises(ReleaseUnlockedLock):
+            redlock.release()
 
-    def test_release_unlocked_lock(self):
-        with self.assertRaises(ReleaseUnlockedLock):
-            self.redlock.release()
-
-    def test_releaseunlockedlock_repr(self):
+    @staticmethod
+    def test_releaseunlockedlock_repr(redlock: Redlock) -> None:
         try:
-            self.redlock.release()
+            redlock.release()
         except ReleaseUnlockedLock as wtf:
+            redis = next(iter(redlock.masters))
+            redis_db = redis.get_connection_kwargs()['db']  # type: ignore
             assert repr(wtf) == (
                 "ReleaseUnlockedLock(key='redlock:printer', "
-                f"masters=frozenset({{Redis<ConnectionPool<Connection<host=localhost,port=6379,db={self.redis_db}>>>}}), "
+                f"masters=frozenset({{Redis<ConnectionPool<Connection<host=localhost,port=6379,db={redis_db}>>>}}), "
                 "redis_errors=[])"
             )
 
-    def test_release_same_lock_twice(self):
-        assert not self.redis.exists(self.redlock.key)
-        assert self.redlock.acquire()
-        self.redlock.release()
-        with self.assertRaises(ReleaseUnlockedLock):
-            self.redlock.release()
+    @staticmethod
+    def test_release_same_lock_twice(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        assert not redis.exists(redlock.key)
+        assert redlock.acquire()
+        redlock.release()
+        with pytest.raises(ReleaseUnlockedLock):
+            redlock.release()
 
-    def test_context_manager(self):
-        assert not self.redis.exists(self.redlock.key)
-        with self.redlock:
-            assert self.redis.exists(self.redlock.key)
-        assert not self.redis.exists(self.redlock.key)
+    @staticmethod
+    def test_context_manager(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        assert not redis.exists(redlock.key)
+        with redlock:
+            assert redis.exists(redlock.key)
+        assert not redis.exists(redlock.key)
 
-    def test_context_manager_time_out_before_exit(self):
-        assert not self.redis.exists(self.redlock.key)
-        with self.assertRaises(ReleaseUnlockedLock), self.redlock:
-            assert self.redis.exists(self.redlock.key)
-            time.sleep(self.redlock.auto_release_time * 2)
-            assert not self.redis.exists(self.redlock.key)
-        assert not self.redis.exists(self.redlock.key)
+    @staticmethod
+    def test_context_manager_time_out_before_exit(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        assert not redis.exists(redlock.key)
+        with pytest.raises(ReleaseUnlockedLock), redlock:
+            assert redis.exists(redlock.key)
+            time.sleep(redlock.auto_release_time * 2)
+            assert not redis.exists(redlock.key)
+        assert not redis.exists(redlock.key)
 
-    def test_context_manager_acquired(self):
-        assert not self.redis.exists(self.redlock.key)
-        assert not self.redlock.locked()
-        with self.redlock:
-            assert self.redis.exists(self.redlock.key)
-            assert self.redlock.locked()
-        assert not self.redis.exists(self.redlock.key)
-        assert not self.redlock.locked()
+    @staticmethod
+    def test_context_manager_acquired(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        assert not redis.exists(redlock.key)
+        assert not redlock.locked()
+        with redlock:
+            assert redis.exists(redlock.key)
+            assert redlock.locked()
+        assert not redis.exists(redlock.key)
+        assert not redlock.locked()
 
-    def test_context_manager_acquired_time_out_before_exit(self):
-        assert not self.redis.exists(self.redlock.key)
-        assert not self.redlock.locked()
-        with self.assertRaises(ReleaseUnlockedLock), self.redlock:
-            assert self.redis.exists(self.redlock.key)
-            assert self.redlock.locked()
-            time.sleep(self.redlock.auto_release_time * 2)
-            assert not self.redis.exists(self.redlock.key)
-            assert not self.redlock.locked()
-        assert not self.redis.exists(self.redlock.key)
-        assert not self.redlock.locked()
+    @staticmethod
+    def test_context_manager_acquired_time_out_before_exit(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        assert not redis.exists(redlock.key)
+        assert not redlock.locked()
+        with pytest.raises(ReleaseUnlockedLock), redlock:
+            assert redis.exists(redlock.key)
+            assert redlock.locked()
+            time.sleep(redlock.auto_release_time * 2)
+            assert not redis.exists(redlock.key)
+            assert not redlock.locked()
+        assert not redis.exists(redlock.key)
+        assert not redlock.locked()
 
-    def test_context_manager_release_before_exit(self):
-        assert not self.redis.exists(self.redlock.key)
-        with self.assertRaises(ReleaseUnlockedLock), self.redlock:
-            assert self.redis.exists(self.redlock.key)
-            self.redlock.release()
-            assert not self.redis.exists(self.redlock.key)
+    @staticmethod
+    def test_context_manager_release_before_exit(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        assert not redis.exists(redlock.key)
+        with pytest.raises(ReleaseUnlockedLock), redlock:
+            assert redis.exists(redlock.key)
+            redlock.release()
+            assert not redis.exists(redlock.key)
 
-    def test_invalid_context_manager_params(self):
-        with self.assertRaises(ValueError):
+    @staticmethod
+    def test_invalid_context_manager_params(redis: Redis) -> None:
+        with pytest.raises(ValueError):
             Redlock(
-                masters={self.redis},
+                masters={redis},
                 key='printer',
                 context_manager_blocking=False,
                 context_manager_timeout=0.2,
             )
 
-    def test_default_context_manager_params(self):
-        redlock2 = Redlock(
-            masters={self.redis},
-            key='printer',
-            auto_release_time=.2,
-        )
-        with contextlib.suppress(ReleaseUnlockedLock), self.redlock:
-            assert self.redlock.locked()
+    @staticmethod
+    def test_default_context_manager_params(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        redlock2 = Redlock(masters={redis}, key='printer', auto_release_time=.2)
+        with contextlib.suppress(ReleaseUnlockedLock), redlock:
+            assert redlock.locked()
             assert not redlock2.locked()
             with redlock2:
-                assert not self.redlock.locked()
+                assert not redlock.locked()
                 assert redlock2.locked()
 
-    def test_overridden_context_manager_params(self):
+    @staticmethod
+    def test_overridden_context_manager_params(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
         redlock2 = Redlock(
-            masters={self.redis},
+            masters={redis},
             key='printer',
             auto_release_time=.2,
             context_manager_blocking=False,
         )
-        with self.redlock, self.assertRaises(QuorumNotAchieved):
+        with redlock, pytest.raises(QuorumNotAchieved):
             with redlock2:
                 ...  # pragma: no cover
 
-    def test_repr(self):
-        assert repr(self.redlock) == '<Redlock key=redlock:printer>'
+    @staticmethod
+    def test_repr(redlock: Redlock) -> None:
+        assert repr(redlock) == '<Redlock key=redlock:printer>'
 
-    def test_slots(self):
-        with self.assertRaises(AttributeError):
-            self.redlock.__dict__
+    @staticmethod
+    def test_slots(redlock: Redlock) -> None:
+        with pytest.raises(AttributeError):
+            redlock.__dict__
 
-    def test_acquire_rediserror(self):
-        with unittest.mock.patch.object(self.redis, 'set') as set:
+    @staticmethod
+    def test_acquire_rediserror(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        with unittest.mock.patch.object(redis, 'set') as set:
             set.side_effect = TimeoutError
-            assert not self.redlock.acquire(blocking=False)
+            assert not redlock.acquire(blocking=False)
 
-    def test_acquire_quorumisimpossible(self):
-        with unittest.mock.patch.object(self.redis, 'set') as set, \
-             self.assertRaises(QuorumIsImpossible):
+    @staticmethod
+    def test_acquire_quorumisimpossible(redlock: Redlock) -> None:
+        redis = next(iter(redlock.masters))
+        with unittest.mock.patch.object(redis, 'set') as set, \
+             pytest.raises(QuorumIsImpossible):
             set.side_effect = TimeoutError
-            self.redlock.acquire(raise_on_redis_errors=True)
+            redlock.acquire(raise_on_redis_errors=True)
 
-    def test_locked_rediserror(self):
-        with self.redlock, \
+    @staticmethod
+    def test_locked_rediserror(redlock: Redlock) -> None:
+        with redlock, \
              unittest.mock.patch.object(Script, '__call__') as __call__:
             __call__.side_effect = TimeoutError
-            assert not self.redlock.locked()
+            assert not redlock.locked()
 
-    def test_locked_quorumisimpossible(self):
-        with self.redlock, \
+    @staticmethod
+    def test_locked_quorumisimpossible(redlock: Redlock) -> None:
+        with redlock, \
              unittest.mock.patch.object(Script, '__call__') as __call__, \
-             self.assertRaises(QuorumIsImpossible):
+             pytest.raises(QuorumIsImpossible):
             __call__.side_effect = TimeoutError
-            self.redlock.locked(raise_on_redis_errors=True)
+            redlock.locked(raise_on_redis_errors=True)
 
-    def test_extend_rediserror(self):
-        with self.redlock, \
+    @staticmethod
+    def test_extend_rediserror(redlock: Redlock) -> None:
+        with redlock, \
              unittest.mock.patch.object(Script, '__call__') as __call__, \
-             self.assertRaises(ExtendUnlockedLock):
+             pytest.raises(ExtendUnlockedLock):
             __call__.side_effect = TimeoutError
-            self.redlock.extend()
+            redlock.extend()
 
-    def test_extend_quorumisimpossible(self):
-        with self.redlock, \
+    @staticmethod
+    def test_extend_quorumisimpossible(redlock: Redlock) -> None:
+        with redlock, \
              unittest.mock.patch.object(Script, '__call__') as __call__, \
-             self.assertRaises(QuorumIsImpossible):
+             pytest.raises(QuorumIsImpossible):
             __call__.side_effect = TimeoutError
-            self.redlock.extend(raise_on_redis_errors=True)
+            redlock.extend(raise_on_redis_errors=True)
 
-    def test_release_rediserror(self):
-        with self.redlock, \
+    @staticmethod
+    def test_release_rediserror(redlock: Redlock) -> None:
+        with redlock, \
              unittest.mock.patch.object(Script, '__call__') as __call__, \
-             self.assertRaises(ReleaseUnlockedLock):
+             pytest.raises(ReleaseUnlockedLock):
             __call__.side_effect = TimeoutError
-            self.redlock.release()
+            redlock.release()
 
-    def test_release_quorumisimpossible(self):
-        with self.redlock, \
+    @staticmethod
+    def test_release_quorumisimpossible(redlock: Redlock) -> None:
+        with redlock, \
              unittest.mock.patch.object(Script, '__call__') as __call__, \
-             self.assertRaises(QuorumIsImpossible):
+             pytest.raises(QuorumIsImpossible):
             __call__.side_effect = TimeoutError
-            self.redlock.release(raise_on_redis_errors=True)
+            redlock.release(raise_on_redis_errors=True)
 
-    def test_contention(self):
+    @staticmethod
+    def test_contention() -> None:
         dbs = range(1, 6)
         urls = [f'redis://localhost:6379/{db}' for db in dbs]
         masters = [Redis.from_url(url, socket_timeout=1) for url in urls]
@@ -300,14 +329,11 @@ class RedlockTests(TestCase):
                     lock.release()
 
 
-class SynchronizeTests(TestCase):
-    def test_synchronize(self):
-        @synchronize(
-            key='synchronized-func',
-            masters={self.redis},
-            auto_release_time=.2,
-        )
-        def func():
+class TestSynchronize:
+    @staticmethod
+    def test_synchronize(redis: Redis) -> None:
+        @synchronize(key='synchronized-func', masters={redis}, auto_release_time=.2)
+        def func() -> float:
             time.sleep(.1)
             return time.time()
 
@@ -318,15 +344,11 @@ class SynchronizeTests(TestCase):
             delta = result2 - result1
             assert delta > .1
 
-    def test_synchronize_fails(self):
-        @synchronize(
-            key='synchronized-func',
-            masters={self.redis},
-            auto_release_time=.001,
-            blocking=False,
-        )
-        def func():
+    @staticmethod
+    def test_synchronize_fails(redis: Redis) -> None:
+        @synchronize(key='synchronized-func', masters={redis}, auto_release_time=.001, blocking=False)
+        def func() -> None:
             raise NotImplementedError
 
-        with self.assertRaises(QuorumNotAchieved):
+        with pytest.raises(QuorumNotAchieved):
             func()

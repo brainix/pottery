@@ -28,6 +28,9 @@ mmh3
 uvloop
 typing_extensions
 
+pytest
+pytest-asyncio
+pytest-cov
 coverage
 mypy
 types-redis

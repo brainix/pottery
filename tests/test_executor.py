@@ -20,36 +20,35 @@ import concurrent.futures
 import time
 
 from pottery.executor import BailOutExecutor
-from tests.base import TestCase
 
 
-class ExecutorTests(TestCase):
-    def test_threadpoolexecutor(self):
-        'ThreadPoolExecutor waits for futures to complete on .__exit__()'
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(time.sleep, 0.1)
-        assert not future.running()
+def test_threadpoolexecutor() -> None:
+    'ThreadPoolExecutor waits for futures to complete on .__exit__()'
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(time.sleep, 0.1)
+    assert not future.running()
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future1 = executor.submit(time.sleep, 0.1)
-            future2 = executor.submit(time.sleep, 0.2)
-            future1.result()
-        assert not future1.running()
-        assert not future2.running()
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future1 = executor.submit(time.sleep, 0.1)
+        future2 = executor.submit(time.sleep, 0.2)
+        future1.result()
+    assert not future1.running()
+    assert not future2.running()
 
-    def test_bailoutexecutor(self):
-        'BailOutExecutor does not wait for futures to complete on .__exit__()'
-        with BailOutExecutor() as executor:
-            future = executor.submit(time.sleep, 0.1)
-        assert future.running()
-        time.sleep(0.15)
-        assert not future.running()
 
-        with BailOutExecutor() as executor:
-            future1 = executor.submit(time.sleep, 0.1)
-            future2 = executor.submit(time.sleep, 0.2)
-            future1.result()
-        assert not future1.running()
-        assert future2.running()
-        time.sleep(0.15)
-        assert not future2.running()
+def test_bailoutexecutor() -> None:
+    'BailOutExecutor does not wait for futures to complete on .__exit__()'
+    with BailOutExecutor() as executor:
+        future = executor.submit(time.sleep, 0.1)
+    assert future.running()
+    time.sleep(0.15)
+    assert not future.running()
+
+    with BailOutExecutor() as executor:
+        future1 = executor.submit(time.sleep, 0.1)
+        future2 = executor.submit(time.sleep, 0.2)
+        future1.result()
+    assert not future1.running()
+    assert future2.running()
+    time.sleep(0.15)
+    assert not future2.running()

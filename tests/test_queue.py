@@ -16,75 +16,71 @@
 # --------------------------------------------------------------------------- #
 
 
+import pytest
+from redis import Redis
+
 from pottery import ContextTimer
 from pottery import QueueEmptyError
 from pottery import RedisSimpleQueue
-from tests.base import TestCase
 
 
-class QueueTests(TestCase):
-    def test_put(self):
-        queue = RedisSimpleQueue()
+@pytest.fixture
+def queue(redis: Redis) -> RedisSimpleQueue:
+    return RedisSimpleQueue(redis=redis)
 
+
+def test_put(queue: RedisSimpleQueue) -> None:
+    assert queue.qsize() == 0
+    assert queue.empty()
+
+    for num in range(1, 6):
+        queue.put(num)
+        assert queue.qsize() == num
+        assert not queue.empty()
+
+
+def test_put_nowait(queue: RedisSimpleQueue) -> None:
+    assert queue.qsize() == 0
+    assert queue.empty()
+
+    for num in range(1, 6):
+        queue.put_nowait(num)
+        assert queue.qsize() == num
+        assert not queue.empty()
+
+
+def test_get(queue: RedisSimpleQueue) -> None:
+    with pytest.raises(QueueEmptyError):
+        queue.get()
+
+    for num in range(1, 6):
+        queue.put(num)
+        assert queue.get() == num
         assert queue.qsize() == 0
         assert queue.empty()
 
-        for num in range(1, 6):
-            with self.subTest(num=num):
-                queue.put(num)
-                assert queue.qsize() == num
-                assert not queue.empty()
+    with pytest.raises(QueueEmptyError):
+        queue.get()
 
-    def test_put_nowait(self):
-        queue = RedisSimpleQueue()
 
-        assert queue.qsize() == 0
-        assert queue.empty()
+def test_get_nowait(queue: RedisSimpleQueue) -> None:
+    with pytest.raises(QueueEmptyError):
+        queue.get_nowait()
 
-        for num in range(1, 6):
-            with self.subTest(num=num):
-                queue.put_nowait(num)
-                assert queue.qsize() == num
-                assert not queue.empty()
+    for num in range(1, 6):
+        queue.put(num)
 
-    def test_get(self):
-        queue = RedisSimpleQueue()
+    for num in range(1, 6):
+        assert queue.get_nowait() == num
+        assert queue.qsize() == 5 - num
+        assert queue.empty() == (num == 5)
 
-        with self.assertRaises(QueueEmptyError):
-            queue.get()
+    with pytest.raises(QueueEmptyError):
+        queue.get_nowait()
 
-        for num in range(1, 6):
-            with self.subTest(num=num):
-                queue.put(num)
-                assert queue.get() == num
-                assert queue.qsize() == 0
-                assert queue.empty()
 
-        with self.assertRaises(QueueEmptyError):
-            queue.get()
-
-    def test_get_nowait(self):
-        queue = RedisSimpleQueue()
-
-        with self.assertRaises(QueueEmptyError):
-            queue.get_nowait()
-
-        for num in range(1, 6):
-            queue.put(num)
-
-        for num in range(1, 6):
-            with self.subTest(num=num):
-                assert queue.get_nowait() == num
-                assert queue.qsize() == 5 - num
-                assert queue.empty() == (num == 5)
-
-        with self.assertRaises(QueueEmptyError):
-            queue.get_nowait()
-
-    def test_get_timeout(self):
-        queue = RedisSimpleQueue()
-        timeout = 1
-
-        with self.assertRaises(QueueEmptyError), ContextTimer() as timer:
-            queue.get(timeout=timeout)
-        assert timer.elapsed() / 1000 >= timeout
+def test_get_timeout(queue: RedisSimpleQueue) -> None:
+    timeout = 1
+    with pytest.raises(QueueEmptyError), ContextTimer() as timer:
+        queue.get(timeout=1)
+    assert timer.elapsed() / 1000 >= timeout

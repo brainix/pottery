@@ -278,13 +278,3 @@ class NextID(Scripts, Primitive):
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__qualname__} key={self.key}>'
-
-
-if __name__ == '__main__':
-    # Run the doctests in this module with:
-    #   $ source venv/bin/activate
-    #   $ python3 -m pottery.nextid
-    #   $ deactivate
-    with contextlib.suppress(ImportError):
-        from tests.base import run_doctests
-        run_doctests()

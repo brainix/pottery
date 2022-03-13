@@ -127,14 +127,3 @@ class ContextTimer:
             return round(elapsed * 1000)
         else:
             raise RuntimeError("timer hasn't yet been started")
-
-
-if __name__ == '__main__':
-    # Run the doctests in this module with:
-    #   $ source venv/bin/activate
-    #   $ python3 -m pottery.timer
-    #   $ deactivate
-    import contextlib
-    with contextlib.suppress(ImportError):
-        from tests.base import run_doctests
-        run_doctests()

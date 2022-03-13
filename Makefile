@@ -71,11 +71,9 @@ endif
 
 .PHONY: test
 test:
-ifeq ($(tests),)
 	$(eval $@_SOURCE_FILES := $(shell find . -name '*.py' -not -path './.git/*' -not -path './build/*' -not -path './dist/*' -not -path './pottery.egg-info/*' -not -path './venv/*'))
 	source $(venv)/bin/activate && \
-		coverage3 run -m unittest discover --start-directory tests --verbose && \
-		coverage3 report && \
+		pytest --verbose --cov-config=.coveragerc --cov=pottery --cov=tests && \
 		echo Running static type checks && \
 		mypy && \
 		echo Running Flake8 on $($@_SOURCE_FILES) && \
@@ -84,26 +82,6 @@ ifeq ($(tests),)
 		isort $($@_SOURCE_FILES) --check-only --diff && \
 		bandit --recursive pottery && \
 		safety check
-else
-	source $(venv)/bin/activate && \
-		python3 -m unittest --verbose $(tests)
-endif
-
-.PHONY: doctest
-doctest: clean-redis doctest-readme doctest-code
-
-.PHONY: clean-redis
-clean-redis:
-	@source $(venv)/bin/activate && \
-		python3 -c "from redis import Redis; redis = Redis.from_url('redis://localhost:6379/1'); redis.flushdb()"
-
-.PHONY: doctest-readme
-doctest-readme:
-	source $(venv)/bin/activate && python3 -m doctest README.md
-
-.PHONY: doctest-code
-doctest-code:
-	make test tests=tests.test_doctests.DoctestTests.test_modules
 
 
 .PHONY: release
@@ -113,6 +91,7 @@ release:
 		python3 setup.py sdist && \
 		python3 setup.py bdist_wheel && \
 		twine upload dist/*
+
 
 # Usage:
 #	make pattern="tmp:*" delete-keys

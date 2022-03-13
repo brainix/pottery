@@ -1,5 +1,5 @@
 # --------------------------------------------------------------------------- #
-#   test_monkey.py                                                            #
+#   conftest.py                                                               #
 #                                                                             #
 #   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
@@ -16,47 +16,42 @@
 # --------------------------------------------------------------------------- #
 
 
-import json
+import random
+import warnings
+# TODO: When we drop support for Python 3.9, change the following import to:
+#   from collections.abc import AsyncGenerator
+from typing import AsyncGenerator
+from typing import Generator
 
 import pytest
 from redis import Redis
+from redis.asyncio import Redis as AIORedis  # type: ignore
 
-from pottery import RedisDict
-from pottery import RedisList
-
-
-def test_typeerror_not_jsonifyable() -> None:
-    "Ensure json.dumps() raises TypeError for objs that can't be serialized"
-    try:
-        json.dumps(object())
-    except TypeError as error:
-        assert str(error) == 'Object of type object is not JSON serializable'
+from pottery import PotteryWarning
 
 
-def test_dict() -> None:
-    'Ensure that json.dumps() can serialize a dict'
-    assert json.dumps({}) == '{}'
+@pytest.fixture(autouse=True)
+def filter_warnings() -> None:
+    warnings.filterwarnings('ignore', category=PotteryWarning)
 
 
-def test_redisdict(redis: Redis) -> None:
-    'Ensure that json.dumps() can serialize a RedisDict'
-    dict_ = RedisDict(redis=redis)
-    assert json.dumps(dict_) == '{}'
+@pytest.fixture(scope='session')
+def redis_url() -> str:
+    redis_db = random.randint(1, 15)  # nosec
+    return f'redis://localhost:6379/{redis_db}'
 
 
-def test_list() -> None:
-    'Ensure that json.dumps() can serialize a list'
-    assert json.dumps([]) == '[]'
+@pytest.fixture
+def redis(redis_url: str) -> Generator[Redis, None, None]:
+    redis_client = Redis.from_url(redis_url, socket_timeout=1)
+    redis_client.flushdb()
+    yield redis_client
+    redis_client.flushdb()
 
 
-def test_redislist(redis: Redis) -> None:
-    'Ensure that json.dumps() can serialize a RedisList'
-    list_ = RedisList(redis=redis)
-    assert json.dumps(list_) == '[]'
-
-
-def test_json_encoder(redis: Redis) -> None:
-    'Ensure that we can pass in the cls keyword argument to json.dumps()'
-    dict_ = RedisDict(redis=redis)
-    with pytest.raises(TypeError):
-        json.dumps(dict_, cls=None)
+@pytest.fixture
+async def aioredis(redis_url: str) -> AsyncGenerator[AIORedis, None]:  # type: ignore
+    redis_client = AIORedis.from_url(redis_url, socket_timeout=1)
+    await redis_client.flushdb()
+    yield redis_client
+    await redis_client.flushdb()

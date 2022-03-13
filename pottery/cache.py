@@ -294,7 +294,7 @@ class CachedOrderedDict(collections.OrderedDict):
         self._misses.discard(dict_key)
         if dict_key not in self or self[dict_key] is self._SENTINEL:
             value = self[dict_key] = default
-        else:
+        else:  # pragma: no cover
             value = self[dict_key]
         return value
 
@@ -306,7 +306,7 @@ class CachedOrderedDict(collections.OrderedDict):
                                default: JSONTypes = None,
                                ) -> None:
         with self._cache._watch() as pipeline:
-            if dict_key not in self._cache:
+            if dict_key not in self._cache:  # pragma: no cover
                 pipeline.multi()  # Available since Redis 1.2.0
                 # The following line is equivalent to: self._cache[dict_key] = default
                 pipeline.hset(  # Available since Redis 2.0.0

@@ -126,7 +126,7 @@ class AIONextID(Scripts, AIOPrimitive):
             redis_errors=redis_errors,
         )
 
-    async def reset(self):
+    async def reset(self) -> None:
         num_masters_reset, redis_errors = 0, []
         coros = [self.__reset_current_id(master) for master in self.masters]
         for coro in asyncio.as_completed(coros):
