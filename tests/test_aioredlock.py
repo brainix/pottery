@@ -173,11 +173,12 @@ async def test_enqueued(aioredlock: AIORedlock) -> None:
     assert not await aioredlock2.acquire(timeout=0.1)
 
 
-async def test_contention():
+@pytest.mark.parametrize('num_locks', range(1, 11))
+async def test_contention(num_locks: int) -> None:
     dbs = range(1, 6)
     urls = [f'redis://localhost:6379/{db}' for db in dbs]
     masters = [AIORedis.from_url(url, socket_timeout=1) for url in urls]
-    locks = [AIORedlock(key='shower', masters=masters, auto_release_time=.2) for _ in range(5)]
+    locks = [AIORedlock(key='shower', masters=masters, auto_release_time=.2) for _ in range(num_locks)]
 
     try:
         coros = [lock.acquire(blocking=False) for lock in locks]
@@ -186,13 +187,16 @@ async def test_contention():
         results = [task.result() for task in done]
         num_unlocked = results.count(False)
         num_locked = results.count(True)
-        assert 4 <= num_unlocked <= 5
+        assert num_locks-1 <= num_unlocked <= num_locks
         assert 0 <= num_locked <= 1
+        # To see the following output, issue:
+        # $ source venv/bin/activate; pytest -rP -k test_contention; deactivate
+        print(f'{num_locks} locks, {num_unlocked} unlocked, {num_locked} locked')
 
     finally:
         # Clean up for the next unit test run.
         for lock in locks:
-            coros = [lock.release() for lock in locks]
+            coros = [lock.release() for lock in locks]  # type: ignore
             tasks = [asyncio.create_task(coro) for coro in coros]
             done, _ = await asyncio.wait(tasks)
             [task.exception() for task in done]

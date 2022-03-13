@@ -312,11 +312,12 @@ class TestRedlock:
             redlock.release(raise_on_redis_errors=True)
 
     @staticmethod
-    def test_contention() -> None:
+    @pytest.mark.parametrize('num_locks', range(1, 11))
+    def test_contention(num_locks: int) -> None:
         dbs = range(1, 6)
         urls = [f'redis://localhost:6379/{db}' for db in dbs]
         masters = [Redis.from_url(url, socket_timeout=1) for url in urls]
-        locks = [Redlock(key='printer', masters=masters, auto_release_time=.2) for _ in range(5)]
+        locks = [Redlock(key='printer', masters=masters, auto_release_time=.2) for _ in range(num_locks)]
 
         try:
             num_unlocked, num_locked = 0, 0
@@ -326,8 +327,11 @@ class TestRedlock:
                     locked = future.result()
                     num_unlocked += not locked
                     num_locked += locked
-            assert 4 <= num_unlocked <= 5
+            assert num_locks-1 <= num_unlocked <= num_locks
             assert 0 <= num_locked <= 1
+            # To see the following output, issue:
+            # $ source venv/bin/activate; pytest -rP -k test_contention; deactivate
+            print(f'{num_locks} locks, {num_unlocked} unlocked, {num_locked} locked')
 
         finally:
             # Clean up for the next unit test run.
