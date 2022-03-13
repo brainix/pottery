@@ -184,7 +184,10 @@ async def test_contention():
         tasks = [asyncio.create_task(coro) for coro in coros]
         done, _ = await asyncio.wait(tasks)
         results = [task.result() for task in done]
-        assert 0 <= results.count(True) <= 1
+        num_unlocked = results.count(False)
+        num_locked = results.count(True)
+        assert 4 <= num_unlocked <= 5
+        assert 0 <= num_locked <= 1
 
     finally:
         # Clean up for the next unit test run.

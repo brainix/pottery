@@ -113,7 +113,7 @@ class TestRedlock:
         with pytest.raises(ExtendUnlockedLock):
             redlock.extend()
         assert redlock.acquire()
-        for _ in range(Redlock._NUM_EXTENSIONS):
+        for extension_num in range(Redlock._NUM_EXTENSIONS):
             redlock.extend()
         with pytest.raises(TooManyExtensions):
             redlock.extend()
@@ -319,7 +319,14 @@ class TestRedlock:
         locks = [Redlock(key='printer', masters=masters, auto_release_time=.2) for _ in range(5)]
 
         try:
-            num_locked = sum(lock.acquire(blocking=False) for lock in locks)
+            num_unlocked, num_locked = 0, 0
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = [executor.submit(lock.acquire, blocking=False) for lock in locks]
+                for future in concurrent.futures.as_completed(futures):
+                    locked = future.result()
+                    num_unlocked += not locked
+                    num_locked += locked
+            assert 4 <= num_unlocked <= 5
             assert 0 <= num_locked <= 1
 
         finally:
