@@ -71,7 +71,6 @@ endif
 
 .PHONY: test
 test:
-ifeq ($(tests),)
 	$(eval $@_SOURCE_FILES := $(shell find . -name '*.py' -not -path './.git/*' -not -path './build/*' -not -path './dist/*' -not -path './pottery.egg-info/*' -not -path './venv/*'))
 	source $(venv)/bin/activate && \
 		pytest --verbose --cov-config=.coveragerc --cov=pottery --cov=tests && \
@@ -83,10 +82,6 @@ ifeq ($(tests),)
 		isort $($@_SOURCE_FILES) --check-only --diff && \
 		bandit --recursive pottery && \
 		safety check
-else
-	source $(venv)/bin/activate && \
-		python3 -m unittest --verbose $(tests)
-endif
 
 
 .PHONY: release
