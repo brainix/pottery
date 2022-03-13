@@ -195,11 +195,10 @@ async def test_contention(num_locks: int) -> None:
 
     finally:
         # Clean up for the next unit test run.
-        for lock in locks:
-            coros = [lock.release() for lock in locks]  # type: ignore
-            tasks = [asyncio.create_task(coro) for coro in coros]
-            done, _ = await asyncio.wait(tasks)
-            [task.exception() for task in done]
+        coros = [lock.release() for lock in locks]  # type: ignore
+        tasks = [asyncio.create_task(coro) for coro in coros]
+        done, _ = await asyncio.wait(tasks)
+        [task.exception() for task in done]
 
 
 async def test_slots(aioredlock: AIORedlock) -> None:
