@@ -17,6 +17,8 @@
 'Async distributed Redis-powered monotonically increasing ID generator tests.'
 
 
+import asyncio
+import contextlib
 import unittest.mock
 
 import pytest
@@ -69,13 +71,38 @@ def aioids(aioredis: AIORedis) -> AIONextID:  # type: ignore
 async def test_aionextid(aioids: AIONextID) -> None:
     for expected in range(1, 10):
         got = await anext(aioids)  # type: ignore
-        assert got == expected
+        assert got == expected, f'expected {expected}, got {got}'
 
 
 async def test_reset(aioids: AIONextID) -> None:
     assert await anext(aioids) == 1  # type: ignore
     await aioids.reset()
     assert await anext(aioids) == 1  # type: ignore
+
+
+@pytest.mark.parametrize('num_aioids', range(1, 6))
+async def test_contention(num_aioids: int) -> None:
+    dbs = range(1, 6)
+    urls = [f'redis://localhost:6379/{db}' for db in dbs]
+    masters = [AIORedis.from_url(url, socket_timeout=1) for url in urls]
+    aioids = [AIONextID(key='tweet-ids', masters=masters) for _ in range(num_aioids)]
+
+    try:
+        coros = [anext(aioids[id_gen]) for id_gen in range(num_aioids)]  # type: ignore
+        tasks = [asyncio.create_task(coro) for coro in coros]
+        done, _ = await asyncio.wait(tasks)
+        results = []
+        with contextlib.suppress(QuorumNotAchieved):
+            for task in done:
+                results.append(task.result())
+        assert len(results) == len(set(results))
+        # To see the following output, issue:
+        # $ source venv/bin/activate; pytest -rP tests/test_aionextid.py::test_contention; deactivate
+        print(f'{num_aioids} aioids, {results} IDs')
+
+    finally:
+        # Clean up for the next unit test run.
+        await aioids[0].reset()
 
 
 def test_slots(aioids: AIONextID) -> None:
