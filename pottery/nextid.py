@@ -195,8 +195,8 @@ class NextID(Scripts, Primitive):
                     redis_errors.append(error)
                     logger.exception(
                         '%s.__current_id() getter caught %s',
-                        self.__class__.__name__,
-                        error.__class__.__name__,
+                        self.__class__.__qualname__,
+                        error.__class__.__qualname__,
                     )
                 else:
                     current_ids.append(current_id)
@@ -231,8 +231,8 @@ class NextID(Scripts, Primitive):
                     redis_errors.append(error)
                     logger.exception(
                         '%s.__current_id() setter caught %s',
-                        self.__class__.__name__,
-                        error.__class__.__name__,
+                        self.__class__.__qualname__,
+                        error.__class__.__qualname__,
                     )
                 else:
                     if num_masters_set > len(self.masters) // 2:  # pragma: no cover
@@ -261,8 +261,8 @@ class NextID(Scripts, Primitive):
                     redis_errors.append(error)
                     logger.exception(
                         '%s.reset() caught %s',
-                        self.__class__.__name__,
-                        error.__class__.__name__,
+                        self.__class__.__qualname__,
+                        error.__class__.__qualname__,
                     )
                 else:
                     num_masters_reset += 1

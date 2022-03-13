@@ -55,7 +55,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
         super().__init__(iterable, redis=redis, key=key)
         if not iterable and self.maxlen is not None and len(self) > self.maxlen:
             raise IndexError(
-                f'persistent {self.__class__.__name__} beyond its maximum size'
+                f'persistent {self.__class__.__qualname__} beyond its maximum size'
             )
 
     def _populate(self,
@@ -78,7 +78,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
     @maxlen.setter
     def maxlen(self, value: int) -> None:
         raise AttributeError(
-            f"attribute 'maxlen' of '{self.__class__.__name__}' objects is not "
+            f"attribute 'maxlen' of '{self.__class__.__qualname__}' objects is not "
             'writable'
         )
 
@@ -88,7 +88,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
             current_length = cast(int, pipeline.llen(self.key))  # Available since Redis 1.0.0
             if self.maxlen is not None and current_length >= self.maxlen:
                 raise IndexError(
-                    f'{self.__class__.__name__} already at its maximum size'
+                    f'{self.__class__.__qualname__} already at its maximum size'
                 )
             super()._insert(index, value, pipeline=pipeline)
 
@@ -148,7 +148,7 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
         '''
         if not isinstance(n, int):
             raise TypeError(
-                f"'{n.__class__.__name__}' object cannot be interpreted "
+                f"'{n.__class__.__qualname__}' object cannot be interpreted "
                 'as an integer'
             )
         if n == 0:

@@ -258,8 +258,8 @@ class AIORedlock(Scripts, AIOPrimitive):
                     redis_errors.append(error)
                     logger.exception(
                         '%s.__acquire_masters() caught %s',
-                        self.__class__.__name__,
-                        error.__class__.__name__,
+                        self.__class__.__qualname__,
+                        error.__class__.__qualname__,
                     )
             if num_masters_acquired > len(self.masters) // 2:
                 validity_time = self.auto_release_time
@@ -399,8 +399,8 @@ class AIORedlock(Scripts, AIOPrimitive):
                     redis_errors.append(error)
                     logger.exception(
                         '%s.locked() caught %s',
-                        self.__class__.__name__,
-                        error.__class__.__name__,
+                        self.__class__.__qualname__,
+                        error.__class__.__qualname__,
                     )
                 else:
                     if ttl:
@@ -431,8 +431,8 @@ class AIORedlock(Scripts, AIOPrimitive):
                 redis_errors.append(error)
                 logger.exception(
                     '%s.extend() caught %s',
-                    self.__class__.__name__,
-                    error.__class__.__name__,
+                    self.__class__.__qualname__,
+                    error.__class__.__qualname__,
                 )
         if num_masters_extended > len(self.masters) // 2:
             self._extension_num += 1
@@ -458,8 +458,8 @@ class AIORedlock(Scripts, AIOPrimitive):
                 redis_errors.append(error)
                 logger.exception(
                     '%s.release() caught %s',
-                    self.__class__.__name__,
-                    error.__class__.__name__,
+                    self.__class__.__qualname__,
+                    error.__class__.__qualname__,
                 )
         if num_masters_released > len(self.masters) // 2:
             return
