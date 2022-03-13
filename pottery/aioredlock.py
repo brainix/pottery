@@ -487,7 +487,7 @@ class AIORedlock(Scripts, AIOPrimitive):
                         exc_value: BaseException | None,
                         traceback: TracebackType | None,
                         ) -> None:
-        await self.release()
+        await self.__release()
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__qualname__} key={self.key}>'
