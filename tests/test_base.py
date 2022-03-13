@@ -33,15 +33,18 @@ from pottery.base import random_key
 
 
 class TestRandomKey:
-    def test_random_key_raises_typeerror_for_invalid_num_tries(self, redis: Redis) -> None:
+    @staticmethod
+    def test_random_key_raises_typeerror_for_invalid_num_tries(redis: Redis) -> None:
         with pytest.raises(TypeError):
             random_key(redis=redis, num_tries=3.0)  # type: ignore
 
-    def test_random_key_raises_valueerror_for_invalid_num_tries(self, redis: Redis) -> None:
+    @staticmethod
+    def test_random_key_raises_valueerror_for_invalid_num_tries(redis: Redis) -> None:
         with pytest.raises(ValueError):
             random_key(redis=redis, num_tries=-1)
 
-    def test_random_key_raises_randomkeyerror_when_no_tries_left(self, redis: Redis) -> None:
+    @staticmethod
+    def test_random_key_raises_randomkeyerror_when_no_tries_left(redis: Redis) -> None:
         with pytest.raises(RandomKeyError), \
              unittest.mock.patch.object(redis, 'exists') as exists:
             exists.return_value = True
@@ -49,7 +52,8 @@ class TestRandomKey:
 
 
 class TestCommon:
-    def test_out_of_scope(self, redis: Redis) -> None:
+    @staticmethod
+    def test_out_of_scope(redis: Redis) -> None:
         def scope() -> str:
             raj = RedisDict(redis=redis, hobby='music', vegetarian=True)
             assert redis.exists(raj.key)
@@ -59,7 +63,8 @@ class TestCommon:
         gc.collect()
         assert not redis.exists(key)
 
-    def test_del(self, redis: Redis) -> None:
+    @staticmethod
+    def test_del(redis: Redis) -> None:
         raj = RedisDict(redis=redis, key='pottery:raj', hobby='music', vegetarian=True)
         nilika = RedisDict(redis=redis, key='pottery:nilika', hobby='music', vegetarian=True)
         luvh = RedisDict(redis=redis, key='luvh', hobby='bullying', vegetarian=False)
@@ -77,7 +82,8 @@ class TestCommon:
             del luvh
             unlink.assert_not_called()
 
-    def test_eq(self, redis: Redis) -> None:
+    @staticmethod
+    def test_eq(redis: Redis) -> None:
         raj = RedisDict(redis=redis, key='pottery:raj', hobby='music', vegetarian=True)
         nilika = RedisDict(redis=redis, key='pottery:nilika', hobby='music', vegetarian=True)
         luvh = RedisDict(redis=redis, key='luvh', hobby='bullying', vegetarian=False)
@@ -88,7 +94,8 @@ class TestCommon:
         assert not raj == luvh
         assert not raj == None
 
-    def test_ne(self, redis: Redis) -> None:
+    @staticmethod
+    def test_ne(redis: Redis) -> None:
         raj = RedisDict(redis=redis, key='pottery:raj', hobby='music', vegetarian=True)
         nilika = RedisDict(redis=redis, key='pottery:nilika', hobby='music', vegetarian=True)
         luvh = RedisDict(redis=redis, key='luvh', hobby='bullying', vegetarian=False)
@@ -99,7 +106,8 @@ class TestCommon:
         assert raj != luvh
         assert raj != None
 
-    def test_randomkeyerror_raised(self, redis: Redis) -> None:
+    @staticmethod
+    def test_randomkeyerror_raised(redis: Redis) -> None:
         raj = RedisDict(redis=redis, key='pottery:raj', hobby='music', vegetarian=True)
 
         with pytest.raises(RandomKeyError), \
@@ -107,7 +115,8 @@ class TestCommon:
             exists.return_value = True
             raj._random_key()
 
-    def test_randomkeyerror_repr(self, redis: Redis) -> None:
+    @staticmethod
+    def test_randomkeyerror_repr(redis: Redis) -> None:
         raj = RedisDict(redis=redis, key='pottery:raj', hobby='music', vegetarian=True)
 
         with unittest.mock.patch.object(raj.redis, 'exists') as exists:
@@ -122,14 +131,16 @@ class TestCommon:
 
 
 class TestEncodable:
+    @staticmethod
     @pytest.fixture
-    def decoded_redis(self, redis_url: str) -> Generator[Redis, None, None]:
+    def decoded_redis(redis_url: str) -> Generator[Redis, None, None]:
         redis = Redis.from_url(redis_url, socket_timeout=1, decode_responses=True)
         redis.flushdb()
         yield redis
         redis.flushdb()
 
-    def test_decoded_responses(self, decoded_redis: Redis) -> None:
+    @staticmethod
+    def test_decoded_responses(decoded_redis: Redis) -> None:
         'Ensure that Pottery still works if the Redis client decodes responses.'
         tel = RedisDict({'jack': 4098, 'sape': 4139}, redis=decoded_redis)  # type: ignore
 
@@ -149,23 +160,27 @@ class TestEncodable:
 
 
 class TestPipelined:
-    def test_abc_cant_be_instantiated(self):
+    @staticmethod
+    def test_abc_cant_be_instantiated():
         with pytest.raises(TypeError):
             _Pipelined()
 
 
 class TestComparable:
-    def test_abc_cant_be_instantiated(self) -> None:
+    @staticmethod
+    def test_abc_cant_be_instantiated() -> None:
         with pytest.raises(TypeError):
             _Comparable()  # type: ignore
 
 
 class TestIterable:
-    def test_abc_cant_be_instantiated(self) -> None:
+    @staticmethod
+    def test_abc_cant_be_instantiated() -> None:
         with pytest.raises(TypeError):
             Iterable_()  # type: ignore
 
-    def test_iter(self, redis: Redis) -> None:
+    @staticmethod
+    def test_iter(redis: Redis) -> None:
         garbage = RedisDict(redis=redis)
         for num in range(1024):
             garbage[num] = num
@@ -173,6 +188,7 @@ class TestIterable:
 
 
 class TestPrimitive:
-    def test_abc_cant_be_instantiated(self) -> None:
+    @staticmethod
+    def test_abc_cant_be_instantiated() -> None:
         with pytest.raises(TypeError):
             Primitive(key='abc')  # type: ignore
