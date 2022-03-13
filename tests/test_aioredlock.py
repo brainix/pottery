@@ -111,7 +111,7 @@ async def test_context_manager_release_before_exit(aioredlock: AIORedlock) -> No
             await aioredlock.release()
 
 
-async def test_context_manager_nonblocking_with_timeout(aioredis: AIORedis) -> None:  # type: ignore
+def test_context_manager_nonblocking_with_timeout(aioredis: AIORedis) -> None:  # type: ignore
     with pytest.raises(ValueError):
         AIORedlock(
             masters={aioredis},
@@ -201,10 +201,10 @@ async def test_contention(num_locks: int) -> None:
         [task.exception() for task in done]
 
 
-async def test_slots(aioredlock: AIORedlock) -> None:
+def test_slots(aioredlock: AIORedlock) -> None:
     with pytest.raises(AttributeError):
         aioredlock.__dict__
 
 
-async def test_repr(aioredlock: AIORedlock) -> None:
+def test_repr(aioredlock: AIORedlock) -> None:
     assert repr(aioredlock) == '<AIORedlock key=redlock:shower>'

@@ -78,12 +78,12 @@ async def test_reset(aioids: AIONextID) -> None:
     assert await anext(aioids) == 1  # type: ignore
 
 
-async def test_slots(aioids: AIONextID) -> None:
+def test_slots(aioids: AIONextID) -> None:
     with pytest.raises(AttributeError):
         aioids.__dict__
 
 
-async def test_aiter(aioids: AIONextID) -> None:
+def test_aiter(aioids: AIONextID) -> None:
     assert aiter(aioids) is aioids  # type: ignore
 
 
@@ -108,5 +108,5 @@ async def test_reset_quorumnotachieved(aioids: AIONextID) -> None:
         await aioids.reset()
 
 
-async def test_repr(aioids: AIONextID) -> None:
+def test_repr(aioids: AIONextID) -> None:
     assert repr(aioids) == '<AIONextID key=nextid:current>'
