@@ -22,40 +22,39 @@ import random
 import time
 import unittest.mock
 
+import pytest
+from redis import Redis
+
 from pottery import redis_cache
 from pottery.cache import _DEFAULT_TIMEOUT
 from pottery.cache import CachedOrderedDict
 from pottery.cache import CacheInfo
-from tests.base import TestCase
 
 
-class CacheDecoratorTests(TestCase):
-    _KEY_EXPIRATION = 'expensive-method-expiration'
-    _KEY_NO_EXPIRATION = 'expensive-method-no-expiration'
+class TestCacheDecorator:
+    KEY_EXPIRATION = 'expensive-method-expiration'
+    KEY_NO_EXPIRATION = 'expensive-method-no-expiration'
 
-    def setUp(self):
-        super().setUp()
+    @pytest.fixture(autouse=True)
+    def setup(self, redis: Redis) -> None:
+        self.redis = redis
 
         def expensive_method(*args, **kwargs):
             'getrandbits(16) -> x.  Generates a 16-bit random int.'
             return random.getrandbits(16)
 
         self.expensive_method_expiration = redis_cache(
-            redis=self.redis,
-            key=self._KEY_EXPIRATION,
+            redis=redis,
+            key=self.KEY_EXPIRATION,
         )(expensive_method)
 
         self.expensive_method_no_expiration = redis_cache(
-            redis=self.redis,
-            key=self._KEY_NO_EXPIRATION,
+            redis=redis,
+            key=self.KEY_NO_EXPIRATION,
             timeout=None,
         )(expensive_method)
 
         self.expensive_method_no_cache_kwargs = redis_cache()(expensive_method)
-
-        self.expensive_method_expiration.cache_clear()
-        self.expensive_method_no_expiration.cache_clear()
-        self.expensive_method_no_cache_kwargs.cache_clear()
 
     def test_cache(self):
         assert self.expensive_method_expiration.cache_info() == CacheInfo(
@@ -143,49 +142,49 @@ class CacheDecoratorTests(TestCase):
 
     def test_expiration(self):
         self.expensive_method_expiration()
-        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT
+        assert self.redis.ttl(self.KEY_EXPIRATION) == _DEFAULT_TIMEOUT
         time.sleep(1)
-        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT - 1
+        assert self.redis.ttl(self.KEY_EXPIRATION) == _DEFAULT_TIMEOUT - 1
 
         self.expensive_method_expiration()
-        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT
+        assert self.redis.ttl(self.KEY_EXPIRATION) == _DEFAULT_TIMEOUT
         time.sleep(1)
-        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT - 1
+        assert self.redis.ttl(self.KEY_EXPIRATION) == _DEFAULT_TIMEOUT - 1
 
         self.expensive_method_expiration('raj')
-        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT
+        assert self.redis.ttl(self.KEY_EXPIRATION) == _DEFAULT_TIMEOUT
 
         self.expensive_method_expiration.__bypass__()
-        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT
+        assert self.redis.ttl(self.KEY_EXPIRATION) == _DEFAULT_TIMEOUT
         time.sleep(1)
-        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT - 1
+        assert self.redis.ttl(self.KEY_EXPIRATION) == _DEFAULT_TIMEOUT - 1
 
         self.expensive_method_expiration.__bypass__()
-        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT
+        assert self.redis.ttl(self.KEY_EXPIRATION) == _DEFAULT_TIMEOUT
         time.sleep(1)
-        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT - 1
+        assert self.redis.ttl(self.KEY_EXPIRATION) == _DEFAULT_TIMEOUT - 1
 
         self.expensive_method_expiration.__bypass__('raj')
-        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT
+        assert self.redis.ttl(self.KEY_EXPIRATION) == _DEFAULT_TIMEOUT
 
     def test_no_expiration(self):
         self.expensive_method_no_expiration()
-        assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1
+        assert self.redis.ttl(self.KEY_NO_EXPIRATION) == -1
 
         self.expensive_method_no_expiration()
-        assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1
+        assert self.redis.ttl(self.KEY_NO_EXPIRATION) == -1
 
         self.expensive_method_no_expiration('raj')
-        assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1
+        assert self.redis.ttl(self.KEY_NO_EXPIRATION) == -1
 
         self.expensive_method_no_expiration.__bypass__()
-        assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1
+        assert self.redis.ttl(self.KEY_NO_EXPIRATION) == -1
 
         self.expensive_method_no_expiration.__bypass__()
-        assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1
+        assert self.redis.ttl(self.KEY_NO_EXPIRATION) == -1
 
         self.expensive_method_no_expiration.__bypass__('raj')
-        assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1
+        assert self.redis.ttl(self.KEY_NO_EXPIRATION) == -1
 
     def test_wrapped(self):
         value1 = self.expensive_method_expiration()
@@ -298,20 +297,21 @@ class CacheDecoratorTests(TestCase):
         )
 
 
-class CachedOrderedDictTests(TestCase):
-    _KEY_EXPIRATION = 'cached-ordereddict-expiration'
-    _KEY_NO_EXPIRATION = 'cached-ordereddict-no-expiration'
+class TestCachedOrderedDict:
+    KEY_EXPIRATION = 'cached-ordereddict-expiration'
+    KEY_NO_EXPIRATION = 'cached-ordereddict-no-expiration'
 
-    def setUp(self):
-        super().setUp()
+    @pytest.fixture(autouse=True)
+    def setup(self, redis: Redis) -> None:
+        self.redis = redis
 
         # Populate the cache with three hits:
         for redis_key, timeout in {
-            (self._KEY_EXPIRATION, _DEFAULT_TIMEOUT),
-            (self._KEY_NO_EXPIRATION, None),
+            (self.KEY_EXPIRATION, _DEFAULT_TIMEOUT),
+            (self.KEY_NO_EXPIRATION, None),
         }:
             cache = CachedOrderedDict(
-                redis_client=self.redis,
+                redis_client=redis,
                 redis_key=redis_key,
                 dict_keys=('hit1', 'hit2', 'hit3'),
                 timeout=timeout,
@@ -322,13 +322,13 @@ class CachedOrderedDictTests(TestCase):
 
         # Instantiate the cache again with the three hits and three misses:
         self.cache_expiration = CachedOrderedDict(
-            redis_client=self.redis,
-            redis_key=self._KEY_EXPIRATION,
+            redis_client=redis,
+            redis_key=self.KEY_EXPIRATION,
             dict_keys=('hit1', 'miss1', 'hit2', 'miss2', 'hit3', 'miss3'),
         )
         self.cache_no_expiration = CachedOrderedDict(
-            redis_client=self.redis,
-            redis_key=self._KEY_NO_EXPIRATION,
+            redis_client=redis,
+            redis_key=self.KEY_NO_EXPIRATION,
             dict_keys=('hit1', 'miss1', 'hit2', 'miss2', 'hit3', 'miss3'),
             timeout=None,
         )
@@ -386,31 +386,30 @@ class CachedOrderedDictTests(TestCase):
         }
         assert self.cache_expiration.misses() == {'miss2', 'miss3'}
 
-    def test_setdefault(self):
+    @pytest.mark.parametrize('default', ('rajiv', 'raj'))
+    def test_setdefault(self, default):
         'Ensure setdefault() sets the key iff the key does not exist.'
-        for default in ('rajiv', 'raj'):
-            with self.subTest(default=default):
-                self.cache_expiration.setdefault('first', default=default)
-                assert self.cache_expiration == collections.OrderedDict((
-                    ('hit1', 'value1'),
-                    ('miss1', CachedOrderedDict._SENTINEL),
-                    ('hit2', 'value2'),
-                    ('miss2', CachedOrderedDict._SENTINEL),
-                    ('hit3', 'value3'),
-                    ('miss3', CachedOrderedDict._SENTINEL),
-                    ('first', 'rajiv'),
-                ))
-                assert self.cache_expiration._cache == {
-                    'hit1': 'value1',
-                    'hit2': 'value2',
-                    'hit3': 'value3',
-                    'first': 'rajiv',
-                }
-                assert self.cache_expiration.misses() == {
-                    'miss1',
-                    'miss2',
-                    'miss3',
-                }
+        self.cache_expiration.setdefault('first', default=default)
+        assert self.cache_expiration == collections.OrderedDict((
+            ('hit1', 'value1'),
+            ('miss1', CachedOrderedDict._SENTINEL),
+            ('hit2', 'value2'),
+            ('miss2', CachedOrderedDict._SENTINEL),
+            ('hit3', 'value3'),
+            ('miss3', CachedOrderedDict._SENTINEL),
+            ('first', default),
+        ))
+        assert self.cache_expiration._cache == {
+            'hit1': 'value1',
+            'hit2': 'value2',
+            'hit3': 'value3',
+            'first': default,
+        }
+        assert self.cache_expiration.misses() == {
+            'miss1',
+            'miss2',
+            'miss3',
+        }
 
         self.cache_expiration.setdefault('miss1', default='value1')
         assert self.cache_expiration == collections.OrderedDict((
@@ -420,13 +419,13 @@ class CachedOrderedDictTests(TestCase):
             ('miss2', CachedOrderedDict._SENTINEL),
             ('hit3', 'value3'),
             ('miss3', CachedOrderedDict._SENTINEL),
-            ('first', 'rajiv'),
+            ('first', default),
         ))
         assert self.cache_expiration._cache == {
             'hit1': 'value1',
             'hit2': 'value2',
             'hit3': 'value3',
-            'first': 'rajiv',
+            'first': default,
             'miss1': 'value1',
         }
         assert self.cache_expiration.misses() == {'miss2', 'miss3'}
@@ -602,23 +601,23 @@ class CachedOrderedDictTests(TestCase):
             future.result()
 
     def _test_expiration(self):
-        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT
+        assert self.redis.ttl(self.KEY_EXPIRATION) == _DEFAULT_TIMEOUT
         time.sleep(1)
-        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT - 1
+        assert self.redis.ttl(self.KEY_EXPIRATION) == _DEFAULT_TIMEOUT - 1
         self.cache_expiration['hit4'] = 'value4'
-        assert self.redis.ttl(self._KEY_EXPIRATION) == _DEFAULT_TIMEOUT
+        assert self.redis.ttl(self.KEY_EXPIRATION) == _DEFAULT_TIMEOUT
 
     def _test_no_expiration(self):
-        assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1
+        assert self.redis.ttl(self.KEY_NO_EXPIRATION) == -1
         time.sleep(1)
-        assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1
+        assert self.redis.ttl(self.KEY_NO_EXPIRATION) == -1
         self.cache_no_expiration['hit4'] = 'value4'
-        assert self.redis.ttl(self._KEY_NO_EXPIRATION) == -1
+        assert self.redis.ttl(self.KEY_NO_EXPIRATION) == -1
 
     def test_set_sentinel(self):
         self.cache_expiration = CachedOrderedDict(
             redis_client=self.redis,
-            redis_key=self._KEY_EXPIRATION,
+            redis_key=self.KEY_EXPIRATION,
             dict_keys=('hit1', 'miss1', 'hit2', 'hit3'),
         )
         assert self.cache_expiration == collections.OrderedDict((

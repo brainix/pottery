@@ -37,7 +37,7 @@ jobs:
         python -m pip install --upgrade pip wheel
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Test with pytest
-      run: pytest --cov-config=.coveragerc --cov=pottery --cov=tests
+      run: pytest --verbose --cov-config=.coveragerc --cov=pottery --cov=tests
     - name: Type check with Mypy
       run: mypy
     - name: Lint with Flake8 and isort

@@ -74,7 +74,7 @@ test:
 ifeq ($(tests),)
 	$(eval $@_SOURCE_FILES := $(shell find . -name '*.py' -not -path './.git/*' -not -path './build/*' -not -path './dist/*' -not -path './pottery.egg-info/*' -not -path './venv/*'))
 	source $(venv)/bin/activate && \
-		pytest --cov-config=.coveragerc --cov=pottery --cov=tests && \
+		pytest --verbose --cov-config=.coveragerc --cov=pottery --cov=tests && \
 		echo Running static type checks && \
 		mypy && \
 		echo Running Flake8 on $($@_SOURCE_FILES) && \
