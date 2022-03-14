@@ -389,6 +389,22 @@ class AIORedlock(Scripts, AIOPrimitive):
                      *,
                      raise_on_redis_errors: bool | None = None,
                      ) -> float:
+        '''How much longer we'll hold the lock (unless we extend or release it).
+
+        If we don't currently hold the lock, then this method returns 0.
+
+            >>> async def main():
+            ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
+            ...     shower_lock = AIORedlock(key='shower', masters={aioredis})
+            ...     print(await shower_lock.locked())
+            ...     async with shower_lock:
+            ...         print(math.ceil(await shower_lock.locked()))
+            ...     print(await shower_lock.locked())
+            >>> asyncio.run(main(), debug=True)
+            0
+            10
+            0
+        '''
         with ContextTimer() as timer:
             ttls, redis_errors = [], []
             coros = [self.__acquired_master(master) for master in self.masters]
