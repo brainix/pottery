@@ -435,6 +435,22 @@ class AIORedlock(Scripts, AIOPrimitive):
                      *,
                      raise_on_redis_errors: bool | None = None,
                      ) -> None:
+        '''Extend our hold on the lock (if we currently hold it).
+
+            >>> async def main():
+            ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
+            ...     shower_lock = AIORedlock(key='shower', masters={aioredis})
+            ...     await shower_lock.acquire()
+            ...     print(math.ceil(await shower_lock.locked()))
+            ...     await asyncio.sleep(1)
+            ...     print(math.ceil(await shower_lock.locked()))
+            ...     await shower_lock.extend()
+            ...     print(math.ceil(await shower_lock.locked()))
+            >>> asyncio.run(main(), debug=True)
+            10
+            9
+            10
+        '''
         if self._extension_num >= self.num_extensions:
             raise TooManyExtensions(self.key, self.masters)
 
