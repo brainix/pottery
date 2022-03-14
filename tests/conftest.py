@@ -31,12 +31,12 @@ from redis.asyncio import Redis as AIORedis  # type: ignore
 from pottery import PotteryWarning
 
 
-@pytest.fixture(autouse=True, scope='session')
+@pytest.fixture(autouse=True)
 def install_uvloop() -> None:
     uvloop.install()
 
 
-@pytest.fixture(autouse=True, scope='session')
+@pytest.fixture(autouse=True)
 def filter_warnings() -> None:
     warnings.filterwarnings('ignore', category=PotteryWarning)
 
