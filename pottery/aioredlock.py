@@ -77,7 +77,6 @@ class AIORedlock(Scripts, AIOPrimitive):
     Usage:
 
         >>> import asyncio
-        >>> import uvloop
         >>> from redis.asyncio import Redis as AIORedis
         >>> async def main():
         ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
@@ -87,7 +86,6 @@ class AIORedlock(Scripts, AIOPrimitive):
         ...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
         ...         await shower.release()
         ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
-        >>> uvloop.install()
         >>> asyncio.run(main(), debug=True)
         shower is occupied
         shower is available
@@ -446,6 +444,7 @@ class AIORedlock(Scripts, AIOPrimitive):
             ...     print(math.ceil(await shower_lock.locked()))
             ...     await shower_lock.extend()
             ...     print(math.ceil(await shower_lock.locked()))
+            ...     await shower_lock.release()
             >>> asyncio.run(main(), debug=True)
             10
             9
@@ -481,6 +480,19 @@ class AIORedlock(Scripts, AIOPrimitive):
                       *,
                       raise_on_redis_errors: bool | None = None,
                       ) -> None:
+        '''Unlock the lock.
+
+            >>> async def main():
+            ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
+            ...     shower_lock = AIORedlock(key='shower', masters={aioredis})
+            ...     await shower_lock.acquire()
+            ...     print(bool(await shower_lock.locked()))
+            ...     await shower_lock.release()
+            ...     print(bool(await shower_lock.locked()))
+            >>> asyncio.run(main(), debug=True)
+            True
+            False
+        '''
         num_masters_released, redis_errors = 0, []
         coros = [self.__release_master(master) for master in self.masters]
         for coro in asyncio.as_completed(coros):

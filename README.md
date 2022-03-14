@@ -543,7 +543,6 @@ Instantiate an `AIORedlock` and protect a resource:
 
 ```python
 >>> import asyncio
->>> import uvloop
 >>> from redis.asyncio import Redis as AIORedis
 >>> from pottery import AIORedlock
 >>> async def main():
@@ -555,7 +554,6 @@ Instantiate an `AIORedlock` and protect a resource:
 ...         await shower.release()
 ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
 ...
->>> uvloop.install()
 >>> asyncio.run(main(), debug=True)
 shower is occupied
 shower is available
