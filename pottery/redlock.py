@@ -418,13 +418,13 @@ class Redlock(Scripts, Primitive):
                 while timeout == -1 or timer.elapsed() / 1000 < timeout:
                     if acquire_masters():
                         if enqueued:
-                            self.__log_time_enqueued(timer, True)
+                            self.__log_time_enqueued(timer, acquired=True)
                         return True
                     enqueued = True
                     delay = random.uniform(0, self._RETRY_DELAY)  # nosec
                     time.sleep(delay)
             if enqueued:  # pragma: no cover
-                self.__log_time_enqueued(timer, False)
+                self.__log_time_enqueued(timer, acquired=False)
             return False  # pragma: no cover
 
         if timeout == -1:
@@ -434,7 +434,7 @@ class Redlock(Scripts, Primitive):
 
     __acquire = acquire
 
-    def __log_time_enqueued(self, timer: ContextTimer, acquired: bool) -> None:
+    def __log_time_enqueued(self, timer: ContextTimer, *, acquired: bool) -> None:
         key_suffix = self.key.split(':', maxsplit=1)[1]
         time_enqueued = math.ceil(timer.elapsed())
         logger.info(
