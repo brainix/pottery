@@ -25,18 +25,17 @@
 redis>=4.2.0rc1
 hiredis
 mmh3
-uvloop
 typing_extensions
 
 pytest
 pytest-asyncio
 pytest-cov
-coverage
+uvloop
 mypy
 types-redis
+
 flake8
 isort
-
 bandit
 safety
 
