@@ -24,13 +24,19 @@ from typing import AsyncGenerator
 from typing import Generator
 
 import pytest
+import uvloop
 from redis import Redis
 from redis.asyncio import Redis as AIORedis  # type: ignore
 
 from pottery import PotteryWarning
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope='session')
+def install_uvloop() -> None:
+    uvloop.install()
+
+
+@pytest.fixture(autouse=True, scope='session')
 def filter_warnings() -> None:
     warnings.filterwarnings('ignore', category=PotteryWarning)
 
