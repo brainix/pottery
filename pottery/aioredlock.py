@@ -518,6 +518,19 @@ class AIORedlock(Scripts, AIOPrimitive):
     __release = release
 
     async def __aenter__(self) -> AIORedlock:
+        '''You can use an AIORedlock as a context manager.
+
+            >>> async def main():
+            ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
+            ...     shower = AIORedlock(key='shower', masters={aioredis})
+            ...     async with shower:
+            ...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+            ...         # Critical section - no other coroutine can enter while we hold the lock.
+            ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+            >>> asyncio.run(main(), debug=True)
+            shower is occupied
+            shower is available
+        '''
         acquired = await self.__acquire(
             blocking=self.context_manager_blocking,
             timeout=self.context_manager_timeout,
@@ -531,6 +544,19 @@ class AIORedlock(Scripts, AIOPrimitive):
                         exc_value: BaseException | None,
                         traceback: TracebackType | None,
                         ) -> None:
+        '''You can use an AIORedlock as a context manager.
+
+            >>> async def main():
+            ...     aioredis = AIORedis.from_url('redis://localhost:6379/1')
+            ...     shower = AIORedlock(key='shower', masters={aioredis})
+            ...     async with shower:
+            ...         print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+            ...         # Critical section - no other coroutine can enter while we hold the lock.
+            ...     print(f"shower is {'occupied' if await shower.locked() else 'available'}")
+            >>> asyncio.run(main(), debug=True)
+            shower is occupied
+            shower is available
+        '''
         await self.__release()
 
     def __repr__(self) -> str:

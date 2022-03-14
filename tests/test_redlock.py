@@ -330,7 +330,7 @@ class TestRedlock:
             assert num_locks-1 <= num_unlocked <= num_locks
             assert 0 <= num_locked <= 1
             # To see the following output, issue:
-            # $ source venv/bin/activate; pytest -rP -k test_contention; deactivate
+            # $ source venv/bin/activate; pytest -rP tests/test_redlock.py::TestRedlock::test_contention; deactivate
             print(f'{num_locks} locks, {num_unlocked} unlocked, {num_locked} locked')
 
         finally:
