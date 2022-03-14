@@ -17,6 +17,8 @@
 'Distributed Redis-powered monotonically increasing ID generator tests.'
 
 
+import concurrent.futures
+import contextlib
 import unittest.mock
 from typing import Generator
 
@@ -62,6 +64,30 @@ def test_reset(ids: NextID) -> None:
     assert next(ids) == 1
     for redis in ids.masters:
         assert redis.exists(ids.key)
+
+
+@pytest.mark.parametrize('num_ids', range(1, 6))
+def test_contention(num_ids: int) -> None:
+    dbs = range(1, 6)
+    urls = [f'redis://localhost:6379/{db}' for db in dbs]
+    masters = [Redis.from_url(url, socket_timeout=1) for url in urls]
+    ids = [NextID(key='tweet-ids', masters=masters) for _ in range(num_ids)]
+
+    try:
+        results = []
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(next, i) for i in ids]
+            for future in concurrent.futures.as_completed(futures):
+                with contextlib.suppress(QuorumNotAchieved):
+                    result = future.result()
+                    results.append(result)
+        assert len(results) == len(set(results))
+        # To see the following output, issue:
+        # $ source venv/bin/activate; pytest -rP tests/test_nextid.py::test_contention; deactivate
+        print(f'{num_ids} ids, {results} IDs')
+
+    finally:
+        ids[0].reset()
 
 
 def test_repr(ids: NextID) -> None:
