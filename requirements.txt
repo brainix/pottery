@@ -21,7 +21,7 @@ isort==5.10.1
 keyring==23.5.0
 mccabe==0.6.1
 mmh3==3.0.0
-mypy==0.940
+mypy==0.941
 mypy-extensions==0.4.3
 packaging==21.3
 pbr==5.8.1
@@ -37,7 +37,7 @@ pytest-asyncio==0.18.2
 pytest-cov==3.0.0
 PyYAML==6.0
 readme-renderer==34.0
-redis==4.2.0rc2
+redis==4.2.0rc3
 requests==2.27.1
 requests-toolbelt==0.9.1
 rfc3986==2.0.0
