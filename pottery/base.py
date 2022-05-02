@@ -27,7 +27,7 @@ import json
 import os
 import uuid
 import warnings
-from typing import Any, Final
+from typing import Any, Final, final, Protocol
 from typing import AnyStr
 from typing import ClassVar
 from typing import ContextManager
