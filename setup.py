@@ -21,23 +21,19 @@ import pathlib
 from setuptools import find_packages
 from setuptools import setup
 
-import pottery
-
-
 _package_dir = pathlib.Path(__file__).parent
 _long_description = (_package_dir / 'README.md').read_text()
 
-
 setup(
-    name=pottery.__name__,
-    version=pottery.__version__,
-    description=pottery.__description__,
+    name="poettry",
+    version="v0.3.0",
+    description="Poettry",
     long_description=_long_description,
     long_description_content_type='text/markdown',
-    url=pottery.__url__,
-    author=pottery.__author__,
-    author_email=pottery.__author_email__,
-    license=pottery.__license__,
+    url="https://github.com/brainix/pottery",
+    author="brainix",
+    author_email="brainix",
+    license="Apache 2.0",
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
         'Intended Audience :: Developers',
@@ -54,7 +50,7 @@ setup(
         'Framework :: AsyncIO',
         'Typing :: Typed',
     ],
-    keywords=pottery.__keywords__,
+    keywords=[],
     python_requires='>=3.7, <4',
     install_requires=('redis>=4.2.2, <5', 'mmh3'),
     extras_require={},
