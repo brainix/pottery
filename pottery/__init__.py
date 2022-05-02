@@ -26,9 +26,7 @@ been battle tested in production at scale.
 
 from typing import Tuple
 
-# TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import Final
-from typing_extensions import Final
+from typing import Final
 
 
 __title__: Final[str] = 'pottery'
