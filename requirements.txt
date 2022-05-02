@@ -37,7 +37,7 @@ pytest-asyncio==0.18.2
 pytest-cov==3.0.0
 PyYAML==6.0
 readme-renderer==34.0
-redis==4.2.0rc3
+redis==4.2.2
 requests==2.27.1
 requests-toolbelt==0.9.1
 rfc3986==2.0.0
