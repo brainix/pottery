@@ -23,7 +23,7 @@ from __future__ import annotations
 import collections
 import functools
 import itertools
-from typing import Any
+from typing import Any, Final
 from typing import Callable
 from typing import ClassVar
 from typing import Collection
@@ -38,16 +38,12 @@ from typing import cast
 
 from redis import Redis
 from redis.exceptions import WatchError
-# TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import Final
-from typing_extensions import Final
 
 from .annotations import JSONTypes
 from .base import _default_redis
 from .base import logger
 from .base import random_key
 from .dict import RedisDict
-
 
 F = TypeVar('F', bound=Callable[..., JSONTypes])
 
@@ -56,7 +52,7 @@ UpdateItem = Tuple[JSONTypes, Union[JSONTypes, object]]
 UpdateIter = Iterable[UpdateItem]
 UpdateArg = Union[UpdateMap, UpdateIter]
 
-_DEFAULT_TIMEOUT: Final[int] = 60   # seconds
+_DEFAULT_TIMEOUT: Final[int] = 60  # seconds
 
 
 class CacheInfo(NamedTuple):
@@ -185,6 +181,7 @@ def redis_cache(*,  # NoQA: C901
         wrapper.cache_info = cache_info  # type: ignore
         wrapper.cache_clear = cache_clear  # type: ignore
         return cast(F, wrapper)
+
     return decorator
 
 
@@ -193,8 +190,10 @@ def _set_expiration(func: F) -> F:
     def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
         value = func(self, *args, **kwargs)
         if self._timeout:
-            self._cache.redis.expire(self._cache.key, self._timeout)  # Available since Redis 1.0.0
+            self._cache.redis.expire(self._cache.key,
+                                     self._timeout)  # Available since Redis 1.0.0
         return value
+
     return cast(F, wrapper)
 
 
@@ -320,7 +319,7 @@ class CachedOrderedDict(collections.OrderedDict):
             return callable()
         except WatchError:  # pragma: no cover
             if try_num < self._num_tries - 1:
-                return self.__retry(callable, try_num=try_num+1)
+                return self.__retry(callable, try_num=try_num + 1)
             raise
 
     @_set_expiration

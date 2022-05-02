@@ -22,7 +22,7 @@ import itertools
 import math
 import uuid
 import warnings
-from typing import Any
+from typing import Any, final
 from typing import Callable
 from typing import Generator
 from typing import Iterable
@@ -30,9 +30,6 @@ from typing import Set
 from typing import cast
 
 import mmh3
-# TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import final
-from typing_extensions import final
 
 from .annotations import F
 from .annotations import JSONTypes
@@ -45,6 +42,7 @@ from .exceptions import InefficientAccessWarning
 #   https://docs.python.org/3/library/functools.html#functools.cached_property
 def _store_on_self(*, attr: str) -> Callable[[F], F]:
     "Decorator to store/cache a method's return value as an attribute on self."
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
@@ -54,7 +52,9 @@ def _store_on_self(*, attr: str) -> Callable[[F], F]:
                 value = func(self, *args, **kwargs)
                 setattr(self, attr, value)
             return value
+
         return cast(F, wrapper)
+
     return decorator
 
 
@@ -121,7 +121,7 @@ class BloomFilterABC(abc.ABC):
         size = (
             -self.num_elements
             * math.log(self.false_positives)
-            / math.log(2)**2
+            / math.log(2) ** 2
         )
         size = math.ceil(size)
         return size

@@ -16,7 +16,6 @@
 # --------------------------------------------------------------------------- #
 'Measure the execution time of small code snippets.'
 
-
 # TODO: Remove the following import after deferred evaluation of annotations
 # because the default.
 #   1. https://docs.python.org/3/whatsnew/3.7.html#whatsnew37-pep563
@@ -26,10 +25,8 @@ from __future__ import annotations
 
 import timeit
 from types import TracebackType
-from typing import Type
+from typing import Type, Literal
 from typing import overload
-
-from typing_extensions import Literal
 
 
 class ContextTimer:

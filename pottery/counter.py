@@ -26,7 +26,7 @@ from __future__ import annotations
 import collections
 import contextlib
 import itertools
-from typing import Callable
+from typing import Callable, Counter
 from typing import Iterable
 from typing import List
 from typing import Tuple
@@ -34,11 +34,9 @@ from typing import Union
 from typing import cast
 
 from redis.client import Pipeline
-from typing_extensions import Counter
 
 from .annotations import JSONTypes
 from .dict import RedisDict
-
 
 InitIter = Iterable[JSONTypes]
 InitArg = Union[InitIter, Counter]
@@ -124,7 +122,8 @@ class RedisCounter(RedisDict, collections.Counter):
     def __math_op(self,
                   other: Counter[JSONTypes],
                   *,
-                  method: Callable[[Counter[JSONTypes], Counter[JSONTypes]], Counter[JSONTypes]],
+                  method: Callable[
+                      [Counter[JSONTypes], Counter[JSONTypes]], Counter[JSONTypes]],
                   ) -> Counter[JSONTypes]:
         with self._watch(other):
             counter = self.__to_counter()
@@ -197,7 +196,8 @@ class RedisCounter(RedisDict, collections.Counter):
                     # Available since Redis 2.0.0:
                     pipeline.hset(self.key, mapping=encoded_to_set)  # type: ignore
                 if encoded_to_del:
-                    pipeline.hdel(self.key, *encoded_to_del)  # Available since Redis 2.0.0
+                    pipeline.hdel(self.key,
+                                  *encoded_to_del)  # Available since Redis 2.0.0
             return self
 
     def __iadd__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:

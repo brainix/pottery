@@ -27,7 +27,7 @@ import json
 import os
 import uuid
 import warnings
-from typing import Any
+from typing import Any, Final
 from typing import AnyStr
 from typing import ClassVar
 from typing import ContextManager
@@ -42,20 +42,12 @@ from redis import Redis
 from redis import RedisError
 from redis.asyncio import Redis as AIORedis  # type: ignore
 from redis.client import Pipeline
-# TODO: When we drop support for Python 3.7, change the following imports to:
-#   from typing import Final
-#   from typing import Protocol
-#   from typing import final
-from typing_extensions import Final
-from typing_extensions import Protocol
-from typing_extensions import final
 
 from .annotations import JSONTypes
 from .exceptions import InefficientAccessWarning
 from .exceptions import QuorumIsImpossible
 from .exceptions import RandomKeyError
 from .monkey import logger
-
 
 _default_url: Final[str] = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 _default_redis: Final[Redis] = Redis.from_url(_default_url, socket_timeout=1)
@@ -80,7 +72,7 @@ def random_key(*,
         key = random_key(
             redis=redis,
             prefix=prefix,
-            num_tries=num_tries-1,
+            num_tries=num_tries - 1,
         )
     return key
 
@@ -174,6 +166,7 @@ class _HasRedisClientAndKey(Protocol):
 
 class _Clearable:
     'Mixin class that implements clearing (emptying) a Redis-backed collection.'
+
     def clear(self: _HasRedisClientAndKey) -> None:
         'Remove the elements in a Redis-backed container.  O(n)'
         self.redis.unlink(self.key)  # Available since Redis 4.0.0

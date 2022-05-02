@@ -24,7 +24,7 @@ import collections.abc
 import itertools
 import uuid
 import warnings
-from typing import Any
+from typing import Any, Literal
 from typing import Generator
 from typing import Iterable
 from typing import NoReturn
@@ -33,7 +33,6 @@ from typing import cast
 
 from redis import Redis
 from redis.client import Pipeline
-from typing_extensions import Literal
 
 from .annotations import JSONTypes
 from .base import Container
@@ -81,7 +80,8 @@ class RedisSet(Container, Iterable_, collections.abc.MutableSet):
             encoded_value = self._encode(value)
         except TypeError:
             return False
-        return self.redis.sismember(self.key, encoded_value)  # Available since Redis 1.0.0
+        return self.redis.sismember(self.key,
+                                    encoded_value)  # Available since Redis 1.0.0
 
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
         'Yield whether this RedisSet contains multiple elements.  O(n)'
@@ -101,7 +101,8 @@ class RedisSet(Container, Iterable_, collections.abc.MutableSet):
             encoded_values.append(encoded_value)
 
         # Available since Redis 6.2.0:
-        for is_member in self.redis.smismember(self.key, encoded_values):  # type: ignore
+        for is_member in self.redis.smismember(self.key,
+                                               encoded_values):  # type: ignore
             yield bool(is_member)
 
     def __iter__(self) -> Generator[JSONTypes, None, None]:

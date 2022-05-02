@@ -25,7 +25,6 @@
 redis>=4.2.0rc1
 hiredis
 mmh3
-typing_extensions
 
 pytest
 pytest-asyncio

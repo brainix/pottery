@@ -31,7 +31,6 @@ Lua scripting:
     https://github.com/andymccurdy/redis-py#lua-scripting
 '''
 
-
 # TODO: Remove the following import after deferred evaluation of annotations
 # because the default.
 #   1. https://docs.python.org/3/whatsnew/3.7.html#whatsnew37-pep563
@@ -47,7 +46,7 @@ import random
 import time
 import uuid
 from types import TracebackType
-from typing import Any
+from typing import Any, Literal
 from typing import Callable
 from typing import ClassVar
 from typing import Iterable
@@ -59,9 +58,6 @@ from typing import overload
 from redis import Redis
 from redis import RedisError
 from redis.commands.core import Script
-# TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import Literal
-from typing_extensions import Literal
 
 from .annotations import F
 from .base import Primitive
@@ -745,7 +741,9 @@ def synchronize(*,
                 _log_synchronize(func, redlock, waiting_timer, holding_timer)
 
             return return_value
+
         return cast(F, wrapper)
+
     return decorator
 
 

@@ -22,10 +22,8 @@ from __future__ import annotations
 
 import concurrent.futures
 from types import TracebackType
-from typing import Type
+from typing import Type, Literal
 from typing import overload
-
-from typing_extensions import Literal
 
 
 class BailOutExecutor(concurrent.futures.ThreadPoolExecutor):

@@ -16,26 +16,21 @@
 # --------------------------------------------------------------------------- #
 'Monkey patches.'
 
-
 # TODO: When we drop support for Python 3.9, remove the following import.  We
 # only need it for X | Y union type annotations as of 2022-01-29.
 from __future__ import annotations
 
 import logging
-
-# TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import Final
-from typing_extensions import Final
-
+from typing import Final
 
 logger: Final[logging.Logger] = logging.getLogger('pottery')
 logger.addHandler(logging.NullHandler())
-
 
 import functools  # isort: skip
 import json  # isort: skip
 from typing import Any  # isort: skip
 from typing import Callable  # isort: skip
+
 
 class PotteryEncoder(json.JSONEncoder):
     'Custom JSON encoder that can serialize Pottery containers.'
@@ -49,15 +44,19 @@ class PotteryEncoder(json.JSONEncoder):
                 return o.to_list()  # type: ignore
         return super().default(o)
 
+
 def _decorate_dumps(func: Callable[..., str]) -> Callable[..., str]:
     'Decorate json.dumps() to use PotteryEncoder by default.'
+
     @functools.wraps(func)
     def wrapper(*args: Any,
                 cls: type[json.JSONEncoder] = PotteryEncoder,
                 **kwargs: Any,
                 ) -> str:
         return func(*args, cls=cls, **kwargs)
+
     return wrapper
+
 
 json.dumps = _decorate_dumps(json.dumps)
 
