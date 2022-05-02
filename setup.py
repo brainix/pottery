@@ -25,9 +25,9 @@ _package_dir = pathlib.Path(__file__).parent
 _long_description = (_package_dir / 'README.md').read_text()
 
 setup(
-    name="poettry",
+    name="pottery",
     version="v0.3.0",
-    description="Poettry",
+    description="pottery",
     long_description=_long_description,
     long_description_content_type='text/markdown',
     url="https://github.com/brainix/pottery",
