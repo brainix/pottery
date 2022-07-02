@@ -254,7 +254,7 @@ class Redlock(Scripts, Primitive):
                 automatically release this Redlock, unless it's already been
                 released
             num_extensions -- the number of times that this Redlock's lease can
-                be extended
+                be extended.  Set to ``-1`` for unlimited extensions.
             context_manager_blocking -- when using this Redlock as a context
                 manager, whether to block when acquiring
             context_manager_timeout -- if context_manager_blocking, how long to
@@ -521,7 +521,10 @@ class Redlock(Scripts, Primitive):
             True
             >>> printer_lock.release()
         '''
-        if self._extension_num >= self.num_extensions:
+        if (
+            self.num_extensions != -1
+            and self._extension_num >= self.num_extensions
+        ):
             raise TooManyExtensions(self.key, self.masters)
 
         with BailOutExecutor() as executor:
@@ -543,7 +546,9 @@ class Redlock(Scripts, Primitive):
                     )
                 else:
                     if num_masters_extended > len(self.masters) // 2:
-                        self._extension_num += 1
+                        if self.num_extensions != -1:
+                            self._extension_num += 1
+
                         return
 
         self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
