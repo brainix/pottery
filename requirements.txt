@@ -2,7 +2,7 @@ async-timeout==4.0.2
 attrs==21.4.0
 bandit==1.7.4
 bleach==4.1.0
-certifi==2021.10.8
+certifi==2022.12.7
 charset-normalizer==2.0.12
 click==8.0.4
 colorama==0.4.4
