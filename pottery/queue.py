@@ -73,7 +73,7 @@ class RedisSimpleQueue(Container):
         class.
         '''
         encoded_item = self._encode(item)
-        self.redis.xadd(self.key, {'item': encoded_item}, id='*')  # Available since Redis 5.0.0
+        self.redis.xadd(self.key, {b'item': encoded_item}, id='*')  # Available since Redis 5.0.0
 
     __put = put
 
@@ -128,7 +128,7 @@ class RedisSimpleQueue(Container):
             id_, dict_ = cast(Tuple[bytes, dict], returned_value[0][1][0])
             pipeline.multi()  # Available since Redis 1.2.0
             pipeline.xdel(self.key, id_)  # Available since Redis 5.0.0
-        encoded_item = dict_['item']
+        encoded_item = dict_[b'item']
         item = self._decode(encoded_item)
         return item
 
