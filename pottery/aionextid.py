@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from typing import Any
 from typing import ClassVar
 from typing import Iterable
 
@@ -67,8 +68,8 @@ class AIONextID(Scripts, AIOPrimitive):
                 return next_id
         raise QuorumNotAchieved(self.key, self.masters)
 
-    async def __get_current_id(self, master: AIORedis) -> int:  # type: ignore
-        current_id: int = await master.get(self.key)
+    async def __get_current_id(self, master: AIORedis) -> Any | None:
+        current_id = await master.get(self.key)
         return current_id
 
     async def __set_current_id(self, master: AIORedis, value: int) -> bool:  # type: ignore
