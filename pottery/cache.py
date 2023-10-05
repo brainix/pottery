@@ -134,7 +134,7 @@ def redis_cache(*,  # NoQA: C901
     def decorator(func: F) -> F:
         nonlocal redis, key
         if key is None:
-            key = random_key(redis=cast(Redis, redis))
+            key = random_key(redis=redis)
             logger.warning(
                 "Self-assigning key redis_cache(key='%s') for function %s",
                 key,
@@ -155,7 +155,7 @@ def redis_cache(*,  # NoQA: C901
                 cache[hash_] = return_value
                 misses += 1
             if timeout:
-                cast(Redis, redis).expire(cast(str, key), timeout)
+                redis.expire(key, timeout)
             return return_value
 
         @functools.wraps(func)
@@ -164,7 +164,7 @@ def redis_cache(*,  # NoQA: C901
             return_value = func(*args, **kwargs)
             cache[hash_] = return_value
             if timeout:
-                cast(Redis, redis).expire(cast(str, key), timeout)
+                redis.expire(key, timeout)
             return return_value
 
         def cache_info() -> CacheInfo:
@@ -177,7 +177,7 @@ def redis_cache(*,  # NoQA: C901
 
         def cache_clear() -> None:
             nonlocal hits, misses
-            cast(Redis, redis).unlink(cast(str, key))
+            redis.unlink(key)
             hits, misses = 0, 0
 
         wrapper.__wrapped__ = func  # type: ignore
