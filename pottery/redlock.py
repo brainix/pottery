@@ -51,6 +51,7 @@ from typing import Any
 from typing import Callable
 from typing import ClassVar
 from typing import Iterable
+from typing import Literal
 from typing import Tuple
 from typing import Type
 from typing import cast
@@ -60,9 +61,6 @@ from redis import Redis
 from redis import RedisError
 from redis.asyncio import Redis as AIORedis
 from redis.commands.core import Script
-# TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import Literal
-from typing_extensions import Literal
 
 from .annotations import F
 from .base import Primitive

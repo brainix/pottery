@@ -28,11 +28,9 @@ from typing import Generator
 from typing import Iterable
 from typing import Set
 from typing import cast
+from typing import final
 
 import mmh3
-# TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import final
-from typing_extensions import final
 
 from .annotations import F
 from .annotations import JSONTypes

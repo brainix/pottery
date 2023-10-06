@@ -27,6 +27,7 @@ from typing import Any
 from typing import Callable
 from typing import ClassVar
 from typing import Collection
+from typing import Final
 from typing import Hashable
 from typing import Iterable
 from typing import Mapping
@@ -38,9 +39,6 @@ from typing import cast
 
 from redis import Redis
 from redis.exceptions import WatchError
-# TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import Final
-from typing_extensions import Final
 
 from .annotations import JSONTypes
 from .base import _default_redis
