@@ -248,7 +248,7 @@ class AIORedlock(Scripts, AIOPrimitive):
 
         with ContextTimer() as timer:
             num_masters_acquired, redis_errors = 0, []
-            coros = [self.__acquire_master(master) for master in self.masters]
+            coros = [self.__acquire_master(master) for master in self.masters]  # type: ignore
             for coro in asyncio.as_completed(coros):
                 try:
                     num_masters_acquired += await coro
@@ -405,7 +405,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         '''
         with ContextTimer() as timer:
             ttls, redis_errors = [], []
-            coros = [self.__acquired_master(master) for master in self.masters]
+            coros = [self.__acquired_master(master) for master in self.masters]  # type: ignore
             for coro in asyncio.as_completed(coros):
                 try:
                     ttl = await coro / 1000
@@ -454,7 +454,7 @@ class AIORedlock(Scripts, AIOPrimitive):
             raise TooManyExtensions(self.key, self.masters)
 
         num_masters_extended, redis_errors = 0, []
-        coros = [self.__extend_master(master) for master in self.masters]
+        coros = [self.__extend_master(master) for master in self.masters]  # type: ignore
         for coro in asyncio.as_completed(coros):
             try:
                 num_masters_extended += await coro
@@ -494,7 +494,7 @@ class AIORedlock(Scripts, AIOPrimitive):
             False
         '''
         num_masters_released, redis_errors = 0, []
-        coros = [self.__release_master(master) for master in self.masters]
+        coros = [self.__release_master(master) for master in self.masters]  # type: ignore
         for coro in asyncio.as_completed(coros):
             try:
                 num_masters_released += await coro
