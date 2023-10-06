@@ -58,6 +58,7 @@ from typing import overload
 
 from redis import Redis
 from redis import RedisError
+from redis.asyncio import Redis as AIORedis
 from redis.commands.core import Script
 # TODO: When we drop support for Python 3.7, change the following import to:
 #   from typing import Literal
@@ -90,7 +91,7 @@ class Scripts:
     def __init__(self,
                  *,
                  key: str,
-                 masters: Iterable[Redis] = frozenset(),
+                 masters: Iterable[Redis | AIORedis] = frozenset(),
                  raise_on_redis_errors: bool = False,
                  ) -> None:
         super().__init__(  # type: ignore
