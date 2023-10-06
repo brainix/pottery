@@ -62,7 +62,7 @@ ifneq ($(recursive),)
 	~/.pyenv/versions/$(version)/bin/python3 -m venv $(venv)
 endif
 	source $(venv)/bin/activate && \
-		pip3 install --upgrade --no-cache-dir pip wheel && \
+		pip3 install --upgrade --no-cache-dir pip setuptools wheel && \
 		pip3 install --requirement $(requirements) --upgrade --no-cache-dir && \
 		pip3 freeze > requirements.txt
 	git status
