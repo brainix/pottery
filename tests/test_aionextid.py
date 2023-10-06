@@ -22,8 +22,8 @@ import contextlib
 import unittest.mock
 
 import pytest
-from redis.asyncio import Redis as AIORedis  # type: ignore
-from redis.commands.core import AsyncScript  # type: ignore
+from redis.asyncio import Redis as AIORedis
+from redis.commands.core import AsyncScript
 from redis.exceptions import TimeoutError
 
 from pottery import AIONextID

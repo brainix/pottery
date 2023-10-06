@@ -31,7 +31,7 @@ from typing import ClassVar
 from typing import Iterable
 
 from redis import RedisError
-from redis.asyncio import Redis as AIORedis  # type: ignore
+from redis.asyncio import Redis as AIORedis
 
 from .base import AIOPrimitive
 from .base import logger
