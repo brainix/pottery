@@ -152,7 +152,7 @@ class AIORedlock(Scripts, AIOPrimitive):
     _RETRY_DELAY: ClassVar[float] = Redlock._RETRY_DELAY
     _NUM_EXTENSIONS: ClassVar[int] = Redlock._NUM_EXTENSIONS
 
-    def __init__(self,  # type: ignore
+    def __init__(self,
                  *,
                  key: str,
                  masters: Iterable[AIORedis],

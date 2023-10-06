@@ -47,7 +47,7 @@ class AIONextID(Scripts, AIOPrimitive):
 
     _KEY_PREFIX: ClassVar[str] = NextID._KEY_PREFIX
 
-    def __init__(self,  # type: ignore
+    def __init__(self,
                  *,
                  key: str = 'current',
                  masters: Iterable[AIORedis] = frozenset(),
