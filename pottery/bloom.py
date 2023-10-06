@@ -38,9 +38,6 @@ from .base import Container
 from .exceptions import InefficientAccessWarning
 
 
-# TODO: When we drop support for Python 3.7, stop using @_store_on_self().  Use
-# @functools.cached_property() instead.
-#   https://docs.python.org/3/library/functools.html#functools.cached_property
 def _store_on_self(*, attr: str) -> Callable[[F], F]:
     "Decorator to store/cache a method's return value as an attribute on self."
     def decorator(func: F) -> F:
