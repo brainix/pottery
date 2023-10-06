@@ -72,7 +72,7 @@ class AIONextID(Scripts, AIOPrimitive):
         current_id = await master.get(self.key)
         return current_id
 
-    async def __set_current_id(self, master: AIORedis, value: int) -> bool:  # type: ignore
+    async def __set_current_id(self, master: AIORedis, value: int) -> bool:
         current_id: int | None = await self._set_id_script(  # type: ignore
             keys=(self.key,),
             args=(value,),
@@ -80,7 +80,7 @@ class AIONextID(Scripts, AIOPrimitive):
         )
         return current_id == value
 
-    async def __reset_current_id(self, master: AIORedis) -> int:  # type: ignore
+    async def __reset_current_id(self, master: AIORedis) -> None:
         await master.delete(self.key)
 
     async def __get_current_ids(self) -> int:

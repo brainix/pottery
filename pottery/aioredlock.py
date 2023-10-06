@@ -199,7 +199,7 @@ class AIORedlock(Scripts, AIOPrimitive):
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
     #   https://stackoverflow.com/a/38534939
-    async def __acquire_master(self, master: AIORedis) -> bool:  # type: ignore
+    async def __acquire_master(self, master: AIORedis) -> bool:
         acquired = await master.set(
             self.key,
             self._uuid,
@@ -219,7 +219,7 @@ class AIORedlock(Scripts, AIOPrimitive):
             ttl = 0
         return ttl
 
-    async def __extend_master(self, master: AIORedis) -> bool:  # type: ignore
+    async def __extend_master(self, master: AIORedis) -> bool:
         auto_release_time_ms = int(self.auto_release_time * 1000)
         extended = await self._extend_script(  # type: ignore
             keys=(self.key,),
@@ -228,7 +228,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         )
         return bool(extended)
 
-    async def __release_master(self, master: AIORedis) -> bool:  # type: ignore
+    async def __release_master(self, master: AIORedis) -> bool:
         released = await self._release_script(  # type: ignore
             keys=(self.key,),
             args=(self._uuid,),
