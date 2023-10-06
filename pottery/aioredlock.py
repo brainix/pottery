@@ -51,7 +51,7 @@ from typing import Iterable
 from typing import Type
 
 from redis import RedisError
-from redis.asyncio import Redis as AIORedis  # type: ignore
+from redis.asyncio import Redis as AIORedis
 
 from .base import AIOPrimitive
 from .base import logger
@@ -152,7 +152,7 @@ class AIORedlock(Scripts, AIOPrimitive):
     _RETRY_DELAY: ClassVar[float] = Redlock._RETRY_DELAY
     _NUM_EXTENSIONS: ClassVar[int] = Redlock._NUM_EXTENSIONS
 
-    def __init__(self,  # type: ignore
+    def __init__(self,
                  *,
                  key: str,
                  masters: Iterable[AIORedis],
@@ -199,7 +199,7 @@ class AIORedlock(Scripts, AIOPrimitive):
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
     #   https://stackoverflow.com/a/38534939
-    async def __acquire_master(self, master: AIORedis) -> bool:  # type: ignore
+    async def __acquire_master(self, master: AIORedis) -> bool:
         acquired = await master.set(
             self.key,
             self._uuid,
@@ -219,7 +219,7 @@ class AIORedlock(Scripts, AIOPrimitive):
             ttl = 0
         return ttl
 
-    async def __extend_master(self, master: AIORedis) -> bool:  # type: ignore
+    async def __extend_master(self, master: AIORedis) -> bool:
         auto_release_time_ms = int(self.auto_release_time * 1000)
         extended = await self._extend_script(  # type: ignore
             keys=(self.key,),
@@ -228,7 +228,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         )
         return bool(extended)
 
-    async def __release_master(self, master: AIORedis) -> bool:  # type: ignore
+    async def __release_master(self, master: AIORedis) -> bool:
         released = await self._release_script(  # type: ignore
             keys=(self.key,),
             args=(self._uuid,),
@@ -248,7 +248,7 @@ class AIORedlock(Scripts, AIOPrimitive):
 
         with ContextTimer() as timer:
             num_masters_acquired, redis_errors = 0, []
-            coros = [self.__acquire_master(master) for master in self.masters]
+            coros = [self.__acquire_master(master) for master in self.masters]  # type: ignore
             for coro in asyncio.as_completed(coros):
                 try:
                     num_masters_acquired += await coro
@@ -405,7 +405,7 @@ class AIORedlock(Scripts, AIOPrimitive):
         '''
         with ContextTimer() as timer:
             ttls, redis_errors = [], []
-            coros = [self.__acquired_master(master) for master in self.masters]
+            coros = [self.__acquired_master(master) for master in self.masters]  # type: ignore
             for coro in asyncio.as_completed(coros):
                 try:
                     ttl = await coro / 1000
@@ -454,7 +454,7 @@ class AIORedlock(Scripts, AIOPrimitive):
             raise TooManyExtensions(self.key, self.masters)
 
         num_masters_extended, redis_errors = 0, []
-        coros = [self.__extend_master(master) for master in self.masters]
+        coros = [self.__extend_master(master) for master in self.masters]  # type: ignore
         for coro in asyncio.as_completed(coros):
             try:
                 num_masters_extended += await coro
@@ -494,7 +494,7 @@ class AIORedlock(Scripts, AIOPrimitive):
             False
         '''
         num_masters_released, redis_errors = 0, []
-        coros = [self.__release_master(master) for master in self.masters]
+        coros = [self.__release_master(master) for master in self.masters]  # type: ignore
         for coro in asyncio.as_completed(coros):
             try:
                 num_masters_released += await coro

@@ -26,7 +26,7 @@ from typing import Generator
 import pytest
 import uvloop
 from redis import Redis
-from redis.asyncio import Redis as AIORedis  # type: ignore
+from redis.asyncio import Redis as AIORedis
 
 from pottery import PotteryWarning
 

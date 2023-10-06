@@ -31,24 +31,20 @@ from typing import Any
 from typing import AnyStr
 from typing import ClassVar
 from typing import ContextManager
+from typing import Final
 from typing import FrozenSet
 from typing import Generator
 from typing import Iterable
 from typing import List
+from typing import Protocol
 from typing import Tuple
 from typing import cast
+from typing import final
 
 from redis import Redis
 from redis import RedisError
-from redis.asyncio import Redis as AIORedis  # type: ignore
+from redis.asyncio import Redis as AIORedis
 from redis.client import Pipeline
-# TODO: When we drop support for Python 3.7, change the following imports to:
-#   from typing import Final
-#   from typing import Protocol
-#   from typing import final
-from typing_extensions import Final
-from typing_extensions import Protocol
-from typing_extensions import final
 
 from .annotations import JSONTypes
 from .exceptions import InefficientAccessWarning

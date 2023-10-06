@@ -33,13 +33,11 @@ from typing import Callable
 from typing import Iterable
 from typing import List
 from typing import cast
+from typing import final
 
 from redis import Redis
 from redis import ResponseError
 from redis.client import Pipeline
-# TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import final
-from typing_extensions import final
 
 from .annotations import F
 from .annotations import JSONTypes

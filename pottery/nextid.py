@@ -42,6 +42,7 @@ from typing import cast
 
 from redis import Redis
 from redis import RedisError
+from redis.asyncio import Redis as AIORedis
 from redis.commands.core import Script
 
 from .base import Primitive
@@ -65,7 +66,7 @@ class Scripts:
     def __init__(self,
                  *,
                  key: str = 'current',
-                 masters: Iterable[Redis] = frozenset(),
+                 masters: Iterable[Redis | AIORedis] = frozenset(),
                  raise_on_redis_errors: bool = False,
                  ) -> None:
         super().__init__(  # type: ignore

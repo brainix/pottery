@@ -36,8 +36,8 @@ install: init python
 .PHONY: init
 init:
 	-xcode-select --install
-	command -v brew >/dev/null 2>&1 || \
-		ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+	# command -v brew >/dev/null 2>&1 || \
+	# 	ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 	brew analytics regenerate-uuid
 	brew analytics off
 	-brew install $(formulae)
