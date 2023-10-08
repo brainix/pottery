@@ -362,13 +362,7 @@ class BloomFilter(BloomFilterABC, Container):
 
         # I stole this recipe from here:
         #   https://stackoverflow.com/a/61435714
-        #
-        # TODO: When we drop support for Python 3.7, rewrite the following loop
-        # using the walrus operator, like in the Stack Overflow answer linked
-        # above.
-        bits_per_chunk = self.num_hashes()
-        while True:
-            bits_in_chunk = tuple(itertools.islice(bits, bits_per_chunk))
+        while bits_in_chunk := tuple(itertools.islice(bits, self.num_hashes())):
             if not bits_in_chunk:
                 break
             yield all(bits_in_chunk)
