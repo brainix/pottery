@@ -7,7 +7,7 @@ already know how to use Pottery.  Pottery is useful for accessing Redis more
 easily, and also for implementing microservice resilience patterns; and it has
 been battle tested in production at scale.
 
-[![Build status](https://img.shields.io/github/workflow/status/brainix/pottery/Python%20package/master)](https://github.com/brainix/pottery/actions?query=branch%3Amaster)
+[![Build status](https://img.shields.io/github/actions/workflow/status/brainix/pottery/python-package.yml?branch=master)](https://github.com/brainix/pottery/actions?query=branch%3Amaster)
 [![Security status](https://img.shields.io/badge/security-bandit-dark.svg)](https://github.com/PyCQA/bandit)
 [![Latest released version](https://badge.fury.io/py/pottery.svg)](https://badge.fury.io/py/pottery)
 
