@@ -345,8 +345,8 @@ class BloomFilter(BloomFilterABC, Container):
         Please note that this method *may* produce false positives, but *never*
         produces false negatives.  This means that if .contains_many() yields
         all Trues, then you *may* have inserted the elements into the Bloom
-        filter.  But if .contains_many() yields one False, then you *must not*
-        have inserted the corresponding element.
+        filter.  But if .contains_many() yields one False or stops yielding,
+        then you *must not* have inserted the corresponding element.
         '''
         with self._watch() as pipeline:
             pipeline.multi()  # Available since Redis 1.2.0
