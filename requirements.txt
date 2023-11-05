@@ -50,6 +50,7 @@ rich==13.6.0
 ruamel.yaml==0.17.35
 ruamel.yaml.clib==0.2.8
 safety==2.3.5
+setuptools==68.2.2
 six==1.16.0
 smmap==5.0.1
 stevedore==5.1.0
@@ -61,4 +62,5 @@ typing_extensions==4.8.0
 urllib3==2.0.7
 uvloop==0.19.0
 webencodings==0.5.1
+wheel==0.41.3
 zipp==3.17.0
