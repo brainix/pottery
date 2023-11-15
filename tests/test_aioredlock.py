@@ -101,7 +101,7 @@ async def test_context_manager_time_out_before_exit(aioredlock: AIORedlock) -> N
     aioredlock.auto_release_time = 1
     with pytest.raises(ReleaseUnlockedLock):
         async with aioredlock:
-            await asyncio.sleep(aioredlock.auto_release_time)
+            await asyncio.sleep(aioredlock.auto_release_time * 2)
             assert not await aioredlock.locked()
 
 
