@@ -48,4 +48,4 @@ jobs:
     - name: Check for security vulnerabilities with Bandit and Safety
       run: |
         bandit --recursive pottery
-        safety check
+        safety check --file requirements.txt
