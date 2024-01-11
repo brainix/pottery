@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   annotations.py                                                            #
 #                                                                             #
-#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2024, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
