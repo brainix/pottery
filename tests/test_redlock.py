@@ -141,7 +141,7 @@ class TestRedlock:
             redis_db = redis.get_connection_kwargs()['db']  # type: ignore
             assert repr(wtf) == (
                 "ReleaseUnlockedLock(key='redlock:printer', "
-                f"masters=frozenset({{Redis<ConnectionPool<Connection<host=localhost,port=6379,db={redis_db}>>>}}), "
+                f"masters=frozenset({{<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=localhost,port=6379,db={redis_db})>)>)>}}), "
                 "redis_errors=[])"
             )
 
