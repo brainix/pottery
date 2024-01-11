@@ -42,11 +42,11 @@ def _store_on_self(*, attr: str) -> Callable[[F], F]:
     "Decorator to store/cache a method's return value as an attribute on self."
     def decorator(func: F) -> F:
         @functools.wraps(func)
-        def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+        def wrapper(self: Any) -> Any:
             try:
                 value = getattr(self, attr)
             except AttributeError:
-                value = func(self, *args, **kwargs)
+                value = func(self)
                 setattr(self, attr, value)
             return value
         return cast(F, wrapper)
