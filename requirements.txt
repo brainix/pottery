@@ -1,3 +1,4 @@
+async-timeout==4.0.3
 bandit==1.7.6
 certifi==2023.11.17
 cffi==1.16.0
@@ -39,7 +40,7 @@ pytest-asyncio==0.23.3
 pytest-cov==4.1.0
 PyYAML==6.0.1
 readme-renderer==42.0
-redis==5.1.0b2
+redis==5.1.0b3
 requests==2.31.0
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
