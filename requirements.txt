@@ -1,17 +1,15 @@
 async-timeout==4.0.3
 Authlib==1.3.0
-bandit==1.7.6
+bandit==1.7.7
 certifi==2023.11.17
 cffi==1.16.0
 charset-normalizer==3.3.2
 click==8.1.7
 coverage==7.4.0
-cryptography==41.0.7
+cryptography==42.0.0
 docutils==0.20.1
 dparse==0.6.4b0
 flake8==7.0.0
-gitdb==4.0.11
-GitPython==3.1.41
 hiredis==2.3.2
 idna==3.6
 importlib-metadata==7.0.1
@@ -54,7 +52,6 @@ ruamel.yaml.clib==0.2.8
 safety==3.0.1
 safety-schemas==0.0.1
 setuptools==69.0.3
-smmap==5.0.1
 stevedore==5.1.0
 twine==4.0.2
 typer==0.9.0
