@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   counter.py                                                                #
 #                                                                             #
-#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2024, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -103,7 +103,7 @@ class RedisCounter(RedisDict, collections.Counter):
             value = super().__missing__(key)  # type: ignore
         return value
 
-    def __delitem__(self, key: JSONTypes) -> None:
+    def __delitem__(self, key: JSONTypes) -> None:  # type: ignore
         'c.__delitem__(key) <==> del c[key].  O(1)'
         with contextlib.suppress(KeyError):
             super().__delitem__(key)
@@ -130,7 +130,7 @@ class RedisCounter(RedisDict, collections.Counter):
             counter = self.__to_counter()
             return method(counter, other)
 
-    def __add__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
+    def __add__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:  # type: ignore
         "Return the addition our counts to other's counts, but keep only counts > 0.  O(n)"
         return self.__math_op(other, method=collections.Counter.__add__)
 
@@ -200,11 +200,11 @@ class RedisCounter(RedisDict, collections.Counter):
                     pipeline.hdel(self.key, *encoded_to_del)  # Available since Redis 2.0.0
             return self
 
-    def __iadd__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
+    def __iadd__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:  # type: ignore
         'Same as __add__(), but in-place.  O(n)'
         return self.__imath_op(other, sign=+1)
 
-    def __isub__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
+    def __isub__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:  # type: ignore
         'Same as __sub__(), but in-place.  O(n)'
         return self.__imath_op(other, sign=-1)
 
@@ -245,7 +245,7 @@ class RedisCounter(RedisDict, collections.Counter):
         'Same as __or__(), but in-place.  O(n)'
         return self.__iset_op(other, method=int.__gt__)
 
-    def __iand__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:
+    def __iand__(self, other: Counter[JSONTypes]) -> Counter[JSONTypes]:  # type: ignore
         'Same as __and__(), but in-place.  O(n)'
         return self.__iset_op(other, method=int.__lt__)
 

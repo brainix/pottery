@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   bloom.py                                                                  #
 #                                                                             #
-#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2024, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -28,11 +28,9 @@ from typing import Generator
 from typing import Iterable
 from typing import Set
 from typing import cast
+from typing import final
 
 import mmh3
-# TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import final
-from typing_extensions import final
 
 from .annotations import F
 from .annotations import JSONTypes
@@ -40,18 +38,15 @@ from .base import Container
 from .exceptions import InefficientAccessWarning
 
 
-# TODO: When we drop support for Python 3.7, stop using @_store_on_self().  Use
-# @functools.cached_property() instead.
-#   https://docs.python.org/3/library/functools.html#functools.cached_property
 def _store_on_self(*, attr: str) -> Callable[[F], F]:
     "Decorator to store/cache a method's return value as an attribute on self."
     def decorator(func: F) -> F:
         @functools.wraps(func)
-        def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+        def wrapper(self: Any) -> Any:
             try:
                 value = getattr(self, attr)
             except AttributeError:
-                value = func(self, *args, **kwargs)
+                value = func(self)
                 setattr(self, attr, value)
             return value
         return cast(F, wrapper)
@@ -349,16 +344,10 @@ class BloomFilter(BloomFilterABC, Container):
 
         Please note that this method *may* produce false positives, but *never*
         produces false negatives.  This means that if .contains_many() yields
-        True, then you *may* have inserted the element into the Bloom filter.
-        But if .contains_many() yields False, then you *must not* have inserted
-        it.
+        all Trues, then you *may* have inserted the elements into the Bloom
+        filter.  But if .contains_many() yields one False or stops yielding,
+        then you *must not* have inserted the corresponding element.
         '''
-        if len(values) > 1:
-            warnings.warn(
-                cast(str, InefficientAccessWarning.__doc__),
-                InefficientAccessWarning,
-            )
-
         with self._watch() as pipeline:
             pipeline.multi()  # Available since Redis 1.2.0
             for bit_offset in self._bit_offsets_many(*values):
@@ -367,13 +356,7 @@ class BloomFilter(BloomFilterABC, Container):
 
         # I stole this recipe from here:
         #   https://stackoverflow.com/a/61435714
-        #
-        # TODO: When we drop support for Python 3.7, rewrite the following loop
-        # using the walrus operator, like in the Stack Overflow answer linked
-        # above.
-        bits_per_chunk = self.num_hashes()
-        while True:
-            bits_in_chunk = tuple(itertools.islice(bits, bits_per_chunk))
+        while bits_in_chunk := tuple(itertools.islice(bits, self.num_hashes())):
             if not bits_in_chunk:
                 break
             yield all(bits_in_chunk)

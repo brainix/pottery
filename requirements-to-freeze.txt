@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   requirements-to-freeze.txt                                                #
 #                                                                             #
-#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2024, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -54,25 +54,3 @@ requests>=2.20.0
 #   https://nvd.nist.gov/vuln/detail/CVE-2018-20060
 #   https://nvd.nist.gov/vuln/detail/CVE-2019-11324
 urllib3>=1.24.2
-
-# We don't need bleach at the top-level.  However, it's pulled in from
-# something else, and there's a security vulnerability in the version that it
-# pulls in.  For more info:
-#   https://bugzilla.mozilla.org/show_bug.cgi?id=1615315
-bleach>=3.1.1
-
-# We don't need importlib-metadata at the top-level.  However, it's pulled in
-# by Flake8, and on Python 3.7, there's a version conflict:
-#   ERROR: Cannot install flake8==4.0.1 and importlib-metadata==4.6.1 because these package versions have conflicting dependencies.
-#
-#   ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/user_guide/#fixing-conflicting-dependencies
-#   The conflict is caused by:
-#       The user requested importlib-metadata==4.6.1
-#       flake8 4.0.1 depends on importlib-metadata<4.3; python_version < "3.8"
-#
-#   To fix this you could try to:
-#   1. loosen the range of package versions you've specified
-#   2. remove package versions to allow pip attempt to solve the dependency conflict
-#
-#   Error: Process completed with exit code 1.
-importlib-metadata<4.3

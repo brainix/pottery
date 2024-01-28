@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   redlock.py                                                                #
 #                                                                             #
-#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2024, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -51,6 +51,7 @@ from typing import Any
 from typing import Callable
 from typing import ClassVar
 from typing import Iterable
+from typing import Literal
 from typing import Tuple
 from typing import Type
 from typing import cast
@@ -58,10 +59,8 @@ from typing import overload
 
 from redis import Redis
 from redis import RedisError
+from redis.asyncio import Redis as AIORedis
 from redis.commands.core import Script
-# TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import Literal
-from typing_extensions import Literal
 
 from .annotations import F
 from .base import Primitive
@@ -90,7 +89,7 @@ class Scripts:
     def __init__(self,
                  *,
                  key: str,
-                 masters: Iterable[Redis] = frozenset(),
+                 masters: Iterable[Redis | AIORedis] = frozenset(),
                  raise_on_redis_errors: bool = False,
                  ) -> None:
         super().__init__(  # type: ignore

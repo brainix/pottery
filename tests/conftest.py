@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   conftest.py                                                               #
 #                                                                             #
-#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2024, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -26,7 +26,7 @@ from typing import Generator
 import pytest
 import uvloop
 from redis import Redis
-from redis.asyncio import Redis as AIORedis  # type: ignore
+from redis.asyncio import Redis as AIORedis
 
 from pottery import PotteryWarning
 

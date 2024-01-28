@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   monkey.py                                                                 #
 #                                                                             #
-#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2024, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -22,10 +22,7 @@
 from __future__ import annotations
 
 import logging
-
-# TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import Final
-from typing_extensions import Final
+from typing import Final
 
 
 logger: Final[logging.Logger] = logging.getLogger('pottery')

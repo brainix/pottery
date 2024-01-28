@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   executor.py                                                               #
 #                                                                             #
-#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2024, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -23,7 +23,6 @@ from __future__ import annotations
 import concurrent.futures
 from types import TracebackType
 from typing import Type
-from typing import overload
 
 from typing_extensions import Literal
 
@@ -54,22 +53,6 @@ class BailOutExecutor(concurrent.futures.ThreadPoolExecutor):
     This subclass overrides .__exit__() to not wait for pending futures to
     complete before returning control to the main thread, allowing bail out.
     '''
-
-    @overload
-    def __exit__(self,
-                 exc_type: None,
-                 exc_value: None,
-                 exc_traceback: None,
-                 ) -> Literal[False]:
-        raise NotImplementedError
-
-    @overload
-    def __exit__(self,
-                 exc_type: Type[BaseException],
-                 exc_value: BaseException,
-                 exc_traceback: TracebackType,
-                 ) -> Literal[False]:
-        raise NotImplementedError
 
     def __exit__(self,
                  exc_type: Type[BaseException] | None,

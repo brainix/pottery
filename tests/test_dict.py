@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   test_dict.py                                                              #
 #                                                                             #
-#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2024, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -68,8 +68,7 @@ def test_keyexistserror_repr(redis: Redis) -> None:
     except KeyExistsError as wtf:
         redis_db = redis.get_connection_kwargs()['db']  # type: ignore
         assert repr(wtf) == (
-            f"KeyExistsError(redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db={redis_db}>>>, "
-            "key='pottery:tel')"
+            f"KeyExistsError(redis=<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=localhost,port=6379,db={redis_db})>)>)>, key='pottery:tel')"
         )
     else:  # pragma: no cover
         pytest.fail(msg='KeyExistsError not raised')

@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   setup.py                                                                  #
 #                                                                             #
-#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2024, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -47,15 +47,16 @@ setup(
         'Topic :: System :: Distributed Computing',
         'Topic :: Utilities',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'Framework :: AsyncIO',
         'Typing :: Typed',
     ],
     keywords=pottery.__keywords__,
-    python_requires='>=3.7, <4',
+    python_requires='>=3.8, <4',
     install_requires=('redis>=4.2.0rc1, <5', 'mmh3', 'typing_extensions'),
     extras_require={},
     packages=find_packages(exclude=('contrib', 'docs', 'tests*')),

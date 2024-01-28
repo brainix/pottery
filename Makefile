@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   Makefile                                                                  #
 #                                                                             #
-#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2024, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -24,7 +24,7 @@ THIS_FILE := $(lastword $(MAKEFILE_LIST))
 venv ?= venv
 
 init upgrade: formulae := {openssl,readline,xz,redis}
-python upgrade: version ?= 3.10.2
+python upgrade: version ?= 3.12.1
 upgrade: requirements ?= requirements-to-freeze.txt
 delete-keys: pattern ?= tmp:*
 
@@ -36,8 +36,8 @@ install: init python
 .PHONY: init
 init:
 	-xcode-select --install
-	command -v brew >/dev/null 2>&1 || \
-		ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+	# command -v brew >/dev/null 2>&1 || \
+	# 	ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 	brew analytics regenerate-uuid
 	brew analytics off
 	-brew install $(formulae)
@@ -62,7 +62,7 @@ ifneq ($(recursive),)
 	~/.pyenv/versions/$(version)/bin/python3 -m venv $(venv)
 endif
 	source $(venv)/bin/activate && \
-		pip3 install --upgrade --no-cache-dir pip wheel && \
+		pip3 install --upgrade --no-cache-dir pip setuptools wheel && \
 		pip3 install --requirement $(requirements) --upgrade --no-cache-dir && \
 		pip3 freeze > requirements.txt
 	git status

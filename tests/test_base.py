@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   test_base.py                                                              #
 #                                                                             #
-#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2024, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -125,7 +125,9 @@ class TestCommon:
                 raj._random_key()
             except RandomKeyError as wtf:
                 redis_db = redis.get_connection_kwargs()['db']  # type: ignore
-                assert repr(wtf) == f'RandomKeyError(redis=Redis<ConnectionPool<Connection<host=localhost,port=6379,db={redis_db}>>>, key=None)'
+                assert repr(wtf) == (
+                    f'RandomKeyError(redis=<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=localhost,port=6379,db={redis_db})>)>)>, key=None)'
+                )
             else:  # pragma: no cover
                 pytest.fail(msg='RandomKeyError not raised')
 

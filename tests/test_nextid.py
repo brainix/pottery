@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   test_nextid.py                                                            #
 #                                                                             #
-#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2024, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -76,7 +76,7 @@ def test_contention(num_ids: int) -> None:
     try:
         results = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [executor.submit(next, i) for i in ids]
+            futures = [executor.submit(next, i) for i in ids]  # type: ignore
             for future in concurrent.futures.as_completed(futures):
                 with contextlib.suppress(QuorumNotAchieved):
                     result = future.result()

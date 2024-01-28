@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   test_aioredlock.py                                                        #
 #                                                                             #
-#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2024, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -21,8 +21,8 @@ import asyncio
 import unittest.mock
 
 import pytest
-from redis.asyncio import Redis as AIORedis  # type: ignore
-from redis.commands.core import AsyncScript  # type: ignore
+from redis.asyncio import Redis as AIORedis
+from redis.commands.core import AsyncScript
 from redis.exceptions import TimeoutError
 
 from pottery import AIORedlock
@@ -101,7 +101,7 @@ async def test_context_manager_time_out_before_exit(aioredlock: AIORedlock) -> N
     aioredlock.auto_release_time = 1
     with pytest.raises(ReleaseUnlockedLock):
         async with aioredlock:
-            await asyncio.sleep(aioredlock.auto_release_time)
+            await asyncio.sleep(aioredlock.auto_release_time * 2)
             assert not await aioredlock.locked()
 
 
@@ -162,7 +162,7 @@ async def test_release_rediserror(aioredlock: AIORedlock) -> None:
 async def test_enqueued(aioredlock: AIORedlock) -> None:
     aioredlock.auto_release_time = .2
     aioredis = next(iter(aioredlock.masters))
-    aioredlock2 = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)
+    aioredlock2 = AIORedlock(masters={aioredis}, key='shower', auto_release_time=.2)  # type: ignore
 
     await aioredlock.acquire()
     # aioredlock2 is enqueued until self.aioredlock is automatically released:

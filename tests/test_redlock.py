@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   test_redlock.py                                                           #
 #                                                                             #
-#   Copyright © 2015-2022, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2024, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -155,7 +155,7 @@ class TestRedlock:
             redis_db = redis.get_connection_kwargs()['db']  # type: ignore
             assert repr(wtf) == (
                 "ReleaseUnlockedLock(key='redlock:printer', "
-                f"masters=frozenset({{Redis<ConnectionPool<Connection<host=localhost,port=6379,db={redis_db}>>>}}), "
+                f"masters=frozenset({{<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=localhost,port=6379,db={redis_db})>)>)>}}), "
                 "redis_errors=[])"
             )
 
