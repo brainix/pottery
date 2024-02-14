@@ -52,7 +52,7 @@ setup(
     ],
     keywords=[],
     python_requires='>=3.7, <4',
-    install_requires=('redis>=4.2.2, <5', 'mmh3'),
+    install_requires=('redis==5.0.1', 'mmh3'),
     extras_require={},
     packages=find_packages(exclude=('contrib', 'docs', 'tests*')),
     package_data={'pottery': ('py.typed',)},
