@@ -165,6 +165,11 @@ def redis_cache(*,  # NoQA: C901
                 redis.expire(key, timeout)
             return return_value
 
+        @functools.wraps(func)
+        def drop(*args: Hashable, **kwargs: Hashable) -> None:
+            hash_ = _arg_hash(*args, **kwargs)
+            del cache[hash_]
+
         def cache_info() -> CacheInfo:
             return CacheInfo(
                 hits=hits,
@@ -180,6 +185,7 @@ def redis_cache(*,  # NoQA: C901
 
         wrapper.__wrapped__ = func  # type: ignore
         wrapper.__bypass__ = bypass  # type: ignore
+        wrapper.__drop__ = drop  # type: ignore
         wrapper.cache_info = cache_info  # type: ignore
         wrapper.cache_clear = cache_clear  # type: ignore
         return cast(F, wrapper)
