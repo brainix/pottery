@@ -221,6 +221,7 @@ class Redlock(Scripts, Primitive):
         'num_extensions',
         'context_manager_blocking',
         'context_manager_timeout',
+        'retry_delay',
         '_uuid',
         '_extension_num',
     )
@@ -240,7 +241,7 @@ class Redlock(Scripts, Primitive):
                  num_extensions: int = _NUM_EXTENSIONS,
                  context_manager_blocking: bool = True,
                  context_manager_timeout: float = -1,
-                 retry_delay: int = _RETRY_DELAY,
+                 retry_delay: float = _RETRY_DELAY,
                  ) -> None:
         '''Initialize a Redlock.
 
