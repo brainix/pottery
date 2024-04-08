@@ -71,7 +71,7 @@ def test_keyexistserror_repr(redis: Redis) -> None:
             f"KeyExistsError(redis=<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=localhost,port=6379,db={redis_db})>)>)>, key='pottery:tel')"
         )
     else:  # pragma: no cover
-        pytest.fail(msg='KeyExistsError not raised')
+        pytest.fail(reason='KeyExistsError not raised')
 
 
 def test_basic_usage(redis: Redis) -> None:

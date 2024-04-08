@@ -129,7 +129,7 @@ class TestCommon:
                     f'RandomKeyError(redis=<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=localhost,port=6379,db={redis_db})>)>)>, key=None)'
                 )
             else:  # pragma: no cover
-                pytest.fail(msg='RandomKeyError not raised')
+                pytest.fail(reason='RandomKeyError not raised')
 
 
 class TestEncodable:
