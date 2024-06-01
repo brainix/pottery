@@ -54,3 +54,7 @@ requests>=2.20.0
 #   https://nvd.nist.gov/vuln/detail/CVE-2018-20060
 #   https://nvd.nist.gov/vuln/detail/CVE-2019-11324
 urllib3>=1.24.2
+
+# We don't need docutils at the top-level.  However, it's pulled in from
+# something else, and recent docutils doesn't support Python 3.8.
+docutils==0.20.1
