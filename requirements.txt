@@ -12,7 +12,7 @@ dparse==0.6.4b0
 flake8==7.1.0
 hiredis==2.3.2
 idna==3.7
-importlib_metadata==7.2.1
+importlib_metadata==8.0.0
 iniconfig==2.0.0
 isort==5.13.2
 jaraco.classes==3.4.0
@@ -32,7 +32,7 @@ mypy-extensions==1.0.0
 nh3==0.2.17
 packaging==24.1
 pbr==6.0.0
-pkginfo==1.11.1
+pkginfo==1.10.0
 pluggy==1.5.0
 pycodestyle==2.12.0
 pycparser==2.22
@@ -54,15 +54,15 @@ ruamel.yaml==0.18.6
 ruamel.yaml.clib==0.2.8
 safety==3.2.3
 safety-schemas==0.0.2
-setuptools==70.1.0
+setuptools==70.1.1
 shellingham==1.5.4
 stevedore==5.2.0
-twine==5.1.0
+twine==5.1.1
 typer==0.12.3
 types-cffi==1.16.0.20240331
 types-pyOpenSSL==24.1.0.20240425
 types-redis==4.6.0.20240425
-types-setuptools==70.1.0.20240625
+types-setuptools==70.1.0.20240627
 typing_extensions==4.12.2
 urllib3==2.2.2
 uvloop==0.19.0
