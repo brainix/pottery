@@ -36,8 +36,8 @@ pkginfo==1.10.0
 pluggy==1.5.0
 pycodestyle==2.12.0
 pycparser==2.22
-pydantic==2.7.4
-pydantic_core==2.18.4
+pydantic==2.8.0
+pydantic_core==2.20.0
 pyflakes==3.2.0
 Pygments==2.18.0
 pytest==8.2.2
@@ -54,7 +54,7 @@ ruamel.yaml==0.18.6
 ruamel.yaml.clib==0.2.8
 safety==3.2.3
 safety-schemas==0.0.2
-setuptools==70.1.1
+setuptools==70.2.0
 shellingham==1.5.4
 stevedore==5.2.0
 twine==5.1.1
