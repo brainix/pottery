@@ -45,7 +45,10 @@ jobs:
       run: |
         flake8 *\.py pottery/*\.py tests/*\.py --count --max-complexity=10 --statistics
         isort *\.py pottery/*\.py tests/*\.py --check-only --diff
-    - name: Check for security vulnerabilities with Bandit and Safety
+    - name: Check for security vulnerabilities with Bandit
       run: |
         bandit --recursive pottery
-        safety check --file requirements.txt
+    - name: Check for security vulnerabilities with Safety
+      uses: pyupio/safety-action@v1
+      with:
+        api-key: ${{ secrets.SAFETY_API_KEY }}

@@ -81,7 +81,7 @@ test:
 		echo Running isort on $($@_SOURCE_FILES) && \
 		isort $($@_SOURCE_FILES) --check-only --diff && \
 		bandit --recursive pottery && \
-		safety check
+		safety scan
 
 
 .PHONY: release
