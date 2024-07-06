@@ -16,6 +16,10 @@ report:
         environment-results: true
         unpinned-requirements: true
       cvss-severity: []
+      vulnerabilities:
+        70612:
+          reason: "We don't render Jinja templates"
+          expires: '2024-12-31'
 
 
 fail-scan-with-exit-code:
