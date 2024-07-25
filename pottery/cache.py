@@ -232,7 +232,7 @@ class CachedOrderedDict(collections.OrderedDict):
         init_cache = functools.partial(
             RedisDict,
             redis=redis_client,
-            key=redis_key,
+            key=redis_key,  # type: ignore
         )
         self._cache = self.__retry(init_cache)
         self._misses = set()
