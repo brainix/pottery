@@ -12,7 +12,6 @@ been battle tested in production at scale.
 [![Latest released version](https://badge.fury.io/py/pottery.svg)](https://badge.fury.io/py/pottery)
 
 ![Supported Python versions](https://img.shields.io/pypi/pyversions/pottery)
-![Number of lines of code](https://img.shields.io/tokei/lines/github/brainix/pottery)
 
 [![Total number of downloads](https://pepy.tech/badge/pottery)](https://pepy.tech/project/pottery)
 [![Downloads per month](https://pepy.tech/badge/pottery/month)](https://pepy.tech/project/pottery)
