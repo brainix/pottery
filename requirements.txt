@@ -41,13 +41,13 @@ pydantic==2.9.2
 pydantic_core==2.23.4
 pyflakes==3.2.0
 Pygments==2.19.1
-PyJWT==2.9.0
+PyJWT==2.10.1
 pytest==8.3.4
 pytest-asyncio==0.25.3
 pytest-cov==6.0.0
 PyYAML==6.0.2
 readme_renderer==43.0
-redis==5.3.0b4
+redis==5.3.0b3
 requests==2.32.3
 requests-toolbelt==1.0.0
 rfc3986==2.0.0

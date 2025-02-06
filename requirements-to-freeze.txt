@@ -58,3 +58,9 @@ urllib3>=1.24.2
 # We don't need docutils at the top-level.  However, it's pulled in from
 # something else, and recent docutils doesn't support Python 3.8.
 docutils==0.20.1
+
+# We don't need pyjwt at the top-level.  However, it's pulled in from something
+# else, and there's a security vulnerability in the version that it pulls in.
+# For more info:
+#   https://data.safetycli.com/p/pypi/pyjwt/eda/?
+pyjwt>=2.10.1
