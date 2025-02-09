@@ -182,7 +182,8 @@ class BloomFilterABC(abc.ABC):
             / self.num_hashes()
             * math.log(1 - self._num_bits_set() / self.size())
         )
-        return math.floor(len_)
+        len_ = math.floor(len_)
+        return len_
 
     @final
     def __contains__(self, value: JSONTypes) -> bool:
