@@ -346,8 +346,8 @@ class BloomFilter(BloomFilterABC, Container):
         Please note that this method *may* produce false positives, but *never*
         produces false negatives.  This means that if .contains_many() yields
         all Trues, then you *may* have inserted the elements into the Bloom
-        filter.  But if .contains_many() yields one False or stops yielding,
-        then you *must not* have inserted the corresponding element.
+        filter.  But if .contains_many() yields one False, then you *must not*
+        have inserted the corresponding element.
         '''
         with self._watch() as pipeline:
             pipeline.multi()  # Available since Redis 1.2.0
@@ -358,9 +358,7 @@ class BloomFilter(BloomFilterABC, Container):
         # I stole this recipe from here:
         #   https://stackoverflow.com/a/61435714
         while bits_in_chunk := tuple(itertools.islice(bits, self.num_hashes())):
-            if not bits_in_chunk:
-                break
-            yield all(bits_in_chunk)
+            yield all(bits_in_chunk) if bits_in_chunk else False
 
     def __repr__(self) -> str:
         'Return the string representation of the BloomFilter.  O(1)'
