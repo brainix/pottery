@@ -358,7 +358,7 @@ class BloomFilter(BloomFilterABC, Container):
         # I stole this recipe from here:
         #   https://stackoverflow.com/a/61435714
         while bits_in_chunk := tuple(itertools.islice(bits, self.num_hashes())):
-            yield bool(bits_in_chunk) and all(bits_in_chunk)
+            yield all(bits_in_chunk)
 
     def __repr__(self) -> str:
         'Return the string representation of the BloomFilter.  O(1)'
