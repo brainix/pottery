@@ -30,6 +30,14 @@ from typing import Tuple
 #   from typing import Final
 from typing_extensions import Final
 
+from .counter import RedisCounter
+from .deque import RedisDeque
+from .dict import RedisDict
+from .list import RedisList
+from .queue import RedisSimpleQueue
+from .set import RedisSet
+
+
 from .monkey import PotteryEncoder  # isort: skip
 
 from .exceptions import PotteryError  # isort:skip
@@ -54,12 +62,6 @@ from .redlock import Redlock  # isort:skip
 from .redlock import synchronize  # isort:skip
 from .timer import ContextTimer  # isort:skip
 
-from .counter import RedisCounter
-from .deque import RedisDeque
-from .dict import RedisDict
-from .list import RedisList
-from .queue import RedisSimpleQueue
-from .set import RedisSet
 
 
 from .bloom import BloomFilter  # isort:skip

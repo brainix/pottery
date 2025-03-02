@@ -20,7 +20,6 @@ import pathlib
 
 from setuptools import find_packages
 from setuptools import setup
-
 from typing_extensions import Final
 
 
