@@ -30,18 +30,6 @@ from typing import Tuple
 #   from typing import Final
 from typing_extensions import Final
 
-
-__title__: Final[str] = 'pottery'
-__version__: Final[str] = '3.0.0'
-__description__: Final[str] = __doc__.split(sep='\n\n', maxsplit=1)[0]
-__url__: Final[str] = 'https://github.com/brainix/pottery'
-__author__: Final[str] = 'Rajiv Bakulesh Shah'
-__author_email__: Final[str] = 'brainix@gmail.com'
-__license__: Final[str] = 'Apache 2.0'
-__keywords__: Final[str] = 'Redis client persistent storage'
-__copyright__: Final[str] = f'Copyright © 2015-2022, {__author__}, original author.'
-
-
 from .monkey import PotteryEncoder  # isort: skip
 
 from .exceptions import PotteryError  # isort:skip
