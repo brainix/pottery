@@ -63,7 +63,6 @@ from .redlock import synchronize  # isort:skip
 from .timer import ContextTimer  # isort:skip
 
 
-
 from .bloom import BloomFilter  # isort:skip
 from .hyper import HyperLogLog  # isort:skip
 
