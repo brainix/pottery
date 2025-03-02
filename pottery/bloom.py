@@ -341,7 +341,10 @@ class BloomFilter(BloomFilterABC, Container):
                 pipeline.setbit(self.key, bit_offset, 1)  # Available since Redis 2.2.0
 
     def contains_many(self, *values: JSONTypes) -> Generator[bool, None, None]:
-        '''Yield whether this Bloom filter contains multiple elements.  O(n)
+        '''Yield whether this Bloom filter contains multiple elements.  O(n * k)
+
+        Here, n is the number of elements that we're checking for membership,
+        and k is the number of times to run our hash functions on each element.
 
         Please note that this method *may* produce false positives, but *never*
         produces false negatives.  This means that if .contains_many() yields
