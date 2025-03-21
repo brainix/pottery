@@ -67,7 +67,8 @@ class BloomFilterABC(abc.ABC):
     def _bit_offsets(self, value: JSONTypes) -> Generator[int, None, None]:
         for seed in range(self.num_hashes()):
             hash_ = mmh3.hash(cast(str, value), seed=seed)
-            yield hash_ % self.size()
+            hash_ %= self.size()
+            yield hash_
 
     @abc.abstractmethod
     def _num_bits_set(self) -> int:
