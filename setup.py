@@ -14,6 +14,14 @@
 #   See the License for the specific language governing permissions and       #
 #   limitations under the License.                                            #
 # --------------------------------------------------------------------------- #
+'''Redis for Humans.
+
+Redis is awesome, but Redis commands are not always intuitive.  Pottery is a
+Pythonic way to access Redis.  If you know how to use Python dicts, then you
+already know how to use Pottery.  Pottery is useful for accessing Redis more
+easily, and also for implementing microservice resilience patterns; and it has
+been battle tested in production at scale.
+'''
 
 
 import pathlib
@@ -50,7 +58,6 @@ setup(
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
         'Intended Audience :: Developers',
-        'Natural Language :: English',
         'Development Status :: 4 - Beta',
         'Topic :: Database :: Front-Ends',
         'Topic :: System :: Distributed Computing',
