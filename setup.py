@@ -36,7 +36,6 @@ __description__ = __doc__.split(sep='\n\n', maxsplit=1)[0]
 __url__ = 'https://github.com/brainix/pottery'
 __author__ = 'Rajiv Bakulesh Shah'
 __author_email__ = 'brainix@gmail.com'
-__license__ = 'Apache 2.0'
 __keywords__ = 'Redis client persistent storage'
 __copyright__ = f'Copyright © 2015-2025, {__author__}, original author.'
 
@@ -46,7 +45,6 @@ _long_description = (_package_dir / 'README.md').read_text()
 
 
 setup(
-    name=__name__,
     version=__version__,
     description=__description__,
     long_description=_long_description,
@@ -54,7 +52,6 @@ setup(
     url=__url__,
     author=__author__,
     author_email=__author_email__,
-    license=__license__,
     classifiers=[
         'Intended Audience :: Developers',
         'Development Status :: 4 - Beta',
