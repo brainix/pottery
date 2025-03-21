@@ -31,7 +31,7 @@ from setuptools import setup
 
 
 __title__ = 'pottery'
-__version__ = '3.0.0'
+__version__ = '3.0.1'
 __description__ = __doc__.split(sep='\n\n', maxsplit=1)[0]
 __url__ = 'https://github.com/brainix/pottery'
 __author__ = 'Rajiv Bakulesh Shah'
@@ -56,7 +56,6 @@ setup(
     author_email=__author_email__,
     license=__license__,
     classifiers=[
-        'License :: OSI Approved :: Apache Software License',
         'Intended Audience :: Developers',
         'Development Status :: 4 - Beta',
         'Topic :: Database :: Front-Ends',
