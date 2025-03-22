@@ -131,9 +131,8 @@ def test_popleft_from_empty(redis: Redis) -> None:
 @pytest.mark.parametrize('invalid_steps', (None, 'a', 0.5))
 def test_invalid_rotating(redis: Redis, invalid_steps: Any) -> None:
     d = RedisDeque(('g', 'h', 'i', 'j', 'k', 'l'), redis=redis)
-    for invalid_steps in {None, 'a', 0.5}:
-        with pytest.raises(TypeError):
-            d.rotate(invalid_steps)
+    with pytest.raises(TypeError):
+        d.rotate(invalid_steps)
 
 
 def test_rotate_zero_steps(redis: Redis) -> None:
