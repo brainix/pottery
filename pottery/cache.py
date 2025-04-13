@@ -130,7 +130,7 @@ def redis_cache(*,  # NoQA: C901
         redis = _default_redis
 
     def decorator(func: F) -> F:
-        nonlocal redis, key
+        nonlocal redis, key  # NoQA: F824
         if key is None:
             key = random_key(redis=redis)
             logger.warning(
