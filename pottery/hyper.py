@@ -49,10 +49,10 @@ class HyperLogLog(Container):
     elements to and get the length of; but that you might not want to use to
     test element membership, and can't iterate through, or get elements out of.
 
-    HyperLogLogs are probabilistic, which means that they&rsquo;re accurate
-    within a margin of error up to 2%.  However, they can reasonably accurately
-    estimate the cardinality (size) of vast datasets (like the number of unique
-    Google searches issued in a day) with a tiny amount of storage (1.5 KB).
+    HyperLogLogs are probabilistic, which means that they/re accurate within a
+    margin of error up to 2%.  However, they can reasonably accurately estimate
+    the cardinality (size) of vast datasets (like the number of unique Google
+    searches issued in a day) with a tiny amount of storage (1.5 KB).
 
     Wikipedia article:
         https://en.wikipedia.org/wiki/HyperLogLog
