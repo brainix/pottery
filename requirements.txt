@@ -5,7 +5,7 @@ bandit==1.8.3
 certifi==2025.4.26
 cffi==1.17.1
 charset-normalizer==3.4.2
-click==8.2.0
+click==8.1.8
 coverage==7.8.0
 cryptography==44.0.3
 docutils==0.20.1
@@ -53,14 +53,14 @@ pytest-asyncio==0.26.0
 pytest-cov==6.1.1
 PyYAML==6.0.2
 readme_renderer==43.0
-redis==6.0.0
+redis==6.1.0
 regex==2024.11.6
 requests==2.32.3
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
 rich==14.0.0
 ruamel.yaml==0.18.10
-safety==3.5.0
+safety==3.5.1
 safety-schemas==0.0.14
 setuptools==80.4.0
 shellingham==1.5.4
