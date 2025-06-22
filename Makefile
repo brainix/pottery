@@ -24,7 +24,7 @@ THIS_FILE := $(lastword $(MAKEFILE_LIST))
 venv ?= venv
 
 init upgrade: formulae := {openssl,readline,xz,redis}
-python upgrade: version ?= 3.13.4
+python upgrade: version ?= 3.13.5
 upgrade: requirements ?= requirements-to-freeze.txt
 delete-keys: pattern ?= tmp:*
 
