@@ -1,12 +1,12 @@
 annotated-types==0.7.0
 anyio==4.9.0
-Authlib==1.6.0
+Authlib==1.6.1
 bandit==1.8.6
-certifi==2025.7.9
+certifi==2025.7.14
 cffi==1.17.1
 charset-normalizer==3.4.2
 click==8.2.1
-coverage==7.9.2
+coverage==7.10.0
 cryptography==45.0.5
 docutils==0.20.1
 dparse==0.6.4
@@ -33,9 +33,9 @@ mccabe==0.7.0
 mdurl==0.1.2
 mmh3==5.1.0
 more-itertools==10.7.0
-mypy==1.16.1
+mypy==1.17.0
 mypy_extensions==1.1.0
-nh3==0.2.21
+nh3==0.3.0
 nltk==3.9.1
 packaging==25.0
 pathspec==0.12.1
@@ -50,7 +50,7 @@ pyflakes==3.4.0
 Pygments==2.19.2
 PyJWT==2.10.1
 pytest==8.4.1
-pytest-asyncio==1.0.0
+pytest-asyncio==1.1.0
 pytest-cov==6.2.1
 PyYAML==6.0.2
 readme_renderer==43.0
@@ -59,7 +59,7 @@ regex==2024.11.6
 requests==2.32.4
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
-rich==14.0.0
+rich==14.1.0
 ruamel.yaml==0.18.14
 ruamel.yaml.clib==0.2.12
 safety==3.6.0
