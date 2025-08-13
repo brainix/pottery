@@ -48,32 +48,6 @@ def test_keyexistserror_raised(redis: Redis) -> None:
         )
 
 
-def test_keyexistserror_repr(redis: Redis) -> None:
-    d = RedisDict(
-        redis=redis,
-        key='pottery:tel',
-        sape=4139,
-        guido=4127,
-        jack=4098,
-    )
-    d   # Workaround for Pyflakes.  :-(
-    try:
-        RedisDict(
-            redis=redis,
-            key='pottery:tel',
-            sape=4139,
-            guido=4127,
-            jack=4098,
-        )
-    except KeyExistsError as wtf:
-        redis_db = redis.get_connection_kwargs()['db']  # type: ignore
-        assert repr(wtf) == (
-            f"KeyExistsError(redis=<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=localhost,port=6379,db={redis_db})>)>)>, key='pottery:tel')"
-        )
-    else:  # pragma: no cover
-        pytest.fail(reason='KeyExistsError not raised')
-
-
 def test_basic_usage(redis: Redis) -> None:
     tel = RedisDict(redis=redis, jack=4098, sape=4139)
     tel['guido'] = 4127

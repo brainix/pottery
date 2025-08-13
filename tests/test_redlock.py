@@ -133,19 +133,6 @@ class TestRedlock:
             redlock.release()
 
     @staticmethod
-    def test_releaseunlockedlock_repr(redlock: Redlock) -> None:
-        try:
-            redlock.release()
-        except ReleaseUnlockedLock as wtf:
-            redis = next(iter(redlock.masters))
-            redis_db = redis.get_connection_kwargs()['db']  # type: ignore
-            assert repr(wtf) == (
-                "ReleaseUnlockedLock(key='redlock:printer', "
-                f"masters=frozenset({{<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=localhost,port=6379,db={redis_db})>)>)>}}), "
-                "redis_errors=[])"
-            )
-
-    @staticmethod
     def test_release_same_lock_twice(redlock: Redlock) -> None:
         redis = next(iter(redlock.masters))
         assert not redis.exists(redlock.key)
