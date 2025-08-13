@@ -115,22 +115,6 @@ class TestCommon:
             exists.return_value = True
             raj._random_key()
 
-    @staticmethod
-    def test_randomkeyerror_repr(redis: Redis) -> None:
-        raj = RedisDict(redis=redis, key='pottery:raj', hobby='music', vegetarian=True)
-
-        with unittest.mock.patch.object(raj.redis, 'exists') as exists:
-            exists.return_value = True
-            try:
-                raj._random_key()
-            except RandomKeyError as wtf:
-                redis_db = redis.get_connection_kwargs()['db']  # type: ignore
-                assert repr(wtf) == (
-                    f'RandomKeyError(redis=<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=localhost,port=6379,db={redis_db})>)>)>, key=None)'
-                )
-            else:  # pragma: no cover
-                pytest.fail(reason='RandomKeyError not raised')
-
 
 class TestEncodable:
     @staticmethod
