@@ -265,6 +265,7 @@ class Redlock(Scripts, Primitive):
             raise ValueError("can't specify a timeout for a non-blocking call")
         if num_extensions < 0 or (isinstance(num_extensions, float) and not math.isinf(num_extensions)):
             raise ValueError("num_extensions must be either a positive integer or float infinity")
+        
         super().__init__(
             key=key,
             masters=masters,
