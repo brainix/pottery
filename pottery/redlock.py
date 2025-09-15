@@ -526,7 +526,7 @@ class Redlock(Scripts, Primitive):
             True
             >>> printer_lock.release()
         '''
-        if self.limited_extensions and notself._extension_num >= self.num_extensions:
+        if self.limited_extensions and self._extension_num >= self.num_extensions:
             raise TooManyExtensions(self.key, self.masters)
 
         with BailOutExecutor() as executor:
