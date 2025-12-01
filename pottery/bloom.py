@@ -303,7 +303,7 @@ class BloomFilter(BloomFilterABC, Container):
         Similarly, if we want to check to see if the value 'rajiv' is in our
         Bloom filter, then we must check to see if the bits 183, 319, 787, 585,
         8, 471, and 711 are all set to 1.  If even one of those bits is set to
-        0, then the value 'rajiv' must never have been inserted into our Bloom
+        0, then the value 'rajiv' must *never* have been inserted into our Bloom
         filter.  But if all of those bits are set to 1, then the value 'rajiv'
         has *probably* been inserted into our Bloom filter.
         '''
@@ -365,5 +365,5 @@ class BloomFilter(BloomFilterABC, Container):
             yield all(bits_in_chunk)
 
     def __repr__(self) -> str:
-        'Return the string representation of the BloomFilter.  O(1)'
+        'Return the string representation of the BloomFilter object.  O(1)'
         return f'<{self.__class__.__qualname__} key={self.key}>'
