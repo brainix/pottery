@@ -31,9 +31,14 @@ from redis.asyncio import Redis as AIORedis
 from pottery import PotteryWarning
 
 
-@pytest.fixture(autouse=True)
-def install_uvloop() -> None:
+# Install uvloop once at import time to avoid repeatedly changing the event loop policy
+# during test execution, which can produce noisy warnings or race conditions. Use a
+# safe try/except in case uvloop cannot be installed in certain environments.
+try:
     uvloop.install()
+except Exception:
+    # Fall back to the default asyncio policy if installation fails.
+    pass
 
 
 @pytest.fixture(autouse=True)
