@@ -6,11 +6,11 @@ certifi==2025.11.12
 cffi==2.0.0
 charset-normalizer==3.4.4
 click==8.3.1
-coverage==7.13.0
+coverage==7.13.1
 cryptography==46.0.3
 docutils==0.20.1
 dparse==0.6.4
-filelock==3.20.1
+filelock==3.20.2
 flake8==7.3.0
 h11==0.16.0
 hiredis==3.3.0
@@ -26,7 +26,7 @@ jaraco.functools==4.4.0
 Jinja2==3.1.6
 joblib==1.5.3
 keyring==25.7.0
-librt==0.7.5
+librt==0.7.7
 markdown-it-py==4.0.0
 MarkupSafe==3.0.3
 marshmallow==4.1.2
@@ -59,8 +59,7 @@ requests==2.32.5
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
 rich==14.2.0
-ruamel.yaml==0.18.17
-ruamel.yaml.clib==0.2.15
+ruamel.yaml==0.19.1
 safety==3.7.0
 safety-schemas==0.0.16
 setuptools==80.9.0
