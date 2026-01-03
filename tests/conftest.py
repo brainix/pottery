@@ -16,6 +16,7 @@
 # --------------------------------------------------------------------------- #
 
 
+import contextlib
 import random
 import warnings
 # TODO: When we drop support for Python 3.9, change the following import to:
@@ -31,14 +32,13 @@ from redis.asyncio import Redis as AIORedis
 from pottery import PotteryWarning
 
 
-# Install uvloop once at import time to avoid repeatedly changing the event loop policy
-# during test execution, which can produce noisy warnings or race conditions. Use a
-# safe try/except in case uvloop cannot be installed in certain environments.
-try:
+# Install uvloop once at import time to avoid repeatedly changing the event loop
+# policy during test execution, which can produce noisy warnings or race
+# conditions.  Use a safe contextlib.suppress(Exception) in case uvloop cannot
+# be installed in certain environments, in which case, fall back to the default
+# asyncio policy.
+with contextlib.suppress(Exception):
     uvloop.install()
-except Exception:
-    # Fall back to the default asyncio policy if installation fails.
-    pass
 
 
 @pytest.fixture(autouse=True)
