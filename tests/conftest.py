@@ -19,7 +19,7 @@
 import random
 import warnings
 # TODO: When we drop support for Python 3.9, change the following import to:
-#   from collections.abc import AsyncGenerator
+#   from collections.abc import AsyncGenerator, Generator
 from typing import AsyncGenerator
 from typing import Generator
 
@@ -49,15 +49,15 @@ def redis_url() -> str:
 
 @pytest.fixture
 def redis(redis_url: str) -> Generator[Redis, None, None]:
-    redis_client = Redis.from_url(redis_url, socket_timeout=1)
+    redis_client: Redis = Redis.from_url(redis_url, socket_timeout=1)
     redis_client.flushdb()
     yield redis_client
     redis_client.flushdb()
 
 
 @pytest.fixture
-async def aioredis(redis_url: str) -> AsyncGenerator[AIORedis, None]:  # type: ignore
-    redis_client = AIORedis.from_url(redis_url, socket_timeout=1)
+async def aioredis(redis_url: str) -> AsyncGenerator[AIORedis, None]:
+    redis_client: AIORedis = AIORedis.from_url(redis_url, socket_timeout=1)
     await redis_client.flushdb()
     yield redis_client
     await redis_client.flushdb()
