@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------- #
 #   conftest.py                                                               #
 #                                                                             #
-#   Copyright © 2015-2025, Rajiv Bakulesh Shah, original author.              #
+#   Copyright © 2015-2026, Rajiv Bakulesh Shah, original author.              #
 #                                                                             #
 #   Licensed under the Apache License, Version 2.0 (the "License");           #
 #   you may not use this file except in compliance with the License.          #
@@ -18,8 +18,6 @@
 
 import random
 import warnings
-# TODO: When we drop support for Python 3.9, change the following import to:
-#   from collections.abc import AsyncGenerator, Generator
 from typing import AsyncGenerator
 from typing import Generator
 
