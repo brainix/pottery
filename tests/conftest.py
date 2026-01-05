@@ -17,6 +17,7 @@
 
 
 import random
+import sys
 import warnings
 from typing import AsyncGenerator
 from typing import Generator
@@ -29,9 +30,10 @@ from redis.asyncio import Redis as AIORedis
 from pottery import PotteryWarning
 
 
-@pytest.fixture(scope='session', autouse=True)
-def install_uvloop() -> None:
-    uvloop.install()
+if sys.version_info < (3, 14):
+    @pytest.fixture(scope='session', autouse=True)
+    def install_uvloop() -> None:
+        uvloop.install()
 
 
 @pytest.fixture(autouse=True)
