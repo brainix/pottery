@@ -30,7 +30,7 @@ from redis.asyncio import Redis as AIORedis
 from pottery import PotteryWarning
 
 
-if sys.version_info < (3, 14):
+if sys.version_info < (3, 14):  # pragma: no cover
     @pytest.fixture(scope='session', autouse=True)
     def install_uvloop() -> None:
         uvloop.install()

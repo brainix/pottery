@@ -147,7 +147,7 @@ async def test_extend_rediserror(aioredlock: AIORedlock) -> None:
         await aioredlock.extend()
         with unittest.mock.patch.object(AsyncScript, '__call__') as __call__:
             __call__.side_effect = TimeoutError
-            with pytest.raises(ExtendUnlockedLock):
+            with pytest.raises(ExtendUnlockedLock):  # pragma: no cover
                 await aioredlock.extend()
 
 
