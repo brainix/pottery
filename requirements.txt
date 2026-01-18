@@ -21,12 +21,12 @@ idna==3.11
 iniconfig==2.3.0
 isort==7.0.0
 jaraco.classes==3.4.0
-jaraco.context==6.0.2
+jaraco.context==6.1.0
 jaraco.functools==4.4.0
 Jinja2==3.1.6
 joblib==1.5.3
 keyring==25.7.0
-librt==0.7.7
+librt==0.7.8
 markdown-it-py==4.0.0
 MarkupSafe==3.0.3
 marshmallow==4.2.0
@@ -54,7 +54,7 @@ pytest-cov==7.0.0
 PyYAML==6.0.3
 readme_renderer==43.0
 redis==7.1.0
-regex==2025.11.3
+regex==2026.1.15
 requests==2.32.5
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
@@ -66,7 +66,7 @@ setuptools==80.9.0
 shellingham==1.5.4
 stevedore==5.6.0
 tenacity==9.1.2
-tomlkit==0.13.3
+tomlkit==0.14.0
 tqdm==4.67.1
 twine==6.2.0
 typer==0.21.1
