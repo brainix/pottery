@@ -221,6 +221,7 @@ class Redlock(Scripts, Primitive):
         'num_extensions',
         'context_manager_blocking',
         'context_manager_timeout',
+        'retry_delay',
         '_uuid',
         '_extension_num',
     )
@@ -240,6 +241,7 @@ class Redlock(Scripts, Primitive):
                  num_extensions: int = _NUM_EXTENSIONS,
                  context_manager_blocking: bool = True,
                  context_manager_timeout: float = -1,
+                 retry_delay: float = _RETRY_DELAY,
                  ) -> None:
         '''Initialize a Redlock.
 
@@ -259,6 +261,8 @@ class Redlock(Scripts, Primitive):
             context_manager_timeout -- if context_manager_blocking, how long to
                 wait when acquiring before giving up and raising the
                 QuorumNotAchieved exception
+            retry_delay -- the upper bound of how long to block before attempting
+                to re-acquire the lock
         '''
         if not context_manager_blocking and context_manager_timeout != -1:
             raise ValueError("can't specify a timeout for a non-blocking call")
@@ -272,6 +276,7 @@ class Redlock(Scripts, Primitive):
         self.num_extensions = num_extensions
         self.context_manager_blocking = context_manager_blocking
         self.context_manager_timeout = context_manager_timeout
+        self.retry_delay = retry_delay
         self._uuid = ''
         self._extension_num = 0
 
@@ -420,7 +425,7 @@ class Redlock(Scripts, Primitive):
                             self.__log_time_enqueued(timer, acquired=True)
                         return True
                     enqueued = True
-                    delay = random.uniform(0, self._RETRY_DELAY)  # nosec
+                    delay = random.uniform(0, self.retry_delay)  # nosec
                     time.sleep(delay)
             if enqueued:  # pragma: no cover
                 self.__log_time_enqueued(timer, acquired=False)
