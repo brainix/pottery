@@ -26,7 +26,6 @@ from .counter import RedisCounter
 from .deque import RedisDeque
 from .dict import RedisDict
 from .list import RedisList
-from .queue import RedisSimpleQueue
 from .set import RedisSet
 
 
