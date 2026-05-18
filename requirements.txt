@@ -1,13 +1,13 @@
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.13.0
-ast_serialize==0.4.0
+ast_serialize==0.5.0
 Authlib==1.7.2
 bandit==1.9.4
 certifi==2026.4.22
 cffi==2.0.0
 charset-normalizer==3.4.7
-click==8.3.3
+click==8.4.0
 coverage==7.14.0
 cryptography==48.0.0
 docutils==0.20.1
@@ -24,7 +24,7 @@ iniconfig==2.3.0
 isort==8.0.1
 jaraco.classes==3.4.0
 jaraco.context==6.1.2
-jaraco.functools==4.4.0
+jaraco.functools==4.5.0
 Jinja2==3.1.6
 joblib==1.5.3
 joserfc==1.6.5
