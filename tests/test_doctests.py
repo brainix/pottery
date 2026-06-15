@@ -26,18 +26,20 @@ import pytest
 from redis import Redis
 
 
-def modules() -> Generator[ModuleType, None, None]:
+def modules() -> list[ModuleType]:
     tests_dir = pathlib.Path(__file__).parent
     package_dir = tests_dir.parent
     source_dir = package_dir / 'pottery'
     source_files = source_dir.glob('**/*.py')
+    result = []
     for source_file in source_files:
         relative_path = source_file.relative_to(package_dir)
         parts = list(relative_path.parts)
         parts[-1] = source_file.stem
         module_name = '.'.join(parts)
         module = importlib.import_module(module_name)
-        yield module
+        result.append(module)
+    return result
 
 
 @pytest.mark.parametrize('module', modules())
