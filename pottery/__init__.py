@@ -16,11 +16,8 @@
 # --------------------------------------------------------------------------- #
 
 
+from typing import Final
 from typing import Tuple
-
-# TODO: When we drop support for Python 3.7, change the following import to:
-#   from typing import Final
-from typing_extensions import Final
 
 from .counter import RedisCounter
 from .deque import RedisDeque
