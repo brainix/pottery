@@ -17,10 +17,6 @@
 'Monkey patches.'
 
 
-# TODO: When we drop support for Python 3.9, remove the following import.  We
-# only need it for X | Y union type annotations as of 2022-01-29.
-from __future__ import annotations
-
 import logging
 from typing import Final
 
