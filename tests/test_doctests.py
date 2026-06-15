@@ -35,9 +35,9 @@ def modules() -> list[ModuleType]:
     module_list = []
     for source_file in source_files:
         relative_path = source_file.relative_to(package_dir)
-        parts = list(relative_path.parts)
-        parts[-1] = source_file.stem
-        module_name = '.'.join(parts)
+        path_parts = list(relative_path.parts)
+        path_parts[-1] = source_file.stem
+        module_name = '.'.join(path_parts)
         module = importlib.import_module(module_name)
         module_list.append(module)
     return module_list
