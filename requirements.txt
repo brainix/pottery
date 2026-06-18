@@ -1,10 +1,10 @@
 annotated-doc==0.0.4
 annotated-types==0.7.0
-anyio==4.13.0
+anyio==4.14.0
 ast_serialize==0.5.0
 Authlib==1.7.2
 bandit==1.9.4
-certifi==2026.5.20
+certifi==2026.6.17
 cffi==2.0.0
 charset-normalizer==3.4.7
 click==8.4.1
@@ -70,7 +70,7 @@ shellingham==1.5.4
 stevedore==5.8.0
 tenacity==9.1.4
 tomlkit==0.15.0
-tqdm==4.68.2
+tqdm==4.68.3
 truststore==0.10.4
 twine==6.2.0
 typer==0.25.1
