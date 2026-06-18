@@ -27,9 +27,9 @@ jobs:
           - 6379:6379
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
@@ -49,6 +49,6 @@ jobs:
       run: |
         bandit --recursive pottery
     - name: Check for security vulnerabilities with Safety
-      uses: pyupio/safety-action@v1
+      uses: pyupio/safety-action@v1.0.1
       with:
         api-key: ${{ secrets.SAFETY_API_KEY }}
