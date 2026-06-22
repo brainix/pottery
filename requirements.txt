@@ -8,7 +8,7 @@ certifi==2026.6.17
 cffi==2.0.0
 charset-normalizer==3.4.7
 click==8.4.1
-coverage==7.14.1
+coverage==7.14.2
 cryptography==49.0.0
 docutils==0.20.1
 dparse==0.6.4
@@ -39,7 +39,7 @@ mmh3==5.2.1
 more-itertools==11.1.0
 mypy==2.1.0
 mypy_extensions==1.1.0
-nh3==0.3.5
+nh3==0.3.6
 nltk==3.9.4
 packaging==26.2
 pathspec==1.1.1
