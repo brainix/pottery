@@ -1,14 +1,14 @@
 annotated-doc==0.0.4
 annotated-types==0.7.0
-anyio==4.14.0
+anyio==4.14.1
 ast_serialize==0.5.0
 Authlib==1.7.2
 bandit==1.9.4
 certifi==2026.6.17
 cffi==2.0.0
 charset-normalizer==3.4.7
-click==8.4.1
-coverage==7.14.2
+click==8.4.2
+coverage==7.14.3
 cryptography==49.0.0
 docutils==0.20.1
 dparse==0.6.4
@@ -27,7 +27,7 @@ jaraco.context==6.1.2
 jaraco.functools==4.5.0
 Jinja2==3.1.6
 joblib==1.5.3
-joserfc==1.7.1
+joserfc==1.7.2
 keyring==25.7.0
 librt==0.11.0
 markdown-it-py==4.2.0
@@ -56,8 +56,8 @@ pytest-asyncio==1.4.0
 pytest-cov==7.1.0
 PyYAML==6.0.3
 readme_renderer==43.0
-redis==8.0.0
-regex==2026.5.9
+redis==8.0.1
+regex==2026.6.28
 requests==2.34.2
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
