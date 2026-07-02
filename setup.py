@@ -32,7 +32,7 @@ from setuptools import setup
 
 __title__ = 'pottery'
 __version__ = '3.0.1'
-__description__ = __doc__.split(sep='\n\n', maxsplit=1)[0]
+__description__ = (__doc__ or '').split(sep='\n\n', maxsplit=1)[0]
 __url__ = 'https://github.com/brainix/pottery'
 __author__ = 'Rajiv Bakulesh Shah'
 __author_email__ = 'brainix@gmail.com'
