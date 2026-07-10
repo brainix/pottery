@@ -339,8 +339,8 @@ class RedisList(Container, collections.abc.MutableSequence):
                     )
                 return self._decode(encoded_value)
             else:
-                value: JSONTypes = self[cast(int, index)]
-                self.__delete(pipeline, cast(int, index))
+                value: JSONTypes = self[index]
+                self.__delete(pipeline, index)
                 return value
 
     # From collections.abc.MutableSequence:

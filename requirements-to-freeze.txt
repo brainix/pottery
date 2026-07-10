@@ -64,3 +64,8 @@ docutils==0.20.1
 # For more info:
 #   https://data.safetycli.com/p/pypi/pyjwt/eda/?
 pyjwt>=2.10.1
+
+# TODO: Remove this when we drop support for Python 3.10.  We don't need
+# stevedore at the top-level.  However, it's pulled in from something else, and
+# stevedore >= 5.9.0 doesn't support Python 3.10.
+stevedore<5.9.0
