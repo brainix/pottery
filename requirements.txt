@@ -1,6 +1,6 @@
 annotated-doc==0.0.4
 annotated-types==0.7.0
-anyio==4.14.1
+anyio==4.14.2
 ast_serialize==0.6.0
 Authlib==1.7.2
 bandit==1.9.4
@@ -8,7 +8,7 @@ certifi==2026.6.17
 cffi==2.1.0
 charset-normalizer==3.4.9
 click==8.4.2
-coverage==7.15.0
+coverage==7.15.1
 cryptography==49.0.0
 defusedxml==0.7.1
 docutils==0.20.1
@@ -38,7 +38,7 @@ mccabe==0.7.0
 mdurl==0.1.2
 mmh3==5.2.1
 more-itertools==11.1.0
-mypy==2.2.0
+mypy==2.3.0
 mypy_extensions==1.1.0
 nh3==0.3.6
 nltk==3.10.0
@@ -58,7 +58,7 @@ pytest-cov==7.1.0
 PyYAML==6.0.3
 readme_renderer==43.0
 redis==8.0.1
-regex==2026.6.28
+regex==2026.7.10
 requests==2.34.2
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
