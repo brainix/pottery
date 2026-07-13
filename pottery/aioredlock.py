@@ -49,6 +49,7 @@ from types import TracebackType
 from typing import ClassVar
 from typing import Iterable
 from typing import Type
+from typing import Union
 
 from redis import RedisError
 from redis.asyncio import Redis as AIORedis
@@ -150,7 +151,7 @@ class AIORedlock(Scripts, AIOPrimitive):
     _AUTO_RELEASE_TIME: ClassVar[float] = Redlock._AUTO_RELEASE_TIME
     _CLOCK_DRIFT_FACTOR: ClassVar[float] = Redlock._CLOCK_DRIFT_FACTOR
     _RETRY_DELAY: ClassVar[float] = Redlock._RETRY_DELAY
-    _NUM_EXTENSIONS: ClassVar[int] = Redlock._NUM_EXTENSIONS
+    _NUM_EXTENSIONS: ClassVar[Union[int, float]] = Redlock._NUM_EXTENSIONS
 
     def __init__(self,
                  *,
@@ -158,7 +159,7 @@ class AIORedlock(Scripts, AIOPrimitive):
                  masters: Iterable[AIORedis],
                  raise_on_redis_errors: bool = False,
                  auto_release_time: float = _AUTO_RELEASE_TIME,
-                 num_extensions: int = _NUM_EXTENSIONS,
+                 num_extensions: Union[int, float] = _NUM_EXTENSIONS,
                  context_manager_blocking: bool = True,
                  context_manager_timeout: float = -1,
                  ) -> None:
@@ -173,8 +174,8 @@ class AIORedlock(Scripts, AIOPrimitive):
             auto_release_time -- the timeout in seconds by which to
                 automatically release this AIORedlock, unless it's already been
                 released
-            num_extensions -- the number of times that this AIORedlock's lease
-                can be extended
+            num_extensions -- the number of times that this Redlock's lease can be extended. 
+                Value can be either a positive integer or float infinity (math.inf)
             context_manager_blocking -- when using this AIORedlock as a context
                 manager, whether to block when acquiring
             context_manager_timeout -- if context_manager_blocking, how long to
@@ -183,7 +184,9 @@ class AIORedlock(Scripts, AIOPrimitive):
         '''
         if not context_manager_blocking and context_manager_timeout != -1:
             raise ValueError("can't specify a timeout for a non-blocking call")
-
+        if num_extensions < 0 or (isinstance(num_extensions, float) and not math.isinf(num_extensions)):
+            raise ValueError("num_extensions must be either a positive integer or float infinity")
+        
         super().__init__(
             key=key,
             masters=masters,
@@ -196,6 +199,10 @@ class AIORedlock(Scripts, AIOPrimitive):
         self._uuid = ''
         self._extension_num = 0
 
+    @property
+    def limited_extensions(self) -> bool:
+        return not math.isinf(self.num_extensions)
+    
     # Preserve the Open-Closed Principle with name mangling.
     #   https://youtu.be/miGolgp9xq8?t=2086
     #   https://stackoverflow.com/a/38534939
@@ -450,7 +457,7 @@ class AIORedlock(Scripts, AIOPrimitive):
             9
             10
         '''
-        if self._extension_num >= self.num_extensions:
+        if self.limited_extensions and self._extension_num >= self.num_extensions:
             raise TooManyExtensions(self.key, self.masters)
 
         num_masters_extended, redis_errors = 0, []
@@ -466,7 +473,8 @@ class AIORedlock(Scripts, AIOPrimitive):
                     error.__class__.__qualname__,
                 )
         if num_masters_extended > len(self.masters) // 2:
-            self._extension_num += 1
+            if self.limited_extensions:
+                self._extension_num += 1
             return
 
         self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
