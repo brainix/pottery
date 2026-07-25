@@ -1,10 +1,10 @@
 annotated-doc==0.0.4
-annotated-types==0.7.0
+annotated-types==0.8.0
 anyio==4.14.2
 ast_serialize==0.6.0
 Authlib==1.7.2
 bandit==1.9.4
-certifi==2026.6.17
+certifi==2026.7.22
 cffi==2.1.0
 charset-normalizer==3.4.9
 click==8.4.2
@@ -13,7 +13,7 @@ cryptography==49.0.0
 defusedxml==0.7.1
 docutils==0.20.1
 dparse==0.6.4
-filelock==3.31.0
+filelock==3.32.0
 flake8==7.3.0
 h11==0.16.0
 hiredis==3.4.0
@@ -28,7 +28,7 @@ jaraco.context==6.1.2
 jaraco.functools==4.6.0
 Jinja2==3.1.6
 joblib==1.5.3
-joserfc==1.7.3
+joserfc==1.7.4
 keyring==25.7.0
 librt==0.13.0
 markdown-it-py==4.2.0
@@ -71,14 +71,14 @@ shellingham==1.5.4
 stevedore==5.8.0
 tenacity==9.1.4
 tomlkit==0.15.1
-tqdm==4.69.0
+tqdm==4.69.1
 truststore==0.10.4
 twine==6.2.0
 typer==0.25.1
 types-cffi==2.0.0.20260518
 types-pyOpenSSL==24.1.0.20240722
 types-redis==4.6.0.20241004
-types-setuptools==83.0.0.20260716
+types-setuptools==83.0.0.20260724
 typing-inspection==0.4.2
 typing_extensions==4.16.0
 urllib3==2.7.0
