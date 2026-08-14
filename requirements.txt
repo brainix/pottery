@@ -6,14 +6,14 @@ Authlib==1.7.2
 bandit==1.9.4
 certifi==2026.7.22
 cffi==2.1.1
-charset-normalizer==3.4.9
+charset-normalizer==3.5.0
 click==8.4.2
 coverage==7.15.4
 cryptography==50.0.0
 defusedxml==0.7.1
 docutils==0.20.1
 dparse==0.6.4
-filelock==3.32.2
+filelock==3.32.3
 flake8==7.3.0
 h11==0.16.0
 hiredis==3.4.1
@@ -41,7 +41,7 @@ more-itertools==11.1.0
 mypy==2.3.0
 mypy_extensions==1.1.0
 nh3==0.3.6
-nltk==3.10.2
+nltk==3.10.3
 packaging==26.3
 pathspec==1.1.1
 pluggy==1.6.0
@@ -78,8 +78,8 @@ typer==0.25.1
 types-cffi==2.0.0.20260518
 types-pyOpenSSL==24.1.0.20240722
 types-redis==4.6.0.20241004
-types-setuptools==83.0.0.20260807
-typing-inspection==0.4.3
+types-setuptools==84.0.0.20260812
+typing-inspection==0.4.4
 typing_extensions==4.16.0
 urllib3==2.7.0
 uvloop==0.22.1
