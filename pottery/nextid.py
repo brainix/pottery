@@ -20,7 +20,7 @@ Rationale and algorithm description:
     http://antirez.com/news/102
 
 Lua scripting:
-    https://github.com/andymccurdy/redis-py#lua-scripting
+    https://redis.readthedocs.io/en/stable/lua_scripting.html#lua-scripting-in-default-connections
 '''
 
 
