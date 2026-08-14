@@ -28,7 +28,7 @@ Reference implementations:
     https://github.com/SPSCommerce/redlock-py
 
 Lua scripting:
-    https://github.com/andymccurdy/redis-py#lua-scripting
+    https://redis.readthedocs.io/en/stable/lua_scripting.html#lua-scripting-in-default-connections
 '''
 
 
