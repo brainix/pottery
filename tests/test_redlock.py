@@ -119,6 +119,20 @@ class TestRedlock:
             redlock.extend()
 
     @staticmethod
+    def test_extend_unlimited(redis: Redis) -> None:
+        redlock = Redlock(masters={redis}, key='printer', auto_release_time=.2, num_extensions=-1)
+        assert not redis.exists(redlock.key)
+        with pytest.raises(ExtendUnlockedLock):
+            redlock.extend()
+        assert redlock.acquire()
+        for extension_num in range(Redlock._NUM_EXTENSIONS):
+            redlock.extend()
+        # Extend the lock once more and an exception should not be raised
+        redlock.extend()
+        assert redlock._extension_num == 0
+        redlock.release()
+
+    @staticmethod
     def test_acquire_then_release(redlock: Redlock) -> None:
         redis = next(iter(redlock.masters))
         assert not redis.exists(redlock.key)
