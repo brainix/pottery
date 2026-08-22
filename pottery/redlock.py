@@ -54,6 +54,7 @@ from typing import Iterable
 from typing import Literal
 from typing import Tuple
 from typing import Type
+from typing import Union
 from typing import cast
 from typing import overload
 
@@ -229,7 +230,7 @@ class Redlock(Scripts, Primitive):
     _AUTO_RELEASE_TIME: ClassVar[float] = 10
     _CLOCK_DRIFT_FACTOR: ClassVar[float] = 0.01
     _RETRY_DELAY: ClassVar[float] = .2
-    _NUM_EXTENSIONS: ClassVar[int] = 3
+    _NUM_EXTENSIONS: ClassVar[Union[int, float]] = 3
 
     def __init__(self,
                  *,
@@ -237,7 +238,7 @@ class Redlock(Scripts, Primitive):
                  masters: Iterable[Redis] = frozenset(),
                  raise_on_redis_errors: bool = False,
                  auto_release_time: float = _AUTO_RELEASE_TIME,
-                 num_extensions: int = _NUM_EXTENSIONS,
+                 num_extensions: Union[int, float] = _NUM_EXTENSIONS,
                  context_manager_blocking: bool = True,
                  context_manager_timeout: float = -1,
                  ) -> None:
@@ -252,8 +253,8 @@ class Redlock(Scripts, Primitive):
             auto_release_time -- the timeout in seconds by which to
                 automatically release this Redlock, unless it's already been
                 released
-            num_extensions -- the number of times that this Redlock's lease can
-                be extended
+            num_extensions -- the number of times that this Redlock's lease can be extended. 
+                Value can be either a positive integer or float infinity (math.inf)
             context_manager_blocking -- when using this Redlock as a context
                 manager, whether to block when acquiring
             context_manager_timeout -- if context_manager_blocking, how long to
@@ -262,7 +263,9 @@ class Redlock(Scripts, Primitive):
         '''
         if not context_manager_blocking and context_manager_timeout != -1:
             raise ValueError("can't specify a timeout for a non-blocking call")
-
+        if num_extensions < 0 or (isinstance(num_extensions, float) and not math.isinf(num_extensions)):
+            raise ValueError("num_extensions must be either a positive integer or float infinity")
+        
         super().__init__(
             key=key,
             masters=masters,
@@ -275,6 +278,10 @@ class Redlock(Scripts, Primitive):
         self._uuid = ''
         self._extension_num = 0
 
+    @property
+    def limited_extensions(self) -> bool:
+        return not math.isinf(self.num_extensions)
+    
     def __acquire_master(self, master: Redis) -> bool:
         acquired = master.set(
             self.key,
@@ -520,7 +527,7 @@ class Redlock(Scripts, Primitive):
             True
             >>> printer_lock.release()
         '''
-        if self._extension_num >= self.num_extensions:
+        if self.limited_extensions and self._extension_num >= self.num_extensions:
             raise TooManyExtensions(self.key, self.masters)
 
         with BailOutExecutor() as executor:
@@ -542,7 +549,8 @@ class Redlock(Scripts, Primitive):
                     )
                 else:
                     if num_masters_extended > len(self.masters) // 2:
-                        self._extension_num += 1
+                        if self.limited_extensions:
+                            self._extension_num += 1
                         return
 
         self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
@@ -699,11 +707,9 @@ def synchronize(*,
             exception when too many Redis masters throw errors
         auto_release_time -- the timeout in seconds by which to automatically
             release this Redlock, unless it's already been released
-        num_extensions -- the number of times that this Redlock's lease can be
-            extended
-        context_manager_blocking -- when using this Redlock as a context
+        blocking -- when using this Redlock as a context
             manager, whether to block when acquiring
-        context_manager_timeout -- if context_manager_blocking, how long to wait
+        timeout -- if context_manager_blocking, how long to wait
             when acquiring before giving up and raising the QuorumNotAchieved
             exception
 
