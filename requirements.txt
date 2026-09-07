@@ -64,8 +64,6 @@ requests-toolbelt==1.0.0
 rfc3986==2.0.0
 rich==15.0.0
 ruamel.yaml==0.19.1
-safety==3.8.1
-safety-schemas==0.0.16
 setuptools==84.0.0
 shellingham==1.5.4
 stevedore==5.8.0

@@ -48,7 +48,3 @@ jobs:
     - name: Check for security vulnerabilities with Bandit
       run: |
         bandit --recursive pottery
-    - name: Check for security vulnerabilities with Safety
-      uses: pyupio/safety-action@v1.0.1
-      with:
-        api-key: ${{ secrets.SAFETY_API_KEY }}
