@@ -81,7 +81,7 @@ test:
 		echo Running isort on $($@_SOURCE_FILES) && \
 		isort $($@_SOURCE_FILES) --check-only --diff && \
 		bandit --recursive pottery && \
-		safety scan --ignore SFTY-20260902-58666
+		safety scan --policy-file .safety-policy.json
 
 
 .PHONY: release
