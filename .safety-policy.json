@@ -9,10 +9,10 @@
       "package": "authlib"
     },
     {
-      "id": "*",
-      "reason": "Ignore nltk vulnerability",
-      "cve": null,
-      "ignore_reason": "ignore",
+      "id": "SFTY-20260902-58666",
+      "reason": "CVE-2026-81726: nltk Path Traversal vulnerability - no known fix available for 3.10.3",
+      "cve": "CVE-2026-81726",
+      "ignore_reason": "acceptable_risk",
       "package": "nltk"
     }
   ]
