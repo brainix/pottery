@@ -7,6 +7,13 @@
       "cve": null,
       "ignore_reason": "ignore",
       "package": "authlib"
+    },
+    {
+      "id": "*",
+      "reason": "Ignore nltk vulnerability",
+      "cve": null,
+      "ignore_reason": "ignore",
+      "package": "nltk"
     }
   ]
 }
