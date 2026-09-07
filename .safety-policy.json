@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "ignore": [
+    {
+      "id": "*",
+      "reason": "Ignore httpx deprecation warning from authlib dependency",
+      "cve": null,
+      "ignore_reason": "ignore",
+      "package": "authlib"
+    }
+  ]
+}
