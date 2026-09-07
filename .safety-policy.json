@@ -1,8 +1,53 @@
 {
-  "ignore": [
-    {
-      "id": "SFTY-20260902-58666",
-      "reason": "CVE-2026-81726: nltk Path Traversal vulnerability - no known fix available for 3.10.3"
+  "version": "3.0",
+  "scanning-settings": {
+    "max-depth": 6,
+    "exclude": [],
+    "include-files": [],
+    "system": {
+      "targets": []
     }
-  ]
+  },
+  "report": {
+    "dependency-vulnerabilities": {
+      "enabled": true,
+      "auto-ignore-in-report": {
+        "python": {
+          "environment-results": true,
+          "unpinned-requirements": true
+        },
+        "cvss-severity": [],
+        "vulnerabilities": {
+          "58666": {
+            "reason": "CVE-2026-81726: nltk Path Traversal vulnerability - no known fix available for 3.10.3",
+            "expires": "2027-09-07"
+          }
+        }
+      }
+    }
+  },
+  "fail-scan-with-exit-code": {
+    "dependency-vulnerabilities": {
+      "enabled": true,
+      "fail-on-any-of": {
+        "cvss-severity": [
+          "high",
+          "critical",
+          "medium"
+        ],
+        "exploitability": [
+          "high",
+          "critical",
+          "medium"
+        ]
+      }
+    }
+  },
+  "security-updates": {
+    "dependency-vulnerabilities": {
+      "auto-security-updates-limit": [
+        "patch"
+      ]
+    }
+  }
 }
