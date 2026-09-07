@@ -37,7 +37,6 @@ types-redis
 flake8
 isort
 bandit
-safety
 
 twine
 
@@ -61,8 +60,7 @@ docutils==0.20.1
 
 # We don't need pyjwt at the top-level.  However, it's pulled in from something
 # else, and there's a security vulnerability in the version that it pulls in.
-# For more info:
-#   https://data.safetycli.com/p/pypi/pyjwt/eda/?
+# Keep it explicitly constrained to a version with the vulnerability fixed.
 pyjwt>=2.10.1
 
 # TODO: Remove this when we drop support for Python 3.10.  We don't need

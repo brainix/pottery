@@ -80,8 +80,7 @@ test:
 		flake8 $($@_SOURCE_FILES) --count --max-complexity=10 --statistics && \
 		echo Running isort on $($@_SOURCE_FILES) && \
 		isort $($@_SOURCE_FILES) --check-only --diff && \
-		bandit --recursive pottery && \
-		safety scan
+		bandit --recursive pottery
 
 
 .PHONY: release

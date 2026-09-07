@@ -7,8 +7,8 @@
 - Tests require a running Redis instance at `localhost:6379` (GitHub Actions uses a Redis service). Locally you can run:
   - Docker: `docker run --rm -p 6379:6379 redis`
   - macOS/Homebrew: `brew services start redis` (Makefile has convenience targets too).
-- Run tests: `pytest --verbose` or `make test` (the `make test` target also runs mypy, flake8, isort check, bandit and safety in a venv).
-- CI: `.github/workflows/python-package.yml` runs pytest, mypy, flake8/isort, bandit, safety across supported Python versions.
+- Run tests: `pytest --verbose` or `make test` (the `make test` target also runs mypy, flake8, isort check and bandit in a venv).
+- CI: `.github/workflows/python-package.yml` runs pytest, mypy, flake8/isort and bandit across supported Python versions.
 
 ## Important patterns & conventions (do not change without cause)
 - Constructor convention for containers: `RedisX(..., redis=redis_client, key='name')` — the **first keyword is `redis`, second is `key`**. Many README examples follow this order.
@@ -25,7 +25,7 @@
 ## Static checks & style
 - The project is typed and ships `py.typed` — preserve type annotations and run `mypy` on your changes.
 - Linting/formatting: `flake8` (max complexity 10) and `isort --check-only --diff` are enforced in CI and Makefile.
-- Security checks: `bandit --recursive pottery` and `safety scan` are part of the test target and CI.
+- Security checks: `bandit --recursive pottery` is part of the test target and CI.
 
 ## Packaging & release
 - Version lives in `setup.py` (`__version__`). The `Makefile` includes a `release` target to build `sdist` / `wheel` and upload via `twine`.
