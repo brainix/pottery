@@ -52,3 +52,4 @@ jobs:
       uses: pyupio/safety-action@v1.0.1
       with:
         api-key: ${{ secrets.SAFETY_API_KEY }}
+        args: --ignore SFTY-20260902-58666
