@@ -156,6 +156,17 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
                 # Rotating an empty RedisDeque is a no-op.
                 return
 
+            # Rotating more than the length wraps around, like
+            # collections.deque.rotate().  Rotate the shorter way to
+            # minimize the number of elements pushed.
+            length = len(self)
+            n %= length
+            if n > length // 2:
+                n -= length
+            if n == 0:
+                # A whole number of turns is a no-op.
+                return
+
             push_method_name = 'lpush' if n > 0 else 'rpush'  # Available since Redis 1.0.0
             values = self[-n:][::-1] if n > 0 else self[:-n]
             encoded_values = (self._encode(value) for value in values)

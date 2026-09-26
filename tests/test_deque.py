@@ -167,6 +167,22 @@ def test_rotate_left(redis: Redis) -> None:
     assert d == collections.deque([2, 3, 4, 5, 6, 7, 8, 9, 0, 1])
 
 
+@pytest.mark.parametrize('steps, expected', (
+    (4, [3, 1, 2]),
+    (-4, [2, 3, 1]),
+    (7, [3, 1, 2]),
+    (-7, [2, 3, 1]),
+    (6, [1, 2, 3]),
+    (-6, [1, 2, 3]),
+))
+def test_rotate_more_than_length(redis: Redis, steps: int, expected: list) -> None:
+    # Rotating more than the length wraps around, like
+    # collections.deque.rotate().
+    d = RedisDeque([1, 2, 3], redis=redis)
+    d.rotate(steps)
+    assert d == collections.deque(expected)
+
+
 def test_moving_average(redis: Redis) -> None:
     'Test RedisDeque-based moving average'
 
