@@ -84,7 +84,6 @@ __all__: Final[Tuple[str, ...]] = (
     'RedisDeque',
     'RedisDict',
     'RedisList',
-    'RedisSimpleQueue',
     'RedisSet',
     'BloomFilter',
     'HyperLogLog',
