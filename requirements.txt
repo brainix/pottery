@@ -1,4 +1,4 @@
-ast_serialize==0.12.1
+ast_serialize==0.13.1
 bandit==1.9.4
 certifi==2026.7.22
 cffi==2.1.1
@@ -7,7 +7,7 @@ coverage==7.16.2
 cryptography==50.0.2
 docutils==0.20.1
 flake8==7.4.1
-hiredis==3.4.2
+hiredis==3.5.0
 id==1.6.1
 idna==3.20
 iniconfig==2.3.1
@@ -21,13 +21,13 @@ markdown-it-py==4.2.0
 mccabe==0.7.0
 mdurl==0.1.2
 mmh3==5.3.1
-more-itertools==11.1.0
+more-itertools==11.2.1
 mypy==2.4.0
 mypy_extensions==1.1.0
 nh3==0.3.7
 packaging==26.3
 pathspec==1.1.1
-pluggy==1.6.0
+pluggy==1.7.0
 pycodestyle==2.15.0
 pycparser==3.11
 pyflakes==4.0.3
