@@ -137,3 +137,21 @@ def test_reset_quorumisimpossible(redis: Redis) -> None:
          unittest.mock.patch.object(next(iter(ids.masters)), 'delete') as delete:
         delete.side_effect = TimeoutError
         ids.reset()
+
+
+def test_key_prefix_default(ids: NextID) -> None:
+    assert ids._key_prefix == 'nextid:'
+    assert ids.key == 'nextid:current'
+
+
+@pytest.mark.parametrize(
+    ('key_prefix', 'result'),
+    [
+        (None, 'current'),
+        ('', 'current'),
+        ('seq_', 'seq_current'),
+    ],
+    ids=['None', 'empty string', 'custom string']
+)
+def test_key_prefix(redis: Redis, key_prefix: str | None, result: str) -> None:
+    assert NextID(masters={redis}, key_prefix=key_prefix).key == result
