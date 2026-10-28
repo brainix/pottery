@@ -117,8 +117,8 @@ class TestCommon:
 
 
 class TestEncodable:
-    @staticmethod
     @pytest.fixture
+    @staticmethod
     def decoded_redis(redis_url: str) -> Generator[Redis, None, None]:
         redis = Redis.from_url(redis_url, socket_timeout=1, decode_responses=True)
         redis.flushdb()

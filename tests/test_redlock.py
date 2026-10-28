@@ -41,8 +41,8 @@ from pottery.base import logger
 class TestRedlock:
     'Distributed Redis-powered lock tests.'
 
-    @staticmethod
     @pytest.fixture
+    @staticmethod
     def redlock(redis: Redis) -> Redlock:
         return Redlock(masters={redis}, key='printer', auto_release_time=.2)
 
