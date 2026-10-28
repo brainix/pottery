@@ -317,8 +317,9 @@ class RedisList(Container, collections.abc.MutableSequence):
     # From collections.abc.MutableSequence:
     def extend(self, values: Iterable[JSONTypes]) -> None:
         'Extend the RedisList by appending elements from the iterable.  O(1)'
-        encoded_values = (self._encode(value) for value in values)
-        self.redis.rpush(self.key, *encoded_values)  # Available since Redis 1.0.0
+        encoded_values = [self._encode(value) for value in values]
+        if encoded_values:
+            self.redis.rpush(self.key, *encoded_values)  # Available since Redis 1.0.0
 
     __extend = extend
 
