@@ -453,22 +453,29 @@ class AIORedlock(Scripts, AIOPrimitive):
         if self._extension_num >= self.num_extensions:
             raise TooManyExtensions(self.key, self.masters)
 
-        num_masters_extended, redis_errors = 0, []
-        coros = [self.__extend_master(master) for master in self.masters]  # type: ignore
-        for coro in asyncio.as_completed(coros):
-            try:
-                num_masters_extended += await coro
-            except RedisError as error:
-                redis_errors.append(error)
-                logger.exception(
-                    '%s.extend() caught %s',
-                    self.__class__.__qualname__,
-                    error.__class__.__qualname__,
-                )
-        if num_masters_extended > len(self.masters) // 2:
-            self._extension_num += 1
-            return
+        with ContextTimer() as timer:
+            num_masters_extended, redis_errors = 0, []
+            coros = [self.__extend_master(master) for master in self.masters]  # type: ignore
+            for coro in asyncio.as_completed(coros):
+                try:
+                    num_masters_extended += await coro
+                except RedisError as error:
+                    redis_errors.append(error)
+                    logger.exception(
+                        '%s.extend() caught %s',
+                        self.__class__.__qualname__,
+                        error.__class__.__qualname__,
+                    )
+            if num_masters_extended > len(self.masters) // 2:
+                validity_time = self.auto_release_time
+                validity_time -= self.__drift()
+                validity_time -= timer.elapsed() / 1000
+                if validity_time > 0:
+                    self._extension_num += 1
+                    return
 
+        with contextlib.suppress(ReleaseUnlockedLock):
+            await self.__release(raise_on_redis_errors=raise_on_redis_errors)
         self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         raise ExtendUnlockedLock(
             self.key,
