@@ -91,11 +91,13 @@ class Scripts:
                  key: str,
                  masters: Iterable[Redis | AIORedis] = frozenset(),
                  raise_on_redis_errors: bool = False,
+                 key_prefix: str | None = None,
                  ) -> None:
         super().__init__(  # type: ignore
             key=key,
             masters=masters,
             raise_on_redis_errors=raise_on_redis_errors,
+            key_prefix=key_prefix,
         )
         self.__register_acquired_script()
         self.__register_extend_script()
@@ -225,7 +227,7 @@ class Redlock(Scripts, Primitive):
         '_extension_num',
     )
 
-    _KEY_PREFIX: ClassVar[str] = 'redlock'
+    _KEY_PREFIX: ClassVar[str] = 'redlock:'
     _AUTO_RELEASE_TIME: ClassVar[float] = 10
     _CLOCK_DRIFT_FACTOR: ClassVar[float] = 0.01
     _RETRY_DELAY: ClassVar[float] = .2
@@ -240,6 +242,7 @@ class Redlock(Scripts, Primitive):
                  num_extensions: int = _NUM_EXTENSIONS,
                  context_manager_blocking: bool = True,
                  context_manager_timeout: float = -1,
+                 key_prefix: str | None = _KEY_PREFIX,
                  ) -> None:
         '''Initialize a Redlock.
 
@@ -259,6 +262,9 @@ class Redlock(Scripts, Primitive):
             context_manager_timeout -- if context_manager_blocking, how long to
                 wait when acquiring before giving up and raising the
                 QuorumNotAchieved exception
+            key_prefix -- the prefix (including any separator) prepended to the
+                key when storing it in Redis; defaults to 'redlock:' so the key
+                is stored as 'redlock:<key>'. Pass None (or '') for no prefix
         '''
         if not context_manager_blocking and context_manager_timeout != -1:
             raise ValueError("can't specify a timeout for a non-blocking call")
@@ -267,6 +273,7 @@ class Redlock(Scripts, Primitive):
             key=key,
             masters=masters,
             raise_on_redis_errors=raise_on_redis_errors,
+            key_prefix=key_prefix,
         )
         self.auto_release_time = auto_release_time
         self.num_extensions = num_extensions
@@ -434,7 +441,7 @@ class Redlock(Scripts, Primitive):
     __acquire = acquire
 
     def __log_time_enqueued(self, timer: ContextTimer, *, acquired: bool) -> None:
-        key_suffix = self.key.split(':', maxsplit=1)[1]
+        key_suffix = self._key_unprefixed
         time_enqueued = math.ceil(timer.elapsed())
         logger.info(
             'source=pottery sample#redlock.enqueued.%s=%dms sample#redlock.acquired.%s=%d',

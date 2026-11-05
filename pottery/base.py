@@ -295,7 +295,7 @@ class Primitive(abc.ABC):
     def _KEY_PREFIX(self) -> str:
         'Redis key prefix/namespace.'
 
-    __slots__ = ('__key', 'masters', 'raise_on_redis_errors')
+    __slots__ = ('__key', 'masters', 'raise_on_redis_errors', '_key_prefix')
 
     _DEFAULT_MASTERS: ClassVar[FrozenSet[Redis]] = frozenset({_default_redis})
 
@@ -304,18 +304,37 @@ class Primitive(abc.ABC):
                  key: str,
                  masters: Iterable[Redis] = frozenset(),
                  raise_on_redis_errors: bool = False,
+                 key_prefix: str | None = None,
                  ) -> None:
+        self._key_prefix = key_prefix
         self.key = key
         self.masters = frozenset(masters) or self._DEFAULT_MASTERS
         self.raise_on_redis_errors = raise_on_redis_errors
 
     @property
     def key(self) -> str:
-        return self.__key
+        '''The Redis key for this primitive, with self._key_prefix prepended.
+
+        Note that this property isn't symmetric: the setter stores the key as
+        given, but the getter prepends the prefix.  So assigning 'printer' to a
+        Redlock and reading it back returns 'redlock:printer'.  Use
+        self._key_unprefixed to get back what the caller passed in.
+        '''
+        return f'{self._key_prefix}{self.__key}' if self._key_prefix else self.__key
 
     @key.setter
     def key(self, value: str) -> None:
-        self.__key = f'{self._KEY_PREFIX}:{value}'
+        self.__key = value
+
+    @property
+    def _key_unprefixed(self) -> str:
+        '''The key as the caller passed it in, without self._key_prefix.
+
+        Subclasses must go through this property rather than referring to
+        self.__key directly -- the name mangling in their own class bodies
+        resolves to the wrong attribute.
+        '''
+        return self.__key
 
     def _check_enough_masters_up(self,
                                  raise_on_redis_errors: bool | None,

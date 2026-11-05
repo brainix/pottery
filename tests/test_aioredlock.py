@@ -30,6 +30,7 @@ from pottery import ExtendUnlockedLock
 from pottery import QuorumNotAchieved
 from pottery import Redlock
 from pottery import ReleaseUnlockedLock
+from pottery.base import logger
 from pottery.exceptions import TooManyExtensions
 
 
@@ -208,3 +209,48 @@ def test_slots(aioredlock: AIORedlock) -> None:
 
 def test_repr(aioredlock: AIORedlock) -> None:
     assert repr(aioredlock) == '<AIORedlock key=redlock:shower>'
+
+
+def test_default_key_prefix(aioredlock: AIORedlock) -> None:
+    assert aioredlock._key_prefix == 'redlock:'
+    assert aioredlock.key == 'redlock:shower'
+
+
+@pytest.mark.parametrize(
+    ('key_prefix', 'result'),
+    [
+        (None, 'shower'),
+        ('', 'shower'),
+        ('lock_', 'lock_shower'),
+    ],
+    ids=['None', 'empty string', 'custom string']
+)
+def test_key_prefix(aioredis: AIORedis, key_prefix: str | None, result: str) -> None:
+    aioredlock = AIORedlock(masters={aioredis}, key='shower',
+                            key_prefix=key_prefix)
+    assert aioredlock.key == result
+
+
+async def test_acquire_logs_without_prefix(aioredis: AIORedis) -> None:
+    # No prefix + colon-less key must not raise in the enqueue-logging path.
+    aioredlock = AIORedlock(masters={aioredis}, key='shower', key_prefix=None,
+                            auto_release_time=.2)  # type: ignore
+    assert await aioredlock.acquire()
+    assert await aioredis.exists('shower')
+    await aioredlock.release()
+
+
+async def test_acquire_logs_time_enqueued(aioredis: AIORedis) -> None:
+    # __log_time_enqueued() only runs once we've failed to acquire at least
+    # once, so hold the lock until it auto releases to force the retry path.
+    aioredlock1 = AIORedlock(masters={aioredis}, key='shower',
+                             auto_release_time=.2)  # type: ignore
+    aioredlock2 = AIORedlock(masters={aioredis}, key='shower',
+                             auto_release_time=.2)  # type: ignore
+    assert await aioredlock1.acquire()
+    with unittest.mock.patch.object(logger, 'info') as info:
+        assert await aioredlock2.acquire(timeout=2)
+    info.assert_called_once()
+    # The logged key suffix is the key as passed in, without the prefix.
+    assert info.call_args.args[1] == 'shower'
+    await aioredlock2.release()
