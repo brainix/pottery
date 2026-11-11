@@ -120,6 +120,8 @@ class RedisDeque(RedisList, collections.deque):  # type: ignore
         with self._watch(values) as pipeline:
             push_method_name = 'rpush' if right else 'lpush'
             encoded_values = [self._encode(value) for value in values]
+            if not encoded_values:
+                return
             len_ = cast(int, pipeline.llen(self.key)) + len(encoded_values)  # Available since Redis 1.0.0
             trim_indices: Tuple[int, int] | Tuple = tuple()
             if self.maxlen is not None and len_ >= self.maxlen:

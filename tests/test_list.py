@@ -171,6 +171,13 @@ def test_extend(redis: Redis) -> None:
     assert squares == [1, 4, 9, 16, 25]
 
 
+def test_extend_with_empty_iterable(redis: Redis) -> None:
+    squares = RedisList([1, 4, 9], redis=redis)
+    squares.extend([])
+    squares += []
+    assert squares == [1, 4, 9]
+
+
 def test_sort(redis: Redis) -> None:
     squares = RedisList({1, 4, 9, 16, 25}, redis=redis)
     squares.sort()
