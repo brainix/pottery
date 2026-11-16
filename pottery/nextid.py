@@ -68,11 +68,13 @@ class Scripts:
                  key: str = 'current',
                  masters: Iterable[Redis | AIORedis] = frozenset(),
                  raise_on_redis_errors: bool = False,
+                 key_prefix: str | None = None,
                  ) -> None:
         super().__init__(  # type: ignore
             key=key,
             masters=masters,
             raise_on_redis_errors=raise_on_redis_errors,
+            key_prefix=key_prefix,
         )
         self.__register_set_id_script()
 
@@ -138,7 +140,7 @@ class NextID(Scripts, Primitive):
 
     __slots__ = ('num_tries',)
 
-    _KEY_PREFIX: ClassVar[str] = 'nextid'
+    _KEY_PREFIX: ClassVar[str] = 'nextid:'
     _NUM_TRIES: ClassVar[int] = 3
 
     def __init__(self,
@@ -147,6 +149,7 @@ class NextID(Scripts, Primitive):
                  masters: Iterable[Redis] = frozenset(),
                  raise_on_redis_errors: bool = False,
                  num_tries: int = _NUM_TRIES,
+                 key_prefix: str | None = _KEY_PREFIX,
                  ) -> None:
         '''Initialize a NextID ID generator.
 
@@ -158,11 +161,15 @@ class NextID(Scripts, Primitive):
                 exception when too many Redis masters throw errors
             num_tries -- the number of times to try to achieve quorum before
                 giving up and raising the QuorumNotAchieved exception
+            key_prefix -- the prefix (including any separator) prepended to the
+                key when storing it in Redis; defaults to 'nextid:' so the key
+                is stored as 'nextid:<key>'. Pass None (or '') for no prefix
         '''
         super().__init__(
             key=key,
             masters=masters,
             raise_on_redis_errors=raise_on_redis_errors,
+            key_prefix=key_prefix,
         )
         self.num_tries = num_tries
 

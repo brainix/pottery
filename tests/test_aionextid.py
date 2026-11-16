@@ -104,3 +104,21 @@ async def test_reset_quorumnotachieved(aioids: AIONextID) -> None:
 
 def test_repr(aioids: AIONextID) -> None:
     assert repr(aioids) == '<AIONextID key=nextid:current>'
+
+
+def test_default_key_prefix(aioids: AIONextID) -> None:
+    assert aioids._key_prefix == 'nextid:'
+    assert aioids.key == 'nextid:current'
+
+
+@pytest.mark.parametrize(
+    ('key_prefix', 'result'),
+    [
+        (None, 'current'),
+        ('', 'current'),
+        ('seq_', 'seq_current'),
+    ],
+    ids=['None', 'empty string', 'custom string']
+)
+def test_key_prefix(aioredis: AIORedis, key_prefix: str | None, result: str) -> None:
+    assert AIONextID(masters={aioredis}, key_prefix=key_prefix).key == result

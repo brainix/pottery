@@ -52,9 +52,10 @@ class AIONextID(Scripts, AIOPrimitive):
                  key: str = 'current',
                  masters: Iterable[AIORedis] = frozenset(),
                  num_tries: int = NextID._NUM_TRIES,
+                 key_prefix: str | None = _KEY_PREFIX,
                  ) -> None:
         'Initialize an AIONextID ID generator.'
-        super().__init__(key=key, masters=masters)
+        super().__init__(key=key, masters=masters, key_prefix=key_prefix)
         self.num_tries = num_tries
 
     def __aiter__(self) -> AIONextID:

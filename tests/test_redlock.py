@@ -326,6 +326,47 @@ class TestRedlock:
                 for lock in locks:  # pragma: no cover
                     lock.release()
 
+    @staticmethod
+    def test_default_key_prefix(redlock: Redlock) -> None:
+        assert redlock._key_prefix == 'redlock:'
+        assert redlock.key == 'redlock:printer'
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        ('key_prefix', 'result'),
+        [
+            (None, 'printer'),
+            ('', 'printer'),
+            ('lock_', 'lock_printer'),
+        ],
+        ids=['None', 'empty string', 'custom string']
+    )
+    def test_key_prefix(redis: Redis, key_prefix: str | None, result: str) -> None:
+        redlock = Redlock(masters={redis}, key='printer', key_prefix=key_prefix)
+        assert redlock.key == result
+
+    @staticmethod
+    def test_acquire_logs_without_prefix(redis: Redis) -> None:
+        # No prefix + colon-less key must not raise in the enqueue-logging path.
+        redlock = Redlock(masters={redis}, key='printer', key_prefix='')
+        with unittest.mock.patch.object(logger, 'info'):
+            assert redlock.acquire()
+            assert redis.exists('printer')
+        redlock.release()
+
+    @staticmethod
+    def test_acquire_logs_time_enqueued(redis: Redis) -> None:
+        # __log_time_enqueued() only runs once we've failed to acquire at least
+        # once, so hold the lock until it auto releases to force the retry path.
+        redlock1 = Redlock(masters={redis}, key='printer', auto_release_time=.2)
+        redlock2 = Redlock(masters={redis}, key='printer', auto_release_time=.2)
+        assert redlock1.acquire()
+        with unittest.mock.patch.object(logger, 'info') as info:
+            assert redlock2.acquire(timeout=2)
+        info.assert_called_once()
+        # The logged key suffix is the key as passed in, without the prefix.
+        assert info.call_args.args[1] == 'printer'
+        redlock2.release()
 
 class TestSynchronize:
     @staticmethod

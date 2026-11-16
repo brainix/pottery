@@ -161,6 +161,7 @@ class AIORedlock(Scripts, AIOPrimitive):
                  num_extensions: int = _NUM_EXTENSIONS,
                  context_manager_blocking: bool = True,
                  context_manager_timeout: float = -1,
+                 key_prefix: str | None = _KEY_PREFIX,
                  ) -> None:
         '''Initialize an AIORedlock.
 
@@ -180,6 +181,9 @@ class AIORedlock(Scripts, AIOPrimitive):
             context_manager_timeout -- if context_manager_blocking, how long to
                 wait when acquiring before giving up and raising the
                 QuorumNotAchieved exception
+            key_prefix -- the prefix (including any separator) prepended to the
+                key when storing it in Redis; defaults to 'redlock:' so the key
+                is stored as 'redlock:<key>'. Pass None (or '') for no prefix
         '''
         if not context_manager_blocking and context_manager_timeout != -1:
             raise ValueError("can't specify a timeout for a non-blocking call")
@@ -188,6 +192,7 @@ class AIORedlock(Scripts, AIOPrimitive):
             key=key,
             masters=masters,
             raise_on_redis_errors=raise_on_redis_errors,
+            key_prefix=key_prefix,
         )
         self.auto_release_time = auto_release_time
         self.num_extensions = num_extensions
@@ -373,7 +378,7 @@ class AIORedlock(Scripts, AIOPrimitive):
     __acquire = acquire
 
     def __log_time_enqueued(self, timer: ContextTimer, *, acquired: bool) -> None:
-        key_suffix = self.key.split(':', maxsplit=1)[1]
+        key_suffix = self._key_unprefixed
         time_enqueued = math.ceil(timer.elapsed())
         logger.info(
             'source=pottery sample#aioredlock.enqueued.%s=%dms sample#aioredlock.acquired.%s=%d',
