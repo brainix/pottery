@@ -523,7 +523,7 @@ class Redlock(Scripts, Primitive):
         if self._extension_num >= self.num_extensions:
             raise TooManyExtensions(self.key, self.masters)
 
-        with BailOutExecutor() as executor:
+        with ContextTimer() as timer, BailOutExecutor() as executor:
             futures = set()
             for master in self.masters:
                 future = executor.submit(self.__extend_master, master)
@@ -542,9 +542,15 @@ class Redlock(Scripts, Primitive):
                     )
                 else:
                     if num_masters_extended > len(self.masters) // 2:
-                        self._extension_num += 1
-                        return
+                        validity_time = self.auto_release_time
+                        validity_time -= self.__drift()
+                        validity_time -= timer.elapsed() / 1000
+                        if validity_time > 0:
+                            self._extension_num += 1
+                            return
 
+        with contextlib.suppress(ReleaseUnlockedLock):
+            self.__release(raise_on_redis_errors=raise_on_redis_errors)
         self._check_enough_masters_up(raise_on_redis_errors, redis_errors)
         raise ExtendUnlockedLock(
             self.key,
