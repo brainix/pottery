@@ -122,6 +122,14 @@ def test_extend(redis: Redis) -> None:
     assert d == collections.deque(['g', 'h', 'i', 'j'])
 
 
+@pytest.mark.parametrize('maxlen', (None, 4))
+def test_extend_with_empty_iterable(redis: Redis, maxlen: int | None) -> None:
+    d = RedisDeque('ghi', redis=redis, maxlen=maxlen)
+    d.extend([])
+    d.extendleft([])
+    assert d == collections.deque(['g', 'h', 'i'])
+
+
 def test_popleft_from_empty(redis: Redis) -> None:
     d = RedisDeque(redis=redis)
     with pytest.raises(IndexError):
